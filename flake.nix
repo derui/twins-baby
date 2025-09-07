@@ -54,9 +54,8 @@
           fenix-pkg = fenix.packages.${system};
         in
         {
-          default = pkgs.mkShell {
-            nativeBuildInputs = with pkgs; [ pkg-config ];
-            buildInputs = [
+          default = let
+            _buildInputs = [
               (fenix-pkg.combine [
                 fenix-pkg.stable.cargo
                 fenix-pkg.stable.clippy
@@ -74,13 +73,41 @@
               pkgs.python312
               pkgs.python312Packages.pip
 
+              # for bevy
+              pkgs.xdotool
+              pkgs.glib.dev
+              pkgs.gdk-pixbuf.dev
+              pkgs.pango.dev
+              pkgs.atk.dev
+              pkgs.gtk3.dev
+              pkgs.libsoup_3.dev
+              pkgs.webkitgtk_4_1.dev
+              pkgs.alsa-lib.dev
+              pkgs.udev.dev 
+              pkgs.xorg.libX11
+              pkgs.xorg.libXrandr
+              pkgs.xorg.libXcursor
+              pkgs.xorg.libxcb
+              pkgs.xorg.libXi
+              pkgs.wayland
+              pkgs.libxkbcommon
+              pkgs.libxkbcommon.dev
+              pkgs.vulkan-loader
+              pkgs.vulkan-tools
+              pkgs.glfw
+              pkgs.xorg.xf86videoamdgpu  # notice this line might not match your needs or desires
+              
               # for tailwindcss
               pkgs.nodejs_22
             ];
+          in
+            pkgs.mkShell {
+            nativeBuildInputs = with pkgs; [ pkg-config ];
+            buildInputs = _buildInputs;
 
             RUST_SRC_PATH = "${fenix-pkg.stable.rust-src}/lib/rustlib/src/rust/library";
             RUST_BACKTRACE = 1;
-            LD_LIBRARY_PATH = "${pkgs.stdenv.cc.cc.lib}/lib";
+            LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath _buildInputs;
 
             shellHook = ''
               pre-commit install
