@@ -1,0 +1,22 @@
+{
+  "name": "twins-baby",
+  "version": "1.0.0",
+  "description": "",
+  "main": "tailwind.css.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/derui/twins-baby.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/derui/twins-baby/issues"
+  },
+  "homepage": "https://github.com/derui/twins-baby#readme",
+  "dependencies": {
+    "tailwindcss": "^4.1.13"
+  }
+}
