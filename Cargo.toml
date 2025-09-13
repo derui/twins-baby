@@ -4,7 +4,18 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-bevy = "0.16.1"
 console_error_panic_hook = "0.1.7"
 leptos = { version = "0.8.8", features = ["csr"] }
 leptos-bevy-canvas = "0.3.0"
+
+[dependencies.bevy]
+version = "0.16.1"
+features = [
+    "bevy_mesh_picking_backend",
+    "bevy_pbr",
+    "bevy_picking",
+    "bevy_window",
+    "bevy_winit",
+    "tonemapping_luts",
+    "webgpu",
+]
