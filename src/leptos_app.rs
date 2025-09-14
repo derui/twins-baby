@@ -5,7 +5,6 @@ use leptos_bevy_canvas::prelude::*;
 use crate::bevy_app::init_bevy_app;
 
 #[component]
-
 pub fn App() -> impl IntoView {
     view! {
         <div class="flex gap-5 items-center p-5 mx-auto w-full max-w-[1400px]">
