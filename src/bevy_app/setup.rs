@@ -1,20 +1,13 @@
 use bevy::prelude::*;
 use bevy::{
-    asset::{AssetServer, Assets, transformer::TransformedAsset},
-    color::{
-        Color,
-        palettes::tailwind::{RED_50, RED_500},
-    },
-    core_pipeline::core_3d::Camera3d,
+    asset::{AssetServer, Assets},
+    color::{Color, palettes::tailwind::RED_500},
     ecs::{
-        error::{BevyError, default_error_handler},
+        error::BevyError,
         system::{Commands, Res, ResMut},
     },
     math::{Vec3, primitives::Cuboid},
-    pbr::{
-        MeshMaterial3d, PointLight, StandardMaterial, environment_map::EnvironmentMapLight,
-        wireframe::Mesh3dWireframe,
-    },
+    pbr::{MeshMaterial3d, PointLight, StandardMaterial},
     render::{
         mesh::{Mesh, Mesh3d},
         render_resource::Face,
@@ -59,12 +52,6 @@ pub fn setup_scene(
             ..Default::default()
         },
         Transform::from_xyz(8.0, 16.0, 8.0),
-    ));
-
-    // Camera
-    commands.spawn((
-        Camera3d::default(),
-        Transform::from_xyz(0.0, 7., 14.0).looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y),
     ));
 
     Ok(())

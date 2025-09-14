@@ -1,10 +1,11 @@
+mod camera;
 mod pan_orbit;
 mod setup;
 
 // This initializes a normal Bevy app
 use bevy::prelude::*;
 
-use crate::bevy_app::setup::setup_scene;
+use crate::bevy_app::{camera::setup_camera, setup::setup_scene};
 
 pub fn init_bevy_app() -> App {
     let mut app = App::new();
@@ -20,7 +21,7 @@ pub fn init_bevy_app() -> App {
         }),
         MeshPickingPlugin,
     ))
-    .add_systems(Startup, (setup_scene,));
+    .add_systems(Startup, (setup_scene, setup_camera));
 
     app
 }

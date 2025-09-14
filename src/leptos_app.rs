@@ -1,4 +1,3 @@
-use bevy::color::{Srgba, palettes::tailwind::*};
 use leptos::prelude::*;
 use leptos_bevy_canvas::prelude::*;
 
