@@ -1,4 +1,5 @@
 use bevy::{
+    core_pipeline::core_3d::Camera3d,
     ecs::{bundle::Bundle, component::Component},
     input::keyboard::KeyCode,
     math::Vec3,
@@ -9,7 +10,7 @@ use bevy::{
 /// Bundre to spawn custom camera with pan-orbit controller.
 #[derive(Bundle, Default)]
 pub struct PanOrbitCameraBundle {
-    pub camera: Camera3dBundle,
+    pub camera: Camera3d,
     pub state: PanOrbitState,
     pub settings: PanOrbitSettings,
 }
@@ -55,4 +56,35 @@ pub enum PanOrbitAction {
     Pan,
     Orbit,
     Zoom,
+}
+
+impl Default for PanOrbitState {
+    fn default() -> Self {
+        Self {
+            center: Vec3::ZERO,
+            radius: 1.0,
+            upside_down: false,
+            pitch: 0.0,
+            yaw: 0.0,
+        }
+    }
+}
+
+impl Default for PanOrbitSettings {
+    fn default() -> Self {
+        Self {
+            // 1000 pixels per world unit
+            pan_sensitivity: 0.001,
+            // 0.1 degree per pixel
+            orbit_sensitivity: 0.1f32.to_radians(),
+            zoom_sensitivity: 0.01,
+            pan_key: Some(KeyCode::ControlLeft),
+            orbit_key: Some(KeyCode::AltLeft),
+            zoom_key: Some(KeyCode::ShiftLeft),
+            scroll_action: Some(PanOrbitAction::Zoom),
+            // 1 line = 16 pixels of motion
+            scroll_line_sensitivity: 16.0,
+            scroll_pixel_sensitivity: 1.0,
+        }
+    }
 }
