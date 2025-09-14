@@ -7,4 +7,9 @@ repos:
       entry: rustfmt
       language: system
       files: "\\.rs$"
-      args: ["--edition", "2021"]
+      args: ["--edition", "2024"]
+    - id: leptosfmt
+      name: leptosfmt
+      entry: leptosfmt
+      language: system
+      files: "\\.rs$"

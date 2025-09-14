@@ -114,6 +114,7 @@
               cargo install cargo-nextest
               cargo install cargo-watch
               cargo install cargo-llvm-cov
+              cargo install leptosfmt
             '';
           };
         }
