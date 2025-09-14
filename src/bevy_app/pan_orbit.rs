@@ -6,6 +6,7 @@ use bevy::{
 };
 
 /// This module provides component and system for pan-orbit controller for App.
+/// based on https://bevy-cheatbook.github.io/cookbook/pan-orbit-camera.html
 
 /// Bundre to spawn custom camera with pan-orbit controller.
 #[derive(Bundle, Default)]
