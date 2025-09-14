@@ -1,3 +1,4 @@
+mod pan_orbit;
 mod setup;
 
 // This initializes a normal Bevy app
