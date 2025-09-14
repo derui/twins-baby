@@ -1,3 +1,4 @@
+mod bevy_app;
 mod leptos_app;
 
 use leptos::{

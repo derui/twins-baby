@@ -2,6 +2,8 @@ use bevy::color::{Srgba, palettes::tailwind::*};
 use leptos::prelude::*;
 use leptos_bevy_canvas::prelude::*;
 
+use crate::bevy_app::init_bevy_app;
+
 #[component]
 
 pub fn App() -> impl IntoView {
@@ -15,7 +17,10 @@ pub fn App() -> impl IntoView {
                     class="overflow-hidden rounded-lg aspect-[8/5]"
                     style:max-width="100%"
                     style:max-height="100%"
-                ></div>
+                >
+
+                    <BevyCanvas init=move || { init_bevy_app() } {..} width="300" height="500" />
+                </div>
             </Frame>
         </div>
     }
