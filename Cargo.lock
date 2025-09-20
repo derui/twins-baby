@@ -1614,6 +1614,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "coarsetime"
+version = "0.1.36"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "91849686042de1b41cd81490edc83afbcb0abe5a9b6f2c4114f23ce8cca1bcf4"
+dependencies = [
+ "libc",
+ "wasix",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "codee"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5291,6 +5302,7 @@ name = "twins-baby"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "coarsetime",
  "console_error_panic_hook",
  "leptos",
  "leptos-bevy-canvas",
@@ -5497,6 +5509,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "03fa2761397e5bd52002cd7e73110c71af2109aca4e521a9f40473fe685b0a24"
 dependencies = [
  "wit-bindgen",
+]
+
+[[package]]
+name = "wasix"
+version = "0.12.21"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c1fbb4ef9bbca0c1170e0b00dd28abc9e3b68669821600cad1caaed606583c6d"
+dependencies = [
+ "wasi 0.11.1+wasi-snapshot-preview1",
 ]
 
 [[package]]

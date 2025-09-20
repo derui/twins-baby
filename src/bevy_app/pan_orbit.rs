@@ -7,7 +7,7 @@ use bevy::{
         change_detection::DetectChanges,
         component::Component,
         error::BevyError,
-        event::EventReader,
+        event::{EventReader, EventWriter},
         system::{Query, Res},
     },
     input::{
@@ -18,6 +18,8 @@ use bevy::{
     math::{EulerRot, Quat, Vec2, Vec3},
     transform::components::Transform,
 };
+
+use crate::events::LoggingEvent;
 
 /// This module provides component and system for pan-orbit controller for App.
 /// based on https://bevy-cheatbook.github.io/cookbook/pan-orbit-camera.html
@@ -121,6 +123,7 @@ pub fn pan_orbit_camera(
     mut evr_motion: EventReader<MouseMotion>,
     mut evr_scroll: EventReader<MouseWheel>,
     mut q_camere: Query<(&PanOrbitSettings, &mut PanOrbitState, &mut Transform)>,
+    mut logger: EventWriter<LoggingEvent>,
 ) -> Result<(), BevyError> {
     let mut total_motion: Vec2 = evr_motion.read().map(|ev| ev.delta).sum();
 
@@ -246,6 +249,16 @@ pub fn pan_orbit_camera(
         }
 
         if any || state.is_added() {
+            logger.write(LoggingEvent::debug(&format!(
+                "motion: ({}, {}), scroll_lines: ({}, {}), scroll pixels: ({}, {})",
+                total_motion.x,
+                total_motion.y,
+                total_scroll_lines.x,
+                total_scroll_lines.y,
+                total_scroll_pixels.x,
+                total_scroll_pixels.y
+            )));
+
             // rotation performs yaw/pitch/roll via quatanion.
             transform.rotation = Quat::from_euler(EulerRot::YXZ, state.yaw, state.pitch, 0.0);
             // using back direction vector to stay the camera at the desired radius from the center

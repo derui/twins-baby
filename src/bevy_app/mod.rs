@@ -4,14 +4,18 @@ mod setup;
 
 // This initializes a normal Bevy app
 use bevy::prelude::*;
+use leptos_bevy_canvas::prelude::{BevyEventSender, LeptosBevyApp};
 
-use crate::bevy_app::{
-    camera::setup_camera,
-    pan_orbit::{PanOrbitState, pan_orbit_camera},
-    setup::setup_scene,
+use crate::{
+    bevy_app::{
+        camera::setup_camera,
+        pan_orbit::{PanOrbitState, pan_orbit_camera},
+        setup::setup_scene,
+    },
+    events::LoggingEvent,
 };
 
-pub fn init_bevy_app() -> App {
+pub fn init_bevy_app(logger: BevyEventSender<LoggingEvent>) -> App {
     let mut app = App::new();
     app.add_plugins((
         DefaultPlugins.set(WindowPlugin {
@@ -25,6 +29,7 @@ pub fn init_bevy_app() -> App {
         }),
         MeshPickingPlugin,
     ))
+    .export_event_to_leptos(logger)
     .add_systems(Startup, (setup_scene, setup_camera))
     .add_systems(
         Update,
