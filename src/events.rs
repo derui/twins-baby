@@ -50,7 +50,7 @@ impl LoggingEvent {
 
     /// Create a new info logging event
     pub fn info(text: &str) -> Self {
-        Self::new(LogLevel::Info, text)
+        Self::info_at(text, Instant::now())
     }
 
     /// Create a new info logging event with a specific timestamp
@@ -60,7 +60,7 @@ impl LoggingEvent {
 
     /// Create a new debug logging event
     pub fn debug(text: &str) -> Self {
-        Self::new(LogLevel::Debug, text)
+        Self::debug_at(text, Instant::now())
     }
 
     /// Create a new debug logging event with a specific timestamp
@@ -70,7 +70,7 @@ impl LoggingEvent {
 
     /// Create a new warning logging event
     pub fn warning(text: &str) -> Self {
-        Self::new(LogLevel::Warning, text)
+        Self::warning_at(text, Instant::now())
     }
 
     /// Create a new warning logging event with a specific timestamp
@@ -80,7 +80,7 @@ impl LoggingEvent {
 
     /// Create a new error logging event
     pub fn error(text: &str) -> Self {
-        Self::new(LogLevel::Error, text)
+        Self::error_at(text, Instant::now())
     }
 
     /// Create a new error logging event with a specific timestamp
