@@ -1,7 +1,6 @@
-use std::f32::consts::{FRAC_1_PI, FRAC_2_PI, FRAC_PI_2, PI, TAU};
+use std::f32::consts::{FRAC_PI_2, PI, TAU};
 
 use bevy::{
-    asset::transformer::{self, TransformedAsset},
     core_pipeline::core_3d::Camera3d,
     ecs::{
         bundle::Bundle,
@@ -11,13 +10,12 @@ use bevy::{
         event::EventReader,
         system::{Query, Res},
     },
-    image::TranscodeFormat,
     input::{
         ButtonInput,
         keyboard::KeyCode,
-        mouse::{MouseButton, MouseButtonInput, MouseMotion, MouseScrollUnit, MouseWheel},
+        mouse::{MouseButton, MouseMotion, MouseScrollUnit, MouseWheel},
     },
-    math::{EulerRot, Quat, Vec2, Vec2Swizzles, Vec3},
+    math::{EulerRot, Quat, Vec2, Vec3},
     transform::components::Transform,
 };
 
