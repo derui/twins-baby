@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy::render::view::RenderLayers;
 use bevy::{
     asset::{AssetServer, Assets},
     color::{Color, palettes::tailwind::RED_500},
@@ -14,6 +15,8 @@ use bevy::{
     },
     transform::components::Transform,
 };
+
+use crate::bevy_app::camera::{CAMERA_2D_LAYER, CAMERA_3D_LAYER};
 
 const CUBE_X: f32 = 4.0;
 const CUBE_Y: f32 = 0.0;
@@ -52,6 +55,7 @@ pub fn setup_scene(
             ..Default::default()
         },
         Transform::from_xyz(8.0, 16.0, 8.0),
+        RenderLayers::from_layers(&[CAMERA_2D_LAYER, CAMERA_3D_LAYER]),
     ));
 
     Ok(())
