@@ -1,3 +1,5 @@
+use bevy::color::palettes::css::PINK;
+use bevy::color::palettes::tailwind::PINK_500;
 use bevy::prelude::*;
 use bevy::render::view::RenderLayers;
 use bevy::{
@@ -24,15 +26,15 @@ pub fn setup_ui(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) -> Result<(), BevyError> {
-    // Cube
+    // Navigation Cube
     let cube = meshes.add(Cuboid::default());
 
     commands.spawn((
-        NavigationCube,
-        Mesh3d(cube.clone()),
-        MeshMaterial3d(materials.add(Color::WHITE)),
+        Mesh3d(cube),
+        MeshMaterial3d(materials.add(Color::from(PINK_500))),
         RenderLayers::layer(CAMERA_2D_LAYER),
         Transform::from_xyz(0., 0., 0.).with_scale(Vec3::splat(5.)),
+        NavigationCube,
     ));
 
     Ok(())

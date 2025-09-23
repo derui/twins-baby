@@ -1,6 +1,9 @@
 use bevy::{
     prelude::*,
-    render::{camera::Viewport, view::RenderLayers},
+    render::{
+        camera::{ScalingMode, Viewport},
+        view::RenderLayers,
+    },
 };
 
 use crate::bevy_app::pan_orbit::PanOrbitCameraBundle;
@@ -9,6 +12,8 @@ pub const CAMERA_3D_LAYER: usize = 0;
 pub const CAMERA_2D_LAYER: usize = 1;
 
 /// This module provides 3D camera basic functionally in Bevy.
+#[derive(Component)]
+pub struct UiCamera;
 
 /// Setup camera with pan-orbit controller
 pub fn setup_camera(
@@ -27,20 +32,27 @@ pub fn setup_camera(
     commands.spawn((camera, RenderLayers::from_layers(&[CAMERA_3D_LAYER])));
 
     commands.spawn((
-        Camera2d,
+        Camera3d::default(),
+        // use this camera as 2D
+        Projection::Orthographic(OrthographicProjection {
+            scaling_mode: ScalingMode::WindowSize,
+            // 1unit-10px
+            scale: 0.10,
+            ..OrthographicProjection::default_2d()
+        }),
         Camera {
             // clear color, use background
             clear_color: ClearColorConfig::None,
             order: 1,
-            // set the viewport to a 256x256 square in the top left corner
             viewport: Some(Viewport {
-                physical_position: UVec2::new(0, 1),
-                physical_size: Vec2::new(96., 96.).as_uvec2(),
+                physical_position: UVec2::new(0, 0),
+                physical_size: UVec2::new(96, 96),
                 ..default()
             }),
             ..default()
         },
         RenderLayers::from_layers(&[CAMERA_2D_LAYER]),
+        UiCamera,
     ));
 
     Ok(())
