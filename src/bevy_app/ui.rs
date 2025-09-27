@@ -37,5 +37,17 @@ pub fn setup_ui(
         NavigationCube,
     ));
 
+    // Light for UI
+    commands.spawn((
+        PointLight {
+            intensity: 10_000_000.,
+            range: 100.0,
+            shadow_depth_bias: 0.2,
+            ..Default::default()
+        },
+        Transform::from_xyz(8.0, 16.0, 8.0),
+        RenderLayers::layer(CAMERA_2D_LAYER),
+    ));
+
     Ok(())
 }
