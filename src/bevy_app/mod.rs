@@ -41,7 +41,8 @@ pub fn init_bevy_app(logger: BevyEventSender<LoggingEvent>) -> App {
         (
             pan_orbit_camera.run_if(any_with_component::<PanOrbitOperation>),
             move_camera_with_request,
-        ),
+        )
+            .chain(),
     );
 
     app

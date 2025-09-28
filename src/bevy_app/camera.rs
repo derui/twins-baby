@@ -100,8 +100,12 @@ impl CameraMoveRequest {
         if self.expected.is_none() {
             match &self.operation {
                 CameraMoveOperation::ByOrbit(state) => {
+                    let expected_direction = transform
+                        .clone()
+                        .with_rotation(Quat::from_euler(EulerRot::YXZ, state.yaw, state.pitch, 0.0))
+                        .back();
                     self.expected = Some(CameraMoveExpectation {
-                        translation: Some(state.center + (state.radius * transform.back())),
+                        translation: Some(state.center + (state.radius * expected_direction)),
                         rotation: Some(Quat::from_euler(
                             EulerRot::YXZ,
                             state.yaw,
@@ -136,7 +140,7 @@ impl CameraMoveRequest {
         }
 
         if let Some(rotation) = self.expected.as_ref().unwrap().rotation {
-            transform.rotation = transform.rotation.slerp(rotation, lerped_time);
+            transform.rotation = transform.rotation.lerp(rotation, lerped_time);
         }
 
         if let Some(translation) = self.expected.as_ref().unwrap().translation {
@@ -212,14 +216,18 @@ pub fn move_camera_with_request(
 
         for mut transform in q_main_transform.iter_mut() {
             request.slerp_trasform(ease_in_out_cubic(t), &mut transform);
-            tracing::info!("transformed {:?}", transform)
+            tracing::info!(
+                "transformed {:?}, t={}, cubic={}",
+                transform,
+                t,
+                ease_in_out_cubic(t)
+            )
         }
 
         for mut transform in q_ui_transform.iter_mut() {
             request.slerp_trasform(ease_in_out_cubic(t), &mut transform);
             // fixed distance in UI
             transform.translation = transform.translation.normalize() * 3.0;
-            tracing::info!("transformed {:?}", transform)
         }
 
         if t >= 1.0 {

@@ -246,32 +246,21 @@ pub fn pan_orbit_camera(
             state.center += q_transform.single().unwrap().up() * total_pan.y * radius;
         }
 
-        if any && !state.is_added() {
+        if any || state.is_added() {
             logger.write(LoggingEvent::debug(&format!(
-                "motion: ({}, {}), scroll_lines: ({}, {}), scroll pixels: ({}, {})",
+                "motion: ({}, {}), scroll_lines: ({}, {}), scroll pixels: ({}, {}), {:?}, {:?}",
                 total_motion.x,
                 total_motion.y,
                 total_scroll_lines.x,
                 total_scroll_lines.y,
                 total_scroll_pixels.x,
-                total_scroll_pixels.y
+                total_scroll_pixels.y,
+                q_transform.single().unwrap().translation,
+                state
             )));
 
             commands.spawn(CameraMoveRequest::new(
                 CameraMoveOperation::ByOrbit(state.clone()),
-                CameraMoveDuration::Immediate,
-            ));
-        } else if state.is_added() {
-            state.center = Vec3::ZERO;
-            state.radius = 1.0;
-
-            commands.spawn(CameraMoveRequest::new(
-                CameraMoveOperation::BySystem {
-                    target: (Vec3::new(0.0, 0.0, 0.0)),
-                    position: Vec3::new(0.0, 0.0, -1.0),
-                    yaw: None,
-                    pitch: None,
-                },
                 CameraMoveDuration::Immediate,
             ));
         }
