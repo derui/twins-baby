@@ -8,7 +8,7 @@ use bevy::{
         component::Component,
         error::BevyError,
         event::{EventReader, EventWriter},
-        system::{Query, Res},
+        system::{Commands, Query, Res},
     },
     input::{
         ButtonInput,
@@ -19,27 +19,42 @@ use bevy::{
     transform::components::Transform,
 };
 
-use crate::events::LoggingEvent;
+use crate::{
+    bevy_app::camera::{
+        CameraMoveDuration, CameraMoveOperation, CameraMoveRequest, CameraPosition,
+    },
+    events::LoggingEvent,
+};
 
 /// This module provides component and system for pan-orbit controller for App.
 /// based on https://bevy-cheatbook.github.io/cookbook/pan-orbit-camera.html
 
-/// Bundre to spawn custom camera with pan-orbit controller.
+/// Bundre to spawn pan-orbit controller.
 #[derive(Bundle, Default)]
 pub struct PanOrbitCameraBundle {
-    pub camera: Camera3d,
     pub state: PanOrbitState,
     pub settings: PanOrbitSettings,
 }
 
 /// Internal state of the pan-orbit controller
-#[derive(Component)]
+#[derive(Component, Clone)]
 pub struct PanOrbitState {
     pub center: Vec3,
     pub radius: f32,
     pub upside_down: bool,
     pub pitch: f32,
     pub yaw: f32,
+}
+
+impl Into<CameraPosition> for PanOrbitState {
+    fn into(self) -> CameraPosition {
+        CameraPosition {
+            center: self.center,
+            radius: self.radius,
+            pitch: self.pitch,
+            yaw: self.yaw,
+        }
+    }
 }
 
 #[derive(Component)]
@@ -117,12 +132,27 @@ impl Default for PanOrbitSettings {
     }
 }
 
+/// Setup a pan-orbit controller
+pub fn setup_pan_orbit(mut commands: Commands) -> Result<(), BevyError> {
+    let mut pan_orbit = PanOrbitCameraBundle::default();
+
+    pan_orbit.state.center = Vec3::new(1.0, 2.0, 3.0);
+    pan_orbit.state.radius = 50.0;
+    pan_orbit.state.pitch = 15.0f32.to_radians();
+    pan_orbit.state.yaw = 30.0f32.to_radians();
+
+    commands.spawn(pan_orbit);
+
+    Ok(())
+}
+
 pub fn pan_orbit_camera(
+    mut commands: Commands,
     kbd: Res<ButtonInput<KeyCode>>,
     mouse: Res<ButtonInput<MouseButton>>,
     mut evr_motion: EventReader<MouseMotion>,
     mut evr_scroll: EventReader<MouseWheel>,
-    mut q_camere: Query<(&PanOrbitSettings, &mut PanOrbitState, &mut Transform)>,
+    mut q_camere: Query<(&PanOrbitSettings, &mut PanOrbitState)>,
     mut logger: EventWriter<LoggingEvent>,
 ) -> Result<(), BevyError> {
     let mut total_motion: Vec2 = evr_motion.read().map(|ev| ev.delta).sum();
@@ -145,7 +175,7 @@ pub fn pan_orbit_camera(
         }
     }
 
-    for (settings, mut state, mut transform) in &mut q_camere {
+    for (settings, mut state) in &mut q_camere {
         // Helper function to check if input method is active
         let is_input_active = |input_method: Option<InputMethod>| -> bool {
             match input_method {
@@ -210,45 +240,35 @@ pub fn pan_orbit_camera(
             total_orbit.x = -total_orbit.x;
         }
 
+        let operation = CameraMoveOperation::Relative {
+            pan: if total_pan != Vec2::ZERO {
+                Some(total_pan)
+            } else {
+                None
+            },
+            yaw: if total_orbit != Vec2::ZERO {
+                Some(total_orbit.x)
+            } else {
+                None
+            },
+            pitch: if total_orbit != Vec2::ZERO {
+                Some(total_orbit.y)
+            } else {
+                None
+            },
+            zoom: if total_zoom != Vec2::ZERO {
+                Some(-total_zoom.y)
+            } else {
+                None
+            },
+        };
+
         let mut any = false;
-        if total_zoom != Vec2::ZERO {
-            any = true;
+        any = any || total_zoom != Vec2::ZERO;
+        any = any || total_orbit != Vec2::ZERO;
+        any = any || total_pan != Vec2::ZERO;
 
-            // in order for zoom to feel intuitive, everything needs to be exponential
-            state.radius *= (-total_zoom.y).exp();
-        }
-
-        if total_orbit != Vec2::ZERO {
-            any = true;
-
-            state.yaw += total_orbit.x;
-            state.pitch += total_orbit.y;
-
-            // yaw/pitch wrap around to stay between +-180 degrees
-            if state.yaw > PI {
-                // 2 * PI
-                state.yaw -= TAU;
-            }
-            if state.yaw < -PI {
-                state.yaw += TAU;
-            }
-            if state.pitch > PI {
-                // 2 * PI
-                state.pitch -= TAU;
-            }
-            if state.pitch < -PI {
-                state.pitch += TAU;
-            }
-        }
-
-        if total_pan != Vec2::ZERO {
-            any = true;
-            let radius = state.radius;
-            state.center += transform.right() * total_pan.x * radius;
-            state.center += transform.up() * total_pan.y * radius;
-        }
-
-        if any || state.is_added() {
+        if any && !state.is_added() {
             logger.write(LoggingEvent::debug(&format!(
                 "motion: ({}, {}), scroll_lines: ({}, {}), scroll pixels: ({}, {})",
                 total_motion.x,
@@ -259,10 +279,24 @@ pub fn pan_orbit_camera(
                 total_scroll_pixels.y
             )));
 
-            // rotation performs yaw/pitch/roll via quatanion.
-            transform.rotation = Quat::from_euler(EulerRot::YXZ, state.yaw, state.pitch, 0.0);
-            // using back direction vector to stay the camera at the desired radius from the center
-            transform.translation = state.center + transform.back() * state.radius;
+            commands.spawn(CameraMoveRequest::new(
+                operation,
+                CameraMoveDuration::Immediate,
+            ));
+
+            // // rotation performs yaw/pitch/roll via quatanion.
+            // transform.rotation = Quat::from_euler(EulerRot::YXZ, state.yaw, state.pitch, 0.0);
+            // // using back direction vector to stay the camera at the desired radius from the center
+            // transform.translation = state.center + transform.back() * state.radius;
+        } else if state.is_added() {
+            commands.spawn(CameraMoveRequest::new(
+                CameraMoveOperation::Absolute {
+                    center: Some(Vec3::new(1.0, 1.0, 1.0)),
+                    yaw: None,
+                    pitch: None,
+                },
+                CameraMoveDuration::Immediate,
+            ));
         }
     }
 

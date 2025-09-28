@@ -9,8 +9,8 @@ use leptos_bevy_canvas::prelude::{BevyEventSender, LeptosBevyApp};
 
 use crate::{
     bevy_app::{
-        camera::setup_camera,
-        pan_orbit::{PanOrbitState, pan_orbit_camera},
+        camera::{move_camera_with_request, setup_camera},
+        pan_orbit::{PanOrbitState, pan_orbit_camera, setup_pan_orbit},
         setup::setup_scene,
         ui::setup_ui,
     },
@@ -32,10 +32,16 @@ pub fn init_bevy_app(logger: BevyEventSender<LoggingEvent>) -> App {
         MeshPickingPlugin,
     ))
     .export_event_to_leptos(logger)
-    .add_systems(Startup, (setup_scene, setup_camera, setup_ui))
+    .add_systems(
+        Startup,
+        (setup_scene, setup_camera, setup_ui, setup_pan_orbit),
+    )
     .add_systems(
         Update,
-        pan_orbit_camera.run_if(any_with_component::<PanOrbitState>),
+        (
+            pan_orbit_camera.run_if(any_with_component::<PanOrbitState>),
+            move_camera_with_request,
+        ),
     );
 
     app
