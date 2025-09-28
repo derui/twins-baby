@@ -8,6 +8,7 @@ use bevy::{
         component::Component,
         error::BevyError,
         event::{EventReader, EventWriter},
+        query::With,
         system::{Commands, Query, Res},
     },
     input::{
@@ -21,7 +22,7 @@ use bevy::{
 
 use crate::{
     bevy_app::camera::{
-        CameraMoveDuration, CameraMoveOperation, CameraMoveRequest, CameraPosition,
+        CameraMoveDuration, CameraMoveOperation, CameraMoveRequest, MainCamera, PanOrbitOperation,
     },
     events::LoggingEvent,
 };
@@ -32,29 +33,8 @@ use crate::{
 /// Bundre to spawn pan-orbit controller.
 #[derive(Bundle, Default)]
 pub struct PanOrbitCameraBundle {
-    pub state: PanOrbitState,
+    pub state: PanOrbitOperation,
     pub settings: PanOrbitSettings,
-}
-
-/// Internal state of the pan-orbit controller
-#[derive(Component, Clone)]
-pub struct PanOrbitState {
-    pub center: Vec3,
-    pub radius: f32,
-    pub upside_down: bool,
-    pub pitch: f32,
-    pub yaw: f32,
-}
-
-impl Into<CameraPosition> for PanOrbitState {
-    fn into(self) -> CameraPosition {
-        CameraPosition {
-            center: self.center,
-            radius: self.radius,
-            pitch: self.pitch,
-            yaw: self.yaw,
-        }
-    }
 }
 
 #[derive(Component)]
@@ -102,18 +82,6 @@ pub enum InputMethod {
     Scroll,
 }
 
-impl Default for PanOrbitState {
-    fn default() -> Self {
-        Self {
-            center: Vec3::ZERO,
-            radius: 1.0,
-            upside_down: false,
-            pitch: 0.0,
-            yaw: 0.0,
-        }
-    }
-}
-
 impl Default for PanOrbitSettings {
     fn default() -> Self {
         Self {
@@ -152,7 +120,8 @@ pub fn pan_orbit_camera(
     mouse: Res<ButtonInput<MouseButton>>,
     mut evr_motion: EventReader<MouseMotion>,
     mut evr_scroll: EventReader<MouseWheel>,
-    mut q_camere: Query<(&PanOrbitSettings, &mut PanOrbitState)>,
+    mut q_camere: Query<(&PanOrbitSettings, &mut PanOrbitOperation)>,
+    q_transform: Query<&Transform, With<MainCamera>>,
     mut logger: EventWriter<LoggingEvent>,
 ) -> Result<(), BevyError> {
     let mut total_motion: Vec2 = evr_motion.read().map(|ev| ev.delta).sum();
@@ -240,35 +209,45 @@ pub fn pan_orbit_camera(
             total_orbit.x = -total_orbit.x;
         }
 
-        let operation = CameraMoveOperation::Relative {
-            pan: if total_pan != Vec2::ZERO {
-                Some(total_pan)
-            } else {
-                None
-            },
-            yaw: if total_orbit != Vec2::ZERO {
-                Some(total_orbit.x)
-            } else {
-                None
-            },
-            pitch: if total_orbit != Vec2::ZERO {
-                Some(total_orbit.y)
-            } else {
-                None
-            },
-            zoom: if total_zoom != Vec2::ZERO {
-                Some(-total_zoom.y)
-            } else {
-                None
-            },
-        };
-
         let mut any = false;
-        any = any || total_zoom != Vec2::ZERO;
-        any = any || total_orbit != Vec2::ZERO;
-        any = any || total_pan != Vec2::ZERO;
+        if total_zoom != Vec2::ZERO {
+            any = true;
 
-        if any && !state.is_added() {
+            // in order for zoom to feel intuitive, everything needs to be exponential
+            state.radius *= (-total_zoom.y).exp();
+        }
+
+        if total_orbit != Vec2::ZERO {
+            any = true;
+
+            state.yaw += total_orbit.x;
+            state.pitch += total_orbit.y;
+
+            // yaw/pitch wrap around to stay between +-180 degrees
+            if state.yaw > PI {
+                // 2 * PI
+                state.yaw -= TAU;
+            }
+            if state.yaw < -PI {
+                state.yaw += TAU;
+            }
+            if state.pitch > PI {
+                // 2 * PI
+                state.pitch -= TAU;
+            }
+            if state.pitch < -PI {
+                state.pitch += TAU;
+            }
+        }
+
+        if total_pan != Vec2::ZERO {
+            any = true;
+            let radius = state.radius;
+            state.center += q_transform.single().unwrap().right() * total_pan.x * radius;
+            state.center += q_transform.single().unwrap().up() * total_pan.y * radius;
+        }
+
+        if any || state.is_added() {
             logger.write(LoggingEvent::debug(&format!(
                 "motion: ({}, {}), scroll_lines: ({}, {}), scroll pixels: ({}, {})",
                 total_motion.x,
@@ -280,7 +259,7 @@ pub fn pan_orbit_camera(
             )));
 
             commands.spawn(CameraMoveRequest::new(
-                operation,
+                CameraMoveOperation::ByOrbit(state.clone()),
                 CameraMoveDuration::Immediate,
             ));
 
@@ -290,8 +269,9 @@ pub fn pan_orbit_camera(
             // transform.translation = state.center + transform.back() * state.radius;
         } else if state.is_added() {
             commands.spawn(CameraMoveRequest::new(
-                CameraMoveOperation::Absolute {
-                    center: Some(Vec3::new(1.0, 1.0, 1.0)),
+                CameraMoveOperation::BySystem {
+                    target: (Vec3::new(0.0, 0.0, 0.0)),
+                    position: Vec3::new(1.0, 1.0, 1.0),
                     yaw: None,
                     pitch: None,
                 },

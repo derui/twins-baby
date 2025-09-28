@@ -9,7 +9,7 @@ use bevy::{
     },
 };
 
-use crate::bevy_app::pan_orbit::{PanOrbitCameraBundle, PanOrbitState};
+use crate::bevy_app::pan_orbit::PanOrbitCameraBundle;
 
 pub const CAMERA_3D_LAYER: usize = 0;
 pub const CAMERA_2D_LAYER: usize = 1;
@@ -21,29 +21,38 @@ pub struct UiCamera;
 #[derive(Component)]
 pub struct MainCamera;
 
-// structure of camera position
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct CameraPosition {
+/// Internal state for the pan-orbit operation
+#[derive(Component, Clone, PartialEq, Debug)]
+pub struct PanOrbitOperation {
     pub center: Vec3,
     pub radius: f32,
+    pub upside_down: bool,
     pub pitch: f32,
     pub yaw: f32,
 }
 
-/// Request to move camera to a new position
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum CameraMoveOperation {
-    /// Do operation relatively to current position
-    Relative {
-        pan: Option<Vec2>,
-        pitch: Option<f32>,
-        yaw: Option<f32>,
-        zoom: Option<f32>,
-    },
+impl Default for PanOrbitOperation {
+    fn default() -> Self {
+        Self {
+            center: Vec3::ZERO,
+            radius: 1.0,
+            upside_down: false,
+            pitch: 0.0,
+            yaw: 0.0,
+        }
+    }
+}
 
-    /// Do operation absolutely to current position
-    Absolute {
-        center: Option<Vec3>,
+/// Request to move camera to a new position
+#[derive(Debug, Clone, PartialEq)]
+pub enum CameraMoveOperation {
+    /// Do operation by orbit,
+    ByOrbit(PanOrbitOperation),
+
+    /// Do operation by system. This operation requires absolute position of camera.
+    BySystem {
+        target: Vec3,
+        position: Vec3,
         pitch: Option<f32>,
         yaw: Option<f32>,
     },
@@ -91,73 +100,35 @@ impl CameraMoveRequest {
     /// * `transform` - The current transform of the camera to be modified.
     fn slerp_trasform(&mut self, lerped_time: f32, transform: &mut Transform) {
         if let None = self.expected {
-            match self.operation {
-                CameraMoveOperation::Relative {
-                    pan,
-                    pitch,
-                    yaw,
-                    zoom,
-                } => {
-                    let (mut current_yaw, mut current_pitch, _) =
-                        transform.rotation.to_euler(EulerRot::YXZ);
-                    current_yaw += yaw.unwrap_or(0.0);
-                    current_pitch += pitch.unwrap_or(0.0);
-
-                    // yaw/pitch wrap around to stay between +-180 degrees
-                    if current_yaw > PI {
-                        // 2 * PI
-                        current_yaw -= TAU;
-                    }
-                    if current_yaw < -PI {
-                        current_yaw += TAU;
-                    }
-                    if current_pitch > PI {
-                        // 2 * PI
-                        current_pitch -= TAU;
-                    }
-                    if current_pitch < -PI {
-                        current_pitch += TAU;
-                    }
-
-                    let diff_radius = zoom
-                        .map(|r| {
-                            if r < 0.0 {
-                                -1.0 * r.abs().exp()
-                            } else {
-                                r.exp()
-                            }
-                        })
-                        .unwrap_or(0.0);
-
-                    let radius = transform.translation.length() * zoom.unwrap_or(1.0);
-
-                    let mut center = transform.translation.clone();
-                    let pan = pan.unwrap_or(Vec2::ZERO);
-                    center += pan.x * radius * transform.right();
-                    center += pan.y * radius * transform.up();
-
+            match &self.operation {
+                CameraMoveOperation::ByOrbit(state) => {
                     self.expected = Some(CameraMoveExpectation {
-                        translation: Some(center + diff_radius * transform.back()),
+                        translation: Some(state.center + (state.radius * transform.back())),
                         rotation: Some(Quat::from_euler(
                             EulerRot::YXZ,
-                            current_yaw,
-                            current_pitch,
+                            state.yaw,
+                            state.pitch,
                             0.0,
                         )),
                     });
                 }
-                CameraMoveOperation::Absolute { center, pitch, yaw } => {
+                CameraMoveOperation::BySystem {
+                    target,
+                    position,
+                    pitch,
+                    yaw,
+                } => {
                     self.expected = Some(CameraMoveExpectation {
-                        translation: center,
+                        translation: Some(target + position),
                         rotation: match (pitch, yaw) {
                             (Some(pitch), Some(yaw)) => {
-                                Some(Quat::from_euler(EulerRot::YXZ, yaw, pitch, 0.0))
+                                Some(Quat::from_euler(EulerRot::YXZ, *yaw, *pitch, 0.0))
                             }
                             (None, Some(yaw)) => {
-                                Some(Quat::from_euler(EulerRot::YXZ, yaw, 0.0, 0.0))
+                                Some(Quat::from_euler(EulerRot::YXZ, *yaw, 0.0, 0.0))
                             }
                             (Some(pitch), None) => {
-                                Some(Quat::from_euler(EulerRot::YXZ, 0.0, pitch, 0.0))
+                                Some(Quat::from_euler(EulerRot::YXZ, 0.0, *pitch, 0.0))
                             }
                             (None, None) => None,
                         },
@@ -218,7 +189,7 @@ pub fn move_camera_with_request(
     time: Res<Time>,
     mut commands: Commands,
     mut q_request: Query<(Entity, &mut CameraMoveRequest)>,
-    mut q_main_transform: Query<&mut Transform, (With<MainCamera>, Without<UiCamera>)>,
+    mut q_main_transform: Query<&mut Transform, With<MainCamera>>,
 ) -> Result<(), BevyError> {
     for (entity, mut request) in q_request.iter_mut() {
         request.elapsed += time.delta_secs();

@@ -9,8 +9,8 @@ use leptos_bevy_canvas::prelude::{BevyEventSender, LeptosBevyApp};
 
 use crate::{
     bevy_app::{
-        camera::{move_camera_with_request, setup_camera},
-        pan_orbit::{PanOrbitState, pan_orbit_camera, setup_pan_orbit},
+        camera::{PanOrbitOperation, move_camera_with_request, setup_camera},
+        pan_orbit::{pan_orbit_camera, setup_pan_orbit},
         setup::setup_scene,
         ui::setup_ui,
     },
@@ -39,7 +39,7 @@ pub fn init_bevy_app(logger: BevyEventSender<LoggingEvent>) -> App {
     .add_systems(
         Update,
         (
-            pan_orbit_camera.run_if(any_with_component::<PanOrbitState>),
+            pan_orbit_camera.run_if(any_with_component::<PanOrbitOperation>),
             move_camera_with_request,
         ),
     );
