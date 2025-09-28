@@ -16,12 +16,7 @@ pub const CAMERA_2D_LAYER: usize = 1;
 pub struct UiCamera;
 
 /// Setup camera with pan-orbit controller
-pub fn setup_camera(
-    mut commands: Commands,
-    mut _meshes: ResMut<Assets<Mesh>>,
-    mut _materials: ResMut<Assets<StandardMaterial>>,
-    _asset_server: Res<AssetServer>,
-) -> Result<(), BevyError> {
+pub fn setup_camera(mut commands: Commands, window: Query<&Window>) -> Result<(), BevyError> {
     let mut camera = PanOrbitCameraBundle::default();
 
     camera.state.center = Vec3::new(1.0, 2.0, 3.0);
@@ -30,6 +25,8 @@ pub fn setup_camera(
     camera.state.yaw = 30.0f32.to_radians();
 
     commands.spawn((camera, RenderLayers::from_layers(&[CAMERA_3D_LAYER])));
+
+    let window = window.single().unwrap();
 
     commands.spawn((
         Camera3d::default(),
@@ -45,7 +42,7 @@ pub fn setup_camera(
             clear_color: ClearColorConfig::None,
             order: 1,
             viewport: Some(Viewport {
-                physical_position: UVec2::new(0, 0),
+                physical_position: UVec2::new(0, window.physical_width() - 96),
                 physical_size: UVec2::new(96, 96),
                 ..default()
             }),
