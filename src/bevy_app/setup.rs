@@ -9,14 +9,11 @@ use bevy::{
     },
     math::{Vec3, primitives::Cuboid},
     pbr::{MeshMaterial3d, PointLight, StandardMaterial},
-    render::{
-        mesh::{Mesh, Mesh3d},
-        render_resource::Face,
-    },
+    render::mesh::{Mesh, Mesh3d},
     transform::components::Transform,
 };
 
-use crate::bevy_app::camera::{CAMERA_2D_LAYER, CAMERA_3D_LAYER};
+use crate::bevy_app::camera::CAMERA_3D_LAYER;
 
 const COBE_SCALE: f32 = 3.0;
 

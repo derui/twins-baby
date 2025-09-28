@@ -1,7 +1,6 @@
 use std::f32::consts::{FRAC_PI_2, PI, TAU};
 
 use bevy::{
-    core_pipeline::core_3d::Camera3d,
     ecs::{
         bundle::Bundle,
         change_detection::DetectChanges,
@@ -16,7 +15,7 @@ use bevy::{
         keyboard::KeyCode,
         mouse::{MouseButton, MouseMotion, MouseScrollUnit, MouseWheel},
     },
-    math::{EulerRot, Quat, Vec2, Vec3},
+    math::{Vec2, Vec3},
     transform::components::Transform,
 };
 

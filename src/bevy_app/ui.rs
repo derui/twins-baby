@@ -1,4 +1,3 @@
-use bevy::color::palettes::css::PINK;
 use bevy::color::palettes::tailwind::PINK_500;
 use bevy::prelude::*;
 use bevy::render::view::RenderLayers;

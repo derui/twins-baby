@@ -1,5 +1,3 @@
-use std::f32::consts::{self, PI, TAU};
-
 use bevy::{
     log::tracing,
     prelude::*,
@@ -8,8 +6,6 @@ use bevy::{
         view::RenderLayers,
     },
 };
-
-use crate::bevy_app::pan_orbit::PanOrbitCameraBundle;
 
 pub const CAMERA_3D_LAYER: usize = 0;
 pub const CAMERA_2D_LAYER: usize = 1;
@@ -99,7 +95,7 @@ impl CameraMoveRequest {
     /// * `lerped_time` - A value between 0.0 and 1.0 representing the interpolation factor.
     /// * `transform` - The current transform of the camera to be modified.
     fn slerp_trasform(&mut self, lerped_time: f32, transform: &mut Transform) {
-        if let None = self.expected {
+        if self.expected.is_none() {
             match &self.operation {
                 CameraMoveOperation::ByOrbit(state) => {
                     self.expected = Some(CameraMoveExpectation {
@@ -198,7 +194,7 @@ pub fn move_camera_with_request(
             CameraMoveDuration::Duration(duration) => (request.elapsed / duration).min(1.0),
         };
 
-        for (mut transform) in q_main_transform.iter_mut() {
+        for mut transform in q_main_transform.iter_mut() {
             request.slerp_trasform(ease_in_out_cubic(t), &mut transform);
             tracing::info!("transformed {:?}", transform)
         }
