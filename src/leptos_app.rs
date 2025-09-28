@@ -43,6 +43,10 @@ pub fn LogConsole(log_receiver: LeptosEventReceiver<LoggingEvent>) -> impl IntoV
         if let Some(log) = log_receiver.get() {
             set_events.update(|events| {
                 events.push(log);
+
+                if events.len() >= 100 {
+                    events.remove(0);
+                }
             });
         }
     });

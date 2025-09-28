@@ -1,8 +1,10 @@
 use bevy::{
     log::tracing,
+    platform::collections::HashSet,
     prelude::*,
     render::{
         camera::{ScalingMode, Viewport},
+        render_resource::AsBindGroupShaderType,
         view::RenderLayers,
     },
 };
@@ -186,8 +188,22 @@ pub fn move_camera_with_request(
     mut commands: Commands,
     mut q_request: Query<(Entity, &mut CameraMoveRequest)>,
     mut q_main_transform: Query<&mut Transform, With<MainCamera>>,
+    mut q_ui_transform: Query<&mut Transform, (With<UiCamera>, Without<MainCamera>)>,
 ) -> Result<(), BevyError> {
+    let len = q_request.iter().len();
+    let mut removed = HashSet::<Entity>::new();
+    if len > 1 {
+        for (entity, _) in q_request.iter_mut().take(len - 1) {
+            commands.entity(entity).remove::<CameraMoveRequest>();
+            removed.insert(entity);
+        }
+    }
+
     for (entity, mut request) in q_request.iter_mut() {
+        if removed.contains(&entity) {
+            continue;
+        }
+
         request.elapsed += time.delta_secs();
         let t = match request.duration {
             CameraMoveDuration::Immediate => 1.0,
@@ -196,6 +212,13 @@ pub fn move_camera_with_request(
 
         for mut transform in q_main_transform.iter_mut() {
             request.slerp_trasform(ease_in_out_cubic(t), &mut transform);
+            tracing::info!("transformed {:?}", transform)
+        }
+
+        for mut transform in q_ui_transform.iter_mut() {
+            request.slerp_trasform(ease_in_out_cubic(t), &mut transform);
+            // fixed distance in UI
+            transform.translation = transform.translation.normalize() * 3.0;
             tracing::info!("transformed {:?}", transform)
         }
 

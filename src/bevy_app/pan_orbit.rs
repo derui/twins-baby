@@ -246,7 +246,7 @@ pub fn pan_orbit_camera(
             state.center += q_transform.single().unwrap().up() * total_pan.y * radius;
         }
 
-        if any || state.is_added() {
+        if any && !state.is_added() {
             logger.write(LoggingEvent::debug(&format!(
                 "motion: ({}, {}), scroll_lines: ({}, {}), scroll pixels: ({}, {})",
                 total_motion.x,
@@ -261,16 +261,14 @@ pub fn pan_orbit_camera(
                 CameraMoveOperation::ByOrbit(state.clone()),
                 CameraMoveDuration::Immediate,
             ));
-
-            // // rotation performs yaw/pitch/roll via quatanion.
-            // transform.rotation = Quat::from_euler(EulerRot::YXZ, state.yaw, state.pitch, 0.0);
-            // // using back direction vector to stay the camera at the desired radius from the center
-            // transform.translation = state.center + transform.back() * state.radius;
         } else if state.is_added() {
+            state.center = Vec3::ZERO;
+            state.radius = 1.0;
+
             commands.spawn(CameraMoveRequest::new(
                 CameraMoveOperation::BySystem {
                     target: (Vec3::new(0.0, 0.0, 0.0)),
-                    position: Vec3::new(1.0, 1.0, 1.0),
+                    position: Vec3::new(0.0, 0.0, -1.0),
                     yaw: None,
                     pitch: None,
                 },
