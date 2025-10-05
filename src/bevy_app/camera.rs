@@ -67,6 +67,8 @@ pub enum CameraMoveDuration {
 struct CameraMoveExpectation {
     translation: Option<Vec3>,
     rotation: Option<Quat>,
+    ui_translation: Option<Vec3>,
+    ui_rotation: Option<Quat>,
 }
 
 #[derive(Component, Debug)]
@@ -96,7 +98,7 @@ impl CameraMoveRequest {
     /// # Arguments
     /// * `lerped_time` - A value between 0.0 and 1.0 representing the interpolation factor.
     /// * `transform` - The current transform of the camera to be modified.
-    fn slerp_trasform(&mut self, lerped_time: f32, transform: &mut Transform) {
+    fn slerp_trasform(&mut self, lerped_time: f32, transform: &mut Transform, ui: bool) {
         if self.expected.is_none() {
             match &self.operation {
                 CameraMoveOperation::ByOrbit(state) => {
@@ -112,6 +114,13 @@ impl CameraMoveRequest {
                             state.pitch,
                             0.0,
                         )),
+                        ui_translation: Some((state.radius * expected_direction)),
+                        ui_rotation: Some(Quat::from_euler(
+                            EulerRot::YXZ,
+                            state.yaw,
+                            state.pitch,
+                            0.0,
+                        )),
                     });
                 }
                 CameraMoveOperation::BySystem {
@@ -120,31 +129,42 @@ impl CameraMoveRequest {
                     pitch,
                     yaw,
                 } => {
+                    let rotation = match (pitch, yaw) {
+                        (Some(pitch), Some(yaw)) => {
+                            Some(Quat::from_euler(EulerRot::YXZ, *yaw, *pitch, 0.0))
+                        }
+                        (None, Some(yaw)) => Some(Quat::from_euler(EulerRot::YXZ, *yaw, 0.0, 0.0)),
+                        (Some(pitch), None) => {
+                            Some(Quat::from_euler(EulerRot::YXZ, 0.0, *pitch, 0.0))
+                        }
+                        (None, None) => None,
+                    };
                     self.expected = Some(CameraMoveExpectation {
                         translation: Some(target + position),
-                        rotation: match (pitch, yaw) {
-                            (Some(pitch), Some(yaw)) => {
-                                Some(Quat::from_euler(EulerRot::YXZ, *yaw, *pitch, 0.0))
-                            }
-                            (None, Some(yaw)) => {
-                                Some(Quat::from_euler(EulerRot::YXZ, *yaw, 0.0, 0.0))
-                            }
-                            (Some(pitch), None) => {
-                                Some(Quat::from_euler(EulerRot::YXZ, 0.0, *pitch, 0.0))
-                            }
-                            (None, None) => None,
-                        },
+                        rotation: rotation.clone(),
+                        ui_translation: Some(*position),
+                        ui_rotation: rotation.clone(),
                     });
                 }
             }
         }
 
-        if let Some(rotation) = self.expected.as_ref().unwrap().rotation {
-            transform.rotation = transform.rotation.lerp(rotation, lerped_time);
-        }
+        if (!ui) {
+            if let Some(rotation) = self.expected.as_ref().unwrap().rotation {
+                transform.rotation = transform.rotation.lerp(rotation, lerped_time);
+            }
 
-        if let Some(translation) = self.expected.as_ref().unwrap().translation {
-            transform.translation = transform.translation.lerp(translation, lerped_time);
+            if let Some(translation) = self.expected.as_ref().unwrap().translation {
+                transform.translation = transform.translation.lerp(translation, lerped_time);
+            }
+        } else {
+            if let Some(rotation) = self.expected.as_ref().unwrap().ui_rotation {
+                transform.rotation = transform.rotation.lerp(rotation, lerped_time);
+            }
+
+            if let Some(translation) = self.expected.as_ref().unwrap().ui_translation {
+                transform.translation = transform.translation.lerp(translation, lerped_time);
+            }
         }
     }
 }
@@ -158,6 +178,7 @@ pub fn setup_camera(mut commands: Commands, window: Query<&Window>) -> Result<()
     ));
 
     let window = window.single().unwrap();
+    let right = window.resolution.physical_width() - 96;
 
     commands.spawn((
         Camera3d::default(),
@@ -173,7 +194,7 @@ pub fn setup_camera(mut commands: Commands, window: Query<&Window>) -> Result<()
             clear_color: ClearColorConfig::None,
             order: 1,
             viewport: Some(Viewport {
-                physical_position: UVec2::new(0, 0),
+                physical_position: UVec2::new(right, 0),
                 physical_size: UVec2::new(96, 96),
                 ..default()
             }),
@@ -215,7 +236,7 @@ pub fn move_camera_with_request(
         };
 
         for mut transform in q_main_transform.iter_mut() {
-            request.slerp_trasform(ease_in_out_cubic(t), &mut transform);
+            request.slerp_trasform(ease_in_out_cubic(t), &mut transform, false);
             tracing::info!(
                 "transformed {:?}, t={}, cubic={}",
                 transform,
@@ -225,9 +246,9 @@ pub fn move_camera_with_request(
         }
 
         for mut transform in q_ui_transform.iter_mut() {
-            request.slerp_trasform(ease_in_out_cubic(t), &mut transform);
+            request.slerp_trasform(ease_in_out_cubic(t), &mut transform, true);
             // fixed distance in UI
-            transform.translation = transform.translation.normalize() * 3.0;
+            transform.translation = transform.translation.normalize() * 4.0;
         }
 
         if t >= 1.0 {
@@ -244,5 +265,62 @@ fn ease_in_out_cubic(t: f32) -> f32 {
     } else {
         let f = 2.0 * t - 2.0;
         1.0 + f * f * f / 2.0
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::hint::assert_unchecked;
+
+    use bevy::window::WindowResolution;
+
+    use super::*;
+
+    #[test]
+    fn did_setup_cameres() {
+        // arrange
+        let mut app = App::new();
+
+        app.world_mut().spawn(Window {
+            resolution: WindowResolution::new(800.0, 600.0),
+            ..default()
+        });
+        app.add_systems(Startup, setup_camera);
+
+        // act
+        app.update();
+
+        // assert
+        assert!(
+            app.world_mut()
+                .query::<&MainCamera>()
+                .single(app.world())
+                .is_ok()
+        );
+        assert!(
+            app.world_mut()
+                .query::<&UiCamera>()
+                .single(app.world())
+                .is_ok()
+        );
+        let (camera, _) = app
+            .world_mut()
+            .query::<(&Camera, &UiCamera)>()
+            .single(app.world())
+            .unwrap();
+
+        assert_eq!(camera.order, 1);
+        assert!(match camera.clear_color {
+            ClearColorConfig::None => true,
+            _ => false,
+        });
+        assert!(matches!(
+            camera.viewport,
+            Some(Viewport {
+                physical_position: UVec2 { x: 704, y: 0 },
+                physical_size: UVec2 { x: 96, y: 96 },
+                ..
+            })
+        ));
     }
 }
