@@ -4,7 +4,6 @@ use bevy::{
     prelude::*,
     render::{
         camera::{ScalingMode, Viewport},
-        render_resource::AsBindGroupShaderType,
         view::RenderLayers,
     },
 };
@@ -102,8 +101,7 @@ impl CameraMoveRequest {
         if self.expected.is_none() {
             match &self.operation {
                 CameraMoveOperation::ByOrbit(state) => {
-                    let expected_direction = transform
-                        .clone()
+                    let expected_direction = (*transform)
                         .with_rotation(Quat::from_euler(EulerRot::YXZ, state.yaw, state.pitch, 0.0))
                         .back();
                     self.expected = Some(CameraMoveExpectation {
@@ -114,7 +112,7 @@ impl CameraMoveRequest {
                             state.pitch,
                             0.0,
                         )),
-                        ui_translation: Some((state.radius * expected_direction)),
+                        ui_translation: Some(state.radius * expected_direction),
                         ui_rotation: Some(Quat::from_euler(
                             EulerRot::YXZ,
                             state.yaw,
@@ -141,15 +139,15 @@ impl CameraMoveRequest {
                     };
                     self.expected = Some(CameraMoveExpectation {
                         translation: Some(target + position),
-                        rotation: rotation.clone(),
+                        rotation: rotation,
                         ui_translation: Some(*position),
-                        ui_rotation: rotation.clone(),
+                        ui_rotation: rotation,
                     });
                 }
             }
         }
 
-        if (!ui) {
+        if !ui {
             if let Some(rotation) = self.expected.as_ref().unwrap().rotation {
                 transform.rotation = transform.rotation.lerp(rotation, lerped_time);
             }
@@ -270,8 +268,6 @@ fn ease_in_out_cubic(t: f32) -> f32 {
 
 #[cfg(test)]
 mod tests {
-    use std::hint::assert_unchecked;
-
     use bevy::window::WindowResolution;
 
     use super::*;
@@ -322,5 +318,120 @@ mod tests {
                 ..
             })
         ));
+    }
+
+    #[test]
+    fn move_camera_with_45_degree_pitch() {
+        // arrange
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins);
+
+        let main_camera = app
+            .world_mut()
+            .spawn((MainCamera, Transform::default()))
+            .id();
+        let ui_camera = app.world_mut().spawn((UiCamera, Transform::default())).id();
+
+        let operation = CameraMoveOperation::ByOrbit(PanOrbitOperation {
+            center: Vec3::ZERO,
+            radius: 5.0,
+            upside_down: false,
+            pitch: 45_f32.to_radians(),
+            yaw: 0.0,
+        });
+
+        app.world_mut().spawn(CameraMoveRequest::new(
+            operation,
+            CameraMoveDuration::Immediate,
+        ));
+
+        app.add_systems(Update, move_camera_with_request);
+
+        // act
+        app.update();
+
+        // assert
+        let main_transform = app.world().get::<Transform>(main_camera).unwrap();
+        let expected_rotation = Quat::from_euler(EulerRot::YXZ, 0.0, 45_f32.to_radians(), 0.0);
+
+        assert!(
+            (main_transform.rotation.x - expected_rotation.x).abs() < 0.001,
+            "rotation.x mismatch: got {}, expected {}",
+            main_transform.rotation.x,
+            expected_rotation.x
+        );
+        assert!(
+            (main_transform.rotation.y - expected_rotation.y).abs() < 0.001,
+            "rotation.y mismatch: got {}, expected {}",
+            main_transform.rotation.y,
+            expected_rotation.y
+        );
+
+        let ui_transform = app.world().get::<Transform>(ui_camera).unwrap();
+        assert!(
+            (ui_transform.rotation.x - expected_rotation.x).abs() < 0.001,
+            "UI rotation.x mismatch: got {}, expected {}",
+            ui_transform.rotation.x,
+            expected_rotation.x
+        );
+        assert!(
+            (ui_transform.rotation.y - expected_rotation.y).abs() < 0.001,
+            "UI rotation.y mismatch: got {}, expected {}",
+            ui_transform.rotation.y,
+            expected_rotation.y
+        );
+    }
+
+    #[test]
+    fn move_camera_by_vector() {
+        // arrange
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins);
+
+        let main_camera = app
+            .world_mut()
+            .spawn((MainCamera, Transform::default()))
+            .id();
+        let ui_camera = app.world_mut().spawn((UiCamera, Transform::default())).id();
+
+        let operation = CameraMoveOperation::BySystem {
+            target: Vec3::ZERO,
+            position: Vec3::new(3.0, 0.0, 0.0),
+            pitch: None,
+            yaw: None,
+        };
+
+        app.world_mut().spawn(CameraMoveRequest::new(
+            operation,
+            CameraMoveDuration::Immediate,
+        ));
+
+        app.add_systems(Update, move_camera_with_request);
+
+        // act
+        app.update();
+
+        // assert
+        let main_transform = app.world().get::<Transform>(main_camera).unwrap();
+        let expected_translation = Vec3::new(3.0, 0.0, 0.0);
+
+        assert!(
+            (main_transform.translation.x - expected_translation.x).abs() < 0.001,
+            "translation.x mismatch: got {}, expected {}",
+            main_transform.translation.x,
+            expected_translation.x
+        );
+        assert!(
+            (main_transform.translation.y - expected_translation.y).abs() < 0.001,
+            "translation.y mismatch: got {}, expected {}",
+            main_transform.translation.y,
+            expected_translation.y
+        );
+        assert!(
+            (main_transform.translation.z - expected_translation.z).abs() < 0.001,
+            "translation.z mismatch: got {}, expected {}",
+            main_transform.translation.z,
+            expected_translation.z
+        );
     }
 }
