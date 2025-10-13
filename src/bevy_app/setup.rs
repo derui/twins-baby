@@ -1,11 +1,11 @@
 use bevy::prelude::*;
 use bevy::render::view::RenderLayers;
 use bevy::{
-    asset::{AssetServer, Assets},
+    asset::Assets,
     color::{Color, palettes::tailwind::RED_500},
     ecs::{
         error::BevyError,
-        system::{Commands, Res, ResMut},
+        system::{Commands, ResMut},
     },
     math::{Vec3, primitives::Cuboid},
     pbr::{MeshMaterial3d, PointLight, StandardMaterial},
@@ -22,7 +22,6 @@ pub fn setup_scene(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    asset_server: Res<AssetServer>,
 ) -> Result<(), BevyError> {
     // Cube
     let cube = meshes.add(Cuboid::default());
