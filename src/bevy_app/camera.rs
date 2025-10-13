@@ -1,5 +1,4 @@
 use bevy::{
-    log::tracing,
     platform::collections::HashSet,
     prelude::*,
     render::{
@@ -139,7 +138,7 @@ impl CameraMoveRequest {
                     };
                     self.expected = Some(CameraMoveExpectation {
                         translation: Some(target + position),
-                        rotation: rotation,
+                        rotation,
                         ui_translation: Some(*position),
                         ui_rotation: rotation,
                     });
@@ -235,22 +234,16 @@ pub fn move_camera_with_request(
 
         for mut transform in q_main_transform.iter_mut() {
             request.slerp_trasform(ease_in_out_cubic(t), &mut transform, false);
-            tracing::info!(
-                "transformed {:?}, t={}, cubic={}",
-                transform,
-                t,
-                ease_in_out_cubic(t)
-            )
         }
 
         for mut transform in q_ui_transform.iter_mut() {
             request.slerp_trasform(ease_in_out_cubic(t), &mut transform, true);
             // fixed distance in UI
-            transform.translation = transform.translation.normalize() * 4.0;
+            transform.translation = transform.translation.normalize() * 1.;
         }
 
         if t >= 1.0 {
-            commands.entity(entity).remove::<CameraMoveRequest>();
+            commands.entity(entity).despawn();
         }
     }
 
