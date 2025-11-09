@@ -1,4 +1,4 @@
-use bevy::{log::tracing::span::Attributes, pbr::UvChannel, prelude::*};
+use bevy::{pbr::UvChannel, prelude::*};
 
 use crate::bevy_app::ui::components::NeedsTextureSetup;
 
@@ -31,12 +31,12 @@ impl TextureType {
     /// get texture path of the texture type
     pub fn texture_path(&self) -> String {
         let texture_path = match self {
-            TextureType::Top => "textures/navigation_cube/top_ja.png",
-            TextureType::Bottom => "textures/navigation_cube/bottom_ja.png",
-            TextureType::Left => "textures/navigation_cube/left_ja.png",
-            TextureType::Right => "textures/navigation_cube/right_ja.png",
-            TextureType::Front => "textures/navigation_cube/front_ja.png",
-            TextureType::Back => "textures/navigation_cube/back_ja.png",
+            TextureType::Top => "textures/navigation-cube/top_ja.png",
+            TextureType::Bottom => "textures/navigation-cube/bottom_ja.png",
+            TextureType::Left => "textures/navigation-cube/left_ja.png",
+            TextureType::Right => "textures/navigation-cube/right_ja.png",
+            TextureType::Front => "textures/navigation-cube/front_ja.png",
+            TextureType::Back => "textures/navigation-cube/back_ja.png",
         };
 
         texture_path.to_string()
@@ -147,27 +147,70 @@ mod tests {
     fn test_texture_path() {
         assert_eq!(
             TextureType::Top.texture_path(),
-            "textures/navigation_cube/top_ja.png"
+            "textures/navigation-cube/top_ja.png"
         );
         assert_eq!(
             TextureType::Bottom.texture_path(),
-            "textures/navigation_cube/bottom_ja.png"
+            "textures/navigation-cube/bottom_ja.png"
         );
         assert_eq!(
             TextureType::Left.texture_path(),
-            "textures/navigation_cube/left_ja.png"
+            "textures/navigation-cube/left_ja.png"
         );
         assert_eq!(
             TextureType::Right.texture_path(),
-            "textures/navigation_cube/right_ja.png"
+            "textures/navigation-cube/right_ja.png"
         );
         assert_eq!(
             TextureType::Front.texture_path(),
-            "textures/navigation_cube/front_ja.png"
+            "textures/navigation-cube/front_ja.png"
         );
         assert_eq!(
             TextureType::Back.texture_path(),
-            "textures/navigation_cube/back_ja.png"
+            "textures/navigation-cube/back_ja.png"
         );
+    }
+
+    #[test]
+    fn test_setup_navigation_texture_happy_path() {
+        // Arrange
+        let mut app = App::new();
+        app.add_plugins((TaskPoolPlugin::default(), AssetPlugin::default()))
+            .init_asset::<Image>()
+            .init_resource::<Assets<StandardMaterial>>()
+            .init_resource::<Assets<Mesh>>();
+
+        let material_handle = app
+            .world_mut()
+            .resource_mut::<Assets<StandardMaterial>>()
+            .add(StandardMaterial::default());
+        let mesh_handle = app
+            .world_mut()
+            .resource_mut::<Assets<Mesh>>()
+            .add(Mesh::new(
+                bevy::render::mesh::PrimitiveTopology::TriangleList,
+                Default::default(),
+            ));
+
+        app.world_mut().spawn((
+            Name::new("Face-Top".to_string()),
+            MeshMaterial3d(material_handle.clone()),
+            Mesh3d(mesh_handle.clone()),
+            NeedsTextureSetup,
+        ));
+
+        // Act
+        app.add_systems(Update, setup_navigation_texture);
+        app.update();
+
+        // Assert
+        let materials = app.world().resource::<Assets<StandardMaterial>>();
+        let material = materials.get(&material_handle).unwrap();
+        assert!(material.base_color_texture.is_some());
+        assert_eq!(material.base_color_channel, UvChannel::Uv0);
+
+        let meshes = app.world().resource::<Assets<Mesh>>();
+        let mesh = meshes.get(&mesh_handle).unwrap();
+        assert!(mesh.attribute(Mesh::ATTRIBUTE_UV_0).is_some());
     }
 }
