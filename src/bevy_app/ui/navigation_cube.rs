@@ -18,12 +18,12 @@ impl TextureType {
     /// Get Texture Type from mesh name. Mesh names are defined in gLTF
     pub fn from_mesh_name(s: &str) -> Option<Self> {
         match s {
-            "Face-Top" => Some(TextureType::Top),
-            "Face-Bottom" => Some(TextureType::Bottom),
-            "Face-Left" => Some(TextureType::Left),
-            "Face-Right" => Some(TextureType::Right),
-            "Face-Front" => Some(TextureType::Front),
-            "Face-Back" => Some(TextureType::Back),
+            "Top" => Some(TextureType::Top),
+            "Bottom" => Some(TextureType::Bottom),
+            "Left" => Some(TextureType::Left),
+            "Right" => Some(TextureType::Right),
+            "Front" => Some(TextureType::Front),
+            "Back" => Some(TextureType::Back),
             _ => None,
         }
     }
@@ -60,25 +60,6 @@ pub fn setup_navigation_texture(
             continue;
         };
 
-        // Load image for the texture
-        let texture: Handle<Image> = assets
-            .load_with_settings(&texture.texture_path(), |c: &mut ImageLoaderSettings| {
-                c.is_srgb = false
-            });
-
-        // set up material and mesh
-        if let Some(material) = materials.get_mut(material) {
-            material.base_color_texture = Some(texture);
-            material.base_color_channel = UvChannel::Uv0;
-        }
-
-        if let Some(mesh) = meshes.get_mut(mesh) {
-            mesh.insert_attribute(
-                Mesh::ATTRIBUTE_UV_0,
-                vec![[0.0, 0.0], [0.0, 1.0], [1.0, 1.0], [1.0, 0.0]],
-            )
-        }
-
         commands.entity(entity).remove::<NeedsTextureSetup>();
     }
 
@@ -93,27 +74,27 @@ mod tests {
     fn test_from_mesh_name_valid_faces() {
         // Test all valid face names
         assert!(matches!(
-            TextureType::from_mesh_name("Face-Top"),
+            TextureType::from_mesh_name("Top"),
             Some(TextureType::Top)
         ));
         assert!(matches!(
-            TextureType::from_mesh_name("Face-Bottom"),
+            TextureType::from_mesh_name("Bottom"),
             Some(TextureType::Bottom)
         ));
         assert!(matches!(
-            TextureType::from_mesh_name("Face-Left"),
+            TextureType::from_mesh_name("Left"),
             Some(TextureType::Left)
         ));
         assert!(matches!(
-            TextureType::from_mesh_name("Face-Right"),
+            TextureType::from_mesh_name("Right"),
             Some(TextureType::Right)
         ));
         assert!(matches!(
-            TextureType::from_mesh_name("Face-Front"),
+            TextureType::from_mesh_name("Front"),
             Some(TextureType::Front)
         ));
         assert!(matches!(
-            TextureType::from_mesh_name("Face-Back"),
+            TextureType::from_mesh_name("Back"),
             Some(TextureType::Back)
         ));
     }
@@ -121,29 +102,29 @@ mod tests {
     #[test]
     fn test_from_mesh_name_invalid_names() {
         assert!(TextureType::from_mesh_name("Invalid").is_none());
-        assert!(TextureType::from_mesh_name("Face-top").is_none());
-        assert!(TextureType::from_mesh_name("Face-TOP").is_none());
+        assert!(TextureType::from_mesh_name("top").is_none());
+        assert!(TextureType::from_mesh_name("TOP").is_none());
         assert!(TextureType::from_mesh_name("Face").is_none());
         assert!(TextureType::from_mesh_name("Top").is_none());
         assert!(TextureType::from_mesh_name("").is_none());
-        assert!(TextureType::from_mesh_name("Face-Middle").is_none());
-        assert!(TextureType::from_mesh_name("Face-Top ").is_none());
-        assert!(TextureType::from_mesh_name(" Face-Top").is_none());
+        assert!(TextureType::from_mesh_name("Middle").is_none());
+        assert!(TextureType::from_mesh_name("Top ").is_none());
+        assert!(TextureType::from_mesh_name(" Top").is_none());
     }
 
     #[test]
     fn test_from_mesh_name_case_sensitivity() {
         assert!(TextureType::from_mesh_name("face-top").is_none());
         assert!(TextureType::from_mesh_name("FACE-TOP").is_none());
-        assert!(TextureType::from_mesh_name("Face-bottom").is_none());
-        assert!(TextureType::from_mesh_name("Face-BOTTOM").is_none());
+        assert!(TextureType::from_mesh_name("bottom").is_none());
+        assert!(TextureType::from_mesh_name("BOTTOM").is_none());
     }
 
     #[test]
     fn test_from_mesh_name_special_characters() {
         assert!(TextureType::from_mesh_name("Face_Top").is_none());
         assert!(TextureType::from_mesh_name("Face.Top").is_none());
-        assert!(TextureType::from_mesh_name("Face--Top").is_none());
+        assert!(TextureType::from_mesh_name("-Top").is_none());
     }
 
     #[test]
@@ -196,7 +177,7 @@ mod tests {
             ));
 
         app.world_mut().spawn((
-            Name::new("Face-Top".to_string()),
+            Name::new("Top".to_string()),
             MeshMaterial3d(material_handle.clone()),
             Mesh3d(mesh_handle.clone()),
             NeedsTextureSetup,
