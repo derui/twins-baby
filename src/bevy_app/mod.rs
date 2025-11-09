@@ -12,7 +12,7 @@ use crate::{
         camera::{PanOrbitOperation, move_camera_with_request, setup_camera},
         pan_orbit::{pan_orbit_camera, setup_pan_orbit},
         setup::setup_scene,
-        ui::{insert_render_layer, setup_ui},
+        ui::{insert_render_layer, setup_navigation_texture, setup_ui},
     },
     events::LoggingEvent,
 };
@@ -41,6 +41,7 @@ pub fn init_bevy_app(logger: BevyEventSender<LoggingEvent>) -> App {
         Startup,
         (setup_scene, setup_camera, setup_ui, setup_pan_orbit),
     )
+    .add_systems(Update, setup_navigation_texture)
     .add_systems(
         Update,
         (

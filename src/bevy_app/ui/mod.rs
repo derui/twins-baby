@@ -1,3 +1,6 @@
+mod components;
+mod navigation_cube;
+
 use bevy::prelude::*;
 use bevy::render::view::RenderLayers;
 use bevy::scene::SceneInstance;
@@ -8,14 +11,11 @@ use bevy::{
 };
 
 use crate::bevy_app::camera::CAMERA_2D_LAYER;
-
-#[derive(Component)]
-pub struct NavigationCube;
-
-#[derive(Component)]
-pub struct NeedsRenderLayers(RenderLayers);
+use crate::bevy_app::ui::components::{NavigationCube, NeedsRenderLayers, NeedsTextureSetup};
 
 const NAVIGATION_CUBE_SCALE: f32 = 100.0 * 4.; // 100 = 1mm to 1m, 4 to 4unit = 40px on UI
+
+pub use navigation_cube::setup_navigation_texture;
 
 /// Setup the twins-baby UI elements
 pub fn setup_ui(mut commands: Commands, asset: Res<AssetServer>) -> Result<(), BevyError> {
@@ -59,6 +59,8 @@ pub fn insert_render_layer(
             .iter_instance_entities(**instance)
             .for_each(|e| {
                 commands.entity(e).insert(needs_render_layers.0.clone());
+                commands.entity(e).insert(NavigationCube);
+                commands.entity(e).insert(NeedsTextureSetup);
             });
 
         commands.entity(entity).remove::<NeedsRenderLayers>();
