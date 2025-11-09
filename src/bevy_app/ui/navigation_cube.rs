@@ -1,4 +1,4 @@
-use bevy::{pbr::UvChannel, prelude::*};
+use bevy::{asset::AssetLoadError, image::ImageLoaderSettings, pbr::UvChannel, prelude::*};
 
 use crate::bevy_app::ui::components::NeedsTextureSetup;
 
@@ -61,7 +61,10 @@ pub fn setup_navigation_texture(
         };
 
         // Load image for the texture
-        let texture: Handle<Image> = assets.load(&texture.texture_path());
+        let texture: Handle<Image> = assets
+            .load_with_settings(&texture.texture_path(), |c: &mut ImageLoaderSettings| {
+                c.is_srgb = false
+            });
 
         // set up material and mesh
         if let Some(material) = materials.get_mut(material) {
@@ -72,7 +75,7 @@ pub fn setup_navigation_texture(
         if let Some(mesh) = meshes.get_mut(mesh) {
             mesh.insert_attribute(
                 Mesh::ATTRIBUTE_UV_0,
-                vec![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]],
+                vec![[0.0, 0.0], [0.0, 1.0], [1.0, 1.0], [1.0, 0.0]],
             )
         }
 
