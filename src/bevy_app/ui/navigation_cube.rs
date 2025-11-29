@@ -1,4 +1,4 @@
-use bevy::{asset::AssetLoadError, image::ImageLoaderSettings, pbr::UvChannel, prelude::*};
+use bevy::prelude::*;
 
 use crate::bevy_app::ui::components::NeedsTextureSetup;
 
@@ -46,8 +46,8 @@ impl TextureType {
 /// Setup textures for navigation cube materials
 pub fn setup_navigation_texture(
     mut commands: Commands,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    mut meshes: ResMut<Assets<Mesh>>,
+    materials: ResMut<Assets<StandardMaterial>>,
+    meshes: ResMut<Assets<Mesh>>,
     entities: Query<
         (Entity, &MeshMaterial3d<StandardMaterial>, &Name, &Mesh3d),
         With<NeedsTextureSetup>,
@@ -55,7 +55,7 @@ pub fn setup_navigation_texture(
     assets: Res<AssetServer>,
 ) -> Result<(), BevyError> {
     for (entity, material, name, mesh) in &entities {
-        let Some(texture) = TextureType::from_mesh_name(&name) else {
+        let Some(texture) = TextureType::from_mesh_name(name) else {
             commands.entity(entity).remove::<NeedsTextureSetup>();
             continue;
         };
