@@ -13,7 +13,7 @@ use bevy::{
 use crate::bevy_app::camera::CAMERA_2D_LAYER;
 use crate::bevy_app::ui::components::{NavigationCube, NeedsRenderLayers, NeedsTextureSetup};
 
-const NAVIGATION_CUBE_SCALE: f32 = 100.0 * 4.; // 100 = 1mm to 1m, 4 to 4unit = 40px on UI
+const NAVIGATION_CUBE_SCALE: f32 = 1.0 * 4.; // 100 = 1mm to 1m, 4 to 4unit = 40px on UI
 
 pub use navigation_cube::setup_navigation_texture;
 
@@ -26,7 +26,7 @@ pub fn setup_ui(mut commands: Commands, asset: Res<AssetServer>) -> Result<(), B
         SceneRoot(cube),
         // current navigation cube model is located XY plane. so translate it a bit down to avoid z-fighting with grid.
         Transform::from_scale(Vec3::splat(NAVIGATION_CUBE_SCALE))
-            .with_translation(Vec3::new(0., -2., 0.)),
+            .with_translation(Vec3::new(0., 0., 0.)),
         NavigationCube,
         NeedsRenderLayers(RenderLayers::layer(CAMERA_2D_LAYER)),
     ));
