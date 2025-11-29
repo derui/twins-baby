@@ -1,4 +1,5 @@
 mod components;
+mod gizmo;
 mod navigation_cube;
 
 use bevy::prelude::*;
@@ -10,11 +11,14 @@ use bevy::{
     transform::components::Transform,
 };
 
-use crate::bevy_app::camera::CAMERA_2D_LAYER;
+use crate::bevy_app::camera::CAMERA_CUBE_LAYER;
 use crate::bevy_app::ui::components::{NavigationCube, NeedsRenderLayers, NeedsTextureSetup};
 
 const NAVIGATION_CUBE_SCALE: f32 = 1.0 * 4.; // 100 = 1mm to 1m, 4 to 4unit = 40px on UI
 
+pub use gizmo::AxesGizmoGroup;
+pub use gizmo::draw_gizmos;
+pub use gizmo::setup_gizmos;
 pub use navigation_cube::setup_navigation_texture;
 
 /// Setup the twins-baby UI elements
@@ -28,15 +32,14 @@ pub fn setup_ui(mut commands: Commands, asset: Res<AssetServer>) -> Result<(), B
         Transform::from_scale(Vec3::splat(NAVIGATION_CUBE_SCALE))
             .with_translation(Vec3::new(0., 0., 0.)),
         NavigationCube,
-        NeedsRenderLayers(RenderLayers::layer(CAMERA_2D_LAYER)),
+        NeedsRenderLayers(RenderLayers::layer(CAMERA_CUBE_LAYER)),
     ));
 
-    // Light for UI
-    commands.spawn((
-        DirectionalLight::default(),
-        Transform::from_xyz(0., 1., 0.25).looking_at(Vec3::ZERO, Dir3::Y),
-        RenderLayers::layer(CAMERA_2D_LAYER),
-    ));
+    commands.insert_resource(AmbientLight {
+        color: Color::WHITE,
+        brightness: 600.,
+        ..default()
+    });
 
     Ok(())
 }

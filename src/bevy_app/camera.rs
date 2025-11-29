@@ -8,7 +8,8 @@ use bevy::{
 };
 
 pub const CAMERA_3D_LAYER: usize = 0;
-pub const CAMERA_2D_LAYER: usize = 1;
+pub const CAMERA_CUBE_LAYER: usize = 1;
+pub const CAMERA_GIZMO_LAYER: usize = 2;
 
 /// This module provides 3D camera basic functionally in Bevy.
 #[derive(Component)]
@@ -197,7 +198,33 @@ pub fn setup_camera(mut commands: Commands, window: Query<&Window>) -> Result<()
             }),
             ..default()
         },
-        RenderLayers::from_layers(&[CAMERA_2D_LAYER]),
+        RenderLayers::from_layers(&[CAMERA_CUBE_LAYER]),
+        UiCamera,
+    ));
+
+    let bottom = window.resolution.physical_height() - 96;
+    // camera for gizmo
+    commands.spawn((
+        Camera3d::default(),
+        // use this camera as 2D
+        Projection::Orthographic(OrthographicProjection {
+            scaling_mode: ScalingMode::WindowSize,
+            // 1unit-10px
+            scale: 0.10,
+            ..OrthographicProjection::default_2d()
+        }),
+        Camera {
+            // clear color, use background
+            clear_color: ClearColorConfig::None,
+            order: 1,
+            viewport: Some(Viewport {
+                physical_position: UVec2::new(right, bottom),
+                physical_size: UVec2::new(96, 96),
+                ..default()
+            }),
+            ..default()
+        },
+        RenderLayers::from_layers(&[CAMERA_GIZMO_LAYER]),
         UiCamera,
     ));
 
@@ -286,16 +313,18 @@ mod tests {
                 .single(app.world())
                 .is_ok()
         );
-        assert!(
+        assert_eq!(
+            2,
             app.world_mut()
                 .query::<&UiCamera>()
-                .single(app.world())
-                .is_ok()
+                .iter(app.world())
+                .count(),
         );
         let (camera, _) = app
             .world_mut()
             .query::<(&Camera, &UiCamera)>()
-            .single(app.world())
+            .iter(app.world())
+            .next()
             .unwrap();
 
         assert_eq!(camera.order, 1);
