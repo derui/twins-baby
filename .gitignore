@@ -4,7 +4,7 @@
 
 # Added by cargo
 
-/target
+target/
 /dist
 /node_modules
 #*#
