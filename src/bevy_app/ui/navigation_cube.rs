@@ -68,6 +68,8 @@ pub fn setup_navigation_texture(
 
 #[cfg(test)]
 mod tests {
+    use bevy::pbr::UvChannel;
+
     use super::*;
 
     #[test]

@@ -3,6 +3,12 @@ name = "twins-baby"
 version = "0.1.0"
 edition = "2024"
 
+[workspace]
+
+members = [
+   "lib/solver"
+]
+
 [dependencies]
 coarsetime = "0.1.36"
 console_error_panic_hook = "0.1.7"
