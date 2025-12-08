@@ -17,9 +17,7 @@ impl PartialEq for Variable {
 impl Variable {
     /// Make a new variable with name
     pub fn new(name: &str, value: f32) -> Self {
-        if name.trim().is_empty() {
-            panic!("Variable name cannot be empty");
-        }
+        assert!(!name.trim().is_empty(), "Variable name cannot be empty");
 
         Variable {
             name: name.trim().to_string(),
