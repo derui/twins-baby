@@ -1,6 +1,5 @@
-use std::ops::{Add, Div, Mul, Sub};
-
 /// A simple variable representation
+#[derive(Debug, Clone)]
 pub struct Variable {
     /// Name of the variable
     name: String,
@@ -8,56 +7,22 @@ pub struct Variable {
     value: f32,
 }
 
-// implementation for arithmetic operations
-impl Add<f32> for Variable {
-    type Output = Variable;
-
-    fn add(self, rhs: f32) -> Self::Output {
-        Variable {
-            value: self.value + rhs,
-            ..self
-        }
-    }
-}
-
-impl Sub<f32> for Variable {
-    type Output = Variable;
-
-    fn sub(self, rhs: f32) -> Self::Output {
-        Variable {
-            value: self.value - rhs,
-            ..self
-        }
-    }
-}
-
-impl Mul<f32> for Variable {
-    type Output = Variable;
-
-    fn mul(self, rhs: f32) -> Self::Output {
-        Variable {
-            value: self.value * rhs,
-            ..self
-        }
-    }
-}
-
-impl Div<f32> for Variable {
-    type Output = Variable;
-
-    fn div(self, rhs: f32) -> Self::Output {
-        Variable {
-            value: self.value / rhs,
-            ..self
-        }
+impl PartialEq for Variable {
+    fn eq(&self, other: &Self) -> bool {
+        // same name as same variable.
+        self.name == other.name
     }
 }
 
 impl Variable {
     /// Make a new variable with name
     pub fn new(name: &str, value: f32) -> Self {
+        if name.trim().is_empty() {
+            panic!("Variable name cannot be empty");
+        }
+
         Variable {
-            name: name.to_string(),
+            name: name.trim().to_string(),
             value,
         }
     }
@@ -66,74 +31,67 @@ impl Variable {
 #[cfg(test)]
 mod tests {
     use super::*;
-
     use pretty_assertions::assert_eq;
 
     #[test]
-    fn test_variable_new() {
-        let var = Variable::new("x", 5.0);
-        assert_eq!(var.name, "x");
-        assert_eq!(var.value, 5.0);
+    #[should_panic]
+    fn test_empty_name() {
+        // arrange
+
+        // act
+
+        // assert
+        Variable::new("", 10.0);
     }
 
     #[test]
-    fn test_variable_add() {
-        let var = Variable::new("x", 10.0);
-        let result = var + 5.0;
-        assert_eq!(result.name, "x");
-        assert_eq!(result.value, 15.0);
+    #[should_panic]
+    fn test_name_only_blank() {
+        // arrange
+
+        // act
+
+        // assert
+        Variable::new("  \t\n", 10.0);
     }
 
     #[test]
-    fn test_variable_sub() {
-        let var = Variable::new("y", 20.0);
-        let result = var - 8.0;
-        assert_eq!(result.name, "y");
-        assert_eq!(result.value, 12.0);
+    fn test_name_should_trimmed() {
+        // arrange
+
+        // act
+        let v = Variable::new("  x \t\n", 5.);
+
+        // assert
+        assert_eq!(v.name, "x");
     }
 
     #[test]
-    fn test_variable_mul() {
-        let var = Variable::new("z", 4.0);
-        let result = var * 3.0;
-        assert_eq!(result.name, "z");
-        assert_eq!(result.value, 12.0);
+    fn test_equality_same_name_same_value() {
+        let var1 = Variable::new("x", 10.0);
+        let var2 = Variable::new("x", 10.0);
+        assert_eq!(var1, var2);
     }
 
     #[test]
-    fn test_variable_div() {
-        let var = Variable::new("w", 20.0);
-        let result = var / 4.0;
-        assert_eq!(result.name, "w");
-        assert_eq!(result.value, 5.0);
+    fn test_equality_same_name_different_value() {
+        // Variables with same name are equal regardless of value
+        let var1 = Variable::new("x", 10.0);
+        let var2 = Variable::new("x", 20.0);
+        assert_eq!(var1, var2);
     }
 
     #[test]
-    fn test_variable_chained_operations() {
-        let var = Variable::new("a", 10.0);
-        let result = ((var + 5.0) * 2.0 - 10.0) / 5.0;
-        assert_eq!(result.name, "a");
-        assert_eq!(result.value, 4.0);
+    fn test_inequality_different_name() {
+        let var1 = Variable::new("x", 10.0);
+        let var2 = Variable::new("y", 10.0);
+        assert_ne!(var1, var2);
     }
 
     #[test]
-    fn test_variable_with_negative_value() {
-        let var = Variable::new("neg", -10.0);
-        let result = var + 15.0;
-        assert_eq!(result.value, 5.0);
-    }
-
-    #[test]
-    fn test_variable_with_zero() {
-        let var = Variable::new("zero", 0.0);
-        let result = var + 0.0;
-        assert_eq!(result.value, 0.0);
-    }
-
-    #[test]
-    fn test_variable_floating_point_precision() {
-        let var = Variable::new("float", 0.1);
-        let result = var + 0.2;
-        assert!((result.value - 0.3).abs() < 1e-6);
+    fn test_inequality_different_name_different_value() {
+        let var1 = Variable::new("x", 10.0);
+        let var2 = Variable::new("y", 20.0);
+        assert_ne!(var1, var2);
     }
 }
