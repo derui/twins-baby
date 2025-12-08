@@ -77,3 +77,10 @@ Pre-commit hooks are configured to automatically format code:
 - `leptosfmt` specifically for Leptos component formatting
 
 Both formatters run on `.rs` files to ensure consistent code style.
+
+# Coding Preferences
+
+## Testing
+
+- Use `pretty_assertions::assert_eq` instead of `std::assert_eq` in Rust test modules
+- Import pretty_assertions at the top of test modules with `use pretty_assertions::assert_eq;`
