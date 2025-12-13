@@ -2,7 +2,7 @@ pub(crate) mod constant;
 pub(crate) mod unary;
 pub(crate) mod variable;
 
-use crate::environment::{self, Environment};
+use crate::environment::Environment;
 
 /// Error cases for solving equation
 #[derive(Debug, Clone)]
