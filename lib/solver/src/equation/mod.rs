@@ -1,5 +1,6 @@
 pub(crate) mod arithmetic;
 pub(crate) mod constant;
+pub(crate) mod power;
 pub(crate) mod unary;
 pub(crate) mod variable;
 
