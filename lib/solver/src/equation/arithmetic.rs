@@ -3,7 +3,7 @@ use crate::{environment::Environment, equation::Equation};
 use super::EquationError;
 
 /// Operator of arithmetic
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub(crate) enum Operator {
     Add,
     Subtract,
@@ -33,9 +33,17 @@ impl Equation for ArithmeticEquation {
 
         Ok(ret)
     }
+}
 
-    fn clone_box(&self) -> Box<dyn Equation> {
-        Box::new(self.clone())
+impl std::fmt::Display for ArithmeticEquation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let op = match self.operator {
+            Operator::Add => "+",
+            Operator::Subtract => "-",
+            Operator::Multiply => "*",
+            Operator::Divide => "/",
+        };
+        write!(f, "{}{}{}", self.first, op, self.second)
     }
 }
 

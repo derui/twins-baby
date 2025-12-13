@@ -16,9 +16,11 @@ impl Equation for VariableEquation {
             ])),
         }
     }
+}
 
-    fn clone_box(&self) -> Box<dyn Equation> {
-        Box::new(self.clone())
+impl std::fmt::Display for VariableEquation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.name)
     }
 }
 

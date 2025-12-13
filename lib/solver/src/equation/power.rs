@@ -20,9 +20,11 @@ impl Equation for PowerEquation {
 
         Ok(base.powf(exponent))
     }
+}
 
-    fn clone_box(&self) -> Box<dyn Equation> {
-        Box::new(self.clone())
+impl std::fmt::Display for PowerEquation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}^{}", self.base, self.exponent)
     }
 }
 

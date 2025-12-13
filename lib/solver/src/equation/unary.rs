@@ -21,9 +21,11 @@ impl Equation for UnaryEquation {
 
         Ok(factor * expression)
     }
+}
 
-    fn clone_box(&self) -> Box<dyn Equation> {
-        Box::new(self.clone())
+impl std::fmt::Display for UnaryEquation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}{}", self.factor, self.expression)
     }
 }
 
