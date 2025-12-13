@@ -1,6 +1,6 @@
 use crate::{
     environment::Environment,
-    equation::{Equation, EquationError},
+    equation::{Equation, EquationError, constant::ConstantEquation},
 };
 
 /// Implementation of power equation (base^exponent)
@@ -41,6 +41,14 @@ impl PowerEquation {
             exponent: exponent.clone_box(),
         }
     }
+
+    /// Create a new power equation with the given base and raw exponent
+    pub(crate) fn new_with_raw_exponent(base: &impl Equation, exponent: f32) -> Self {
+        Self {
+            base: base.clone_box(),
+            exponent: Box::new(ConstantEquation::new(exponent)),
+        }
+    }
 }
 
 #[cfg(test)]
@@ -59,6 +67,19 @@ mod tests {
 
         // act
         let equation = PowerEquation::new(&base, &exponent);
+
+        // assert
+        let env = Environment::empty();
+        assert_eq!(equation.evaluate(&env).unwrap(), 8.0);
+    }
+
+    #[test]
+    fn test_new_creates_power_equation_with_constant_base_and_raw_exponent() {
+        // arrange
+        let base = ConstantEquation::new(2.0);
+
+        // act
+        let equation = PowerEquation::new_with_raw_exponent(&base, 3.);
 
         // assert
         let env = Environment::empty();
