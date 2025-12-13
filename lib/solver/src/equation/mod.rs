@@ -3,8 +3,6 @@ pub(crate) mod constant;
 pub(crate) mod unary;
 pub(crate) mod variable;
 
-use std::fmt::Pointer;
-
 use crate::environment::Environment;
 
 /// Error cases for solving equation
@@ -40,8 +38,8 @@ impl Clone for Box<dyn Equation> {
     }
 }
 
-impl Into<Box<dyn Equation>> for &dyn Equation {
-    fn into(self) -> Box<dyn Equation> {
-        self.clone_box()
+impl From<&dyn Equation> for Box<dyn Equation> {
+    fn from(val: &dyn Equation) -> Self {
+        val.clone_box()
     }
 }

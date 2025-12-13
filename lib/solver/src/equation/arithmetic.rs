@@ -1,8 +1,3 @@
-use std::{
-    fmt::Formatter,
-    ops::{Add, Div, Mul, Sub},
-};
-
 use crate::equation::Equation;
 
 /// Operator of arithmetic
