@@ -1,5 +1,6 @@
 .env
 .direnv
+.claude/
 
 
 # Added by cargo
