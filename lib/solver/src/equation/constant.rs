@@ -17,6 +17,12 @@ impl Equation for ConstantEquation {
     fn clone_box(&self) -> Box<dyn Equation> {
         Box::new(self.clone())
     }
+
+    fn debug_fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ConstantEquation")
+            .field("value", &self.value)
+            .finish()
+    }
 }
 
 impl ConstantEquation {

@@ -25,6 +25,13 @@ impl Equation for UnaryEquation {
     fn clone_box(&self) -> Box<dyn Equation> {
         Box::new(self.clone())
     }
+
+    fn debug_fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("UnaryEquation")
+            .field("factor", &self.factor)
+            .field("expression", &self.expression)
+            .finish()
+    }
 }
 
 impl UnaryEquation {

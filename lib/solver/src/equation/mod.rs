@@ -1,3 +1,4 @@
+pub(crate) mod arithmetic;
 pub(crate) mod constant;
 pub(crate) mod unary;
 pub(crate) mod variable;
@@ -29,10 +30,31 @@ pub trait Equation {
     /// # Returns
     /// A boxed clone of the equation
     fn clone_box(&self) -> Box<dyn Equation>;
+
+    /// Format the equation for debugging purposes.
+    ///
+    /// # Arguments
+    /// * `f` - The formatter to write to
+    ///
+    /// # Returns
+    /// Result of the formatting operation
+    fn debug_fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result;
 }
 
 impl Clone for Box<dyn Equation> {
     fn clone(&self) -> Self {
+        self.clone_box()
+    }
+}
+
+impl std::fmt::Debug for Box<dyn Equation> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.debug_fmt(f)
+    }
+}
+
+impl Into<Box<dyn Equation>> for &dyn Equation {
+    fn into(self) -> Box<dyn Equation> {
         self.clone_box()
     }
 }

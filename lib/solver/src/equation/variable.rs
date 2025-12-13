@@ -20,6 +20,12 @@ impl Equation for VariableEquation {
     fn clone_box(&self) -> Box<dyn Equation> {
         Box::new(self.clone())
     }
+
+    fn debug_fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("VariableEquation")
+            .field("name", &self.name)
+            .finish()
+    }
 }
 
 impl VariableEquation {
