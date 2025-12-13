@@ -1,6 +1,7 @@
 use crate::equation::Equation;
 
 /// Represents a constant equation that always evaluates to a fixed value.
+#[derive(Clone)]
 pub(crate) struct ConstantEquation {
     value: f32,
 }
@@ -11,6 +12,10 @@ impl Equation for ConstantEquation {
         _env: &crate::environment::Environment,
     ) -> Result<f32, super::EquationError> {
         Ok(self.value)
+    }
+
+    fn clone_box(&self) -> Box<dyn Equation> {
+        Box::new(self.clone())
     }
 }
 

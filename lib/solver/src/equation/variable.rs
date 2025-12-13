@@ -1,6 +1,7 @@
 use crate::equation::Equation;
 
 /// Representation of a variable equation in a mathematical model.
+#[derive(Clone)]
 pub(crate) struct VariableEquation {
     /// name of variable
     name: String,
@@ -14,6 +15,10 @@ impl Equation for VariableEquation {
                 self.name.clone(),
             ])),
         }
+    }
+
+    fn clone_box(&self) -> Box<dyn Equation> {
+        Box::new(self.clone())
     }
 }
 

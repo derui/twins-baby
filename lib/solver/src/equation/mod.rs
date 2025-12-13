@@ -1,5 +1,6 @@
-mod constant;
-mod variable;
+pub(crate) mod constant;
+pub(crate) mod unary;
+pub(crate) mod variable;
 
 use crate::environment::{self, Environment};
 
@@ -20,4 +21,18 @@ pub trait Equation {
     /// # Returns
     /// result of equation with the environment. Error when some errors
     fn evaluate(&self, env: &Environment) -> Result<f32, EquationError>;
+
+    /// Clone the equation into a Box.
+    ///
+    /// Equation is trait, but it should be clone as value
+    ///
+    /// # Returns
+    /// A boxed clone of the equation
+    fn clone_box(&self) -> Box<dyn Equation>;
+}
+
+impl Clone for Box<dyn Equation> {
+    fn clone(&self) -> Self {
+        self.clone_box()
+    }
 }
