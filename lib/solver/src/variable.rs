@@ -30,6 +30,11 @@ impl Variable {
         self.name.to_string()
     }
 
+    /// Get the value of the variable
+    pub fn value(&self) -> f32 {
+        self.value
+    }
+
     /// Update the value of the variable
     pub fn update(&mut self, value: f32) {
         self.value = value;
