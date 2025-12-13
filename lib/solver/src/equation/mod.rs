@@ -3,6 +3,8 @@ pub(crate) mod constant;
 pub(crate) mod unary;
 pub(crate) mod variable;
 
+use std::fmt::Pointer;
+
 use crate::environment::Environment;
 
 /// Error cases for solving equation
@@ -13,7 +15,7 @@ pub enum EquationError {
 }
 
 /// Equation trait should provide some of the equation behavior of the solver
-pub trait Equation {
+pub trait Equation: std::fmt::Debug {
     /// Evaluate the equation.
     ///
     /// # Arguments
@@ -30,26 +32,11 @@ pub trait Equation {
     /// # Returns
     /// A boxed clone of the equation
     fn clone_box(&self) -> Box<dyn Equation>;
-
-    /// Format the equation for debugging purposes.
-    ///
-    /// # Arguments
-    /// * `f` - The formatter to write to
-    ///
-    /// # Returns
-    /// Result of the formatting operation
-    fn debug_fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result;
 }
 
 impl Clone for Box<dyn Equation> {
     fn clone(&self) -> Self {
         self.clone_box()
-    }
-}
-
-impl std::fmt::Debug for Box<dyn Equation> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.debug_fmt(f)
     }
 }
 

@@ -1,7 +1,7 @@
 use crate::equation::Equation;
 
 /// Represents a constant equation that always evaluates to a fixed value.
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub(crate) struct ConstantEquation {
     value: f32,
 }
@@ -16,12 +16,6 @@ impl Equation for ConstantEquation {
 
     fn clone_box(&self) -> Box<dyn Equation> {
         Box::new(self.clone())
-    }
-
-    fn debug_fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("ConstantEquation")
-            .field("value", &self.value)
-            .finish()
     }
 }
 

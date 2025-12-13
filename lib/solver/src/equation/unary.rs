@@ -4,7 +4,7 @@ use crate::{
 };
 
 /// Implementation of equation
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub(crate) struct UnaryEquation {
     /// The factor of thisequesion
     factor: Box<dyn Equation>,
@@ -24,13 +24,6 @@ impl Equation for UnaryEquation {
 
     fn clone_box(&self) -> Box<dyn Equation> {
         Box::new(self.clone())
-    }
-
-    fn debug_fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("UnaryEquation")
-            .field("factor", &self.factor)
-            .field("expression", &self.expression)
-            .finish()
     }
 }
 

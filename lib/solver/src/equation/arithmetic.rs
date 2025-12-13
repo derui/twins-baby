@@ -15,7 +15,7 @@ pub(crate) enum Operator {
 }
 
 /// Implementation of arithmetic equation
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub(crate) struct ArithmeticEquation {
     operator: Operator,
     first: Box<dyn Equation>,
@@ -39,14 +39,6 @@ impl Equation for ArithmeticEquation {
 
     fn clone_box(&self) -> Box<dyn Equation> {
         Box::new(self.clone())
-    }
-
-    fn debug_fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("ArithmeticEquation")
-            .field("operator", &self.operator)
-            .field("first", &self.first)
-            .field("second", &self.second)
-            .finish()
     }
 }
 
