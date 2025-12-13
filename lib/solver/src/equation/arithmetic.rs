@@ -1,4 +1,6 @@
-use crate::equation::Equation;
+use crate::{environment::Environment, equation::Equation};
+
+use super::EquationError;
 
 /// Operator of arithmetic
 #[derive(Debug, Copy, Clone)]
@@ -18,7 +20,7 @@ pub(crate) struct ArithmeticEquation {
 }
 
 impl Equation for ArithmeticEquation {
-    fn evaluate(&self, env: &crate::environment::Environment) -> Result<f32, super::EquationError> {
+    fn evaluate(&self, env: &Environment) -> Result<f32, EquationError> {
         let first = self.first.evaluate(env)?;
         let second = self.second.evaluate(env)?;
 
@@ -47,7 +49,7 @@ impl ArithmeticEquation {
     ///
     /// # Returns
     /// A new instance of `ArithmeticEquation`
-    pub(crate) fn new(operator: Operator, first: &dyn Equation, second: &dyn Equation) -> Self {
+    pub(crate) fn new(operator: Operator, first: &impl Equation, second: &impl Equation) -> Self {
         Self {
             operator,
             first: first.clone_box(),
