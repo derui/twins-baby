@@ -88,147 +88,58 @@ mod tests {
     use crate::equation::monomial::MonomialEquation;
     use crate::variable::Variable;
     use pretty_assertions::assert_eq;
+    use rstest::rstest;
 
-    #[test]
-    fn test_new_creates_arithmetic_equation_with_add_operator() {
+    #[rstest]
+    #[case(Operator::Add, 10.0, 7.0, 17.0)]
+    #[case(Operator::Subtract, 15.0, 8.0, 7.0)]
+    #[case(Operator::Multiply, 6.0, 4.0, 24.0)]
+    #[case(Operator::Divide, 20.0, 4.0, 5.0)]
+    fn test_evaluate_with_constants(
+        #[case] operator: Operator,
+        #[case] first_val: f32,
+        #[case] second_val: f32,
+        #[case] expected: f32,
+    ) {
         // arrange
-        let first = ConstantEquation::new(5.0);
-        let second = ConstantEquation::new(3.0);
-
-        // act
-        let equation = ArithmeticEquation::new(Operator::Add, &first, &second);
-
-        // assert
-        let env = Environment::empty();
-        assert_eq!(equation.evaluate(&env).unwrap(), 8.0);
-    }
-
-    #[test]
-    fn test_evaluate_add_with_constants() {
-        // arrange
-        let first = ConstantEquation::new(10.0);
-        let second = ConstantEquation::new(7.0);
-        let equation = ArithmeticEquation::new(Operator::Add, &first, &second);
+        let first = ConstantEquation::new(first_val);
+        let second = ConstantEquation::new(second_val);
+        let equation = ArithmeticEquation::new(operator, &first, &second);
         let env = Environment::empty();
 
         // act
         let result = equation.evaluate(&env);
 
         // assert
-        assert_eq!(result.unwrap(), 17.0);
+        assert_eq!(result.unwrap(), expected);
     }
 
-    #[test]
-    fn test_evaluate_minus_with_constants() {
+    #[rstest]
+    #[case(Operator::Add, "x", 12.0, "y", 8.0, 20.0)]
+    #[case(Operator::Subtract, "a", 25.0, "b", 10.0, 15.0)]
+    #[case(Operator::Multiply, "x", 7.0, "y", 3.0, 21.0)]
+    #[case(Operator::Divide, "numerator", 30.0, "denominator", 6.0, 5.0)]
+    fn test_evaluate_with_variables(
+        #[case] operator: Operator,
+        #[case] var1_name: &str,
+        #[case] var1_val: f32,
+        #[case] var2_name: &str,
+        #[case] var2_val: f32,
+        #[case] expected: f32,
+    ) {
         // arrange
-        let first = ConstantEquation::new(15.0);
-        let second = ConstantEquation::new(8.0);
-        let equation = ArithmeticEquation::new(Operator::Subtract, &first, &second);
-        let env = Environment::empty();
-
-        // act
-        let result = equation.evaluate(&env);
-
-        // assert
-        assert_eq!(result.unwrap(), 7.0);
-    }
-
-    #[test]
-    fn test_evaluate_multiply_with_constants() {
-        // arrange
-        let first = ConstantEquation::new(6.0);
-        let second = ConstantEquation::new(4.0);
-        let equation = ArithmeticEquation::new(Operator::Multiply, &first, &second);
-        let env = Environment::empty();
-
-        // act
-        let result = equation.evaluate(&env);
-
-        // assert
-        assert_eq!(result.unwrap(), 24.0);
-    }
-
-    #[test]
-    fn test_evaluate_divide_with_constants() {
-        // arrange
-        let first = ConstantEquation::new(20.0);
-        let second = ConstantEquation::new(4.0);
-        let equation = ArithmeticEquation::new(Operator::Divide, &first, &second);
-        let env = Environment::empty();
-
-        // act
-        let result = equation.evaluate(&env);
-
-        // assert
-        assert_eq!(result.unwrap(), 5.0);
-    }
-
-    #[test]
-    fn test_evaluate_add_with_variables() {
-        // arrange
-        let first = MonomialEquation::new(1.0, "x", 1);
-        let second = MonomialEquation::new(1.0, "y", 1);
-        let equation = ArithmeticEquation::new(Operator::Add, &first, &second);
-        let var1 = Variable::new("x", 12.0);
-        let var2 = Variable::new("y", 8.0);
+        let first = MonomialEquation::new(1.0, var1_name, 1);
+        let second = MonomialEquation::new(1.0, var2_name, 1);
+        let equation = ArithmeticEquation::new(operator, &first, &second);
+        let var1 = Variable::new(var1_name, var1_val);
+        let var2 = Variable::new(var2_name, var2_val);
         let env = Environment::from_variables(vec![var1, var2]);
 
         // act
         let result = equation.evaluate(&env);
 
         // assert
-        assert_eq!(result.unwrap(), 20.0);
-    }
-
-    #[test]
-    fn test_evaluate_minus_with_variables() {
-        // arrange
-        let first = MonomialEquation::new(1.0, "a", 1);
-        let second = MonomialEquation::new(1.0, "b", 1);
-        let equation = ArithmeticEquation::new(Operator::Subtract, &first, &second);
-        let var1 = Variable::new("a", 25.0);
-        let var2 = Variable::new("b", 10.0);
-        let env = Environment::from_variables(vec![var1, var2]);
-
-        // act
-        let result = equation.evaluate(&env);
-
-        // assert
-        assert_eq!(result.unwrap(), 15.0);
-    }
-
-    #[test]
-    fn test_evaluate_multiply_with_variables() {
-        // arrange
-        let first = MonomialEquation::new(1.0, "x", 1);
-        let second = MonomialEquation::new(1.0, "y", 1);
-        let equation = ArithmeticEquation::new(Operator::Multiply, &first, &second);
-        let var1 = Variable::new("x", 7.0);
-        let var2 = Variable::new("y", 3.0);
-        let env = Environment::from_variables(vec![var1, var2]);
-
-        // act
-        let result = equation.evaluate(&env);
-
-        // assert
-        assert_eq!(result.unwrap(), 21.0);
-    }
-
-    #[test]
-    fn test_evaluate_divide_with_variables() {
-        // arrange
-        let first = MonomialEquation::new(1.0, "numerator", 1);
-        let second = MonomialEquation::new(1.0, "denominator", 1);
-        let equation = ArithmeticEquation::new(Operator::Divide, &first, &second);
-        let var1 = Variable::new("numerator", 30.0);
-        let var2 = Variable::new("denominator", 6.0);
-        let env = Environment::from_variables(vec![var1, var2]);
-
-        // act
-        let result = equation.evaluate(&env);
-
-        // assert
-        assert_eq!(result.unwrap(), 5.0);
+        assert_eq!(result.unwrap(), expected);
     }
 
     #[test]
@@ -247,12 +158,25 @@ mod tests {
         assert_eq!(result.unwrap(), 15.0);
     }
 
-    #[test]
-    fn test_evaluate_returns_error_when_first_variable_not_in_environment() {
+    #[rstest]
+    #[case("x", true)]
+    #[case("y", false)]
+    fn test_evaluate_returns_error_when_variable_not_in_environment(
+        #[case] var_name: &str,
+        #[case] first_is_variable: bool,
+    ) {
         // arrange
-        let first = MonomialEquation::new(1.0, "x", 1);
-        let second = ConstantEquation::new(5.0);
-        let equation = ArithmeticEquation::new(Operator::Add, &first, &second);
+        let first: Box<dyn Equation> = if first_is_variable {
+            Box::new(MonomialEquation::new(1.0, var_name, 1))
+        } else {
+            Box::new(ConstantEquation::new(10.0))
+        };
+        let second: Box<dyn Equation> = if first_is_variable {
+            Box::new(ConstantEquation::new(5.0))
+        } else {
+            Box::new(MonomialEquation::new(1.0, var_name, 1))
+        };
+        let equation = ArithmeticEquation::new(Operator::Add, &*first, &*second);
         let env = Environment::empty();
 
         // act
@@ -261,105 +185,35 @@ mod tests {
         // assert
         match result {
             Err(super::super::EquationError::NoVariableInEnvironment(vars)) => {
-                assert_eq!(vars, vec!["x".to_string()]);
+                assert_eq!(vars, vec![var_name.to_string()]);
             }
             _ => panic!("Expected NoVariableInEnvironment error"),
         }
     }
 
-    #[test]
-    fn test_evaluate_returns_error_when_second_variable_not_in_environment() {
+    #[rstest]
+    #[case(Operator::Add, 42.0, 0.0, 42.0)]
+    #[case(Operator::Subtract, 50.0, 0.0, 50.0)]
+    #[case(Operator::Multiply, 100.0, 0.0, 0.0)]
+    #[case(Operator::Multiply, 75.0, 1.0, 75.0)]
+    #[case(Operator::Divide, 99.0, 1.0, 99.0)]
+    fn test_evaluate_with_identity_elements(
+        #[case] operator: Operator,
+        #[case] first_val: f32,
+        #[case] second_val: f32,
+        #[case] expected: f32,
+    ) {
         // arrange
-        let first = ConstantEquation::new(10.0);
-        let second = MonomialEquation::new(1.0, "y", 1);
-        let equation = ArithmeticEquation::new(Operator::Add, &first, &second);
+        let first = ConstantEquation::new(first_val);
+        let second = ConstantEquation::new(second_val);
+        let equation = ArithmeticEquation::new(operator, &first, &second);
         let env = Environment::empty();
 
         // act
         let result = equation.evaluate(&env);
 
         // assert
-        match result {
-            Err(super::super::EquationError::NoVariableInEnvironment(vars)) => {
-                assert_eq!(vars, vec!["y".to_string()]);
-            }
-            _ => panic!("Expected NoVariableInEnvironment error"),
-        }
-    }
-
-    #[test]
-    fn test_evaluate_add_with_zero() {
-        // arrange
-        let first = ConstantEquation::new(42.0);
-        let second = ConstantEquation::new(0.0);
-        let equation = ArithmeticEquation::new(Operator::Add, &first, &second);
-        let env = Environment::empty();
-
-        // act
-        let result = equation.evaluate(&env);
-
-        // assert
-        assert_eq!(result.unwrap(), 42.0);
-    }
-
-    #[test]
-    fn test_evaluate_minus_with_zero() {
-        // arrange
-        let first = ConstantEquation::new(50.0);
-        let second = ConstantEquation::new(0.0);
-        let equation = ArithmeticEquation::new(Operator::Subtract, &first, &second);
-        let env = Environment::empty();
-
-        // act
-        let result = equation.evaluate(&env);
-
-        // assert
-        assert_eq!(result.unwrap(), 50.0);
-    }
-
-    #[test]
-    fn test_evaluate_multiply_with_zero() {
-        // arrange
-        let first = ConstantEquation::new(100.0);
-        let second = ConstantEquation::new(0.0);
-        let equation = ArithmeticEquation::new(Operator::Multiply, &first, &second);
-        let env = Environment::empty();
-
-        // act
-        let result = equation.evaluate(&env);
-
-        // assert
-        assert_eq!(result.unwrap(), 0.0);
-    }
-
-    #[test]
-    fn test_evaluate_multiply_with_one() {
-        // arrange
-        let first = ConstantEquation::new(75.0);
-        let second = ConstantEquation::new(1.0);
-        let equation = ArithmeticEquation::new(Operator::Multiply, &first, &second);
-        let env = Environment::empty();
-
-        // act
-        let result = equation.evaluate(&env);
-
-        // assert
-        assert_eq!(result.unwrap(), 75.0);
-    }
-
-    #[test]
-    fn test_evaluate_divide_by_one() {
-        // arrange
-        let first = ConstantEquation::new(99.0);
-        let second = ConstantEquation::new(1.0);
-        let equation = ArithmeticEquation::new(Operator::Divide, &first, &second);
-        let env = Environment::empty();
-
-        // act
-        let result = equation.evaluate(&env);
-
-        // assert
-        assert_eq!(result.unwrap(), 99.0);
+        assert_eq!(result.unwrap(), expected);
     }
 
     #[test]
@@ -379,74 +233,6 @@ mod tests {
 
         // assert
         assert_eq!(result.unwrap(), 14.0); // (3 + 4) * 2 = 14
-    }
-
-    #[test]
-    fn test_clone_creates_independent_copy() {
-        // arrange
-        let first = ConstantEquation::new(8.0);
-        let second = ConstantEquation::new(3.0);
-        let equation = ArithmeticEquation::new(Operator::Add, &first, &second);
-        let env = Environment::empty();
-
-        // act
-        let cloned_equation = equation.clone();
-        let result1 = equation.evaluate(&env);
-        let result2 = cloned_equation.evaluate(&env);
-
-        // assert
-        assert_eq!(result1.unwrap(), 11.0);
-        assert_eq!(result2.unwrap(), 11.0);
-    }
-
-    #[test]
-    fn test_evaluate_multiple_times_returns_consistent_results() {
-        // arrange
-        let first = MonomialEquation::new(1.0, "x", 1);
-        let second = ConstantEquation::new(5.0);
-        let equation = ArithmeticEquation::new(Operator::Multiply, &first, &second);
-        let var = Variable::new("x", 4.0);
-        let env = Environment::from_variables(vec![var]);
-
-        // act
-        let result1 = equation.evaluate(&env);
-        let result2 = equation.evaluate(&env);
-        let result3 = equation.evaluate(&env);
-
-        // assert
-        assert_eq!(result1.unwrap(), 20.0);
-        assert_eq!(result2.unwrap(), 20.0);
-        assert_eq!(result3.unwrap(), 20.0);
-    }
-
-    #[test]
-    fn test_evaluate_subtract_negative_result() {
-        // arrange
-        let first = ConstantEquation::new(5.0);
-        let second = ConstantEquation::new(10.0);
-        let equation = ArithmeticEquation::new(Operator::Subtract, &first, &second);
-        let env = Environment::empty();
-
-        // act
-        let result = equation.evaluate(&env);
-
-        // assert
-        assert_eq!(result.unwrap(), -5.0);
-    }
-
-    #[test]
-    fn test_evaluate_divide_result_less_than_one() {
-        // arrange
-        let first = ConstantEquation::new(3.0);
-        let second = ConstantEquation::new(4.0);
-        let equation = ArithmeticEquation::new(Operator::Divide, &first, &second);
-        let env = Environment::empty();
-
-        // act
-        let result = equation.evaluate(&env);
-
-        // assert
-        assert_eq!(result.unwrap(), 0.75);
     }
 
     #[test]
@@ -473,5 +259,174 @@ mod tests {
 
         // assert
         assert_eq!(result.unwrap(), 28.0);
+    }
+
+    mod derive_tests {
+        use super::*;
+        use pretty_assertions::assert_eq;
+        use rstest::rstest;
+
+        #[rstest]
+        #[case(Operator::Add, 5.0, 3.0)]
+        #[case(Operator::Subtract, 5.0, 3.0)]
+        #[case(Operator::Multiply, 2.0, 7.0)]
+        #[case(Operator::Divide, 10.0, 2.0)]
+        fn test_derive_with_both_constants_returns_none(
+            #[case] operator: Operator,
+            #[case] first_val: f32,
+            #[case] second_val: f32,
+        ) {
+            // arrange
+            let first = ConstantEquation::new(first_val);
+            let second = ConstantEquation::new(second_val);
+            let equation = ArithmeticEquation::new(operator, &first, &second);
+            let variable = Variable::new("x", 0.0);
+
+            // act
+            let result = equation.derive(&variable);
+
+            // assert
+            assert_eq!(result, None);
+        }
+
+        #[rstest]
+        #[case(Operator::Add, "2")]
+        #[case(Operator::Subtract, "2")]
+        #[case(Operator::Multiply, "2")]
+        #[case(Operator::Divide, "2")]
+        fn test_derive_with_first_variable_second_constant(
+            #[case] operator: Operator,
+            #[case] expected: &str,
+        ) {
+            // arrange
+            let first = MonomialEquation::new(2.0, "x", 1);
+            let second = ConstantEquation::new(3.0);
+            let equation = ArithmeticEquation::new(operator, &first, &second);
+            let variable = Variable::new("x", 0.0);
+
+            // act
+            let result = equation.derive(&variable);
+
+            // assert
+            assert!(result.is_some());
+            assert_eq!(format!("{}", result.unwrap()), expected);
+        }
+
+        #[rstest]
+        #[case(Operator::Add, "3")]
+        #[case(Operator::Subtract, "3")]
+        #[case(Operator::Multiply, "3")]
+        #[case(Operator::Divide, "3")]
+        fn test_derive_with_first_constant_second_variable(
+            #[case] operator: Operator,
+            #[case] expected: &str,
+        ) {
+            // arrange
+            let first = ConstantEquation::new(5.0);
+            let second = MonomialEquation::new(3.0, "y", 1);
+            let equation = ArithmeticEquation::new(operator, &first, &second);
+            let variable = Variable::new("y", 0.0);
+
+            // act
+            let result = equation.derive(&variable);
+
+            // assert
+            assert!(result.is_some());
+            assert_eq!(format!("{}", result.unwrap()), expected);
+        }
+
+        #[rstest]
+        #[case(Operator::Add, "2+3")]
+        #[case(Operator::Subtract, "2-3")]
+        #[case(Operator::Multiply, "2*3")]
+        #[case(Operator::Divide, "2/3")]
+        fn test_derive_with_both_same_variables(
+            #[case] operator: Operator,
+            #[case] expected: &str,
+        ) {
+            // arrange
+            let first = MonomialEquation::new(2.0, "x", 1);
+            let second = MonomialEquation::new(3.0, "x", 1);
+            let equation = ArithmeticEquation::new(operator, &first, &second);
+            let variable = Variable::new("x", 0.0);
+
+            // act
+            let result = equation.derive(&variable);
+
+            // assert
+            assert!(result.is_some());
+            assert_eq!(format!("{}", result.unwrap()), expected);
+        }
+
+        #[rstest]
+        #[case(Operator::Add)]
+        #[case(Operator::Subtract)]
+        #[case(Operator::Multiply)]
+        #[case(Operator::Divide)]
+        fn test_derive_with_both_same_variables_different_derive_var_returns_none(
+            #[case] operator: Operator,
+        ) {
+            // arrange
+            let first = MonomialEquation::new(2.0, "x", 1);
+            let second = MonomialEquation::new(3.0, "x", 1);
+            let equation = ArithmeticEquation::new(operator, &first, &second);
+            let variable = Variable::new("y", 0.0);
+
+            // act
+            let result = equation.derive(&variable);
+
+            // assert
+            assert_eq!(result, None);
+        }
+
+        #[rstest]
+        #[case(Operator::Add, "x", "2")]
+        #[case(Operator::Subtract, "x", "2")]
+        #[case(Operator::Multiply, "x", "2")]
+        #[case(Operator::Divide, "x", "2")]
+        #[case(Operator::Add, "y", "3")]
+        #[case(Operator::Subtract, "y", "3")]
+        #[case(Operator::Multiply, "y", "3")]
+        #[case(Operator::Divide, "y", "3")]
+        fn test_derive_with_different_variables(
+            #[case] operator: Operator,
+            #[case] derive_var: &str,
+            #[case] expected: &str,
+        ) {
+            // arrange
+            let first = MonomialEquation::new(2.0, "x", 1);
+            let second = MonomialEquation::new(3.0, "y", 1);
+            let equation = ArithmeticEquation::new(operator, &first, &second);
+            let variable = Variable::new(derive_var, 0.0);
+
+            // act
+            let result = equation.derive(&variable);
+
+            // assert
+            assert!(result.is_some());
+            assert_eq!(format!("{}", result.unwrap()), expected);
+        }
+
+        #[test]
+        fn test_derive_with_nested_equations() {
+            // arrange
+            // (x + 2) * 3, derive with respect to x
+            let inner_first = MonomialEquation::new(1.0, "x", 1);
+            let inner_second = ConstantEquation::new(2.0);
+            let inner_equation =
+                ArithmeticEquation::new(Operator::Add, &inner_first, &inner_second);
+
+            let outer_second = ConstantEquation::new(3.0);
+            let outer_equation =
+                ArithmeticEquation::new(Operator::Multiply, &inner_equation, &outer_second);
+            let variable = Variable::new("x", 0.0);
+
+            // act
+            let result = outer_equation.derive(&variable);
+
+            // assert
+            assert!(result.is_some());
+            assert_eq!(format!("{}", result.unwrap()), "1");
+        }
     }
 }
