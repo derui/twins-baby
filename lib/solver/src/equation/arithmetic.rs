@@ -1,4 +1,4 @@
-use crate::{environment::Environment, equation::Equation};
+use crate::{environment::Environment, equation::Equation, variable::Variable};
 
 use super::EquationError;
 
@@ -33,6 +33,20 @@ impl Equation for ArithmeticEquation {
 
         Ok(ret)
     }
+
+    fn derive(&self, variable: &Variable) -> Option<Box<dyn Equation>> {
+        let first = self.first.derive(variable);
+        let second = self.second.derive(variable);
+
+        match (first, second) {
+            (None, None) => None,
+            (None, Some(e)) => Some(e),
+            (Some(e), None) => Some(e),
+            (Some(e1), Some(e2)) => {
+                Some(Box::new(ArithmeticEquation::new(self.operator, &*e1, &*e2)))
+            }
+        }
+    }
 }
 
 impl std::fmt::Display for ArithmeticEquation {
@@ -57,7 +71,7 @@ impl ArithmeticEquation {
     ///
     /// # Returns
     /// A new instance of `ArithmeticEquation`
-    pub(crate) fn new(operator: Operator, first: &impl Equation, second: &impl Equation) -> Self {
+    pub(crate) fn new(operator: Operator, first: &dyn Equation, second: &dyn Equation) -> Self {
         Self {
             operator,
             first: first.clone_box(),
@@ -71,7 +85,7 @@ mod tests {
     use super::*;
     use crate::environment::Environment;
     use crate::equation::constant::ConstantEquation;
-    use crate::equation::variable::VariableEquation;
+    use crate::equation::monomial::MonomialEquation;
     use crate::variable::Variable;
     use pretty_assertions::assert_eq;
 
@@ -152,8 +166,8 @@ mod tests {
     #[test]
     fn test_evaluate_add_with_variables() {
         // arrange
-        let first = VariableEquation::new("x");
-        let second = VariableEquation::new("y");
+        let first = MonomialEquation::new(1.0, "x", 1);
+        let second = MonomialEquation::new(1.0, "y", 1);
         let equation = ArithmeticEquation::new(Operator::Add, &first, &second);
         let var1 = Variable::new("x", 12.0);
         let var2 = Variable::new("y", 8.0);
@@ -169,8 +183,8 @@ mod tests {
     #[test]
     fn test_evaluate_minus_with_variables() {
         // arrange
-        let first = VariableEquation::new("a");
-        let second = VariableEquation::new("b");
+        let first = MonomialEquation::new(1.0, "a", 1);
+        let second = MonomialEquation::new(1.0, "b", 1);
         let equation = ArithmeticEquation::new(Operator::Subtract, &first, &second);
         let var1 = Variable::new("a", 25.0);
         let var2 = Variable::new("b", 10.0);
@@ -186,8 +200,8 @@ mod tests {
     #[test]
     fn test_evaluate_multiply_with_variables() {
         // arrange
-        let first = VariableEquation::new("x");
-        let second = VariableEquation::new("y");
+        let first = MonomialEquation::new(1.0, "x", 1);
+        let second = MonomialEquation::new(1.0, "y", 1);
         let equation = ArithmeticEquation::new(Operator::Multiply, &first, &second);
         let var1 = Variable::new("x", 7.0);
         let var2 = Variable::new("y", 3.0);
@@ -203,8 +217,8 @@ mod tests {
     #[test]
     fn test_evaluate_divide_with_variables() {
         // arrange
-        let first = VariableEquation::new("numerator");
-        let second = VariableEquation::new("denominator");
+        let first = MonomialEquation::new(1.0, "numerator", 1);
+        let second = MonomialEquation::new(1.0, "denominator", 1);
         let equation = ArithmeticEquation::new(Operator::Divide, &first, &second);
         let var1 = Variable::new("numerator", 30.0);
         let var2 = Variable::new("denominator", 6.0);
@@ -221,7 +235,7 @@ mod tests {
     fn test_evaluate_mixed_constant_and_variable() {
         // arrange
         let first = ConstantEquation::new(10.0);
-        let second = VariableEquation::new("x");
+        let second = MonomialEquation::new(1.0, "x", 1);
         let equation = ArithmeticEquation::new(Operator::Add, &first, &second);
         let var = Variable::new("x", 5.0);
         let env = Environment::from_variables(vec![var]);
@@ -236,7 +250,7 @@ mod tests {
     #[test]
     fn test_evaluate_returns_error_when_first_variable_not_in_environment() {
         // arrange
-        let first = VariableEquation::new("x");
+        let first = MonomialEquation::new(1.0, "x", 1);
         let second = ConstantEquation::new(5.0);
         let equation = ArithmeticEquation::new(Operator::Add, &first, &second);
         let env = Environment::empty();
@@ -257,7 +271,7 @@ mod tests {
     fn test_evaluate_returns_error_when_second_variable_not_in_environment() {
         // arrange
         let first = ConstantEquation::new(10.0);
-        let second = VariableEquation::new("y");
+        let second = MonomialEquation::new(1.0, "y", 1);
         let equation = ArithmeticEquation::new(Operator::Add, &first, &second);
         let env = Environment::empty();
 
@@ -388,7 +402,7 @@ mod tests {
     #[test]
     fn test_evaluate_multiple_times_returns_consistent_results() {
         // arrange
-        let first = VariableEquation::new("x");
+        let first = MonomialEquation::new(1.0, "x", 1);
         let second = ConstantEquation::new(5.0);
         let equation = ArithmeticEquation::new(Operator::Multiply, &first, &second);
         let var = Variable::new("x", 4.0);

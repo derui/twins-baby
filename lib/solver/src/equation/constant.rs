@@ -1,4 +1,4 @@
-use crate::equation::Equation;
+use crate::{equation::Equation, variable::Variable};
 
 /// Represents a constant equation that always evaluates to a fixed value.
 #[derive(Debug, Clone)]
@@ -12,6 +12,11 @@ impl Equation for ConstantEquation {
         _env: &crate::environment::Environment,
     ) -> Result<f32, super::EquationError> {
         Ok(self.value)
+    }
+
+    fn derive(&self, _variable: &Variable) -> Option<Box<dyn Equation>> {
+        // constant can not derive
+        None
     }
 }
 
