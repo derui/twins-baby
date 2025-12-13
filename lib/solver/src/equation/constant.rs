@@ -140,4 +140,40 @@ mod tests {
         assert_eq!(result2.unwrap(), 50.0);
         assert_eq!(result3.unwrap(), 50.0);
     }
+
+    #[test]
+    fn test_derive_returns_none_regardless_of_variable_name() {
+        // arrange
+        let equation = ConstantEquation::new(100.0);
+        let var_x = Variable::new("x", 0.0);
+        let var_y = Variable::new("y", 0.0);
+        let var_abc = Variable::new("abc", 0.0);
+
+        // act
+        let result_x = equation.derive(&var_x);
+        let result_y = equation.derive(&var_y);
+        let result_abc = equation.derive(&var_abc);
+
+        // assert
+        assert_eq!(result_x, None);
+        assert_eq!(result_y, None);
+        assert_eq!(result_abc, None);
+    }
+
+    #[test]
+    fn test_derive_returns_consistent_result_on_multiple_calls() {
+        // arrange
+        let equation = ConstantEquation::new(25.0);
+        let variable = Variable::new("x", 0.0);
+
+        // act
+        let result1 = equation.derive(&variable);
+        let result2 = equation.derive(&variable);
+        let result3 = equation.derive(&variable);
+
+        // assert
+        assert_eq!(result1, None);
+        assert_eq!(result2, None);
+        assert_eq!(result3, None);
+    }
 }
