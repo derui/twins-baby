@@ -81,6 +81,12 @@ Both formatters run on `.rs` files to ensure consistent code style.
 # Coding Preferences
 
 ## Testing
+All test case must follow these styles:
 
+- Use `AAA` Pattern, there are `Arrange`, `Act`, and `Assert`
+  - Must add comment for each block
+- When assertion for Rust's `Result`, avoid `is_ok` or `is_err` for assert generally.
+
+### Libraries
 - Use `pretty_assertions::assert_eq` instead of `std::assert_eq` in Rust test modules
 - Import pretty_assertions at the top of test modules with `use pretty_assertions::assert_eq;`
