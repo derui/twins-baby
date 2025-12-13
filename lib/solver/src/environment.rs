@@ -7,14 +7,14 @@ use crate::variable::Variable;
 /// An environment tracks all variables in a scope, and can update them by method. But current implementation is too simple,
 /// because it can not update variables simoultaneously.
 #[derive(Debug, Clone)]
-pub(crate) struct Environment {
+pub struct Environment {
     /// variables in this environment
     variables: HashMap<String, Variable>,
 }
 
 impl Environment {
     /// Get a new empty environment
-    pub(crate) fn empty() -> Self {
+    pub fn empty() -> Self {
         Environment {
             variables: HashMap::new(),
         }
@@ -29,7 +29,7 @@ impl Environment {
     ///
     /// # Returns
     /// * `Environment` - A new environment containing the provided variables
-    pub(crate) fn from_variables(variables: Vec<Variable>) -> Self {
+    pub fn from_variables(variables: Vec<Variable>) -> Self {
         let mut vars_map = HashMap::new();
         for var in variables {
             vars_map.insert(var.name().to_string(), var);
@@ -42,12 +42,12 @@ impl Environment {
     /// Add a variable to the environment
     ///
     /// This method will override variable if there is already a variable with the same name.
-    pub(crate) fn add_variable(&mut self, variable: Variable) {
+    pub fn add_variable(&mut self, variable: Variable) {
         self.variables.insert(variable.name(), variable);
     }
 
     /// Remove a variable from the environment
-    pub(crate) fn remove_variable(&mut self, variable: &Variable) {
+    pub fn remove_variable(&mut self, variable: &Variable) {
         // ignore errors
         self.variables.remove(&variable.name());
     }
@@ -60,7 +60,7 @@ impl Environment {
     ///
     /// # Returns
     /// * `Result<Variable, String>` - Ok if the variable was updated successfully, Err with a message if the variable was not found
-    pub(crate) fn update_variable(&mut self, name: &str, value: f32) -> Result<Variable, String> {
+    pub fn update_variable(&mut self, name: &str, value: f32) -> Result<Variable, String> {
         if let Some(var) = self.variables.get_mut(name) {
             var.update(value);
             Ok(var.clone())
@@ -72,7 +72,7 @@ impl Environment {
     /// Get a variable copy by name
     ///
     /// Updating returned variable will not update the variable in environment.
-    pub(crate) fn get_variable(&self, name: &str) -> Option<Variable> {
+    pub fn get_variable(&self, name: &str) -> Option<Variable> {
         self.variables.get(name).cloned()
     }
 }
