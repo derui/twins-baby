@@ -8,7 +8,7 @@ use crate::{
 
 #[component]
 pub fn App() -> impl IntoView {
-    let (log_receiver, log_sender) = event_b2l::<LoggingEvent>();
+    let (log_receiver, log_sender) = message_b2l::<LoggingEvent>();
 
     view! {
         <div class="flex flex-col gap-5 items-center p-5 mx-auto h-full w-full max-w-[1400px]">
@@ -36,7 +36,7 @@ pub fn App() -> impl IntoView {
 }
 
 #[component]
-pub fn LogConsole(log_receiver: LeptosEventReceiver<LoggingEvent>) -> impl IntoView {
+pub fn LogConsole(log_receiver: LeptosMessageReceiver<LoggingEvent>) -> impl IntoView {
     let (events, set_events) = signal(Vec::<LoggingEvent>::new());
 
     Effect::new(move || {

@@ -2,8 +2,8 @@ mod components;
 mod gizmo;
 mod navigation_cube;
 
+use bevy::camera::visibility::RenderLayers;
 use bevy::prelude::*;
-use bevy::render::view::RenderLayers;
 use bevy::scene::SceneInstance;
 use bevy::{
     ecs::{error::BevyError, system::Commands},

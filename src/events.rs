@@ -1,4 +1,4 @@
-use bevy::ecs::event::Event;
+use bevy::ecs::{event::Event, message::Message};
 use coarsetime::Instant;
 
 /// Log levels for logging events
@@ -11,7 +11,7 @@ pub enum LogLevel {
 }
 
 /// An event for logging messages
-#[derive(Event, Debug, Clone)]
+#[derive(Message, Debug, Clone)]
 pub struct LoggingEvent {
     pub log_level: LogLevel,
     pub text: String,

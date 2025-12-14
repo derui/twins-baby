@@ -1,4 +1,4 @@
-use bevy::{ecs::component::Component, render::view::RenderLayers};
+use bevy::{camera::visibility::RenderLayers, ecs::component::Component};
 
 #[derive(Component)]
 pub struct NavigationCube;

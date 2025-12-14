@@ -1,4 +1,5 @@
 use bevy::{
+    camera::visibility::RenderLayers,
     ecs::{
         entity::Entity,
         error::BevyError,
@@ -11,7 +12,6 @@ use bevy::{
     },
     math::Vec3,
     reflect::Reflect,
-    render::view::RenderLayers,
     transform::components::Transform,
 };
 

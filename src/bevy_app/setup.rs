@@ -1,5 +1,5 @@
+use bevy::camera::visibility::RenderLayers;
 use bevy::prelude::*;
-use bevy::render::view::RenderLayers;
 use bevy::{
     asset::Assets,
     color::{Color, palettes::tailwind::RED_500},
@@ -8,8 +8,7 @@ use bevy::{
         system::{Commands, ResMut},
     },
     math::{Vec3, primitives::Cuboid},
-    pbr::{MeshMaterial3d, PointLight, StandardMaterial},
-    render::mesh::{Mesh, Mesh3d},
+    pbr::{MeshMaterial3d, StandardMaterial},
     transform::components::Transform,
 };
 

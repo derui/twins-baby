@@ -5,7 +5,7 @@ mod ui;
 
 // This initializes a normal Bevy app
 use bevy::{asset::AssetMetaCheck, prelude::*};
-use leptos_bevy_canvas::prelude::{BevyEventSender, LeptosBevyApp};
+use leptos_bevy_canvas::prelude::{BevyMessageSender, LeptosBevyApp};
 
 use crate::{
     bevy_app::{
@@ -20,7 +20,7 @@ use crate::{
     events::LoggingEvent,
 };
 
-pub fn init_bevy_app(logger: BevyEventSender<LoggingEvent>) -> App {
+pub fn init_bevy_app(logger: BevyMessageSender<LoggingEvent>) -> App {
     let mut app = App::new();
     app.add_plugins((
         DefaultPlugins
@@ -40,7 +40,7 @@ pub fn init_bevy_app(logger: BevyEventSender<LoggingEvent>) -> App {
         MeshPickingPlugin,
     ))
     .init_gizmo_group::<AxesGizmoGroup>()
-    .export_event_to_leptos(logger)
+    .export_message_to_leptos(logger)
     .add_systems(
         Startup,
         (

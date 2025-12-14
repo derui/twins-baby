@@ -1,10 +1,7 @@
 use bevy::{
+    camera::{Viewport, visibility::RenderLayers},
     platform::collections::HashSet,
     prelude::*,
-    render::{
-        camera::{ScalingMode, Viewport},
-        view::RenderLayers,
-    },
 };
 
 pub const CAMERA_3D_LAYER: usize = 0;
@@ -182,7 +179,7 @@ pub fn setup_camera(mut commands: Commands, window: Query<&Window>) -> Result<()
         Camera3d::default(),
         // use this camera as 2D
         Projection::Orthographic(OrthographicProjection {
-            scaling_mode: ScalingMode::WindowSize,
+            scaling_mode: Default::default(),
             // 1unit-10px
             scale: 0.10,
             ..OrthographicProjection::default_2d()
@@ -208,7 +205,7 @@ pub fn setup_camera(mut commands: Commands, window: Query<&Window>) -> Result<()
         Camera3d::default(),
         // use this camera as 2D
         Projection::Orthographic(OrthographicProjection {
-            scaling_mode: ScalingMode::WindowSize,
+            scaling_mode: Default::default(),
             // 1unit-10px
             scale: 0.10,
             ..OrthographicProjection::default_2d()
@@ -298,7 +295,7 @@ mod tests {
         let mut app = App::new();
 
         app.world_mut().spawn(Window {
-            resolution: WindowResolution::new(800.0, 600.0),
+            resolution: WindowResolution::new(800, 600),
             ..default()
         });
         app.add_systems(Startup, setup_camera);
@@ -414,7 +411,7 @@ mod tests {
             .world_mut()
             .spawn((MainCamera, Transform::default()))
             .id();
-        let ui_camera = app.world_mut().spawn((UiCamera, Transform::default())).id();
+        let _ui_camera = app.world_mut().spawn((UiCamera, Transform::default())).id();
 
         let operation = CameraMoveOperation::BySystem {
             target: Vec3::ZERO,

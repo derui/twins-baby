@@ -68,7 +68,7 @@ pub fn setup_navigation_texture(
 
 #[cfg(test)]
 mod tests {
-    use bevy::pbr::UvChannel;
+    use bevy::{mesh::PrimitiveTopology, pbr::UvChannel};
 
     use super::*;
 
@@ -174,7 +174,7 @@ mod tests {
             .world_mut()
             .resource_mut::<Assets<Mesh>>()
             .add(Mesh::new(
-                bevy::render::mesh::PrimitiveTopology::TriangleList,
+                PrimitiveTopology::TriangleList,
                 Default::default(),
             ));
 
