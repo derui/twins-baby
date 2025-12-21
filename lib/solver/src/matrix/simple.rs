@@ -99,6 +99,7 @@ impl FloatingMatrix for SimpleMatrix<f32> {
 mod tests {
     use super::*;
     use pretty_assertions::assert_eq;
+    use rstest::rstest;
 
     #[test]
     fn test_new_creates_matrix_with_correct_size() -> Result<(), Box<dyn Error>> {
@@ -116,6 +117,26 @@ mod tests {
         Ok(())
     }
 
+    #[rstest]
+    #[case(0, 5, "zero row")]
+    #[case(5, 0, "zero column")]
+    #[case(0, 0, "both zero")]
+    fn test_new_returns_error_for_invalid_dimensions(
+        #[case] row: usize,
+        #[case] col: usize,
+        #[case] description: &str,
+    ) {
+        // Arrange & Act
+        let result = SimpleMatrix::<i32>::new(row, col);
+
+        // Assert
+        assert!(
+            result.is_err(),
+            "Expected error for {}, but got Ok",
+            description
+        );
+    }
+
     #[test]
     fn test_get_returns_none_for_empty_matrix() -> Result<(), Box<dyn Error>> {
         // Arrange
@@ -126,32 +147,6 @@ mod tests {
 
         // Assert
         assert_eq!(result, None);
-        Ok(())
-    }
-
-    #[test]
-    fn test_get_returns_error_when_row_out_of_bounds() -> Result<(), Box<dyn Error>> {
-        // Arrange
-        let matrix = SimpleMatrix::<i32>::new(3, 3)?;
-
-        // Act
-        let result = matrix.get(3, 0);
-
-        // Assert
-        assert!(result.is_err());
-        Ok(())
-    }
-
-    #[test]
-    fn test_get_returns_error_when_column_out_of_bounds() -> Result<(), Box<dyn Error>> {
-        // Arrange
-        let matrix = SimpleMatrix::<i32>::new(3, 3)?;
-
-        // Act
-        let result = matrix.get(0, 3);
-
-        // Assert
-        assert!(result.is_err());
         Ok(())
     }
 
@@ -181,32 +176,6 @@ mod tests {
         // Assert
         assert_eq!(old_value, Some(10));
         assert_eq!(matrix.get(1, 1)?, Some(20));
-        Ok(())
-    }
-
-    #[test]
-    fn test_set_returns_error_when_row_out_of_bounds() -> Result<(), Box<dyn Error>> {
-        // Arrange
-        let mut matrix = SimpleMatrix::<i32>::new(3, 3)?;
-
-        // Act
-        let result = matrix.set(3, 0, 42);
-
-        // Assert
-        assert!(result.is_err());
-        Ok(())
-    }
-
-    #[test]
-    fn test_set_returns_error_when_column_out_of_bounds() -> Result<(), Box<dyn Error>> {
-        // Arrange
-        let mut matrix = SimpleMatrix::<i32>::new(3, 3)?;
-
-        // Act
-        let result = matrix.set(0, 3, 42);
-
-        // Assert
-        assert!(result.is_err());
         Ok(())
     }
 
@@ -306,6 +275,60 @@ mod tests {
         assert_eq!(extracted.get(1, 0)?, None);
         assert_eq!(extracted.get(1, 1)?, Some(10.0));
         assert_eq!(extracted.get(1, 2)?, None);
+        Ok(())
+    }
+
+    #[rstest]
+    #[case(3, 0, "row at boundary")]
+    #[case(4, 0, "row beyond boundary")]
+    #[case(0, 3, "column at boundary")]
+    #[case(0, 4, "column beyond boundary")]
+    #[case(3, 3, "both at boundary")]
+    #[case(5, 5, "both beyond boundary")]
+    fn test_get_returns_error_for_invalid_indices(
+        #[case] row: usize,
+        #[case] col: usize,
+        #[case] description: &str,
+    ) -> Result<(), Box<dyn Error>> {
+        // Arrange
+        let matrix = SimpleMatrix::<i32>::new(3, 3)?;
+
+        // Act
+        let result = matrix.get(row, col);
+
+        // Assert
+        assert!(
+            result.is_err(),
+            "Expected error for {}, but got Ok",
+            description
+        );
+        Ok(())
+    }
+
+    #[rstest]
+    #[case(3, 0, "row at boundary")]
+    #[case(4, 0, "row beyond boundary")]
+    #[case(0, 3, "column at boundary")]
+    #[case(0, 4, "column beyond boundary")]
+    #[case(3, 3, "both at boundary")]
+    #[case(5, 5, "both beyond boundary")]
+    fn test_set_returns_error_for_invalid_indices(
+        #[case] row: usize,
+        #[case] col: usize,
+        #[case] description: &str,
+    ) -> Result<(), Box<dyn Error>> {
+        // Arrange
+        let mut matrix = SimpleMatrix::<i32>::new(3, 3)?;
+
+        // Act
+        let result = matrix.set(row, col, 42);
+
+        // Assert
+        assert!(
+            result.is_err(),
+            "Expected error for {}, but got Ok",
+            description
+        );
         Ok(())
     }
 }
