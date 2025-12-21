@@ -4,7 +4,19 @@ pub struct Size(usize, usize);
 
 impl Size {
     /// Create a new size
-    fn new(first: usize, second: usize) -> Self {
+    pub fn new(first: usize, second: usize) -> Self {
         Size(first, second)
+    }
+
+    /// Get number of rows
+    #[inline]
+    pub fn rows(&self) -> usize {
+        self.0
+    }
+
+    /// Get number of columns
+    #[inline]
+    pub fn columns(&self) -> usize {
+        self.1
     }
 }

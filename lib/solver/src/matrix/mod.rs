@@ -2,12 +2,12 @@ use std::error::Error;
 
 use size::Size;
 
+pub mod simple;
 pub mod size;
+pub mod sparse;
 
-pub trait Matrix {
-    /// Type of element
-    type Element;
-
+/// A matrix trait to define standard behavior of matrix.
+pub trait Matrix<Element> {
     /// Get the size of matrix.
     ///
     /// # Description
@@ -21,8 +21,8 @@ pub trait Matrix {
     /// * `col` - The column index of the element to retrieve.
     ///
     /// # Returns
-    /// * `Option<Self::Element>` - Some(element) if the element exists at the specified position, None otherwise.
-    fn get(row: usize, col: usize) -> Option<Self::Element>;
+    /// * `Option<Element>` - Some(element) if the element exists at the specified position, None otherwise.
+    fn get(&self, row: usize, col: usize) -> Result<Option<Element>, Box<dyn Error>>;
 
     /// Set the element to the position with value.
     ///
@@ -34,25 +34,36 @@ pub trait Matrix {
     /// # Returns
     /// * When succeed setting the element, return old element if exists. Return error string when it failed.
     fn set(
+        &mut self,
         row: usize,
         col: usize,
-        element: Self::Element,
-    ) -> Result<Option<Self::Element>, Box<dyn Error>>;
+        element: Element,
+    ) -> Result<Option<Element>, Box<dyn Error>>;
 
-    /// Calculate a determinant of this matrix
+    /// Extract a matrix of f32 from this matrix
+    ///
+    /// This function to use specialized math function for f32, such as determinant calculation.
     ///
     /// # Arguments
-    /// * `extract` - a function to extract `f32` from the element. If
+    /// * `extract` - a function to extract `f32` from the element.
     ///
     /// # Returns
-    /// * Return the determinant if the matrix can define determinant, or None if the matrix can not calculate it.
-    fn determinant<T>(&self, extract: T) -> Option<f32>
+    /// * Return a new matrix of f32
+    fn extract<T>(&self, extract: T) -> impl Matrix<f32> + FloatingMatrix
     where
-        T: Fn(&Self::Element) -> f32;
+        T: Fn(&Element) -> f32;
 
     /// Get diagonal components.
     ///
     /// # Returns
-    /// * Return compoments that is number of `min(row, column) ^ 2`
-    fn diagonal_components(&self) -> Vec<Self::Element>;
+    /// * Return compoments that is number of `min(row, column)`
+    fn diagonal_components(&self) -> Vec<Option<Element>>;
+}
+
+pub trait FloatingMatrix {
+    /// Calculate a determinant of this matrix
+    ///
+    /// # Returns
+    /// * Return the determinant if the matrix can define determinant, or None if the matrix can not calculate it.
+    fn determinant(&self) -> Option<f32>;
 }
