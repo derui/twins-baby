@@ -1,4 +1,8 @@
-use crate::{equation::Equation, variable::Variable};
+use crate::{
+    environment::Environment,
+    equation::{Equation, EquationError},
+    variable::Variable,
+};
 
 /// Represents a constant equation that always evaluates to a fixed value.
 #[derive(Debug, Clone)]
@@ -7,10 +11,7 @@ pub(crate) struct ConstantEquation {
 }
 
 impl Equation for ConstantEquation {
-    fn evaluate(
-        &self,
-        _env: &crate::environment::Environment,
-    ) -> Result<f32, super::EquationError> {
+    fn evaluate(&self, _env: &Environment) -> Result<f32, EquationError> {
         Ok(self.value)
     }
 

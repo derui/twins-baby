@@ -1,6 +1,8 @@
-use crate::{environment::Environment, equation::Equation, variable::Variable};
-
-use super::EquationError;
+use crate::{
+    environment::Environment,
+    equation::{Equation, EquationError},
+    variable::Variable,
+};
 
 /// Operator of arithmetic
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
