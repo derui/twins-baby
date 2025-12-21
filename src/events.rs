@@ -1,4 +1,4 @@
-use bevy::ecs::{event::Event, message::Message};
+use bevy::ecs::message::Message;
 use coarsetime::Instant;
 
 /// Log levels for logging events

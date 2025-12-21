@@ -49,4 +49,10 @@ pub trait Matrix {
     fn determinant<T>(&self, extract: T) -> Option<f32>
     where
         T: Fn(&Self::Element) -> f32;
+
+    /// Get diagonal components.
+    ///
+    /// # Returns
+    /// * Return compoments that is number of `min(row, column) ^ 2`
+    fn diagonal_components(&self) -> Vec<Self::Element>;
 }
