@@ -19,7 +19,7 @@ impl<M: Clone> SimpleMatrix<M> {
     ///
     /// # Returns
     /// * A new simple matrix with specified size
-    fn new(row: usize, column: usize) -> Self {
+    pub fn new(row: usize, column: usize) -> Self {
         let values: Vec<Vec<Option<M>>> = vec![vec![None; column]; row];
 
         SimpleMatrix {
