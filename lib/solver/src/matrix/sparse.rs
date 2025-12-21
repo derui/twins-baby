@@ -47,7 +47,7 @@ impl<M: Clone> SparseMatrix<M> {
 
         SparseMatrix {
             size,
-            values: values.iter().cloned().filter_map(|v| v).collect(),
+            values: values.iter().cloned().flatten().collect(),
             col_indices,
             row_ptr,
         }
@@ -107,7 +107,7 @@ impl<M: Clone> Matrix<M> for SparseMatrix<M> {
         let mut vec: Vec<Option<M>> = vec![None; len];
 
         for i in 0..len {
-            if let Ok(v) = self.get(i, i).into() {
+            if let Ok(v) = self.get(i, i) {
                 vec[i] = v;
             }
         }
