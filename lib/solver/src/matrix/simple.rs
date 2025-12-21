@@ -77,7 +77,11 @@ impl<M: Clone> Matrix<M> for SimpleMatrix<M> {
         new_matrix
     }
 
-    fn diagonal_components(&self) -> Vec<Option<M>> {
+    fn diagonal_components(&self) -> Option<Vec<Option<M>>> {
+        if self.size.rows() != self.size.columns() {
+            return None;
+        }
+
         let pos = min(self.size.rows(), self.size.columns());
 
         let mut ret: Vec<Option<M>> = vec![None; pos];
@@ -85,7 +89,7 @@ impl<M: Clone> Matrix<M> for SimpleMatrix<M> {
             ret[p] = self.values[p][p].clone();
         }
 
-        ret
+        Some(ret)
     }
 }
 
@@ -213,6 +217,7 @@ mod tests {
         let diagonal = matrix.diagonal_components();
 
         // Assert
+        let diagonal = diagonal.expect("Should return Some for square matrix");
         assert_eq!(diagonal.len(), 3);
         assert_eq!(diagonal[0], Some(1));
         assert_eq!(diagonal[1], Some(5));
@@ -221,20 +226,19 @@ mod tests {
     }
 
     #[test]
-    fn test_diagonal_components_returns_min_size_for_rectangular_matrix()
-    -> Result<(), Box<dyn Error>> {
+    fn test_diagonal_components_returns_none_for_rectangular_matrix() -> Result<(), Box<dyn Error>>
+    {
         // Arrange
-        let mut matrix = SimpleMatrix::<i32>::new(4, 2)?;
-        matrix.set(0, 0, 10)?;
-        matrix.set(1, 1, 20)?;
+        let matrix = SimpleMatrix::<i32>::new(4, 2)?;
 
         // Act
         let diagonal = matrix.diagonal_components();
 
         // Assert
-        assert_eq!(diagonal.len(), 2);
-        assert_eq!(diagonal[0], Some(10));
-        assert_eq!(diagonal[1], Some(20));
+        assert!(
+            diagonal.is_none(),
+            "Should return None for non-square matrix"
+        );
         Ok(())
     }
 
@@ -250,6 +254,7 @@ mod tests {
         let diagonal = matrix.diagonal_components();
 
         // Assert
+        let diagonal = diagonal.expect("Should return Some for square matrix");
         assert_eq!(diagonal.len(), 3);
         assert_eq!(diagonal[0], Some(1));
         assert_eq!(diagonal[1], None);

@@ -102,7 +102,11 @@ impl<M: Clone> Matrix<M> for SparseMatrix<M> {
         }
     }
 
-    fn diagonal_components(&self) -> Vec<Option<M>> {
+    fn diagonal_components(&self) -> Option<Vec<Option<M>>> {
+        if self.size.rows() != self.size.columns() {
+            return None;
+        }
+
         let len = min(self.size.rows(), self.size.columns());
         let mut vec: Vec<Option<M>> = vec![None; len];
 
@@ -112,7 +116,7 @@ impl<M: Clone> Matrix<M> for SparseMatrix<M> {
             }
         }
 
-        vec
+        Some(vec)
     }
 }
 
@@ -311,6 +315,7 @@ mod tests {
         let diagonal = sparse.diagonal_components();
 
         // Assert
+        let diagonal = diagonal.expect("Should return Some for square matrix");
         assert_eq!(diagonal.len(), 3);
         assert_eq!(diagonal[0], Some(1));
         assert_eq!(diagonal[1], Some(5));
@@ -332,6 +337,7 @@ mod tests {
         let diagonal = sparse.diagonal_components();
 
         // Assert
+        let diagonal = diagonal.expect("Should return Some for square matrix");
         assert_eq!(diagonal.len(), 3);
         assert_eq!(diagonal[0], Some(1));
         assert_eq!(diagonal[1], None);
@@ -339,41 +345,39 @@ mod tests {
         Ok(())
     }
 
-    /// Test that diagonal_components works for non-square matrix (more rows)
+    /// Test that diagonal_components returns None for non-square matrix (more rows)
     #[test]
-    fn test_diagonal_components_for_tall_matrix() -> Result<(), Box<dyn Error>> {
+    fn test_diagonal_components_returns_none_for_tall_matrix() -> Result<(), Box<dyn Error>> {
         // Arrange
-        let mut source = SimpleMatrix::<i32>::new(4, 2)?;
-        source.set(0, 0, 1)?;
-        source.set(1, 1, 5)?;
+        let source = SimpleMatrix::<i32>::new(4, 2)?;
         let sparse = SparseMatrix::from_matrix(&source);
 
         // Act
         let diagonal = sparse.diagonal_components();
 
         // Assert
-        assert_eq!(diagonal.len(), 2); // min(4, 2) = 2
-        assert_eq!(diagonal[0], Some(1));
-        assert_eq!(diagonal[1], Some(5));
+        assert!(
+            diagonal.is_none(),
+            "Should return None for non-square matrix"
+        );
         Ok(())
     }
 
-    /// Test that diagonal_components works for non-square matrix (more columns)
+    /// Test that diagonal_components returns None for non-square matrix (more columns)
     #[test]
-    fn test_diagonal_components_for_wide_matrix() -> Result<(), Box<dyn Error>> {
+    fn test_diagonal_components_returns_none_for_wide_matrix() -> Result<(), Box<dyn Error>> {
         // Arrange
-        let mut source = SimpleMatrix::<i32>::new(2, 4)?;
-        source.set(0, 0, 1)?;
-        source.set(1, 1, 5)?;
+        let source = SimpleMatrix::<i32>::new(2, 4)?;
         let sparse = SparseMatrix::from_matrix(&source);
 
         // Act
         let diagonal = sparse.diagonal_components();
 
         // Assert
-        assert_eq!(diagonal.len(), 2); // min(2, 4) = 2
-        assert_eq!(diagonal[0], Some(1));
-        assert_eq!(diagonal[1], Some(5));
+        assert!(
+            diagonal.is_none(),
+            "Should return None for non-square matrix"
+        );
         Ok(())
     }
 

@@ -56,8 +56,8 @@ pub trait Matrix<Element> {
     /// Get diagonal components.
     ///
     /// # Returns
-    /// * Return compoments that is number of `min(row, column)`
-    fn diagonal_components(&self) -> Vec<Option<Element>>;
+    /// * Return compoments that is number of `row`. If the matrix is not square, return None
+    fn diagonal_components(&self) -> Option<Vec<Option<Element>>>;
 }
 
 pub trait FloatingMatrix {
