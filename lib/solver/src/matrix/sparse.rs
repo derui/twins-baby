@@ -130,83 +130,87 @@ mod tests {
 
     /// Test that from_matrix creates a sparse matrix with correct size
     #[test]
-    fn test_from_matrix_preserves_size() {
+    fn test_from_matrix_preserves_size() -> Result<(), Box<dyn Error>> {
         // Arrange
-        let mut source = SimpleMatrix::<i32>::new(3, 4);
-        source.set(0, 0, 1).unwrap();
-        source.set(1, 2, 5).unwrap();
+        let mut source = SimpleMatrix::<i32>::new(3, 4)?;
+        source.set(0, 0, 1)?;
+        source.set(1, 2, 5)?;
 
         // Act
         let sparse = SparseMatrix::from_matrix(&source);
 
         // Assert
         assert_eq!(sparse.size(), Size::new(3, 4));
+        Ok(())
     }
 
     /// Test that from_matrix correctly converts a matrix with sparse values
     #[test]
-    fn test_from_matrix_converts_sparse_values_correctly() {
+    fn test_from_matrix_converts_sparse_values_correctly() -> Result<(), Box<dyn Error>> {
         // Arrange
-        let mut source = SimpleMatrix::<i32>::new(3, 3);
-        source.set(0, 0, 1).unwrap();
-        source.set(0, 2, 3).unwrap();
-        source.set(1, 1, 5).unwrap();
-        source.set(2, 0, 7).unwrap();
+        let mut source = SimpleMatrix::<i32>::new(3, 3)?;
+        source.set(0, 0, 1)?;
+        source.set(0, 2, 3)?;
+        source.set(1, 1, 5)?;
+        source.set(2, 0, 7)?;
 
         // Act
         let sparse = SparseMatrix::from_matrix(&source);
 
         // Assert
-        assert_eq!(sparse.get(0, 0).unwrap(), Some(1));
-        assert_eq!(sparse.get(0, 2).unwrap(), Some(3));
-        assert_eq!(sparse.get(1, 1).unwrap(), Some(5));
-        assert_eq!(sparse.get(2, 0).unwrap(), Some(7));
-        assert_eq!(sparse.get(0, 1).unwrap(), None);
-        assert_eq!(sparse.get(1, 0).unwrap(), None);
-        assert_eq!(sparse.get(2, 2).unwrap(), None);
+        assert_eq!(sparse.get(0, 0)?, Some(1));
+        assert_eq!(sparse.get(0, 2)?, Some(3));
+        assert_eq!(sparse.get(1, 1)?, Some(5));
+        assert_eq!(sparse.get(2, 0)?, Some(7));
+        assert_eq!(sparse.get(0, 1)?, None);
+        assert_eq!(sparse.get(1, 0)?, None);
+        assert_eq!(sparse.get(2, 2)?, None);
+        Ok(())
     }
 
     /// Test that from_matrix handles empty matrix (all None values)
     #[test]
-    fn test_from_matrix_handles_empty_matrix() {
+    fn test_from_matrix_handles_empty_matrix() -> Result<(), Box<dyn Error>> {
         // Arrange
-        let source = SimpleMatrix::<i32>::new(2, 3);
+        let source = SimpleMatrix::<i32>::new(2, 3)?;
 
         // Act
         let sparse = SparseMatrix::from_matrix(&source);
 
         // Assert
-        assert_eq!(sparse.get(0, 0).unwrap(), None);
-        assert_eq!(sparse.get(1, 2).unwrap(), None);
+        assert_eq!(sparse.get(0, 0)?, None);
+        assert_eq!(sparse.get(1, 2)?, None);
         assert_eq!(sparse.size(), Size::new(2, 3));
+        Ok(())
     }
 
     /// Test that from_matrix handles dense matrix (all values present)
     #[test]
-    fn test_from_matrix_handles_dense_matrix() {
+    fn test_from_matrix_handles_dense_matrix() -> Result<(), Box<dyn Error>> {
         // Arrange
-        let mut source = SimpleMatrix::<i32>::new(2, 2);
-        source.set(0, 0, 1).unwrap();
-        source.set(0, 1, 2).unwrap();
-        source.set(1, 0, 3).unwrap();
-        source.set(1, 1, 4).unwrap();
+        let mut source = SimpleMatrix::<i32>::new(2, 2)?;
+        source.set(0, 0, 1)?;
+        source.set(0, 1, 2)?;
+        source.set(1, 0, 3)?;
+        source.set(1, 1, 4)?;
 
         // Act
         let sparse = SparseMatrix::from_matrix(&source);
 
         // Assert
-        assert_eq!(sparse.get(0, 0).unwrap(), Some(1));
-        assert_eq!(sparse.get(0, 1).unwrap(), Some(2));
-        assert_eq!(sparse.get(1, 0).unwrap(), Some(3));
-        assert_eq!(sparse.get(1, 1).unwrap(), Some(4));
+        assert_eq!(sparse.get(0, 0)?, Some(1));
+        assert_eq!(sparse.get(0, 1)?, Some(2));
+        assert_eq!(sparse.get(1, 0)?, Some(3));
+        assert_eq!(sparse.get(1, 1)?, Some(4));
+        Ok(())
     }
 
     /// Test that get returns error for out of bounds row
     #[test]
-    fn test_get_returns_error_for_out_of_bounds_row() {
+    fn test_get_returns_error_for_out_of_bounds_row() -> Result<(), Box<dyn Error>> {
         // Arrange
-        let mut source = SimpleMatrix::<i32>::new(2, 3);
-        source.set(0, 0, 1).unwrap();
+        let mut source = SimpleMatrix::<i32>::new(2, 3)?;
+        source.set(0, 0, 1)?;
         let sparse = SparseMatrix::from_matrix(&source);
 
         // Act
@@ -215,14 +219,15 @@ mod tests {
         // Assert
         assert_eq!(result.is_err(), true);
         assert_eq!(result.unwrap_err().to_string(), "Index out of bound");
+        Ok(())
     }
 
     /// Test that get returns error for out of bounds column
     #[test]
-    fn test_get_returns_error_for_out_of_bounds_column() {
+    fn test_get_returns_error_for_out_of_bounds_column() -> Result<(), Box<dyn Error>> {
         // Arrange
-        let mut source = SimpleMatrix::<i32>::new(2, 3);
-        source.set(0, 0, 1).unwrap();
+        let mut source = SimpleMatrix::<i32>::new(2, 3)?;
+        source.set(0, 0, 1)?;
         let sparse = SparseMatrix::from_matrix(&source);
 
         // Act
@@ -231,49 +236,52 @@ mod tests {
         // Assert
         assert_eq!(result.is_err(), true);
         assert_eq!(result.unwrap_err().to_string(), "Index out of bound");
+        Ok(())
     }
 
     /// Test that get retrieves None for unset values within bounds
     #[test]
-    fn test_get_returns_none_for_unset_values() {
+    fn test_get_returns_none_for_unset_values() -> Result<(), Box<dyn Error>> {
         // Arrange
-        let mut source = SimpleMatrix::<i32>::new(3, 3);
-        source.set(0, 0, 1).unwrap();
-        source.set(2, 2, 9).unwrap();
+        let mut source = SimpleMatrix::<i32>::new(3, 3)?;
+        source.set(0, 0, 1)?;
+        source.set(2, 2, 9)?;
         let sparse = SparseMatrix::from_matrix(&source);
 
         // Act
-        let result = sparse.get(1, 1);
+        let result = sparse.get(1, 1)?;
 
         // Assert
-        assert_eq!(result.unwrap(), None);
+        assert_eq!(result, None);
+        Ok(())
     }
 
     /// Test that extract correctly transforms values using the provided function
     #[test]
-    fn test_extract_transforms_values_correctly() {
+    fn test_extract_transforms_values_correctly() -> Result<(), Box<dyn Error>> {
         // Arrange
-        let mut source = SimpleMatrix::<i32>::new(2, 2);
-        source.set(0, 0, 10).unwrap();
-        source.set(1, 1, 20).unwrap();
+        let mut source = SimpleMatrix::<i32>::new(2, 2)?;
+        source.set(0, 0, 10)?;
+        source.set(1, 1, 20)?;
         let sparse = SparseMatrix::from_matrix(&source);
 
         // Act
         let extracted = sparse.extract(|&v| v as f32 * 2.0);
 
         // Assert
-        assert_eq!(extracted.get(0, 0).unwrap(), Some(20.0));
-        assert_eq!(extracted.get(1, 1).unwrap(), Some(40.0));
-        assert_eq!(extracted.get(0, 1).unwrap(), None);
+        assert_eq!(extracted.get(0, 0)?, Some(20.0));
+        assert_eq!(extracted.get(1, 1)?, Some(40.0));
+        assert_eq!(extracted.get(0, 1)?, None);
+        Ok(())
     }
 
     /// Test that extract preserves the matrix structure
     #[test]
-    fn test_extract_preserves_matrix_structure() {
+    fn test_extract_preserves_matrix_structure() -> Result<(), Box<dyn Error>> {
         // Arrange
-        let mut source = SimpleMatrix::<i32>::new(3, 4);
-        source.set(0, 1, 5).unwrap();
-        source.set(2, 3, 15).unwrap();
+        let mut source = SimpleMatrix::<i32>::new(3, 4)?;
+        source.set(0, 1, 5)?;
+        source.set(2, 3, 15)?;
         let sparse = SparseMatrix::from_matrix(&source);
 
         // Act
@@ -281,20 +289,22 @@ mod tests {
 
         // Assert
         assert_eq!(extracted.size(), Size::new(3, 4));
-        assert_eq!(extracted.get(0, 1).unwrap(), Some(5.0));
-        assert_eq!(extracted.get(2, 3).unwrap(), Some(15.0));
-        assert_eq!(extracted.get(1, 1).unwrap(), None);
+        assert_eq!(extracted.get(0, 1)?, Some(5.0));
+        assert_eq!(extracted.get(2, 3)?, Some(15.0));
+        assert_eq!(extracted.get(1, 1)?, None);
+        Ok(())
     }
 
     /// Test that diagonal_components returns correct values for square matrix
     #[test]
-    fn test_diagonal_components_returns_correct_values_for_square_matrix() {
+    fn test_diagonal_components_returns_correct_values_for_square_matrix()
+    -> Result<(), Box<dyn Error>> {
         // Arrange
-        let mut source = SimpleMatrix::<i32>::new(3, 3);
-        source.set(0, 0, 1).unwrap();
-        source.set(1, 1, 5).unwrap();
-        source.set(2, 2, 9).unwrap();
-        source.set(0, 1, 2).unwrap(); // Non-diagonal
+        let mut source = SimpleMatrix::<i32>::new(3, 3)?;
+        source.set(0, 0, 1)?;
+        source.set(1, 1, 5)?;
+        source.set(2, 2, 9)?;
+        source.set(0, 1, 2)?; // Non-diagonal
         let sparse = SparseMatrix::from_matrix(&source);
 
         // Act
@@ -305,15 +315,16 @@ mod tests {
         assert_eq!(diagonal[0], Some(1));
         assert_eq!(diagonal[1], Some(5));
         assert_eq!(diagonal[2], Some(9));
+        Ok(())
     }
 
     /// Test that diagonal_components handles missing diagonal values
     #[test]
-    fn test_diagonal_components_handles_missing_diagonal_values() {
+    fn test_diagonal_components_handles_missing_diagonal_values() -> Result<(), Box<dyn Error>> {
         // Arrange
-        let mut source = SimpleMatrix::<i32>::new(3, 3);
-        source.set(0, 0, 1).unwrap();
-        source.set(2, 2, 9).unwrap();
+        let mut source = SimpleMatrix::<i32>::new(3, 3)?;
+        source.set(0, 0, 1)?;
+        source.set(2, 2, 9)?;
         // 1,1 is intentionally not set
         let sparse = SparseMatrix::from_matrix(&source);
 
@@ -325,15 +336,16 @@ mod tests {
         assert_eq!(diagonal[0], Some(1));
         assert_eq!(diagonal[1], None);
         assert_eq!(diagonal[2], Some(9));
+        Ok(())
     }
 
     /// Test that diagonal_components works for non-square matrix (more rows)
     #[test]
-    fn test_diagonal_components_for_tall_matrix() {
+    fn test_diagonal_components_for_tall_matrix() -> Result<(), Box<dyn Error>> {
         // Arrange
-        let mut source = SimpleMatrix::<i32>::new(4, 2);
-        source.set(0, 0, 1).unwrap();
-        source.set(1, 1, 5).unwrap();
+        let mut source = SimpleMatrix::<i32>::new(4, 2)?;
+        source.set(0, 0, 1)?;
+        source.set(1, 1, 5)?;
         let sparse = SparseMatrix::from_matrix(&source);
 
         // Act
@@ -343,15 +355,16 @@ mod tests {
         assert_eq!(diagonal.len(), 2); // min(4, 2) = 2
         assert_eq!(diagonal[0], Some(1));
         assert_eq!(diagonal[1], Some(5));
+        Ok(())
     }
 
     /// Test that diagonal_components works for non-square matrix (more columns)
     #[test]
-    fn test_diagonal_components_for_wide_matrix() {
+    fn test_diagonal_components_for_wide_matrix() -> Result<(), Box<dyn Error>> {
         // Arrange
-        let mut source = SimpleMatrix::<i32>::new(2, 4);
-        source.set(0, 0, 1).unwrap();
-        source.set(1, 1, 5).unwrap();
+        let mut source = SimpleMatrix::<i32>::new(2, 4)?;
+        source.set(0, 0, 1)?;
+        source.set(1, 1, 5)?;
         let sparse = SparseMatrix::from_matrix(&source);
 
         // Act
@@ -361,13 +374,14 @@ mod tests {
         assert_eq!(diagonal.len(), 2); // min(2, 4) = 2
         assert_eq!(diagonal[0], Some(1));
         assert_eq!(diagonal[1], Some(5));
+        Ok(())
     }
 
     /// Test that size returns correct dimensions
     #[test]
-    fn test_size_returns_correct_dimensions() {
+    fn test_size_returns_correct_dimensions() -> Result<(), Box<dyn Error>> {
         // Arrange
-        let source = SimpleMatrix::<i32>::new(5, 7);
+        let source = SimpleMatrix::<i32>::new(5, 7)?;
         let sparse = SparseMatrix::from_matrix(&source);
 
         // Act
@@ -376,78 +390,83 @@ mod tests {
         // Assert
         assert_eq!(size.rows(), 5);
         assert_eq!(size.columns(), 7);
+        Ok(())
     }
 
     /// Test that sparse matrix works with f32 values
     #[test]
-    fn test_sparse_matrix_with_f32_values() {
+    fn test_sparse_matrix_with_f32_values() -> Result<(), Box<dyn Error>> {
         // Arrange
-        let mut source = SimpleMatrix::<f32>::new(2, 2);
-        source.set(0, 0, 1.5).unwrap();
-        source.set(1, 1, 2.7).unwrap();
+        let mut source = SimpleMatrix::<f32>::new(2, 2)?;
+        source.set(0, 0, 1.5)?;
+        source.set(1, 1, 2.7)?;
 
         // Act
         let sparse = SparseMatrix::from_matrix(&source);
 
         // Assert
-        assert_eq!(sparse.get(0, 0).unwrap(), Some(1.5));
-        assert_eq!(sparse.get(1, 1).unwrap(), Some(2.7));
-        assert_eq!(sparse.get(0, 1).unwrap(), None);
+        assert_eq!(sparse.get(0, 0)?, Some(1.5));
+        assert_eq!(sparse.get(1, 1)?, Some(2.7));
+        assert_eq!(sparse.get(0, 1)?, None);
+        Ok(())
     }
 
     /// Test that from_matrix handles single element matrix
     #[test]
-    fn test_from_matrix_handles_single_element() {
+    fn test_from_matrix_handles_single_element() -> Result<(), Box<dyn Error>> {
         // Arrange
-        let mut source = SimpleMatrix::<i32>::new(1, 1);
-        source.set(0, 0, 42).unwrap();
+        let mut source = SimpleMatrix::<i32>::new(1, 1)?;
+        source.set(0, 0, 42)?;
 
         // Act
         let sparse = SparseMatrix::from_matrix(&source);
 
         // Assert
         assert_eq!(sparse.size(), Size::new(1, 1));
-        assert_eq!(sparse.get(0, 0).unwrap(), Some(42));
+        assert_eq!(sparse.get(0, 0)?, Some(42));
+        Ok(())
     }
 
     /// Test that from_matrix handles single row matrix
     #[test]
-    fn test_from_matrix_handles_single_row() {
+    fn test_from_matrix_handles_single_row() -> Result<(), Box<dyn Error>> {
         // Arrange
-        let mut source = SimpleMatrix::<i32>::new(1, 5);
-        source.set(0, 0, 1).unwrap();
-        source.set(0, 2, 3).unwrap();
-        source.set(0, 4, 5).unwrap();
+        let mut source = SimpleMatrix::<i32>::new(1, 5)?;
+        source.set(0, 0, 1)?;
+        source.set(0, 2, 3)?;
+        source.set(0, 4, 5)?;
 
         // Act
         let sparse = SparseMatrix::from_matrix(&source);
 
         // Assert
         dbg!(&sparse);
-        assert_eq!(sparse.get(0, 0).unwrap(), Some(1));
-        assert_eq!(sparse.get(0, 2).unwrap(), Some(3));
-        assert_eq!(sparse.get(0, 4).unwrap(), Some(5));
-        assert_eq!(sparse.get(0, 1).unwrap(), None);
-        assert_eq!(sparse.get(0, 3).unwrap(), None);
+        assert_eq!(sparse.get(0, 0)?, Some(1));
+        assert_eq!(sparse.get(0, 2)?, Some(3));
+        assert_eq!(sparse.get(0, 4)?, Some(5));
+        assert_eq!(sparse.get(0, 1)?, None);
+        assert_eq!(sparse.get(0, 3)?, None);
+        Ok(())
     }
 
     /// Test that from_matrix handles single column matrix
     #[test]
-    fn test_from_matrix_handles_single_column() {
+    fn test_from_matrix_handles_single_column() -> Result<(), Box<dyn Error>> {
         // Arrange
-        let mut source = SimpleMatrix::<i32>::new(5, 1);
-        source.set(0, 0, 1).unwrap();
-        source.set(2, 0, 3).unwrap();
-        source.set(4, 0, 5).unwrap();
+        let mut source = SimpleMatrix::<i32>::new(5, 1)?;
+        source.set(0, 0, 1)?;
+        source.set(2, 0, 3)?;
+        source.set(4, 0, 5)?;
 
         // Act
         let sparse = SparseMatrix::from_matrix(&source);
 
         // Assert
-        assert_eq!(sparse.get(0, 0).unwrap(), Some(1));
-        assert_eq!(sparse.get(2, 0).unwrap(), Some(3));
-        assert_eq!(sparse.get(4, 0).unwrap(), Some(5));
-        assert_eq!(sparse.get(1, 0).unwrap(), None);
-        assert_eq!(sparse.get(3, 0).unwrap(), None);
+        assert_eq!(sparse.get(0, 0)?, Some(1));
+        assert_eq!(sparse.get(2, 0)?, Some(3));
+        assert_eq!(sparse.get(4, 0)?, Some(5));
+        assert_eq!(sparse.get(1, 0)?, None);
+        assert_eq!(sparse.get(3, 0)?, None);
+        Ok(())
     }
 }
