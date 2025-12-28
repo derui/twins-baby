@@ -1,4 +1,4 @@
-use std::{cmp::min, error::Error};
+use std::{cmp::min, error::Error, fs::TryLockError};
 
 use crate::matrix::{FloatingMatrix, Matrix, size::Size};
 
@@ -90,6 +90,53 @@ impl<M: Clone> Matrix<M> for SimpleMatrix<M> {
         }
 
         Some(ret)
+    }
+}
+
+struct LUSplit {
+    l_matrix: SimpleMatrix<f32>,
+    u_mattix: SimpleMatrix<f32>,
+}
+
+impl SimpleMatrix<f32> {
+    /// LU split algorithm implementation for the matrix
+    ///
+    /// # Return
+    /// * Ok with splited LU matrix
+    fn lu_split(&self) -> Result<LUSplit, Box<dyn Error>> {
+        if self.size.rows() != self.size.columns() {
+            return Err("can not make the LU split without exponent matrix".into());
+        }
+
+        let mut l = SimpleMatrix::<f32>::new(self.size.rows(), self.size.columns())?;
+        let mut u = SimpleMatrix::<f32>::new(self.size.rows(), self.size.columns())?;
+
+        // initialize L/U matrix
+        for i in 0..(self.size.min()) {
+            u.set(i, i, 1.0)?;
+        }
+
+        for i in 0..(self.size.min()) {
+            for j in i..(self.size.min()) {
+                let mut sum = 0.0;
+
+                for k in 0..(i - 1) {
+                    sum += match (l.get(i, k), u.get(k, j)) {
+                        (Ok(Some(l)), Ok(Some(u))) => l * u,
+                        (_, _) => 0.0,
+                    };
+                }
+
+                let u_ij = self.get(i, j)?.unwrap_or(0.) - sum;
+                u.set(i, j, u_ij);
+                l.set(j, i, u_ij / u.get(i, i)?.unwrap_or(1.0));
+            }
+        }
+
+        Ok(LUSplit {
+            l_matrix: l,
+            u_mattix: u,
+        })
     }
 }
 

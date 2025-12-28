@@ -19,4 +19,10 @@ impl Size {
     pub fn columns(&self) -> usize {
         self.1
     }
+
+    /// Get minimum value of the size
+    #[inline]
+    pub fn min(&self) -> usize {
+        if self.0 >= self.1 { self.1 } else { self.0 }
+    }
 }
