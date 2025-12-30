@@ -476,4 +476,32 @@ mod tests {
         assert_eq!(det, Some(1.0));
         Ok(())
     }
+
+    #[rstest]
+    #[case(2, 3, "more columns than rows")]
+    #[case(3, 2, "more rows than columns")]
+    #[case(1, 4, "single row")]
+    #[case(4, 1, "single column")]
+    fn test_determinant_returns_none_for_non_square_matrix(
+        #[case] rows: usize,
+        #[case] cols: usize,
+        #[case] description: &str,
+    ) -> Result<(), Box<dyn Error>> {
+        // Arrange
+        let matrix = SimpleMatrix::<f32>::new(rows, cols)?;
+
+        // Act
+        let det = matrix.determinant();
+
+        // Assert
+        assert!(
+            det.is_none(),
+            "Expected None for {} ({}x{}), but got {:?}",
+            description,
+            rows,
+            cols,
+            det
+        );
+        Ok(())
+    }
 }
