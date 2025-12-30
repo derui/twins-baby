@@ -47,7 +47,7 @@ impl<M: Clone> SparseMatrix<M> {
 
         SparseMatrix {
             size,
-            values: values.iter().cloned().flatten().collect(),
+            values: values.iter().flatten().cloned().collect(),
             col_indices,
             row_ptr,
         }

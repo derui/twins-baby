@@ -1,4 +1,4 @@
-use std::{cmp::min, error::Error, fs::TryLockError};
+use std::{cmp::min, error::Error};
 
 use crate::matrix::{FloatingMatrix, Matrix, size::Size};
 
