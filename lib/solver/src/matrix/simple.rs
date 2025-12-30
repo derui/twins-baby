@@ -4,6 +4,7 @@ use crate::matrix::{FloatingMatrix, Matrix, size::Size};
 
 /// implement simple matrix.
 
+#[derive(Debug, Clone)]
 pub struct SimpleMatrix<M> {
     size: Size,
     /// A simple 2D matrix
@@ -110,26 +111,40 @@ impl SimpleMatrix<f32> {
 
         let mut l = SimpleMatrix::<f32>::new(self.size.rows(), self.size.columns())?;
         let mut u = SimpleMatrix::<f32>::new(self.size.rows(), self.size.columns())?;
+        let n = self.size.min();
 
         // initialize L/U matrix
-        for i in 0..(self.size.min()) {
-            u.set(i, i, 1.0)?;
+        for i in 0..(n) {
+            l.set(i, i, 1.0)?;
         }
 
-        for i in 0..(self.size.min()) {
-            for j in i..(self.size.min()) {
-                let mut sum = 0.0;
+        for i in 0..(n) {
+            for j in i..(n) {
+                let mut sum_u = 0.0;
 
-                for k in 0..(i - 1) {
-                    sum += match (l.get(i, k), u.get(k, j)) {
+                for k in 0..i {
+                    sum_u += match (l.get(i, k), u.get(k, j)) {
                         (Ok(Some(l)), Ok(Some(u))) => l * u,
                         (_, _) => 0.0,
                     };
                 }
 
-                let u_ij = self.get(i, j)?.unwrap_or(0.) - sum;
-                u.set(i, j, u_ij);
-                l.set(j, i, u_ij / u.get(i, i)?.unwrap_or(1.0));
+                let u_ij = self.get(i, j)?.unwrap_or(0.) - sum_u;
+                let _ = u.set(i, j, u_ij);
+            }
+
+            for j in (i + 1)..(n) {
+                let mut sum_l = 0.0;
+
+                for k in 0..i {
+                    sum_l += match (l.get(j, k), u.get(k, i)) {
+                        (Ok(Some(l)), Ok(Some(u))) => l * u,
+                        (_, _) => 0.0,
+                    };
+                }
+
+                let l_ji = self.get(j, i)?.unwrap_or(0.) - sum_l;
+                let _ = l.set(j, i, l_ji / u.get(i, i)?.unwrap_or(1.0));
             }
         }
 
@@ -142,7 +157,19 @@ impl SimpleMatrix<f32> {
 
 impl FloatingMatrix for SimpleMatrix<f32> {
     fn determinant(&self) -> Option<f32> {
-        todo!()
+        if let Ok(splited) = self.lu_split() {
+            let u = splited.u_mattix;
+            dbg!(&u);
+
+            let mut sum = 1.0;
+            for i in 0..(self.size.min()) {
+                sum *= u.get(i, i).unwrap_or(None).unwrap_or(0.0);
+            }
+
+            Some(sum)
+        } else {
+            None
+        }
     }
 }
 
@@ -381,6 +408,72 @@ mod tests {
             "Expected error for {}, but got Ok",
             description
         );
+        Ok(())
+    }
+
+    #[test]
+    fn test_determinant_2x2_matrix() -> Result<(), Box<dyn Error>> {
+        // Arrange
+        // Matrix: | 1  2 |
+        //         | 3  4 |
+        // det = 1*4 - 2*3 = -2
+        let mut matrix = SimpleMatrix::<f32>::new(2, 2)?;
+        matrix.set(0, 0, 1.0)?;
+        matrix.set(0, 1, 2.0)?;
+        matrix.set(1, 0, 3.0)?;
+        matrix.set(1, 1, 4.0)?;
+
+        // Act
+        let det = matrix.determinant();
+
+        // Assert
+        assert_eq!(det, Some(-2.0));
+        Ok(())
+    }
+
+    #[test]
+    fn test_determinant_3x3_matrix() -> Result<(), Box<dyn Error>> {
+        // Arrange
+        // Matrix: | 1  2  3 |
+        //         | 4  5  6 |
+        //         | 7  8  9 |
+        // det = 1*(5*9-6*8) - 2*(4*9-6*7) + 3*(4*8-5*7)
+        //     = 1*(45-48) - 2*(36-42) + 3*(32-35)
+        //     = 1*(-3) - 2*(-6) + 3*(-3)
+        //     = -3 + 12 - 9 = 0
+        let mut matrix = SimpleMatrix::<f32>::new(3, 3)?;
+        matrix.set(0, 0, 1.0)?;
+        matrix.set(0, 1, 2.0)?;
+        matrix.set(0, 2, 3.0)?;
+        matrix.set(1, 0, 4.0)?;
+        matrix.set(1, 1, 5.0)?;
+        matrix.set(1, 2, 6.0)?;
+        matrix.set(2, 0, 7.0)?;
+        matrix.set(2, 1, 8.0)?;
+        matrix.set(2, 2, 9.0)?;
+
+        // Act
+        let det = matrix.determinant();
+
+        // Assert
+        assert_eq!(det, Some(0.0));
+        Ok(())
+    }
+
+    #[test]
+    fn test_determinant_identity_matrix() -> Result<(), Box<dyn Error>> {
+        // Arrange
+        // Identity matrix has determinant = 1
+        let mut matrix = SimpleMatrix::<f32>::new(3, 3)?;
+        matrix.set(0, 0, 1.0)?;
+        matrix.set(1, 1, 1.0)?;
+        matrix.set(2, 2, 1.0)?;
+
+        // Act
+        let det = matrix.determinant();
+
+        // Assert
+        assert_eq!(det, Some(1.0));
         Ok(())
     }
 }
