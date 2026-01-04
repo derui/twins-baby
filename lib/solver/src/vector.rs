@@ -1,6 +1,7 @@
 use std::{
     error::Error,
-    ops::{Add, Mul, Sub},
+    f32,
+    ops::{Add, Div, Index, IndexMut, Mul, Sub},
 };
 
 /// Offer simple multi-dimension vector. This works with `matrix` module in this library.
@@ -27,6 +28,37 @@ impl Vector {
 
         Ok(Vector { vec: vec.to_vec() })
     }
+
+    /// Make new zero vector
+    ///
+    /// # Arguments
+    /// * `size` : size of the new vector
+    ///
+    /// # Returns
+    /// * new vector unless `size` is lesser than 1
+    fn zero(size: usize) -> Result<Self, Box<dyn Error>> {
+        if size <= 0 {
+            return Err("Can not define 0-dimension vector".into());
+        }
+
+        Ok(Vector {
+            vec: vec![0.0; size],
+        })
+    }
+}
+
+impl Index<usize> for Vector {
+    type Output = f32;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        self.vec.index(index)
+    }
+}
+
+impl IndexMut<usize> for Vector {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        self.vec.index_mut(index)
+    }
 }
 
 impl Mul<f32> for Vector {
@@ -35,6 +67,16 @@ impl Mul<f32> for Vector {
     fn mul(self, rhs: f32) -> Self::Output {
         Vector {
             vec: self.vec.iter().map(|f| f * rhs).collect(),
+        }
+    }
+}
+
+impl Div<f32> for Vector {
+    type Output = Self;
+
+    fn div(self, rhs: f32) -> Self::Output {
+        Vector {
+            vec: self.vec.iter().map(|f| f / rhs).collect(),
         }
     }
 }
