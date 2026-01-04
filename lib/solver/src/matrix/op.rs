@@ -126,7 +126,7 @@ pub fn determinant(mat: &impl Matrix<f32>) -> Option<f32> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::matrix::sparse::SparseMatrix;
+    use crate::matrix::{size::Size, sparse::SparseMatrix};
     use pretty_assertions::assert_eq;
     use rstest::rstest;
 
@@ -325,6 +325,89 @@ mod tests {
 
         // Assert
         assert_eq!(det, Some(9.0));
+        Ok(())
+    }
+
+    #[test]
+    fn test_mul_with_identity_matrix() -> Result<(), Box<dyn Error>> {
+        // Arrange
+        // Matrix A (2x2):  | 3.0  4.0 |
+        //                  | 5.0  6.0 |
+        let mut matrix = SimpleMatrix::<f32>::new(2, 2)?;
+        matrix.set(0, 0, 3.0)?;
+        matrix.set(0, 1, 4.0)?;
+        matrix.set(1, 0, 5.0)?;
+        matrix.set(1, 1, 6.0)?;
+
+        // Identity matrix (2x2): | 1.0  0.0 |
+        //                         | 0.0  1.0 |
+        let mut identity = SimpleMatrix::<f32>::new(2, 2)?;
+        identity.set(0, 0, 1.0)?;
+        identity.set(1, 1, 1.0)?;
+
+        // Act
+        let result = mul(&matrix, &identity)?;
+
+        // Assert
+        // Result should equal original matrix
+        assert_eq!(result.get(0, 0)?, Some(3.0));
+        assert_eq!(result.get(0, 1)?, Some(4.0));
+        assert_eq!(result.get(1, 0)?, Some(5.0));
+        assert_eq!(result.get(1, 1)?, Some(6.0));
+        Ok(())
+    }
+
+    #[test]
+    fn test_mul_with_sparse_matrices() -> Result<(), Box<dyn Error>> {
+        // Arrange
+        // Matrix A (2x3) with some None values:
+        //   | 2.0  None  3.0 |
+        //   | None 5.0   None|
+        let mut lhs = SimpleMatrix::<f32>::new(2, 3)?;
+        lhs.set(0, 0, 2.0)?;
+        lhs.set(0, 2, 3.0)?;
+        lhs.set(1, 1, 5.0)?;
+
+        // Matrix B (3x2) with some None values:
+        //   | 1.0  None |
+        //   | 4.0  2.0  |
+        //   | None 3.0  |
+        let mut rhs = SimpleMatrix::<f32>::new(3, 2)?;
+        rhs.set(0, 0, 1.0)?;
+        rhs.set(1, 0, 4.0)?;
+        rhs.set(1, 1, 2.0)?;
+        rhs.set(2, 1, 3.0)?;
+
+        // Act
+        let result = mul(&lhs, &rhs)?;
+
+        // Assert
+        // Result (2x2):
+        //   | 2.0*1.0 + 0 + 0           0 + 0 + 3.0*3.0      | = | 2.0  9.0  |
+        //   | 0 + 5.0*4.0 + 0           0 + 5.0*2.0 + 0      |   | 20.0 10.0 |
+        assert_eq!(result.size(), Size::new(2, 2));
+        assert_eq!(result.get(0, 0)?, Some(2.0));
+        assert_eq!(result.get(0, 1)?, Some(9.0));
+        assert_eq!(result.get(1, 0)?, Some(20.0));
+        assert_eq!(result.get(1, 1)?, Some(10.0));
+        Ok(())
+    }
+
+    #[test]
+    fn test_mul_with_single_element_matrices() -> Result<(), Box<dyn Error>> {
+        // Arrange
+        let mut lhs = SimpleMatrix::<f32>::new(1, 1)?;
+        lhs.set(0, 0, 5.0)?;
+
+        let mut rhs = SimpleMatrix::<f32>::new(1, 1)?;
+        rhs.set(0, 0, 3.0)?;
+
+        // Act
+        let result = mul(&lhs, &rhs)?;
+
+        // Assert
+        assert_eq!(result.size(), Size::new(1, 1));
+        assert_eq!(result.get(0, 0)?, Some(15.0));
         Ok(())
     }
 }

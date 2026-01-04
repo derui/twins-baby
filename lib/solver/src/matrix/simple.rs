@@ -1,6 +1,6 @@
-use std::{cmp::min, error::Error, ops::Mul};
+use std::{cmp::min, error::Error};
 
-use crate::matrix::{Matrix, op::mul, size::Size};
+use crate::matrix::{Matrix, size::Size};
 
 /// implement simple matrix.
 
@@ -40,7 +40,7 @@ impl<M: Clone> SimpleMatrix<M> {
     ///
     /// # Return
     /// * New simple matrix
-    pub fn from_mat(other: &impl Matrix<M>) -> Self {
+    pub fn from_matrix(other: &impl Matrix<M>) -> Self {
         let mut mat =
             Self::new(other.size().rows(), other.size().columns()).expect("Must be valid");
 
@@ -114,16 +114,6 @@ impl<M: Clone> Matrix<M> for SimpleMatrix<M> {
         }
 
         Some(ret)
-    }
-}
-
-impl Mul<SimpleMatrix<f32>> for SimpleMatrix<f32> {
-    type Output = Result<SimpleMatrix<f32>, Box<dyn Error>>;
-
-    fn mul(self, rhs: SimpleMatrix<f32>) -> Self::Output {
-        let mat = mul::<f32>(&self, &rhs)?;
-
-        Ok(SimpleMatrix::from_mat(&mat))
     }
 }
 
@@ -377,7 +367,7 @@ mod tests {
         source.set(2, 1, 60)?;
 
         // Act
-        let copied = SimpleMatrix::from_mat(&source);
+        let copied = SimpleMatrix::from_matrix(&source);
 
         // Assert
         assert_eq!(copied.size(), Size::new(3, 2));
@@ -399,7 +389,7 @@ mod tests {
         // (0, 1), (0, 2), (1, 0), (1, 1) are intentionally left as None
 
         // Act
-        let copied = SimpleMatrix::from_mat(&source);
+        let copied = SimpleMatrix::from_matrix(&source);
 
         // Assert
         assert_eq!(copied.size(), Size::new(2, 3));
@@ -420,147 +410,12 @@ mod tests {
         source.set(1, 1, 200)?;
 
         // Act
-        let mut copied = SimpleMatrix::from_mat(&source);
+        let mut copied = SimpleMatrix::from_matrix(&source);
         copied.set(0, 0, 999)?;
 
         // Assert
         assert_eq!(source.get(0, 0)?, Some(100), "Source should be unchanged");
         assert_eq!(copied.get(0, 0)?, Some(999), "Copy should be modified");
-        Ok(())
-    }
-
-    #[test]
-    fn test_mul_multiplies_2x3_and_3x2_matrices() -> Result<(), Box<dyn Error>> {
-        // Arrange
-        // Matrix A (2x3):  | 1.0  2.0  3.0 |
-        //                  | 4.0  5.0  6.0 |
-        let mut lhs = SimpleMatrix::<f32>::new(2, 3)?;
-        lhs.set(0, 0, 1.0)?;
-        lhs.set(0, 1, 2.0)?;
-        lhs.set(0, 2, 3.0)?;
-        lhs.set(1, 0, 4.0)?;
-        lhs.set(1, 1, 5.0)?;
-        lhs.set(1, 2, 6.0)?;
-
-        // Matrix B (3x2):  | 7.0   8.0 |
-        //                  | 9.0  10.0 |
-        //                  | 11.0 12.0 |
-        let mut rhs = SimpleMatrix::<f32>::new(3, 2)?;
-        rhs.set(0, 0, 7.0)?;
-        rhs.set(0, 1, 8.0)?;
-        rhs.set(1, 0, 9.0)?;
-        rhs.set(1, 1, 10.0)?;
-        rhs.set(2, 0, 11.0)?;
-        rhs.set(2, 1, 12.0)?;
-
-        // Act
-        let result = (lhs * rhs)?;
-
-        // Assert
-        // Result (2x2):    | 58.0  64.0 |
-        //                  | 139.0 154.0 |
-        assert_eq!(result.size(), Size::new(2, 2));
-        assert_eq!(result.get(0, 0)?, Some(58.0));
-        assert_eq!(result.get(0, 1)?, Some(64.0));
-        assert_eq!(result.get(1, 0)?, Some(139.0));
-        assert_eq!(result.get(1, 1)?, Some(154.0));
-        Ok(())
-    }
-
-    #[test]
-    fn test_mul_with_identity_matrix() -> Result<(), Box<dyn Error>> {
-        // Arrange
-        // Matrix A (2x2):  | 3.0  4.0 |
-        //                  | 5.0  6.0 |
-        let mut matrix = SimpleMatrix::<f32>::new(2, 2)?;
-        matrix.set(0, 0, 3.0)?;
-        matrix.set(0, 1, 4.0)?;
-        matrix.set(1, 0, 5.0)?;
-        matrix.set(1, 1, 6.0)?;
-
-        // Identity matrix (2x2): | 1.0  0.0 |
-        //                         | 0.0  1.0 |
-        let mut identity = SimpleMatrix::<f32>::new(2, 2)?;
-        identity.set(0, 0, 1.0)?;
-        identity.set(1, 1, 1.0)?;
-
-        // Act
-        let result = (matrix * identity)?;
-
-        // Assert
-        // Result should equal original matrix
-        assert_eq!(result.get(0, 0)?, Some(3.0));
-        assert_eq!(result.get(0, 1)?, Some(4.0));
-        assert_eq!(result.get(1, 0)?, Some(5.0));
-        assert_eq!(result.get(1, 1)?, Some(6.0));
-        Ok(())
-    }
-
-    #[test]
-    fn test_mul_with_sparse_matrices() -> Result<(), Box<dyn Error>> {
-        // Arrange
-        // Matrix A (2x3) with some None values:
-        //   | 2.0  None  3.0 |
-        //   | None 5.0   None|
-        let mut lhs = SimpleMatrix::<f32>::new(2, 3)?;
-        lhs.set(0, 0, 2.0)?;
-        lhs.set(0, 2, 3.0)?;
-        lhs.set(1, 1, 5.0)?;
-
-        // Matrix B (3x2) with some None values:
-        //   | 1.0  None |
-        //   | 4.0  2.0  |
-        //   | None 3.0  |
-        let mut rhs = SimpleMatrix::<f32>::new(3, 2)?;
-        rhs.set(0, 0, 1.0)?;
-        rhs.set(1, 0, 4.0)?;
-        rhs.set(1, 1, 2.0)?;
-        rhs.set(2, 1, 3.0)?;
-
-        // Act
-        let result = (lhs * rhs)?;
-
-        // Assert
-        // Result (2x2):
-        //   | 2.0*1.0 + 0 + 0           0 + 0 + 3.0*3.0      | = | 2.0  9.0  |
-        //   | 0 + 5.0*4.0 + 0           0 + 5.0*2.0 + 0      |   | 20.0 10.0 |
-        assert_eq!(result.size(), Size::new(2, 2));
-        assert_eq!(result.get(0, 0)?, Some(2.0));
-        assert_eq!(result.get(0, 1)?, Some(9.0));
-        assert_eq!(result.get(1, 0)?, Some(20.0));
-        assert_eq!(result.get(1, 1)?, Some(10.0));
-        Ok(())
-    }
-
-    #[test]
-    fn test_mul_returns_error_for_incompatible_dimensions() -> Result<(), Box<dyn Error>> {
-        // Arrange
-        let lhs = SimpleMatrix::<f32>::new(2, 3)?;
-        let rhs = SimpleMatrix::<f32>::new(2, 2)?; // columns of lhs != rows of rhs
-
-        // Act
-        let result = lhs * rhs;
-
-        // Assert
-        assert!(result.is_err());
-        Ok(())
-    }
-
-    #[test]
-    fn test_mul_with_single_element_matrices() -> Result<(), Box<dyn Error>> {
-        // Arrange
-        let mut lhs = SimpleMatrix::<f32>::new(1, 1)?;
-        lhs.set(0, 0, 5.0)?;
-
-        let mut rhs = SimpleMatrix::<f32>::new(1, 1)?;
-        rhs.set(0, 0, 3.0)?;
-
-        // Act
-        let result = (lhs * rhs)?;
-
-        // Assert
-        assert_eq!(result.size(), Size::new(1, 1));
-        assert_eq!(result.get(0, 0)?, Some(15.0));
         Ok(())
     }
 }
