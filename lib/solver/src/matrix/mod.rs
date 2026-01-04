@@ -1,7 +1,8 @@
-use std::error::Error;
+use std::{error::Error, ops::Mul};
 
 use size::Size;
 
+pub(crate) mod op;
 pub mod simple;
 pub mod size;
 pub mod sparse;
