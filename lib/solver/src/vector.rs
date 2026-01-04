@@ -94,6 +94,13 @@ impl Vector {
 
         mat
     }
+
+    /// Compute norm of the vector
+    pub fn norm(&self) -> f32 {
+        let f = self.vec.iter().map(|f| f * f).sum::<f32>();
+
+        f32::sqrt(f)
+    }
 }
 
 impl Index<usize> for Vector {
@@ -424,6 +431,22 @@ mod tests {
 
         // Assert
         assert_eq!(vector[index], new_value);
+        Ok(())
+    }
+
+    #[rstest]
+    #[case(&[1.0, 2.0, 3.0], f32::sqrt(14.0))]
+    #[case(&[42.0], 42.0)]
+    #[case(&[-42.0], 42.0)]
+    fn test_compute_norm(#[case] values: &[f32], #[case] norm: f32) -> Result<(), Box<dyn Error>> {
+        // Arrange
+        let vector = Vector::new(values)?;
+
+        // Act
+        let ret = vector.norm();
+
+        // Assert
+        assert_eq!(ret, norm);
         Ok(())
     }
 }
