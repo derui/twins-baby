@@ -4,6 +4,8 @@ use std::{
     ops::{Add, Div, Index, IndexMut, Mul, Sub},
 };
 
+use crate::matrix::{Matrix, simple::SimpleMatrix};
+
 /// Offer simple multi-dimension vector. This works with `matrix` module in this library.
 
 /// A simple vector type
@@ -11,6 +13,13 @@ use std::{
 pub struct Vector {
     // A simple element holder
     vec: Vec<f32>,
+}
+
+/// Method to convert a vector to a [FloatingMatrix], column or row direction
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub enum TransposeMethod {
+    Column,
+    Row,
 }
 
 impl Vector {
@@ -21,7 +30,7 @@ impl Vector {
     ///
     /// # Returns
     /// * new vector. Return `Err` when `vec` is 0-sized slice
-    fn new(vec: &[f32]) -> Result<Self, Box<dyn Error>> {
+    pub fn new(vec: &[f32]) -> Result<Self, Box<dyn Error>> {
         if vec.is_empty() {
             return Err("Can not define 0-dimension vector".into());
         }
@@ -36,7 +45,7 @@ impl Vector {
     ///
     /// # Returns
     /// * new vector unless `size` is lesser than 1
-    fn zero(size: usize) -> Result<Self, Box<dyn Error>> {
+    pub fn zero(size: usize) -> Result<Self, Box<dyn Error>> {
         if size <= 0 {
             return Err("Can not define 0-dimension vector".into());
         }
@@ -44,6 +53,46 @@ impl Vector {
         Ok(Vector {
             vec: vec![0.0; size],
         })
+    }
+
+    /// Length of this vector
+    pub const fn len(&self) -> usize {
+        self.vec.len()
+    }
+
+    /// Change to the matrix.
+    ///
+    /// # Parameters
+    /// * `method` : the method to determine the shape of the converted matrix
+    ///
+    /// # Return
+    /// * New `SimpleMatrix`
+    pub fn to_matrix(&self, method: TransposeMethod) -> SimpleMatrix<f32> {
+        let rows = match method {
+            TransposeMethod::Column => self.len(),
+            TransposeMethod::Row => 1,
+        };
+        let columns = match method {
+            TransposeMethod::Column => 1,
+            TransposeMethod::Row => self.len(),
+        };
+
+        let mut mat = SimpleMatrix::new(rows, columns).expect("Must succeeded");
+
+        let mut update: Box<dyn FnMut(usize, &mut SimpleMatrix<f32>)> = match method {
+            TransposeMethod::Column => Box::new(move |idx, mat| -> () {
+                mat.set(idx, 0, self[idx]).expect("should success to set");
+            }),
+            TransposeMethod::Row => Box::new(move |idx, mat| -> () {
+                mat.set(0, idx, self[idx]).expect("should success to set");
+            }),
+        };
+
+        for idx in 0..self.len() {
+            update(idx, &mut mat);
+        }
+
+        mat
     }
 }
 
