@@ -46,7 +46,7 @@ impl Vector {
     /// # Returns
     /// * new vector unless `size` is lesser than 1
     pub fn zero(size: usize) -> Result<Self, Box<dyn Error>> {
-        if size <= 0 {
+        if size == 0 {
             return Err("Can not define 0-dimension vector".into());
         }
 
@@ -58,6 +58,10 @@ impl Vector {
     /// Length of this vector
     pub const fn len(&self) -> usize {
         self.vec.len()
+    }
+
+    pub const fn is_empty(&self) -> bool {
+        self.vec.is_empty()
     }
 
     /// Change to the matrix.
