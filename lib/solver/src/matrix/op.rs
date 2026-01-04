@@ -38,16 +38,19 @@ where
     Ok(ret)
 }
 
+/// New type for LU Splitted matrix to reuse
 pub struct LUSplit {
     l_matrix: SimpleMatrix<f32>,
     u_matrix: SimpleMatrix<f32>,
 }
 
 impl LUSplit {
+    /// Get Left Triangle Matrix
     pub fn l(&self) -> &SimpleMatrix<f32> {
         &self.l_matrix
     }
 
+    /// Get Upper Triangle Matrix
     pub fn u(&self) -> &SimpleMatrix<f32> {
         &self.u_matrix
     }
@@ -123,6 +126,7 @@ pub fn determinant(mat: &impl Matrix<f32>) -> Option<f32> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::matrix::sparse::SparseMatrix;
     use pretty_assertions::assert_eq;
     use rstest::rstest;
 
@@ -295,6 +299,32 @@ mod tests {
             cols,
             det
         );
+        Ok(())
+    }
+
+    #[test]
+    fn test_determinant_with_sparse_matrix() -> Result<(), Box<dyn Error>> {
+        // Arrange
+        // Create a sparse 3x3 matrix with mostly zero values
+        // Matrix: | 2  0  1 |
+        //         | 0  3  0 |
+        //         | 1  0  2 |
+        // det = 2*(3*2 - 0*0) - 0*(0*2 - 0*1) + 1*(0*0 - 3*1)
+        //     = 2*6 - 0 + 1*(-3)
+        //     = 12 - 3 = 9
+        let mut source = SimpleMatrix::<f32>::new(3, 3)?;
+        source.set(0, 0, 2.0)?;
+        source.set(0, 2, 1.0)?;
+        source.set(1, 1, 3.0)?;
+        source.set(2, 0, 1.0)?;
+        source.set(2, 2, 2.0)?;
+        let sparse_matrix = SparseMatrix::from_matrix(&source);
+
+        // Act
+        let det = determinant(&sparse_matrix);
+
+        // Assert
+        assert_eq!(det, Some(9.0));
         Ok(())
     }
 }

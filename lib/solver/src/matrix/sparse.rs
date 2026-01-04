@@ -6,7 +6,7 @@ use crate::matrix::{Matrix, size::Size};
 
 /// Sparse matrix model. This implementation is based on simple CSR model.
 #[derive(Debug, Clone)]
-struct SparseMatrix<M> {
+pub struct SparseMatrix<M> {
     size: Size,
     /// Values of row-ordered non-zero value. Zero is mean None in this type.
     values: Vec<M>,
