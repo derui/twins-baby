@@ -7,7 +7,7 @@ use std::{
 use crate::matrix::{Matrix, simple::SimpleMatrix};
 
 /// Multiply operation between matrix
-pub fn mul<M>(lhs: impl Matrix<M>, rhs: impl Matrix<M>) -> Result<impl Matrix<M>, Box<dyn Error>>
+pub fn mul<M>(lhs: &impl Matrix<M>, rhs: &impl Matrix<M>) -> Result<impl Matrix<M>, Box<dyn Error>>
 where
     M: Add<Output = M> + Mul<Output = M> + Default + Copy,
 {
@@ -27,11 +27,8 @@ where
             let mut sum: M = Default::default();
 
             for k in 0..(lhs.size().columns()) {
-                match (lhs.get(i, k), rhs.get(k, j)) {
-                    (Ok(Some(lhs)), Ok(Some(rhs))) => {
-                        sum = sum + lhs * rhs;
-                    }
-                    _ => (),
+                if let (Ok(Some(lhs)), Ok(Some(rhs))) = (lhs.get(i, k), rhs.get(k, j)) {
+                    sum = sum + lhs * rhs;
                 }
             }
             ret.set(i, j, sum)?;
@@ -66,7 +63,7 @@ mod tests {
         rhs.set(2, 1, 12)?;
 
         // Act
-        let result = mul(lhs, rhs)?;
+        let result = mul(&lhs, &rhs)?;
 
         // Assert
         assert_eq!(result.size().rows(), 2);
@@ -98,7 +95,7 @@ mod tests {
         rhs.set(2, 1, 6.0)?;
 
         // Act
-        let result = mul(lhs, rhs)?;
+        let result = mul(&lhs, &rhs)?;
 
         // Assert
         assert_eq!(result.size().rows(), 2);
@@ -117,7 +114,7 @@ mod tests {
         let rhs = SimpleMatrix::<i32>::new(2, 2)?;
 
         // Act
-        let result = mul(lhs, rhs);
+        let result = mul(&lhs, &rhs);
 
         // Assert
         assert!(result.is_err());

@@ -1,4 +1,4 @@
-use std::{error::Error, ops::Mul};
+use std::error::Error;
 
 use size::Size;
 
