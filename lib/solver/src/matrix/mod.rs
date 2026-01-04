@@ -50,7 +50,7 @@ pub trait Matrix<Element> {
     ///
     /// # Returns
     /// * Return a new matrix of f32
-    fn extract<T>(&self, extract: T) -> impl Matrix<f32> + FloatingMatrix
+    fn extract<T>(&self, extract: T) -> impl Matrix<f32>
     where
         T: Fn(&Element) -> f32;
 
@@ -59,12 +59,4 @@ pub trait Matrix<Element> {
     /// # Returns
     /// * Return compoments that is number of `row`. If the matrix is not square, return None
     fn diagonal_components(&self) -> Option<Vec<Option<Element>>>;
-}
-
-pub trait FloatingMatrix {
-    /// Calculate a determinant of this matrix
-    ///
-    /// # Returns
-    /// * Return the determinant if the matrix can define determinant, or None if the matrix can not calculate it.
-    fn determinant(&self) -> Option<f32>;
 }

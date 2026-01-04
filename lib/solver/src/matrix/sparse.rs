@@ -1,6 +1,6 @@
 use std::{cmp::min, error::Error};
 
-use crate::matrix::{FloatingMatrix, Matrix, size::Size};
+use crate::matrix::{Matrix, size::Size};
 
 /// implement sparse matrix
 
@@ -90,7 +90,7 @@ impl<M: Clone> Matrix<M> for SparseMatrix<M> {
         todo!()
     }
 
-    fn extract<T>(&self, extract: T) -> impl Matrix<f32> + FloatingMatrix
+    fn extract<T>(&self, extract: T) -> impl Matrix<f32>
     where
         T: Fn(&M) -> f32,
     {
@@ -117,12 +117,6 @@ impl<M: Clone> Matrix<M> for SparseMatrix<M> {
         }
 
         Some(vec)
-    }
-}
-
-impl FloatingMatrix for SparseMatrix<f32> {
-    fn determinant(&self) -> Option<f32> {
-        todo!()
     }
 }
 
