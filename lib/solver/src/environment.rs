@@ -75,6 +75,11 @@ impl Environment {
     pub fn get_variable(&self, name: &str) -> Option<Variable> {
         self.variables.get(name).cloned()
     }
+
+    /// Get list of varibles. This is not reference.
+    pub fn list_variables(&self) -> Vec<Variable> {
+        self.variables.values().cloned().collect()
+    }
 }
 
 #[cfg(test)]
@@ -91,6 +96,35 @@ mod tests {
 
         // assert
         assert_eq!(env.variables.len(), 0);
+    }
+
+    #[test]
+    fn test_list_variables_from_empty_environment() {
+        // arrange
+
+        // act
+        let variables = Environment::empty().list_variables();
+
+        // assert
+        assert_eq!(variables.len(), 0);
+    }
+
+    #[test]
+    fn test_list_variables_from_non_empty_environment() {
+        // arrange
+        let var1 = Variable::new("x", 10.0);
+        let var2 = Variable::new("y", 20.0);
+        let var3 = Variable::new("z", 30.0);
+
+        // act
+        let env = Environment::from_variables(vec![var1.clone(), var2.clone(), var3.clone()])
+            .list_variables();
+
+        // assert
+        assert_eq!(env.len(), 3);
+        assert_eq!(env.contains(&var1), true);
+        assert_eq!(env.contains(&var2), true);
+        assert_eq!(env.contains(&var3), true);
     }
 
     #[test]
