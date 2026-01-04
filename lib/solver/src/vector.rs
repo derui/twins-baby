@@ -173,3 +173,39 @@ impl Sub<Vector> for Vector {
         Ok(Vector { vec: result })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use pretty_assertions::assert_eq;
+    use rstest::rstest;
+
+    #[rstest]
+    #[case(&[1.0, 2.0, 3.0], TransposeMethod::Column, 3, 1, vec![(0, 0, 1.0), (1, 0, 2.0), (2, 0, 3.0)])]
+    #[case(&[1.0, 2.0, 3.0], TransposeMethod::Row, 1, 3, vec![(0, 0, 1.0), (0, 1, 2.0), (0, 2, 3.0)])]
+    #[case(&[42.0], TransposeMethod::Column, 1, 1, vec![(0, 0, 42.0)])]
+    #[case(&[42.0], TransposeMethod::Row, 1, 1, vec![(0, 0, 42.0)])]
+    #[case(&[1.0, 2.0, 3.0, 4.0, 5.0], TransposeMethod::Column, 5, 1, vec![(0, 0, 1.0), (1, 0, 2.0), (2, 0, 3.0), (3, 0, 4.0), (4, 0, 5.0)])]
+    #[case(&[1.0, 2.0, 3.0, 4.0, 5.0], TransposeMethod::Row, 1, 5, vec![(0, 0, 1.0), (0, 1, 2.0), (0, 2, 3.0), (0, 3, 4.0), (0, 4, 5.0)])]
+    fn test_to_matrix_converts_with_correct_dimensions_and_values(
+        #[case] values: &[f32],
+        #[case] method: TransposeMethod,
+        #[case] expected_rows: usize,
+        #[case] expected_columns: usize,
+        #[case] expected_values: Vec<(usize, usize, f32)>,
+    ) -> Result<(), Box<dyn Error>> {
+        // Arrange
+        let vector = Vector::new(values)?;
+
+        // Act
+        let matrix = vector.to_matrix(method);
+
+        // Assert
+        assert_eq!(matrix.size().rows(), expected_rows);
+        assert_eq!(matrix.size().columns(), expected_columns);
+        for (row, col, expected_value) in expected_values {
+            assert_eq!(matrix.get(row, col)?, Some(expected_value));
+        }
+        Ok(())
+    }
+}
