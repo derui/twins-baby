@@ -208,4 +208,169 @@ mod tests {
         }
         Ok(())
     }
+
+    #[rstest]
+    #[case(&[1.0, 2.0, 3.0], 2.0, &[2.0, 4.0, 6.0])]
+    #[case(&[1.0, 2.0, 3.0], 0.5, &[0.5, 1.0, 1.5])]
+    #[case(&[1.0, 2.0, 3.0], 0.0, &[0.0, 0.0, 0.0])]
+    #[case(&[5.0], 3.0, &[15.0])]
+    fn test_mul_scalar_multiplies_all_elements(
+        #[case] values: &[f32],
+        #[case] scalar: f32,
+        #[case] expected: &[f32],
+    ) -> Result<(), Box<dyn Error>> {
+        // Arrange
+        let vector = Vector::new(values)?;
+
+        // Act
+        let result = vector * scalar;
+
+        // Assert
+        assert_eq!(result.len(), expected.len());
+        for (i, &expected_value) in expected.iter().enumerate() {
+            assert_eq!(result[i], expected_value);
+        }
+        Ok(())
+    }
+
+    #[rstest]
+    #[case(&[2.0, 4.0, 6.0], 2.0, &[1.0, 2.0, 3.0])]
+    #[case(&[1.0, 2.0, 3.0], 0.5, &[2.0, 4.0, 6.0])]
+    #[case(&[10.0], 5.0, &[2.0])]
+    fn test_div_scalar_divides_all_elements(
+        #[case] values: &[f32],
+        #[case] scalar: f32,
+        #[case] expected: &[f32],
+    ) -> Result<(), Box<dyn Error>> {
+        // Arrange
+        let vector = Vector::new(values)?;
+
+        // Act
+        let result = vector / scalar;
+
+        // Assert
+        assert_eq!(result.len(), expected.len());
+        for (i, &expected_value) in expected.iter().enumerate() {
+            assert_eq!(result[i], expected_value);
+        }
+        Ok(())
+    }
+
+    #[rstest]
+    #[case(&[1.0, 2.0, 3.0], &[4.0, 5.0, 6.0], &[5.0, 7.0, 9.0])]
+    #[case(&[1.0, 2.0, 3.0], &[0.0, 0.0, 0.0], &[1.0, 2.0, 3.0])]
+    #[case(&[5.0], &[10.0], &[15.0])]
+    fn test_add_vectors_adds_elements(
+        #[case] values1: &[f32],
+        #[case] values2: &[f32],
+        #[case] expected: &[f32],
+    ) -> Result<(), Box<dyn Error>> {
+        // Arrange
+        let vector1 = Vector::new(values1)?;
+        let vector2 = Vector::new(values2)?;
+
+        // Act
+        let result = (vector1 + vector2)?;
+
+        // Assert
+        assert_eq!(result.len(), expected.len());
+        for (i, &expected_value) in expected.iter().enumerate() {
+            assert_eq!(result[i], expected_value);
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn test_add_returns_error_for_different_dimensions() -> Result<(), Box<dyn Error>> {
+        // Arrange
+        let vector1 = Vector::new(&[1.0, 2.0, 3.0])?;
+        let vector2 = Vector::new(&[4.0, 5.0])?;
+
+        // Act
+        let result = vector1 + vector2;
+
+        // Assert
+        assert!(result.is_err());
+        Ok(())
+    }
+
+    #[rstest]
+    #[case(&[5.0, 7.0, 9.0], &[1.0, 2.0, 3.0], &[4.0, 5.0, 6.0])]
+    #[case(&[1.0, 2.0, 3.0], &[0.0, 0.0, 0.0], &[1.0, 2.0, 3.0])]
+    #[case(&[10.0], &[5.0], &[5.0])]
+    fn test_sub_vectors_subtracts_elements(
+        #[case] values1: &[f32],
+        #[case] values2: &[f32],
+        #[case] expected: &[f32],
+    ) -> Result<(), Box<dyn Error>> {
+        // Arrange
+        let vector1 = Vector::new(values1)?;
+        let vector2 = Vector::new(values2)?;
+
+        // Act
+        let result = (vector1 - vector2)?;
+
+        // Assert
+        assert_eq!(result.len(), expected.len());
+        for (i, &expected_value) in expected.iter().enumerate() {
+            assert_eq!(result[i], expected_value);
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn test_sub_returns_error_for_different_dimensions() -> Result<(), Box<dyn Error>> {
+        // Arrange
+        let vector1 = Vector::new(&[1.0, 2.0, 3.0])?;
+        let vector2 = Vector::new(&[4.0, 5.0])?;
+
+        // Act
+        let result = vector1 - vector2;
+
+        // Assert
+        assert!(result.is_err());
+        Ok(())
+    }
+
+    #[rstest]
+    #[case(&[1.0, 2.0, 3.0], 0, 1.0)]
+    #[case(&[1.0, 2.0, 3.0], 1, 2.0)]
+    #[case(&[1.0, 2.0, 3.0], 2, 3.0)]
+    #[case(&[42.0], 0, 42.0)]
+    fn test_index_returns_correct_element(
+        #[case] values: &[f32],
+        #[case] index: usize,
+        #[case] expected: f32,
+    ) -> Result<(), Box<dyn Error>> {
+        // Arrange
+        let vector = Vector::new(values)?;
+
+        // Act
+        let result = vector[index];
+
+        // Assert
+        assert_eq!(result, expected);
+        Ok(())
+    }
+
+    #[rstest]
+    #[case(&[1.0, 2.0, 3.0], 0, 10.0)]
+    #[case(&[1.0, 2.0, 3.0], 1, 20.0)]
+    #[case(&[1.0, 2.0, 3.0], 2, 30.0)]
+    #[case(&[42.0], 0, 100.0)]
+    fn test_index_mut_sets_correct_element(
+        #[case] values: &[f32],
+        #[case] index: usize,
+        #[case] new_value: f32,
+    ) -> Result<(), Box<dyn Error>> {
+        // Arrange
+        let mut vector = Vector::new(values)?;
+
+        // Act
+        vector[index] = new_value;
+
+        // Assert
+        assert_eq!(vector[index], new_value);
+        Ok(())
+    }
 }
