@@ -181,6 +181,59 @@ mod tests {
     use rstest::rstest;
 
     #[rstest]
+    #[case(&[1.0, 2.0, 3.0], 3)]
+    #[case(&[5.0], 1)]
+    #[case(&[1.0, 2.0, 3.0, 4.0, 5.0], 5)]
+    fn test_new_creates_vector_with_correct_values(
+        #[case] values: &[f32],
+        #[case] expected_len: usize,
+    ) -> Result<(), Box<dyn Error>> {
+        // Arrange & Act
+        let vector = Vector::new(values)?;
+
+        // Assert
+        assert_eq!(vector.len(), expected_len);
+        for (i, &expected_value) in values.iter().enumerate() {
+            assert_eq!(vector[i], expected_value);
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn test_new_returns_error_for_empty_slice() {
+        // Arrange & Act
+        let result = Vector::new(&[]);
+
+        // Assert
+        assert!(result.is_err());
+    }
+
+    #[rstest]
+    #[case(3)]
+    #[case(1)]
+    #[case(5)]
+    fn test_zero_creates_zero_vector(#[case] size: usize) -> Result<(), Box<dyn Error>> {
+        // Arrange & Act
+        let vector = Vector::zero(size)?;
+
+        // Assert
+        assert_eq!(vector.len(), size);
+        for i in 0..size {
+            assert_eq!(vector[i], 0.0);
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn test_zero_returns_error_for_zero_size() {
+        // Arrange & Act
+        let result = Vector::zero(0);
+
+        // Assert
+        assert!(result.is_err());
+    }
+
+    #[rstest]
     #[case(&[1.0, 2.0, 3.0], TransposeMethod::Column, 3, 1, vec![(0, 0, 1.0), (1, 0, 2.0), (2, 0, 3.0)])]
     #[case(&[1.0, 2.0, 3.0], TransposeMethod::Row, 1, 3, vec![(0, 0, 1.0), (0, 1, 2.0), (0, 2, 3.0)])]
     #[case(&[42.0], TransposeMethod::Column, 1, 1, vec![(0, 0, 42.0)])]
