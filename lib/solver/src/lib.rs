@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use crate::{
     environment::Environment,
+    equation::Equation,
     matrix::{size::Size, sparse::SparseMatrix},
 };
 
@@ -15,7 +16,7 @@ pub mod vector;
 struct Jacobian(SparseMatrix<Box<dyn equation::Equation>>);
 
 /// Wrapper of Equation Id
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct EquationId(u64);
 
 /// Convertion logics
@@ -55,7 +56,7 @@ pub struct Solver {
 
     /// current equations with equation id. Currently, equation id is not
     /// member of equation mod, because equation does not have identity of it.
-    equations: HashMap<EquationId, Box<dyn equation::Equation>>,
+    equations: HashMap<EquationId, Box<dyn Equation>>,
 
     generator: Box<dyn EquationIdGenerator>,
 }
@@ -99,7 +100,17 @@ impl EquationIdGenerator for DefaultEquationIdGenerator {
 }
 
 impl Solver {
-    /// make new solver
+    /// Creates a new solver instance with the given equation ID generator.
+    ///
+    /// # Parameters
+    /// * `generator` - Custom equation ID generator for creating unique equation identifiers
+    ///
+    /// # Returns
+    /// * A new solver with empty variables, dimensions, and equations
+    ///
+    /// # Initial State
+    /// * Status is set to `Incorrect` until variables match equation count
+    /// * Jacobian is initialized with minimal 1x1 sparse matrix
     pub fn new(generator: Box<dyn EquationIdGenerator>) -> Self {
         Solver {
             status: DimensionSpecificationStatus::Incorrect,
@@ -111,19 +122,35 @@ impl Solver {
         }
     }
 
-    /// update variables for solver
+    /// Updates the solver's variable environment and recalculates dimension specification status.
+    ///
+    /// # Parameters
+    /// * `env` - New environment containing variable definitions
     pub fn update_variables(&mut self, env: &Environment) {
         self.variables = env.clone();
 
         self.recaluculate_status()
     }
 
-    /// Update dimensions for solver
+    /// Updates the solver's dimension environment.
+    ///
+    /// Dimensions act as constants during the solving process and are not modified
+    /// by the solver iterations.
+    ///
+    /// # Parameters
+    /// * `env` - New environment containing dimension definitions
     pub fn update_dimensions(&mut self, env: &Environment) {
         self.dimensions = env.clone()
     }
 
-    /// Re-calculate dimension specification
+    /// Recalculates the dimension specification status.
+    ///
+    /// Compares the number of variables against the number of equations to determine
+    /// if the system is properly specified for solving.
+    ///
+    /// # Status Rules
+    /// * `Correct` - Variable count equals equation count (system is solvable)
+    /// * `Incorrect` - Variable count differs from equation count (under/over-determined)
     fn recaluculate_status(&mut self) {
         let variable_count = self.variables.list_variables().len();
         let equation_count = self.equations.values().len();
@@ -133,5 +160,37 @@ impl Solver {
         } else {
             self.status = DimensionSpecificationStatus::Incorrect
         }
+    }
+
+    /// Adds an equation to the solver and returns its unique identifier.
+    ///
+    /// # Parameters
+    /// * `equation` - Boxed equation trait object to add to the system
+    ///
+    /// # Returns
+    /// * `EquationId` - Unique identifier for the added equation
+    ///
+    /// # Example
+    /// ```ignore
+    /// let id = solver.add_equation(Box::new(my_equation));
+    /// // Use id to reference or remove the equation later
+    /// ```
+    pub fn add_equation(&mut self, equation: Box<dyn Equation>) -> EquationId {
+        let new_id = self.generator.generate();
+
+        self.equations.insert(new_id, equation.clone());
+        new_id
+    }
+
+    /// Removes an equation from the solver by its identifier.
+    ///
+    /// # Parameters
+    /// * `id` - Unique identifier of the equation to remove
+    ///
+    /// # Returns
+    /// * `Some(Box<dyn Equation>)` - The removed equation if it existed
+    /// * `None` - If no equation with the given ID was found
+    pub fn remove_equation(&mut self, id: EquationId) -> Option<Box<dyn Equation>> {
+        self.equations.remove(&id)
     }
 }
