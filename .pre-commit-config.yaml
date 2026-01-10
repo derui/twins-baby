@@ -13,3 +13,11 @@ repos:
       entry: leptosfmt
       language: system
       files: "\\.rs$"
+    - id: clippy
+      name: clippy
+      entry: cargo clippy
+      language: system
+      files: "\\.rs$"
+      pass_filenames: false
+      stages: [post-commit]
+      args: ["--", "-D", "warnings"]
