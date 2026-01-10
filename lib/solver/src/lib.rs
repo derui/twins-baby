@@ -27,6 +27,7 @@ impl Jacobian {
         }
 
         let mut matrix = SimpleMatrix::new(equations.len(), equations.len())?;
+
         for (i, equation) in equations.iter().enumerate() {
             for (j, variable) in variables.iter().enumerate() {
                 // keep empty when can not derive
@@ -181,10 +182,27 @@ impl Solver {
         let variable_count = self.variables.list_variables().len();
         let equation_count = self.equations.values().len();
 
-        if variable_count == equation_count {
+        if variable_count == equation_count && variable_count > 0 {
             self.status = DimensionSpecificationStatus::Correct
         } else {
             self.status = DimensionSpecificationStatus::Incorrect
+        }
+
+        match self.status {
+            DimensionSpecificationStatus::Incorrect => (),
+            DimensionSpecificationStatus::Correct => {
+                let mut equations = self.equations.iter().collect::<Vec<_>>();
+                equations.sort_by_key(|(k, _)| *k);
+                let equations = equations
+                    .iter()
+                    .map(|(_, v)| *v)
+                    .cloned()
+                    .collect::<Vec<_>>();
+
+                self.jacobian =
+                    Jacobian::from_equations(&equations, &self.variables.list_variables())
+                        .expect("Must be valid")
+            }
         }
     }
 
@@ -205,6 +223,9 @@ impl Solver {
         let new_id = self.generator.generate();
 
         self.equations.insert(new_id, equation.clone());
+
+        self.recaluculate_status();
+
         new_id
     }
 
@@ -217,6 +238,10 @@ impl Solver {
     /// * `Some(Box<dyn Equation>)` - The removed equation if it existed
     /// * `None` - If no equation with the given ID was found
     pub fn remove_equation(&mut self, id: EquationId) -> Option<Box<dyn Equation>> {
-        self.equations.remove(&id)
+        let v = self.equations.remove(&id);
+
+        self.recaluculate_status();
+
+        v
     }
 }
