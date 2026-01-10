@@ -20,4 +20,4 @@ repos:
       files: "\\.rs$"
       pass_filenames: false
       stages: [post-commit]
-      args: ["--", "-D", "warnings"]
+      args: ["--fix", "--workspace"]
