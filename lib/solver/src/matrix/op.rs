@@ -50,47 +50,47 @@ pub fn solve<M: Matrix<f32>>(mat: &M, factors: &Vector) -> Result<Vector, Box<dy
     let mut factors = factors.clone();
 
     // forward deletion
-    for k in 0..mat.size().columns() {
+    for k in 0..mat.size().rows() {
         let Some(kv) = mat.get(k, k)? else {
             continue;
         };
 
         // normalize `k` row
-        for i in 0..mat.size().rows() {
+        for i in 0..mat.size().columns() {
             let Some(v) = mat.get(k, i)? else { continue };
 
             mat.set(k, i, v / kv)?;
         }
-        factors[k] = factors[k] / kv;
+        factors[k] /= kv;
 
         // delete `k` column
-        for i in (k + 1)..mat.size().columns() {
+        for i in (k + 1)..mat.size().rows() {
             let Some(kv) = mat.get(i, k)? else { continue };
 
             for j in 0..mat.size().columns() {
-                let Some(v) = mat.get(i, j)? else { continue };
+                let kj = mat.get(k, j)?.unwrap_or(0.0);
+                let ij = mat.get(i, j)?.unwrap_or(0.0);
 
-                mat.set(i, j, v - kv * v)?;
+                mat.set(i, j, ij - kv * kj)?;
             }
 
-            factors[i] -= kv * factors[i];
+            factors[i] -= kv * factors[k];
         }
     }
 
     // backward substitution
-    for i in (0..factors.len()).rev() {
-        for k in 0..i {
-            let Some(kv) = mat.get(i, k)? else {
-                continue;
-            };
+    for k in (0..factors.len()).rev() {
+        for i in 0..k {
+            let kv = mat.get(i, k)?.unwrap_or(0.0);
 
             for j in 0..mat.size().columns() {
-                let Some(v) = mat.get(i, j)? else { continue };
+                let kj = mat.get(k, j)?.unwrap_or(0.0);
+                let ij = mat.get(i, j)?.unwrap_or(0.0);
 
-                mat.set(i, j, v - kv * v)?;
+                mat.set(i, j, ij - kv * kj)?;
             }
 
-            factors[i] -= kv * factors[i];
+            factors[i] -= kv * factors[k];
         }
     }
 
@@ -467,6 +467,31 @@ mod tests {
         // Assert
         assert_eq!(result.size(), Size::new(1, 1));
         assert_eq!(result.get(0, 0)?, Some(15.0));
+        Ok(())
+    }
+
+    #[test]
+    fn test_solve_2x2_system() -> Result<(), Box<dyn Error>> {
+        // Arrange
+        // System of equations:
+        //   x + 2y = 5
+        //   3x + 4y = 11
+        // Expected solution: x = 1, y = 2
+        let mut matrix = SimpleMatrix::<f32>::new(2, 2)?;
+        matrix.set(0, 0, 1.0)?;
+        matrix.set(0, 1, 2.0)?;
+        matrix.set(1, 0, 3.0)?;
+        matrix.set(1, 1, 4.0)?;
+
+        let factors = Vector::new(&[5.0, 11.0])?;
+
+        // Act
+        let result = solve(&matrix, &factors)?;
+
+        // Assert
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0], 1.0);
+        assert_eq!(result[1], 2.0);
         Ok(())
     }
 }
