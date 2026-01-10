@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use crate::{
     environment::Environment,
     matrix::{size::Size, sparse::SparseMatrix},
-    variable::Variable,
 };
 
 pub mod environment;
@@ -86,15 +85,9 @@ impl Clone for Box<dyn EquationIdGenerator> {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct DefaultEquationIdGenerator {
     current: u64,
-}
-
-impl Default for DefaultEquationIdGenerator {
-    fn default() -> Self {
-        Self { current: 0 }
-    }
 }
 
 impl EquationIdGenerator for DefaultEquationIdGenerator {

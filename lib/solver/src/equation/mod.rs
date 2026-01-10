@@ -2,7 +2,7 @@ pub(crate) mod arithmetic;
 pub(crate) mod constant;
 pub(crate) mod monomial;
 
-use std::{collections::HashMap, fmt::Display, iter::Map};
+use std::fmt::Display;
 
 use crate::{environment::Environment, variable::Variable};
 

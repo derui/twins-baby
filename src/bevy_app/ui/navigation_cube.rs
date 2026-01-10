@@ -46,16 +46,16 @@ impl TextureType {
 /// Setup textures for navigation cube materials
 pub fn setup_navigation_texture(
     mut commands: Commands,
-    materials: ResMut<Assets<StandardMaterial>>,
-    meshes: ResMut<Assets<Mesh>>,
+    _materials: ResMut<Assets<StandardMaterial>>,
+    _meshes: ResMut<Assets<Mesh>>,
     entities: Query<
         (Entity, &MeshMaterial3d<StandardMaterial>, &Name, &Mesh3d),
         With<NeedsTextureSetup>,
     >,
-    assets: Res<AssetServer>,
+    _assets: Res<AssetServer>,
 ) -> Result<(), BevyError> {
-    for (entity, material, name, mesh) in &entities {
-        let Some(texture) = TextureType::from_mesh_name(name) else {
+    for (entity, _material, name, _mesh) in &entities {
+        let Some(_texture) = TextureType::from_mesh_name(name) else {
             commands.entity(entity).remove::<NeedsTextureSetup>();
             continue;
         };
