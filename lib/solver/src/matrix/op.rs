@@ -4,10 +4,16 @@ use std::{
     ops::{Add, Mul},
 };
 
-use crate::matrix::{Matrix, simple::SimpleMatrix};
+use crate::{
+    matrix::{Matrix, simple::SimpleMatrix},
+    vector::Vector,
+};
 
 /// Multiply operation between matrix
-pub fn mul<M>(lhs: &impl Matrix<M>, rhs: &impl Matrix<M>) -> Result<impl Matrix<M>, Box<dyn Error>>
+pub fn mul<M, T: Matrix<M>, U: Matrix<M>>(
+    lhs: &T,
+    rhs: &U,
+) -> Result<impl Matrix<M> + use<M, T, U>, Box<dyn Error>>
 where
     M: Add<Output = M> + Mul<Output = M> + Default + Copy,
 {
@@ -36,6 +42,59 @@ where
     }
 
     Ok(ret)
+}
+
+/// Solve the matrix and return result as vector
+pub fn solve<M: Matrix<f32>>(mat: &M, factors: &Vector) -> Result<Vector, Box<dyn Error>> {
+    let mut mat = SimpleMatrix::from_matrix(mat);
+    let mut factors = factors.clone();
+
+    // forward deletion
+    for k in 0..mat.size().columns() {
+        let Some(kv) = mat.get(k, k)? else {
+            continue;
+        };
+
+        // normalize `k` row
+        for i in 0..mat.size().rows() {
+            let Some(v) = mat.get(k, i)? else { continue };
+
+            mat.set(k, i, v / kv)?;
+        }
+        factors[k] = factors[k] / kv;
+
+        // delete `k` column
+        for i in (k + 1)..mat.size().columns() {
+            let Some(kv) = mat.get(i, k)? else { continue };
+
+            for j in 0..mat.size().columns() {
+                let Some(v) = mat.get(i, j)? else { continue };
+
+                mat.set(i, j, v - kv * v)?;
+            }
+
+            factors[i] -= kv * factors[i];
+        }
+    }
+
+    // backward substitution
+    for i in (0..factors.len()).rev() {
+        for k in 0..i {
+            let Some(kv) = mat.get(i, k)? else {
+                continue;
+            };
+
+            for j in 0..mat.size().columns() {
+                let Some(v) = mat.get(i, j)? else { continue };
+
+                mat.set(i, j, v - kv * v)?;
+            }
+
+            factors[i] -= kv * factors[i];
+        }
+    }
+
+    Ok(factors)
 }
 
 /// New type for LU Splitted matrix to reuse

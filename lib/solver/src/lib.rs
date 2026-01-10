@@ -3,8 +3,9 @@ use std::{collections::HashMap, error::Error};
 use crate::{
     environment::Environment,
     equation::Equation,
-    matrix::{Matrix, simple::SimpleMatrix, size::Size, sparse::SparseMatrix},
+    matrix::{Matrix, op::solve, simple::SimpleMatrix, size::Size, sparse::SparseMatrix},
     variable::Variable,
+    vector::{TransposeMethod, Vector},
 };
 
 pub mod environment;
@@ -12,6 +13,8 @@ pub mod equation;
 pub mod matrix;
 pub mod variable;
 pub mod vector;
+
+const DEFAULT_EPSILON: f32 = 0.0000001;
 
 /// Internal Jacobian matrix. It is a matrix of constraint matrix.
 struct Jacobian(SparseMatrix<Box<dyn equation::Equation>>);
@@ -86,6 +89,9 @@ pub struct Solver {
     equations: HashMap<EquationId, Box<dyn Equation>>,
 
     generator: Box<dyn EquationIdGenerator>,
+
+    /// The resolution of solving
+    epsilon: f32,
 }
 
 /// Trait for specialized generating equation id
@@ -146,6 +152,7 @@ impl Solver {
             dimensions: Environment::empty(),
             equations: HashMap::new(),
             generator: generator.clone(),
+            epsilon: DEFAULT_EPSILON,
         }
     }
 
@@ -248,6 +255,76 @@ impl Solver {
         self.recaluculate_status();
 
         v
+    }
+
+    /// Solve current equations and get variables.
+    pub fn solve(&mut self) -> Result<Environment, Box<dyn Error>> {
+        if self.status != DimensionSpecificationStatus::Correct {
+            return Err("Can not solve incorrect solver".into());
+        }
+
+        // make direct solve
+        // x_1 = x_0 - J_0^-1 * f_0 -> J_0 * x_1 = J_0 * x_0 - f_0 -> Ax = b
+        let mut ordered = self.variables.list_variables();
+        ordered.sort_by_key(|f| f.name());
+        let mut equation_order = self.equations.keys().collect::<Vec<_>>();
+        equation_order.sort();
+        let equations: Vec<&Box<dyn Equation>> =
+            equation_order.iter().map(|k| &self.equations[k]).collect();
+
+        // initial value
+        let mut x0 = Vector::new(&ordered.iter().map(|f| f.value()).collect::<Vec<_>>())?;
+
+        let j0 = {
+            let extractor = self.variables.clone();
+            self.jacobian.0.extract(move |e| {
+                e.evaluate(&extractor)
+                    .expect("this evaluation must success")
+            })
+        };
+
+        // resolve targets
+        let x1 = Vector::zero(x0.len())?;
+
+        loop {
+            if (x0.norm() - x1.norm()).abs() < self.epsilon {
+                break;
+            }
+
+            // calculate rhs. this result is simple vector that is row-transposed
+            let b = {
+                let extractor = self.variables.clone();
+                let f0 = equations
+                    .iter()
+                    .map(|e| e.evaluate(&extractor).unwrap_or(0.0))
+                    .collect::<Vec<_>>();
+                let x0 = x0.to_matrix(TransposeMethod::Row);
+                let b = matrix::op::mul(&j0, &x0)?;
+                let mut ret = Vector::zero(ordered.len())?;
+
+                for i in 0..ret.len() {
+                    ret[i] = b.get(i, 0)?.unwrap_or(0.0) - f0[i];
+                }
+
+                ret
+            };
+            let x1 = solve(&j0, &b)?;
+
+            for i in 0..(ordered.len()) {
+                self.variables.update_variable(&ordered[i].name(), x1[i])?;
+                x0[i] = x1[i]
+            }
+        }
+
+        let mut result = Environment::empty();
+
+        for i in 0..(ordered.len()) {
+            let mut v = ordered[i].clone();
+            v.update(x1[i]);
+            result.add_variable(v);
+        }
+
+        Ok(result)
     }
 }
 
