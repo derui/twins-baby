@@ -80,6 +80,19 @@ impl Environment {
     pub fn list_variables(&self) -> Vec<Variable> {
         self.variables.values().cloned().collect()
     }
+
+    /// Merge the two environment to new one
+    ///
+    /// If self and `other` have same variable, overwrite it with `other`'s.
+    pub fn merge(&self, other: &Environment) -> Environment {
+        let mut new = self.clone();
+
+        for v in other.list_variables().iter() {
+            new.add_variable(v.clone());
+        }
+
+        new
+    }
 }
 
 #[cfg(test)]
@@ -292,5 +305,119 @@ mod tests {
         let original_var = env.get_variable("x").unwrap();
         let expected_original = Variable::new("x", 10.0);
         assert_eq!(original_var, expected_original);
+    }
+
+    #[test]
+    fn test_merge_empty_environments() {
+        // arrange
+        let env1 = Environment::empty();
+        let env2 = Environment::empty();
+
+        // act
+        let merged = env1.merge(&env2);
+
+        // assert
+        assert_eq!(merged.list_variables().len(), 0);
+    }
+
+    #[test]
+    fn test_merge_empty_with_non_empty() {
+        // arrange
+        let env1 = Environment::empty();
+        let var = Variable::new("x", 10.0);
+        let env2 = Environment::from_variables(vec![var.clone()]);
+
+        // act
+        let merged = env1.merge(&env2);
+
+        // assert
+        assert_eq!(merged.list_variables().len(), 1);
+        assert_eq!(merged.get_variable("x"), Some(var));
+    }
+
+    #[test]
+    fn test_merge_non_empty_with_empty() {
+        // arrange
+        let var = Variable::new("x", 10.0);
+        let env1 = Environment::from_variables(vec![var.clone()]);
+        let env2 = Environment::empty();
+
+        // act
+        let merged = env1.merge(&env2);
+
+        // assert
+        assert_eq!(merged.list_variables().len(), 1);
+        assert_eq!(merged.get_variable("x"), Some(var));
+    }
+
+    #[test]
+    fn test_merge_disjoint_environments() {
+        // arrange
+        let var1 = Variable::new("x", 10.0);
+        let var2 = Variable::new("y", 20.0);
+        let env1 = Environment::from_variables(vec![var1.clone()]);
+        let env2 = Environment::from_variables(vec![var2.clone()]);
+
+        // act
+        let merged = env1.merge(&env2);
+
+        // assert
+        assert_eq!(merged.list_variables().len(), 2);
+        assert_eq!(merged.get_variable("x"), Some(var1));
+        assert_eq!(merged.get_variable("y"), Some(var2));
+    }
+
+    #[test]
+    fn test_merge_overlapping_environments_uses_other_value() {
+        // arrange
+        let var1 = Variable::new("x", 10.0);
+        let var2 = Variable::new("x", 20.0);
+        let env1 = Environment::from_variables(vec![var1]);
+        let env2 = Environment::from_variables(vec![var2.clone()]);
+
+        // act
+        let merged = env1.merge(&env2);
+
+        // assert
+        assert_eq!(merged.list_variables().len(), 1);
+        assert_eq!(merged.get_variable("x"), Some(var2));
+    }
+
+    #[test]
+    fn test_merge_does_not_modify_original_environments() {
+        // arrange
+        let var1 = Variable::new("x", 10.0);
+        let var2 = Variable::new("y", 20.0);
+        let env1 = Environment::from_variables(vec![var1.clone()]);
+        let env2 = Environment::from_variables(vec![var2.clone()]);
+
+        // act
+        let merged = env1.merge(&env2);
+
+        // assert
+        assert_eq!(env1.list_variables().len(), 1);
+        assert_eq!(env1.get_variable("x"), Some(var1));
+        assert_eq!(env2.list_variables().len(), 1);
+        assert_eq!(env2.get_variable("y"), Some(var2));
+    }
+
+    #[test]
+    fn test_merge_multiple_variables_with_partial_overlap() {
+        // arrange
+        let var_x1 = Variable::new("x", 10.0);
+        let var_y1 = Variable::new("y", 20.0);
+        let var_y2 = Variable::new("y", 25.0);
+        let var_z2 = Variable::new("z", 30.0);
+        let env1 = Environment::from_variables(vec![var_x1.clone(), var_y1]);
+        let env2 = Environment::from_variables(vec![var_y2.clone(), var_z2.clone()]);
+
+        // act
+        let merged = env1.merge(&env2);
+
+        // assert
+        assert_eq!(merged.list_variables().len(), 3);
+        assert_eq!(merged.get_variable("x"), Some(var_x1));
+        assert_eq!(merged.get_variable("y"), Some(var_y2));
+        assert_eq!(merged.get_variable("z"), Some(var_z2));
     }
 }
