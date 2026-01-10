@@ -114,7 +114,7 @@ impl LUSplit {
 }
 
 /// Implemetation for LU split algorithm
-pub fn lu_split(mat: &impl Matrix<f32>) -> Result<LUSplit, anyhow::Error> {
+pub fn lu_split(mat: &impl Matrix<f32>) -> Result<LUSplit> {
     if mat.size().rows() != mat.size().columns() {
         return Err(anyhow::anyhow!(
             "can not make the LU split without exponent matrix"
