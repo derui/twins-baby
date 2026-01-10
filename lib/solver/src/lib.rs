@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 
 use crate::{
     environment::Environment,
@@ -28,7 +28,7 @@ impl Jacobian {
         variables: &[Variable],
     ) -> Result<Self, anyhow::Error> {
         if equations.len() != variables.len() {
-            return Err(anyhow::anyhow!("Can not create valid jacobian"));
+            return Err(anyhow!("Can not create valid jacobian"));
         }
 
         let mut matrix = SimpleMatrix::new(equations.len(), equations.len())?;
@@ -260,9 +260,9 @@ impl Solver {
     }
 
     /// Solve current equations and get variables.
-    pub fn solve(&mut self) -> Result<Environment, anyhow::Error> {
+    pub fn solve(&mut self) -> Result<Environment> {
         if self.status != DimensionSpecificationStatus::Correct {
-            return Err(anyhow::anyhow!("Can not solve incorrect solver"));
+            return Err(anyhow!("Can not solve incorrect solver"));
         }
 
         // make direct solve
@@ -289,7 +289,7 @@ impl Solver {
         let x1 = Vector::zero(x0.len())?;
 
         loop {
-            if (x0.norm() - x1.norm()).abs() < self.epsilon {
+            if (x1.norm() - x0.norm()).abs() < self.epsilon {
                 break;
             }
 
@@ -298,7 +298,7 @@ impl Solver {
                 let extractor = self.variables.clone();
                 let f0 = equations
                     .iter()
-                    .map(|e| e.evaluate(&extractor).unwrap_or(0.0))
+                    .map(move |e| e.evaluate(&extractor).unwrap_or(0.0))
                     .collect::<Vec<_>>();
                 let x0 = x0.to_matrix(TransposeMethod::Row);
                 let b = matrix::op::mul(&j0, &x0)?;
