@@ -90,3 +90,5 @@ All test case must follow these styles:
 ### Libraries
 - Use `pretty_assertions::assert_eq` instead of `std::assert_eq` in Rust test modules
 - Import pretty_assertions at the top of test modules with `use pretty_assertions::assert_eq;`
+- Use `approx::assert_relative_eq!` for floating point comparisons in tests
+- Import approx at the top of test modules with `use approx::assert_relative_eq;`

@@ -186,6 +186,7 @@ pub fn determinant(mat: &impl Matrix<f32>) -> Option<f32> {
 mod tests {
     use super::*;
     use crate::matrix::{size::Size, sparse::SparseMatrix};
+    use approx::assert_relative_eq;
     use pretty_assertions::assert_eq;
     use rstest::rstest;
 
@@ -492,6 +493,38 @@ mod tests {
         assert_eq!(result.len(), 2);
         assert_eq!(result[0], 1.0);
         assert_eq!(result[1], 2.0);
+        Ok(())
+    }
+
+    #[test]
+    fn test_solve_3x3_system() -> Result<(), Box<dyn Error>> {
+        // Arrange
+        // System of equations:
+        //   2x + y + z = 5
+        //   x + 2y + z = 5
+        //   x + y + 2z = 6
+        // Expected solution: x = 1, y = 1, z = 2
+        let mut matrix = SimpleMatrix::<f32>::new(3, 3)?;
+        matrix.set(0, 0, 2.0)?;
+        matrix.set(0, 1, 1.0)?;
+        matrix.set(0, 2, 1.0)?;
+        matrix.set(1, 0, 1.0)?;
+        matrix.set(1, 1, 2.0)?;
+        matrix.set(1, 2, 1.0)?;
+        matrix.set(2, 0, 1.0)?;
+        matrix.set(2, 1, 1.0)?;
+        matrix.set(2, 2, 2.0)?;
+
+        let factors = Vector::new(&[5.0, 5.0, 6.0])?;
+
+        // Act
+        let result = solve(&matrix, &factors)?;
+
+        // Assert
+        assert_eq!(result.len(), 3);
+        assert_relative_eq!(result[0], 1.0, epsilon = 1e-5);
+        assert_relative_eq!(result[1], 1.0, epsilon = 1e-5);
+        assert_relative_eq!(result[2], 2.0, epsilon = 1e-5);
         Ok(())
     }
 }
