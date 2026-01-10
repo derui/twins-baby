@@ -2,7 +2,7 @@ pub(crate) mod arithmetic;
 pub(crate) mod constant;
 pub(crate) mod monomial;
 
-use std::fmt::Display;
+use std::{collections::HashMap, fmt::Display, iter::Map};
 
 use crate::{environment::Environment, variable::Variable};
 
@@ -32,6 +32,9 @@ pub trait Equation: std::fmt::Debug + EquationClone + Display {
     /// # Returns
     /// The derived equation. None if it can not be derived.
     fn derive(&self, variable: &Variable) -> Option<Box<dyn Equation>>;
+
+    /// return the equation related or not
+    fn is_variable_related(&self, variable: &Variable) -> bool;
 }
 
 /// A support trait to define Clone for Box<dyn Equation>

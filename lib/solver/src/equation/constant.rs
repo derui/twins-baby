@@ -19,6 +19,10 @@ impl Equation for ConstantEquation {
         // constant can not derive
         None
     }
+
+    fn is_variable_related(&self, _variable: &Variable) -> bool {
+        false
+    }
 }
 
 impl std::fmt::Display for ConstantEquation {
@@ -176,5 +180,73 @@ mod tests {
         assert_eq!(result1, None);
         assert_eq!(result2, None);
         assert_eq!(result3, None);
+    }
+
+    #[test]
+    fn test_is_variable_related_returns_false_for_any_variable() {
+        // arrange
+        let equation = ConstantEquation::new(42.0);
+        let var_x = Variable::new("x", 0.0);
+
+        // act
+        let result = equation.is_variable_related(&var_x);
+
+        // assert
+        assert_eq!(result, false);
+    }
+
+    #[test]
+    fn test_is_variable_related_returns_false_for_different_variable_names() {
+        // arrange
+        let equation = ConstantEquation::new(100.0);
+        let var_y = Variable::new("y", 0.0);
+        let var_z = Variable::new("z", 0.0);
+        let var_abc = Variable::new("abc", 0.0);
+
+        // act
+        let result_y = equation.is_variable_related(&var_y);
+        let result_z = equation.is_variable_related(&var_z);
+        let result_abc = equation.is_variable_related(&var_abc);
+
+        // assert
+        assert_eq!(result_y, false);
+        assert_eq!(result_z, false);
+        assert_eq!(result_abc, false);
+    }
+
+    #[test]
+    fn test_is_variable_related_returns_false_regardless_of_constant_value() {
+        // arrange
+        let eq_positive = ConstantEquation::new(50.0);
+        let eq_negative = ConstantEquation::new(-50.0);
+        let eq_zero = ConstantEquation::new(0.0);
+        let variable = Variable::new("x", 0.0);
+
+        // act
+        let result_positive = eq_positive.is_variable_related(&variable);
+        let result_negative = eq_negative.is_variable_related(&variable);
+        let result_zero = eq_zero.is_variable_related(&variable);
+
+        // assert
+        assert_eq!(result_positive, false);
+        assert_eq!(result_negative, false);
+        assert_eq!(result_zero, false);
+    }
+
+    #[test]
+    fn test_is_variable_related_returns_consistent_result_on_multiple_calls() {
+        // arrange
+        let equation = ConstantEquation::new(75.0);
+        let variable = Variable::new("x", 0.0);
+
+        // act
+        let result1 = equation.is_variable_related(&variable);
+        let result2 = equation.is_variable_related(&variable);
+        let result3 = equation.is_variable_related(&variable);
+
+        // assert
+        assert_eq!(result1, false);
+        assert_eq!(result2, false);
+        assert_eq!(result3, false);
     }
 }

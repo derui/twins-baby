@@ -49,6 +49,10 @@ impl Equation for ArithmeticEquation {
             }
         }
     }
+
+    fn is_variable_related(&self, variable: &Variable) -> bool {
+        self.first.is_variable_related(variable) || self.second.is_variable_related(variable)
+    }
 }
 
 impl std::fmt::Display for ArithmeticEquation {
@@ -429,6 +433,127 @@ mod tests {
             // assert
             assert!(result.is_some());
             assert_eq!(format!("{}", result.unwrap()), "1");
+        }
+    }
+
+    mod is_variable_related_tests {
+        use super::*;
+        use pretty_assertions::assert_eq;
+
+        #[test]
+        fn test_is_variable_related_returns_false_for_both_constants() {
+            // arrange
+            let first = ConstantEquation::new(5.0);
+            let second = ConstantEquation::new(3.0);
+            let equation = ArithmeticEquation::new(Operator::Add, &first, &second);
+            let variable = Variable::new("x", 0.0);
+
+            // act
+            let result = equation.is_variable_related(&variable);
+
+            // assert
+            assert_eq!(result, false);
+        }
+
+        #[test]
+        fn test_is_variable_related_returns_true_when_first_operand_has_variable() {
+            // arrange
+            let first = MonomialEquation::new(2.0, "x", 1);
+            let second = ConstantEquation::new(3.0);
+            let equation = ArithmeticEquation::new(Operator::Add, &first, &second);
+            let variable = Variable::new("x", 0.0);
+
+            // act
+            let result = equation.is_variable_related(&variable);
+
+            // assert
+            assert_eq!(result, true);
+        }
+
+        #[test]
+        fn test_is_variable_related_returns_true_when_second_operand_has_variable() {
+            // arrange
+            let first = ConstantEquation::new(5.0);
+            let second = MonomialEquation::new(3.0, "y", 1);
+            let equation = ArithmeticEquation::new(Operator::Multiply, &first, &second);
+            let variable = Variable::new("y", 0.0);
+
+            // act
+            let result = equation.is_variable_related(&variable);
+
+            // assert
+            assert_eq!(result, true);
+        }
+
+        #[test]
+        fn test_is_variable_related_returns_true_when_both_operands_have_same_variable() {
+            // arrange
+            let first = MonomialEquation::new(2.0, "x", 1);
+            let second = MonomialEquation::new(3.0, "x", 2);
+            let equation = ArithmeticEquation::new(Operator::Add, &first, &second);
+            let variable = Variable::new("x", 0.0);
+
+            // act
+            let result = equation.is_variable_related(&variable);
+
+            // assert
+            assert_eq!(result, true);
+        }
+
+        #[test]
+        fn test_is_variable_related_returns_true_when_either_operand_has_variable() {
+            // arrange
+            let first = MonomialEquation::new(2.0, "x", 1);
+            let second = MonomialEquation::new(3.0, "y", 1);
+            let equation = ArithmeticEquation::new(Operator::Add, &first, &second);
+            let var_x = Variable::new("x", 0.0);
+            let var_y = Variable::new("y", 0.0);
+
+            // act
+            let result_x = equation.is_variable_related(&var_x);
+            let result_y = equation.is_variable_related(&var_y);
+
+            // assert
+            assert_eq!(result_x, true);
+            assert_eq!(result_y, true);
+        }
+
+        #[test]
+        fn test_is_variable_related_returns_false_when_different_variable() {
+            // arrange
+            let first = MonomialEquation::new(2.0, "x", 1);
+            let second = MonomialEquation::new(3.0, "y", 1);
+            let equation = ArithmeticEquation::new(Operator::Add, &first, &second);
+            let variable = Variable::new("z", 0.0);
+
+            // act
+            let result = equation.is_variable_related(&variable);
+
+            // assert
+            assert_eq!(result, false);
+        }
+
+        #[test]
+        fn test_is_variable_related_with_nested_equations() {
+            // arrange
+            // (x + 2) * 3
+            let inner_first = MonomialEquation::new(1.0, "x", 1);
+            let inner_second = ConstantEquation::new(2.0);
+            let inner_equation =
+                ArithmeticEquation::new(Operator::Add, &inner_first, &inner_second);
+            let outer_second = ConstantEquation::new(3.0);
+            let outer_equation =
+                ArithmeticEquation::new(Operator::Multiply, &inner_equation, &outer_second);
+            let var_x = Variable::new("x", 0.0);
+            let var_y = Variable::new("y", 0.0);
+
+            // act
+            let result_x = outer_equation.is_variable_related(&var_x);
+            let result_y = outer_equation.is_variable_related(&var_y);
+
+            // assert
+            assert_eq!(result_x, true);
+            assert_eq!(result_y, false);
         }
     }
 }

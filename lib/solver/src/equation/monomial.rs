@@ -52,6 +52,10 @@ impl Equation for MonomialEquation {
             None
         }
     }
+
+    fn is_variable_related(&self, variable: &Variable) -> bool {
+        self.variable == variable.name()
+    }
 }
 
 impl std::fmt::Display for MonomialEquation {
@@ -353,6 +357,53 @@ mod tests {
 
             // assert
             assert_eq!(result, None);
+        }
+    }
+
+    mod is_variable_related_tests {
+        use super::*;
+        use pretty_assertions::assert_eq;
+
+        #[test]
+        fn test_is_variable_related_returns_true_for_matching_variable() {
+            // arrange
+            let equation = MonomialEquation::new(2.0, "x", 1);
+            let variable = Variable::new("x", 0.0);
+
+            // act
+            let result = equation.is_variable_related(&variable);
+
+            // assert
+            assert_eq!(result, true);
+        }
+
+        #[test]
+        fn test_is_variable_related_returns_false_for_different_variable() {
+            // arrange
+            let equation = MonomialEquation::new(2.0, "x", 1);
+            let variable = Variable::new("y", 0.0);
+
+            // act
+            let result = equation.is_variable_related(&variable);
+
+            // assert
+            assert_eq!(result, false);
+        }
+
+        #[test]
+        fn test_is_variable_related_case_sensitive() {
+            // arrange
+            let equation = MonomialEquation::new(1.0, "Variable", 1);
+            let var_lowercase = Variable::new("variable", 0.0);
+            let var_correct = Variable::new("Variable", 0.0);
+
+            // act
+            let result_lowercase = equation.is_variable_related(&var_lowercase);
+            let result_correct = equation.is_variable_related(&var_correct);
+
+            // assert
+            assert_eq!(result_lowercase, false);
+            assert_eq!(result_correct, true);
         }
     }
 }
