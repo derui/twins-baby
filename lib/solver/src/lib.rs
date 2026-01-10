@@ -451,4 +451,156 @@ mod tests {
             assert_eq!(solver.status(), DimensionSpecificationStatus::Incorrect);
         }
     }
+
+    mod solve {
+        use crate::environment::Environment;
+        use crate::equation::arithmetic::{self, ArithmeticEquation};
+        use crate::equation::constant::ConstantEquation;
+        use crate::equation::monomial::MonomialEquation;
+        use crate::equation::{self, Equation};
+        use crate::variable::Variable;
+        use crate::{DefaultEquationIdGenerator, DimensionSpecificationStatus, Solver};
+        use pretty_assertions::assert_eq;
+
+        #[test]
+        fn test_solve_line_diminsion() {
+            // Arrange
+            let generator = Box::new(DefaultEquationIdGenerator::default());
+            let mut solver = Solver::new(generator);
+            let env =
+                Environment::from_tuples(&[("x1", 0.0), ("y1", 0.0), ("x2", 1.0), ("y2", 1.0)]);
+            let dimension = Environment::from_tuples(&[("d", 3.0)]);
+            solver.update_variables(&env);
+            solver.update_dimensions(&dimension);
+            // x1 - 3 = 0
+            solver.add_equation(Box::new(ArithmeticEquation::new(
+                arithmetic::Operator::Subtract,
+                &[
+                    Box::new(MonomialEquation::new(1.0, "x1", 1)),
+                    Box::new(ConstantEquation::new(3.0)),
+                ],
+            )));
+            // y1 - 0 = 0
+            solver.add_equation(Box::new(ArithmeticEquation::new(
+                arithmetic::Operator::Subtract,
+                &[
+                    Box::new(MonomialEquation::new(1.0, "y1", 1)),
+                    Box::new(ConstantEquation::new(0.0)),
+                ],
+            )));
+            // (x2 - x1)^2 + (y2 - y1)^2 - d^2 = 0
+            // = x2^2 - 2 * x2 * x1 + x1^2 + y2^2 - 2 * y2 * y1 + y1^2 - d^2 = 0
+            solver.add_equation(Box::new(ArithmeticEquation::new(
+                arithmetic::Operator::Subtract,
+                &[
+                    Box::new(MonomialEquation::new(1.0, "x1", 1)),
+                    Box::new(ConstantEquation::new(3.0)),
+                ],
+            )));
+
+            // Act
+
+            // Assert
+            assert_eq!(solver.status(), DimensionSpecificationStatus::Incorrect);
+        }
+
+        #[test]
+        fn test_status_remains_incorrect_with_only_variables() {
+            // Arrange
+            let generator = Box::new(DefaultEquationIdGenerator::default());
+            let mut solver = Solver::new(generator);
+            let env = Environment::from_variables(vec![Variable::new("x", 1.0)]);
+
+            // Act
+            solver.update_variables(&env);
+
+            // Assert
+            assert_eq!(solver.status(), DimensionSpecificationStatus::Incorrect);
+        }
+
+        #[test]
+        fn test_status_remains_incorrect_with_only_equations() {
+            // Arrange
+            let generator = Box::new(DefaultEquationIdGenerator::default());
+            let mut solver = Solver::new(generator);
+            let equation: Box<dyn Equation> = Box::new(ConstantEquation::new(1.0));
+
+            // Act
+            solver.add_equation(equation);
+
+            // Assert
+            assert_eq!(solver.status(), DimensionSpecificationStatus::Incorrect);
+        }
+
+        #[test]
+        fn test_status_becomes_correct_when_variable_and_equation_counts_match() {
+            // Arrange
+            let generator = Box::new(DefaultEquationIdGenerator::default());
+            let mut solver = Solver::new(generator);
+            let env = Environment::from_variables(vec![Variable::new("x", 1.0)]);
+            let equation: Box<dyn Equation> = Box::new(ConstantEquation::new(1.0));
+
+            // Act
+            solver.add_equation(equation);
+            solver.update_variables(&env);
+
+            // Assert
+            assert_eq!(solver.status(), DimensionSpecificationStatus::Correct);
+        }
+
+        #[test]
+        fn test_status_becomes_correct_with_multiple_variables_and_equations() {
+            // Arrange
+            let generator = Box::new(DefaultEquationIdGenerator::default());
+            let mut solver = Solver::new(generator);
+            let env = Environment::from_variables(vec![
+                Variable::new("x", 1.0),
+                Variable::new("y", 2.0),
+                Variable::new("z", 3.0),
+            ]);
+
+            // Act
+            solver.add_equation(Box::new(ConstantEquation::new(1.0)));
+            solver.add_equation(Box::new(ConstantEquation::new(2.0)));
+            solver.add_equation(Box::new(ConstantEquation::new(3.0)));
+            solver.update_variables(&env);
+
+            // Assert
+            assert_eq!(solver.status(), DimensionSpecificationStatus::Correct);
+        }
+
+        #[test]
+        fn test_status_becomes_incorrect_when_adding_more_variables() {
+            // Arrange
+            let generator = Box::new(DefaultEquationIdGenerator::default());
+            let mut solver = Solver::new(generator);
+            let env1 = Environment::from_variables(vec![Variable::new("x", 1.0)]);
+            solver.add_equation(Box::new(ConstantEquation::new(1.0)));
+            solver.update_variables(&env1);
+
+            // Act
+            let env2 =
+                Environment::from_variables(vec![Variable::new("x", 1.0), Variable::new("y", 2.0)]);
+            solver.update_variables(&env2);
+
+            // Assert
+            assert_eq!(solver.status(), DimensionSpecificationStatus::Incorrect);
+        }
+
+        #[test]
+        fn test_status_becomes_incorrect_after_removing_equation() {
+            // Arrange
+            let generator = Box::new(DefaultEquationIdGenerator::default());
+            let mut solver = Solver::new(generator);
+            let env = Environment::from_variables(vec![Variable::new("x", 1.0)]);
+            let eq_id = solver.add_equation(Box::new(ConstantEquation::new(1.0)));
+            solver.update_variables(&env);
+
+            // Act
+            solver.remove_equation(eq_id);
+
+            // Assert
+            assert_eq!(solver.status(), DimensionSpecificationStatus::Incorrect);
+        }
+    }
 }

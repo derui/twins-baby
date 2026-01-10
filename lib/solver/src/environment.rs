@@ -41,6 +41,25 @@ impl Environment {
         }
     }
 
+    /// Get a new environment with hashmap.
+    ///
+    /// NOTICE: If there are duplicated variable names, the last one will be used.
+    ///
+    /// # Arguments
+    /// * `variables` - A hashmap of name and value
+    ///
+    /// # Returns
+    /// * `Environment` - A new environment containing the provided variables
+    pub fn from_tuples(variables: &[(&str, f32)]) -> Self {
+        let mut vars_map = HashMap::new();
+        for (name, v) in variables {
+            vars_map.insert(name.to_string(), Variable::new(name, *v));
+        }
+        Environment {
+            variables: vars_map,
+        }
+    }
+
     /// Add a variable to the environment
     ///
     /// This method will override variable if there is already a variable with the same name.

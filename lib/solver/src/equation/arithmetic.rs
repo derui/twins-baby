@@ -17,41 +17,44 @@ pub(crate) enum Operator {
 #[derive(Debug, Clone)]
 pub(crate) struct ArithmeticEquation {
     operator: Operator,
-    first: Box<dyn Equation>,
-    second: Box<dyn Equation>,
+    operands: Vec<Box<dyn Equation>>,
 }
 
 impl Equation for ArithmeticEquation {
     fn evaluate(&self, env: &Environment) -> Result<f32, EquationError> {
-        let first = self.first.evaluate(env)?;
-        let second = self.second.evaluate(env)?;
+        let values: Result<Vec<_>, _> = self.operands.iter().map(|e| e.evaluate(env)).collect();
+        let values = values?;
 
-        let ret = match self.operator {
-            Operator::Add => first + second,
-            Operator::Subtract => first - second,
-            Operator::Multiply => first * second,
-            Operator::Divide => first / second,
-        };
+        let ret = values.into_iter().reduce(|o1, o2| match self.operator {
+            Operator::Add => o1 + o2,
+            Operator::Subtract => o1 - o2,
+            Operator::Multiply => o1 * o2,
+            Operator::Divide => o1 / o2,
+        });
 
-        Ok(ret)
+        ret.ok_or(EquationError::NoVariableInEnvironment(vec![]))
     }
 
     fn derive(&self, variable: &Variable) -> Option<Box<dyn Equation>> {
-        let first = self.first.derive(variable);
-        let second = self.second.derive(variable);
+        let ret = self
+            .operands
+            .iter()
+            .flat_map(|e| e.derive(variable))
+            .collect::<Vec<_>>();
 
-        match (first, second) {
-            (None, None) => None,
-            (None, Some(e)) => Some(e),
-            (Some(e), None) => Some(e),
-            (Some(e1), Some(e2)) => {
-                Some(Box::new(ArithmeticEquation::new(self.operator, &*e1, &*e2)))
-            }
+        if ret.len() == 0 {
+            None
+        } else if ret.len() == 1 {
+            Some(ret.into_iter().next().unwrap())
+        } else {
+            Some(Box::new(ArithmeticEquation::new(self.operator, &ret)))
         }
     }
 
     fn is_variable_related(&self, variable: &Variable) -> bool {
-        self.first.is_variable_related(variable) || self.second.is_variable_related(variable)
+        self.operands
+            .iter()
+            .any(|o| o.is_variable_related(variable))
     }
 }
 
@@ -63,7 +66,13 @@ impl std::fmt::Display for ArithmeticEquation {
             Operator::Multiply => "*",
             Operator::Divide => "/",
         };
-        write!(f, "{}{}{}", self.first, op, self.second)
+        if self.operands.len() >= 2 {
+            write!(f, "{}{}{}", self.operands[0], op, self.operands[1])
+        } else if self.operands.len() == 1 {
+            write!(f, "{}", self.operands[0])
+        } else {
+            write!(f, "")
+        }
     }
 }
 
@@ -77,11 +86,10 @@ impl ArithmeticEquation {
     ///
     /// # Returns
     /// A new instance of `ArithmeticEquation`
-    pub(crate) fn new(operator: Operator, first: &dyn Equation, second: &dyn Equation) -> Self {
+    pub(crate) fn new(operator: Operator, operands: &[Box<dyn Equation>]) -> Self {
         Self {
             operator,
-            first: first.clone_box(),
-            second: second.clone_box(),
+            operands: Vec::from(operands),
         }
     }
 }
@@ -108,9 +116,9 @@ mod tests {
         #[case] expected: f32,
     ) {
         // arrange
-        let first = ConstantEquation::new(first_val);
-        let second = ConstantEquation::new(second_val);
-        let equation = ArithmeticEquation::new(operator, &first, &second);
+        let first = Box::new(ConstantEquation::new(first_val));
+        let second = Box::new(ConstantEquation::new(second_val));
+        let equation = ArithmeticEquation::new(operator, &[first, second]);
         let env = Environment::empty();
 
         // act
@@ -134,9 +142,9 @@ mod tests {
         #[case] expected: f32,
     ) {
         // arrange
-        let first = MonomialEquation::new(1.0, var1_name, 1);
-        let second = MonomialEquation::new(1.0, var2_name, 1);
-        let equation = ArithmeticEquation::new(operator, &first, &second);
+        let first = Box::new(MonomialEquation::new(1.0, var1_name, 1));
+        let second = Box::new(MonomialEquation::new(1.0, var2_name, 1));
+        let equation = ArithmeticEquation::new(operator, &[first, second]);
         let var1 = Variable::new(var1_name, var1_val);
         let var2 = Variable::new(var2_name, var2_val);
         let env = Environment::from_variables(vec![var1, var2]);
@@ -151,9 +159,9 @@ mod tests {
     #[test]
     fn test_evaluate_mixed_constant_and_variable() {
         // arrange
-        let first = ConstantEquation::new(10.0);
-        let second = MonomialEquation::new(1.0, "x", 1);
-        let equation = ArithmeticEquation::new(Operator::Add, &first, &second);
+        let first = Box::new(ConstantEquation::new(10.0));
+        let second = Box::new(MonomialEquation::new(1.0, "x", 1));
+        let equation = ArithmeticEquation::new(Operator::Add, &[first, second]);
         let var = Variable::new("x", 5.0);
         let env = Environment::from_variables(vec![var]);
 
@@ -182,7 +190,7 @@ mod tests {
         } else {
             Box::new(MonomialEquation::new(1.0, var_name, 1))
         };
-        let equation = ArithmeticEquation::new(Operator::Add, &*first, &*second);
+        let equation = ArithmeticEquation::new(Operator::Add, &[first, second]);
         let env = Environment::empty();
 
         // act
@@ -210,9 +218,9 @@ mod tests {
         #[case] expected: f32,
     ) {
         // arrange
-        let first = ConstantEquation::new(first_val);
-        let second = ConstantEquation::new(second_val);
-        let equation = ArithmeticEquation::new(operator, &first, &second);
+        let first = Box::new(ConstantEquation::new(first_val));
+        let second = Box::new(ConstantEquation::new(second_val));
+        let equation = ArithmeticEquation::new(operator, &[first, second]);
         let env = Environment::empty();
 
         // act
@@ -225,13 +233,15 @@ mod tests {
     #[test]
     fn test_evaluate_with_nested_arithmetic_equations() {
         // arrange
-        let inner_first = ConstantEquation::new(3.0);
-        let inner_second = ConstantEquation::new(4.0);
-        let inner_equation = ArithmeticEquation::new(Operator::Add, &inner_first, &inner_second);
+        let inner_first = Box::new(ConstantEquation::new(3.0));
+        let inner_second = Box::new(ConstantEquation::new(4.0));
+        let inner_equation = ArithmeticEquation::new(Operator::Add, &[inner_first, inner_second]);
 
-        let outer_second = ConstantEquation::new(2.0);
-        let outer_equation =
-            ArithmeticEquation::new(Operator::Multiply, &inner_equation, &outer_second);
+        let outer_second = Box::new(ConstantEquation::new(2.0));
+        let outer_equation = ArithmeticEquation::new(
+            Operator::Multiply,
+            &[Box::new(inner_equation), outer_second],
+        );
         let env = Environment::empty();
 
         // act
@@ -245,19 +255,22 @@ mod tests {
     fn test_evaluate_complex_nested_expression() {
         // arrange
         // ((10 + 5) * 2) - (6 / 3) = (15 * 2) - 2 = 30 - 2 = 28
-        let add_left = ConstantEquation::new(10.0);
-        let add_right = ConstantEquation::new(5.0);
-        let add_equation = ArithmeticEquation::new(Operator::Add, &add_left, &add_right);
+        let add_left = Box::new(ConstantEquation::new(10.0));
+        let add_right = Box::new(ConstantEquation::new(5.0));
+        let add_equation = ArithmeticEquation::new(Operator::Add, &[add_left, add_right]);
 
-        let mul_right = ConstantEquation::new(2.0);
-        let mul_equation = ArithmeticEquation::new(Operator::Multiply, &add_equation, &mul_right);
+        let mul_right = Box::new(ConstantEquation::new(2.0));
+        let mul_equation =
+            ArithmeticEquation::new(Operator::Multiply, &[Box::new(add_equation), mul_right]);
 
-        let div_left = ConstantEquation::new(6.0);
-        let div_right = ConstantEquation::new(3.0);
-        let div_equation = ArithmeticEquation::new(Operator::Divide, &div_left, &div_right);
+        let div_left = Box::new(ConstantEquation::new(6.0));
+        let div_right = Box::new(ConstantEquation::new(3.0));
+        let div_equation = ArithmeticEquation::new(Operator::Divide, &[div_left, div_right]);
 
-        let final_equation =
-            ArithmeticEquation::new(Operator::Subtract, &mul_equation, &div_equation);
+        let final_equation = ArithmeticEquation::new(
+            Operator::Subtract,
+            &[Box::new(mul_equation), Box::new(div_equation)],
+        );
         let env = Environment::empty();
 
         // act
@@ -283,9 +296,9 @@ mod tests {
             #[case] second_val: f32,
         ) {
             // arrange
-            let first = ConstantEquation::new(first_val);
-            let second = ConstantEquation::new(second_val);
-            let equation = ArithmeticEquation::new(operator, &first, &second);
+            let first = Box::new(ConstantEquation::new(first_val));
+            let second = Box::new(ConstantEquation::new(second_val));
+            let equation = ArithmeticEquation::new(operator, &[first, second]);
             let variable = Variable::new("x", 0.0);
 
             // act
@@ -305,9 +318,9 @@ mod tests {
             #[case] expected: &str,
         ) {
             // arrange
-            let first = MonomialEquation::new(2.0, "x", 1);
-            let second = ConstantEquation::new(3.0);
-            let equation = ArithmeticEquation::new(operator, &first, &second);
+            let first = Box::new(MonomialEquation::new(2.0, "x", 1));
+            let second = Box::new(ConstantEquation::new(3.0));
+            let equation = ArithmeticEquation::new(operator, &[first, second]);
             let variable = Variable::new("x", 0.0);
 
             // act
@@ -328,9 +341,9 @@ mod tests {
             #[case] expected: &str,
         ) {
             // arrange
-            let first = ConstantEquation::new(5.0);
-            let second = MonomialEquation::new(3.0, "y", 1);
-            let equation = ArithmeticEquation::new(operator, &first, &second);
+            let first = Box::new(ConstantEquation::new(5.0));
+            let second = Box::new(MonomialEquation::new(3.0, "y", 1));
+            let equation = ArithmeticEquation::new(operator, &[first, second]);
             let variable = Variable::new("y", 0.0);
 
             // act
@@ -351,9 +364,9 @@ mod tests {
             #[case] expected: &str,
         ) {
             // arrange
-            let first = MonomialEquation::new(2.0, "x", 1);
-            let second = MonomialEquation::new(3.0, "x", 1);
-            let equation = ArithmeticEquation::new(operator, &first, &second);
+            let first = Box::new(MonomialEquation::new(2.0, "x", 1));
+            let second = Box::new(MonomialEquation::new(3.0, "x", 1));
+            let equation = ArithmeticEquation::new(operator, &[first, second]);
             let variable = Variable::new("x", 0.0);
 
             // act
@@ -373,9 +386,9 @@ mod tests {
             #[case] operator: Operator,
         ) {
             // arrange
-            let first = MonomialEquation::new(2.0, "x", 1);
-            let second = MonomialEquation::new(3.0, "x", 1);
-            let equation = ArithmeticEquation::new(operator, &first, &second);
+            let first = Box::new(MonomialEquation::new(2.0, "x", 1));
+            let second = Box::new(MonomialEquation::new(3.0, "x", 1));
+            let equation = ArithmeticEquation::new(operator, &[first, second]);
             let variable = Variable::new("y", 0.0);
 
             // act
@@ -400,9 +413,9 @@ mod tests {
             #[case] expected: &str,
         ) {
             // arrange
-            let first = MonomialEquation::new(2.0, "x", 1);
-            let second = MonomialEquation::new(3.0, "y", 1);
-            let equation = ArithmeticEquation::new(operator, &first, &second);
+            let first = Box::new(MonomialEquation::new(2.0, "x", 1));
+            let second = Box::new(MonomialEquation::new(3.0, "y", 1));
+            let equation = ArithmeticEquation::new(operator, &[first, second]);
             let variable = Variable::new(derive_var, 0.0);
 
             // act
@@ -417,14 +430,16 @@ mod tests {
         fn test_derive_with_nested_equations() {
             // arrange
             // (x + 2) * 3, derive with respect to x
-            let inner_first = MonomialEquation::new(1.0, "x", 1);
-            let inner_second = ConstantEquation::new(2.0);
+            let inner_first = Box::new(MonomialEquation::new(1.0, "x", 1));
+            let inner_second = Box::new(ConstantEquation::new(2.0));
             let inner_equation =
-                ArithmeticEquation::new(Operator::Add, &inner_first, &inner_second);
+                ArithmeticEquation::new(Operator::Add, &[inner_first, inner_second]);
 
-            let outer_second = ConstantEquation::new(3.0);
-            let outer_equation =
-                ArithmeticEquation::new(Operator::Multiply, &inner_equation, &outer_second);
+            let outer_second = Box::new(ConstantEquation::new(3.0));
+            let outer_equation = ArithmeticEquation::new(
+                Operator::Multiply,
+                &[Box::new(inner_equation), outer_second],
+            );
             let variable = Variable::new("x", 0.0);
 
             // act
@@ -443,9 +458,9 @@ mod tests {
         #[test]
         fn test_is_variable_related_returns_false_for_both_constants() {
             // arrange
-            let first = ConstantEquation::new(5.0);
-            let second = ConstantEquation::new(3.0);
-            let equation = ArithmeticEquation::new(Operator::Add, &first, &second);
+            let first = Box::new(ConstantEquation::new(5.0));
+            let second = Box::new(ConstantEquation::new(3.0));
+            let equation = ArithmeticEquation::new(Operator::Add, &[first, second]);
             let variable = Variable::new("x", 0.0);
 
             // act
@@ -458,9 +473,9 @@ mod tests {
         #[test]
         fn test_is_variable_related_returns_true_when_first_operand_has_variable() {
             // arrange
-            let first = MonomialEquation::new(2.0, "x", 1);
-            let second = ConstantEquation::new(3.0);
-            let equation = ArithmeticEquation::new(Operator::Add, &first, &second);
+            let first = Box::new(MonomialEquation::new(2.0, "x", 1));
+            let second = Box::new(ConstantEquation::new(3.0));
+            let equation = ArithmeticEquation::new(Operator::Add, &[first, second]);
             let variable = Variable::new("x", 0.0);
 
             // act
@@ -473,9 +488,9 @@ mod tests {
         #[test]
         fn test_is_variable_related_returns_true_when_second_operand_has_variable() {
             // arrange
-            let first = ConstantEquation::new(5.0);
-            let second = MonomialEquation::new(3.0, "y", 1);
-            let equation = ArithmeticEquation::new(Operator::Multiply, &first, &second);
+            let first = Box::new(ConstantEquation::new(5.0));
+            let second = Box::new(MonomialEquation::new(3.0, "y", 1));
+            let equation = ArithmeticEquation::new(Operator::Multiply, &[first, second]);
             let variable = Variable::new("y", 0.0);
 
             // act
@@ -488,9 +503,9 @@ mod tests {
         #[test]
         fn test_is_variable_related_returns_true_when_both_operands_have_same_variable() {
             // arrange
-            let first = MonomialEquation::new(2.0, "x", 1);
-            let second = MonomialEquation::new(3.0, "x", 2);
-            let equation = ArithmeticEquation::new(Operator::Add, &first, &second);
+            let first = Box::new(MonomialEquation::new(2.0, "x", 1));
+            let second = Box::new(MonomialEquation::new(3.0, "x", 2));
+            let equation = ArithmeticEquation::new(Operator::Add, &[first, second]);
             let variable = Variable::new("x", 0.0);
 
             // act
@@ -503,9 +518,9 @@ mod tests {
         #[test]
         fn test_is_variable_related_returns_true_when_either_operand_has_variable() {
             // arrange
-            let first = MonomialEquation::new(2.0, "x", 1);
-            let second = MonomialEquation::new(3.0, "y", 1);
-            let equation = ArithmeticEquation::new(Operator::Add, &first, &second);
+            let first = Box::new(MonomialEquation::new(2.0, "x", 1));
+            let second = Box::new(MonomialEquation::new(3.0, "y", 1));
+            let equation = ArithmeticEquation::new(Operator::Add, &[first, second]);
             let var_x = Variable::new("x", 0.0);
             let var_y = Variable::new("y", 0.0);
 
@@ -521,9 +536,9 @@ mod tests {
         #[test]
         fn test_is_variable_related_returns_false_when_different_variable() {
             // arrange
-            let first = MonomialEquation::new(2.0, "x", 1);
-            let second = MonomialEquation::new(3.0, "y", 1);
-            let equation = ArithmeticEquation::new(Operator::Add, &first, &second);
+            let first = Box::new(MonomialEquation::new(2.0, "x", 1));
+            let second = Box::new(MonomialEquation::new(3.0, "y", 1));
+            let equation = ArithmeticEquation::new(Operator::Add, &[first, second]);
             let variable = Variable::new("z", 0.0);
 
             // act
@@ -537,13 +552,15 @@ mod tests {
         fn test_is_variable_related_with_nested_equations() {
             // arrange
             // (x + 2) * 3
-            let inner_first = MonomialEquation::new(1.0, "x", 1);
-            let inner_second = ConstantEquation::new(2.0);
+            let inner_first = Box::new(MonomialEquation::new(1.0, "x", 1));
+            let inner_second = Box::new(ConstantEquation::new(2.0));
             let inner_equation =
-                ArithmeticEquation::new(Operator::Add, &inner_first, &inner_second);
-            let outer_second = ConstantEquation::new(3.0);
-            let outer_equation =
-                ArithmeticEquation::new(Operator::Multiply, &inner_equation, &outer_second);
+                ArithmeticEquation::new(Operator::Add, &[inner_first, inner_second]);
+            let outer_second = Box::new(ConstantEquation::new(3.0));
+            let outer_equation = ArithmeticEquation::new(
+                Operator::Multiply,
+                &[Box::new(inner_equation), outer_second],
+            );
             let var_x = Variable::new("x", 0.0);
             let var_y = Variable::new("y", 0.0);
 
