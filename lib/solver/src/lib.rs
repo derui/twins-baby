@@ -1,9 +1,10 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, error::Error};
 
 use crate::{
     environment::Environment,
     equation::Equation,
-    matrix::{size::Size, sparse::SparseMatrix},
+    matrix::{Matrix, simple::SimpleMatrix, size::Size, sparse::SparseMatrix},
+    variable::Variable,
 };
 
 pub mod environment;
@@ -14,6 +15,31 @@ pub mod vector;
 
 /// Internal Jacobian matrix. It is a matrix of constraint matrix.
 struct Jacobian(SparseMatrix<Box<dyn equation::Equation>>);
+
+impl Jacobian {
+    /// Create Jacobian from equations and variables
+    fn from_equations(
+        equations: &[Box<dyn Equation>],
+        variables: &[Variable],
+    ) -> Result<Self, Box<dyn Error>> {
+        if equations.len() != variables.len() {
+            return Err("Can not create valid jacobian".into());
+        }
+
+        let mut matrix = SimpleMatrix::new(equations.len(), equations.len())?;
+        for (i, equation) in equations.iter().enumerate() {
+            for (j, variable) in variables.iter().enumerate() {
+                // keep empty when can not derive
+                let Some(derived) = equation.derive(variable) else {
+                    continue;
+                };
+                matrix.set(i, j, derived)?;
+            }
+        }
+
+        Ok(Jacobian(SparseMatrix::from_matrix(&matrix)))
+    }
+}
 
 /// Wrapper of Equation Id
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
