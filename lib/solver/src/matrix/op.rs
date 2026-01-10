@@ -527,4 +527,44 @@ mod tests {
         assert_relative_eq!(result[2], 2.0, epsilon = 1e-5);
         Ok(())
     }
+
+    #[test]
+    fn test_solve_with_singular_matrix() -> Result<(), Box<dyn Error>> {
+        // Arrange
+        // Singular matrix (determinant = 0):
+        //   1x + 2y + 3z = 1
+        //   2x + 4y + 6z = 2
+        //   3x + 6y + 9z = 3
+        // The second and third rows are multiples of the first row
+        let mut matrix = SimpleMatrix::<f32>::new(3, 3)?;
+        matrix.set(0, 0, 1.0)?;
+        matrix.set(0, 1, 2.0)?;
+        matrix.set(0, 2, 3.0)?;
+        matrix.set(1, 0, 2.0)?;
+        matrix.set(1, 1, 4.0)?;
+        matrix.set(1, 2, 6.0)?;
+        matrix.set(2, 0, 3.0)?;
+        matrix.set(2, 1, 6.0)?;
+        matrix.set(2, 2, 9.0)?;
+
+        let factors = Vector::new(&[1.0, 2.0, 3.0])?;
+
+        // Act
+        let result = solve(&matrix, &factors)?;
+
+        // Assert
+        // For a singular matrix, the solve function may return values
+        // but they involve division by zero or near-zero values
+        // Check that result contains NaN or Inf values
+        assert_eq!(result.len(), 3);
+        assert!(
+            result[0].is_nan()
+                || result[0].is_infinite()
+                || result[1].is_nan()
+                || result[1].is_infinite()
+                || result[2].is_nan()
+                || result[2].is_infinite()
+        );
+        Ok(())
+    }
 }
