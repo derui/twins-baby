@@ -567,4 +567,30 @@ mod tests {
         );
         Ok(())
     }
+
+    #[test]
+    fn test_solve_with_identity_matrix() -> Result<(), Box<dyn Error>> {
+        // Arrange
+        // Identity matrix system:
+        //   1x + 0y + 0z = 3
+        //   0x + 1y + 0z = 5
+        //   0x + 0y + 1z = 7
+        // Expected solution: x = 3, y = 5, z = 7
+        let mut matrix = SimpleMatrix::<f32>::new(3, 3)?;
+        matrix.set(0, 0, 1.0)?;
+        matrix.set(1, 1, 1.0)?;
+        matrix.set(2, 2, 1.0)?;
+
+        let factors = Vector::new(&[3.0, 5.0, 7.0])?;
+
+        // Act
+        let result = solve(&matrix, &factors)?;
+
+        // Assert
+        assert_eq!(result.len(), 3);
+        assert_relative_eq!(result[0], 3.0, epsilon = 1e-5);
+        assert_relative_eq!(result[1], 5.0, epsilon = 1e-5);
+        assert_relative_eq!(result[2], 7.0, epsilon = 1e-5);
+        Ok(())
+    }
 }
