@@ -1,6 +1,6 @@
 use std::{cmp::min, error::Error};
 
-use crate::matrix::{Matrix, size::Size};
+use crate::matrix::{Matrix, simple::SimpleMatrix, size::Size};
 
 /// implement sparse matrix
 
@@ -17,6 +17,17 @@ pub struct SparseMatrix<M> {
 }
 
 impl<M: Clone> SparseMatrix<M> {
+    /// Create a empty Sparse matrix
+    pub fn empty(size: Size) -> Result<Self, Box<dyn Error>> {
+        if size.columns() <= 0 || size.rows() <= 0 {
+            return Err("can not create 0-sized matrix".into());
+        }
+
+        let mat = SimpleMatrix::new(size.rows(), size.columns())?;
+
+        Ok(Self::from_matrix(&mat))
+    }
+
     /// Create a sparse matrix from other matrix
     pub fn from_matrix(mat: &impl Matrix<M>) -> Self {
         let size = mat.size();
@@ -125,6 +136,7 @@ mod tests {
     use super::*;
     use crate::matrix::simple::SimpleMatrix;
     use pretty_assertions::assert_eq;
+    use rstest::rstest;
 
     /// Test that from_matrix creates a sparse matrix with correct size
     #[test]
@@ -466,5 +478,49 @@ mod tests {
         assert_eq!(sparse.get(1, 0)?, None);
         assert_eq!(sparse.get(3, 0)?, None);
         Ok(())
+    }
+
+    /// Test that empty creates a sparse matrix with correct size and all None values
+    #[test]
+    fn test_empty_creates_matrix_with_correct_size_and_all_none_values()
+    -> Result<(), Box<dyn Error>> {
+        // Arrange
+        let size = Size::new(3, 4);
+
+        // Act
+        let sparse = SparseMatrix::<i32>::empty(size)?;
+
+        // Assert
+        assert_eq!(sparse.size(), Size::new(3, 4));
+        assert_eq!(sparse.get(0, 0)?, None);
+        assert_eq!(sparse.get(1, 2)?, None);
+        assert_eq!(sparse.get(2, 3)?, None);
+        Ok(())
+    }
+
+    /// Test that empty returns error for invalid dimensions
+    #[rstest]
+    #[case(0, 3, "zero rows")]
+    #[case(3, 0, "zero columns")]
+    #[case(0, 0, "both zero")]
+    fn test_empty_returns_error_for_zero_dimensions(
+        #[case] rows: usize,
+        #[case] cols: usize,
+        #[case] description: &str,
+    ) {
+        // Arrange
+        let size = Size::new(rows, cols);
+
+        // Act
+        let result = SparseMatrix::<i32>::empty(size);
+
+        // Assert
+        assert!(result.is_err(), "Should return error for {}", description);
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            "can not create 0-sized matrix",
+            "Error message should be correct for {}",
+            description
+        );
     }
 }
