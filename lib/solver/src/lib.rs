@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use crate::{
     environment::Environment,
     matrix::{size::Size, sparse::SparseMatrix},
+    variable::Variable,
 };
 
 pub mod environment;
@@ -106,7 +107,7 @@ impl EquationIdGenerator for DefaultEquationIdGenerator {
 
 impl Solver {
     /// make new solver
-    fn new(generator: Box<dyn EquationIdGenerator>) -> Self {
+    pub fn new(generator: Box<dyn EquationIdGenerator>) -> Self {
         Solver {
             status: DimensionSpecificationStatus::Incorrect,
             jacobian: Jacobian(SparseMatrix::empty(Size::new(1, 1)).expect("should be suceess")),
@@ -114,6 +115,30 @@ impl Solver {
             dimensions: Environment::empty(),
             equations: HashMap::new(),
             generator: generator.clone(),
+        }
+    }
+
+    /// update variables for solver
+    pub fn update_variables(&mut self, env: &Environment) {
+        self.variables = env.clone();
+
+        self.recaluculate_status()
+    }
+
+    /// Update dimensions for solver
+    pub fn update_dimensions(&mut self, env: &Environment) {
+        self.dimensions = env.clone()
+    }
+
+    /// Re-calculate dimension specification
+    fn recaluculate_status(&mut self) {
+        let variable_count = self.variables.list_variables().len();
+        let equation_count = self.equations.values().len();
+
+        if variable_count == equation_count {
+            self.status = DimensionSpecificationStatus::Correct
+        } else {
+            self.status = DimensionSpecificationStatus::Incorrect
         }
     }
 }
