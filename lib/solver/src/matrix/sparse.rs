@@ -1,4 +1,6 @@
-use std::{cmp::min, error::Error};
+use std::cmp::min;
+
+use anyhow::Result;
 
 use crate::matrix::{Matrix, simple::SimpleMatrix, size::Size};
 
@@ -18,9 +20,9 @@ pub struct SparseMatrix<M> {
 
 impl<M: Clone> SparseMatrix<M> {
     /// Create a empty Sparse matrix
-    pub fn empty(size: Size) -> Result<Self, Box<dyn Error>> {
+    pub fn empty(size: Size) -> Result<Self, anyhow::Error> {
         if size.columns() <= 0 || size.rows() <= 0 {
-            return Err("can not create 0-sized matrix".into());
+            return Err(anyhow::anyhow!("can not create 0-sized matrix"));
         }
 
         let mat = SimpleMatrix::new(size.rows(), size.columns())?;
@@ -70,9 +72,9 @@ impl<M: Clone> Matrix<M> for SparseMatrix<M> {
         self.size
     }
 
-    fn get(&self, row: usize, col: usize) -> Result<Option<M>, Box<dyn Error>> {
+    fn get(&self, row: usize, col: usize) -> Result<Option<M>, anyhow::Error> {
         if row >= self.size.rows() || col >= self.size.columns() {
-            return Err("Index out of bound".into());
+            return Err(anyhow::anyhow!("Index out of bound"));
         }
 
         let start_values_index_of_row = self.row_ptr[row];
@@ -92,12 +94,7 @@ impl<M: Clone> Matrix<M> for SparseMatrix<M> {
     }
 
     // Sparse matrix does not support set for now.
-    fn set(
-        &mut self,
-        _row: usize,
-        _col: usize,
-        _element: M,
-    ) -> Result<Option<M>, Box<dyn std::error::Error>> {
+    fn set(&mut self, _row: usize, _col: usize, _element: M) -> Result<Option<M>, anyhow::Error> {
         todo!()
     }
 
@@ -140,7 +137,7 @@ mod tests {
 
     /// Test that from_matrix creates a sparse matrix with correct size
     #[test]
-    fn test_from_matrix_preserves_size() -> Result<(), Box<dyn Error>> {
+    fn test_from_matrix_preserves_size() -> Result<(), anyhow::Error> {
         // Arrange
         let mut source = SimpleMatrix::<i32>::new(3, 4)?;
         source.set(0, 0, 1)?;
@@ -156,7 +153,7 @@ mod tests {
 
     /// Test that from_matrix correctly converts a matrix with sparse values
     #[test]
-    fn test_from_matrix_converts_sparse_values_correctly() -> Result<(), Box<dyn Error>> {
+    fn test_from_matrix_converts_sparse_values_correctly() -> Result<(), anyhow::Error> {
         // Arrange
         let mut source = SimpleMatrix::<i32>::new(3, 3)?;
         source.set(0, 0, 1)?;
@@ -180,7 +177,7 @@ mod tests {
 
     /// Test that from_matrix handles empty matrix (all None values)
     #[test]
-    fn test_from_matrix_handles_empty_matrix() -> Result<(), Box<dyn Error>> {
+    fn test_from_matrix_handles_empty_matrix() -> Result<(), anyhow::Error> {
         // Arrange
         let source = SimpleMatrix::<i32>::new(2, 3)?;
 
@@ -196,7 +193,7 @@ mod tests {
 
     /// Test that from_matrix handles dense matrix (all values present)
     #[test]
-    fn test_from_matrix_handles_dense_matrix() -> Result<(), Box<dyn Error>> {
+    fn test_from_matrix_handles_dense_matrix() -> Result<(), anyhow::Error> {
         // Arrange
         let mut source = SimpleMatrix::<i32>::new(2, 2)?;
         source.set(0, 0, 1)?;
@@ -217,7 +214,7 @@ mod tests {
 
     /// Test that get returns error for out of bounds row
     #[test]
-    fn test_get_returns_error_for_out_of_bounds_row() -> Result<(), Box<dyn Error>> {
+    fn test_get_returns_error_for_out_of_bounds_row() -> Result<(), anyhow::Error> {
         // Arrange
         let mut source = SimpleMatrix::<i32>::new(2, 3)?;
         source.set(0, 0, 1)?;
@@ -234,7 +231,7 @@ mod tests {
 
     /// Test that get returns error for out of bounds column
     #[test]
-    fn test_get_returns_error_for_out_of_bounds_column() -> Result<(), Box<dyn Error>> {
+    fn test_get_returns_error_for_out_of_bounds_column() -> Result<(), anyhow::Error> {
         // Arrange
         let mut source = SimpleMatrix::<i32>::new(2, 3)?;
         source.set(0, 0, 1)?;
@@ -251,7 +248,7 @@ mod tests {
 
     /// Test that get retrieves None for unset values within bounds
     #[test]
-    fn test_get_returns_none_for_unset_values() -> Result<(), Box<dyn Error>> {
+    fn test_get_returns_none_for_unset_values() -> Result<(), anyhow::Error> {
         // Arrange
         let mut source = SimpleMatrix::<i32>::new(3, 3)?;
         source.set(0, 0, 1)?;
@@ -268,7 +265,7 @@ mod tests {
 
     /// Test that extract correctly transforms values using the provided function
     #[test]
-    fn test_extract_transforms_values_correctly() -> Result<(), Box<dyn Error>> {
+    fn test_extract_transforms_values_correctly() -> Result<(), anyhow::Error> {
         // Arrange
         let mut source = SimpleMatrix::<i32>::new(2, 2)?;
         source.set(0, 0, 10)?;
@@ -287,7 +284,7 @@ mod tests {
 
     /// Test that extract preserves the matrix structure
     #[test]
-    fn test_extract_preserves_matrix_structure() -> Result<(), Box<dyn Error>> {
+    fn test_extract_preserves_matrix_structure() -> Result<(), anyhow::Error> {
         // Arrange
         let mut source = SimpleMatrix::<i32>::new(3, 4)?;
         source.set(0, 1, 5)?;
@@ -308,7 +305,7 @@ mod tests {
     /// Test that diagonal_components returns correct values for square matrix
     #[test]
     fn test_diagonal_components_returns_correct_values_for_square_matrix()
-    -> Result<(), Box<dyn Error>> {
+    -> Result<(), anyhow::Error> {
         // Arrange
         let mut source = SimpleMatrix::<i32>::new(3, 3)?;
         source.set(0, 0, 1)?;
@@ -331,7 +328,7 @@ mod tests {
 
     /// Test that diagonal_components handles missing diagonal values
     #[test]
-    fn test_diagonal_components_handles_missing_diagonal_values() -> Result<(), Box<dyn Error>> {
+    fn test_diagonal_components_handles_missing_diagonal_values() -> Result<(), anyhow::Error> {
         // Arrange
         let mut source = SimpleMatrix::<i32>::new(3, 3)?;
         source.set(0, 0, 1)?;
@@ -353,7 +350,7 @@ mod tests {
 
     /// Test that diagonal_components returns None for non-square matrix (more rows)
     #[test]
-    fn test_diagonal_components_returns_none_for_tall_matrix() -> Result<(), Box<dyn Error>> {
+    fn test_diagonal_components_returns_none_for_tall_matrix() -> Result<(), anyhow::Error> {
         // Arrange
         let source = SimpleMatrix::<i32>::new(4, 2)?;
         let sparse = SparseMatrix::from_matrix(&source);
@@ -371,7 +368,7 @@ mod tests {
 
     /// Test that diagonal_components returns None for non-square matrix (more columns)
     #[test]
-    fn test_diagonal_components_returns_none_for_wide_matrix() -> Result<(), Box<dyn Error>> {
+    fn test_diagonal_components_returns_none_for_wide_matrix() -> Result<(), anyhow::Error> {
         // Arrange
         let source = SimpleMatrix::<i32>::new(2, 4)?;
         let sparse = SparseMatrix::from_matrix(&source);
@@ -389,7 +386,7 @@ mod tests {
 
     /// Test that size returns correct dimensions
     #[test]
-    fn test_size_returns_correct_dimensions() -> Result<(), Box<dyn Error>> {
+    fn test_size_returns_correct_dimensions() -> Result<(), anyhow::Error> {
         // Arrange
         let source = SimpleMatrix::<i32>::new(5, 7)?;
         let sparse = SparseMatrix::from_matrix(&source);
@@ -405,7 +402,7 @@ mod tests {
 
     /// Test that sparse matrix works with f32 values
     #[test]
-    fn test_sparse_matrix_with_f32_values() -> Result<(), Box<dyn Error>> {
+    fn test_sparse_matrix_with_f32_values() -> Result<(), anyhow::Error> {
         // Arrange
         let mut source = SimpleMatrix::<f32>::new(2, 2)?;
         source.set(0, 0, 1.5)?;
@@ -423,7 +420,7 @@ mod tests {
 
     /// Test that from_matrix handles single element matrix
     #[test]
-    fn test_from_matrix_handles_single_element() -> Result<(), Box<dyn Error>> {
+    fn test_from_matrix_handles_single_element() -> Result<(), anyhow::Error> {
         // Arrange
         let mut source = SimpleMatrix::<i32>::new(1, 1)?;
         source.set(0, 0, 42)?;
@@ -439,7 +436,7 @@ mod tests {
 
     /// Test that from_matrix handles single row matrix
     #[test]
-    fn test_from_matrix_handles_single_row() -> Result<(), Box<dyn Error>> {
+    fn test_from_matrix_handles_single_row() -> Result<(), anyhow::Error> {
         // Arrange
         let mut source = SimpleMatrix::<i32>::new(1, 5)?;
         source.set(0, 0, 1)?;
@@ -461,7 +458,7 @@ mod tests {
 
     /// Test that from_matrix handles single column matrix
     #[test]
-    fn test_from_matrix_handles_single_column() -> Result<(), Box<dyn Error>> {
+    fn test_from_matrix_handles_single_column() -> Result<(), anyhow::Error> {
         // Arrange
         let mut source = SimpleMatrix::<i32>::new(5, 1)?;
         source.set(0, 0, 1)?;
@@ -482,8 +479,8 @@ mod tests {
 
     /// Test that empty creates a sparse matrix with correct size and all None values
     #[test]
-    fn test_empty_creates_matrix_with_correct_size_and_all_none_values()
-    -> Result<(), Box<dyn Error>> {
+    fn test_empty_creates_matrix_with_correct_size_and_all_none_values() -> Result<(), anyhow::Error>
+    {
         // Arrange
         let size = Size::new(3, 4);
 

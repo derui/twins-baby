@@ -1,8 +1,7 @@
 /// Operation definition for matrix module.
-use std::{
-    error::Error,
-    ops::{Add, Mul},
-};
+use std::ops::{Add, Mul};
+
+use anyhow::Result;
 
 use crate::{
     matrix::{Matrix, simple::SimpleMatrix},
@@ -13,17 +12,16 @@ use crate::{
 pub fn mul<M, T: Matrix<M>, U: Matrix<M>>(
     lhs: &T,
     rhs: &U,
-) -> Result<impl Matrix<M> + use<M, T, U>, Box<dyn Error>>
+) -> Result<impl Matrix<M> + use<M, T, U>, anyhow::Error>
 where
     M: Add<Output = M> + Mul<Output = M> + Default + Copy,
 {
     if lhs.size().columns() != rhs.size().rows() {
-        return Err(format!(
+        return Err(anyhow::anyhow!(
             "Can not multiply different number of columns and rows : {} / {}",
             lhs.size().columns(),
             rhs.size().rows()
-        )
-        .into());
+        ));
     }
 
     let mut ret = SimpleMatrix::new(lhs.size().rows(), rhs.size().columns())?;
@@ -45,7 +43,7 @@ where
 }
 
 /// Solve the matrix and return result as vector
-pub fn solve<M: Matrix<f32>>(mat: &M, factors: &Vector) -> Result<Vector, Box<dyn Error>> {
+pub fn solve<M: Matrix<f32>>(mat: &M, factors: &Vector) -> Result<Vector, anyhow::Error> {
     let mut mat = SimpleMatrix::from_matrix(mat);
     let mut factors = factors.clone();
 
@@ -116,9 +114,11 @@ impl LUSplit {
 }
 
 /// Implemetation for LU split algorithm
-pub fn lu_split(mat: &impl Matrix<f32>) -> Result<LUSplit, Box<dyn Error>> {
+pub fn lu_split(mat: &impl Matrix<f32>) -> Result<LUSplit, anyhow::Error> {
     if mat.size().rows() != mat.size().columns() {
-        return Err("can not make the LU split without exponent matrix".into());
+        return Err(anyhow::anyhow!(
+            "can not make the LU split without exponent matrix"
+        ));
     }
 
     let mut l = SimpleMatrix::<f32>::new(mat.size().rows(), mat.size().columns())?;
@@ -186,12 +186,13 @@ pub fn determinant(mat: &impl Matrix<f32>) -> Option<f32> {
 mod tests {
     use super::*;
     use crate::matrix::{size::Size, sparse::SparseMatrix};
+    use anyhow::Result;
     use approx::assert_relative_eq;
     use pretty_assertions::assert_eq;
     use rstest::rstest;
 
     #[test]
-    fn test_mul_with_i32_matrices() -> Result<(), Box<dyn Error>> {
+    fn test_mul_with_i32_matrices() -> Result<()> {
         // Arrange
         let mut lhs = SimpleMatrix::<i32>::new(2, 3)?;
         lhs.set(0, 0, 1)?;
@@ -223,7 +224,7 @@ mod tests {
     }
 
     #[test]
-    fn test_mul_with_f32_matrices() -> Result<(), Box<dyn Error>> {
+    fn test_mul_with_f32_matrices() -> Result<()> {
         // Arrange
         let mut lhs = SimpleMatrix::<f32>::new(2, 3)?;
         lhs.set(0, 0, 1.5)?;
@@ -255,7 +256,7 @@ mod tests {
     }
 
     #[test]
-    fn test_mul_returns_error_for_incompatible_dimensions() -> Result<(), Box<dyn Error>> {
+    fn test_mul_returns_error_for_incompatible_dimensions() -> Result<()> {
         // Arrange
         let lhs = SimpleMatrix::<i32>::new(2, 3)?;
         let rhs = SimpleMatrix::<i32>::new(2, 2)?;
@@ -269,7 +270,7 @@ mod tests {
     }
 
     #[test]
-    fn test_determinant_2x2_matrix() -> Result<(), Box<dyn Error>> {
+    fn test_determinant_2x2_matrix() -> Result<()> {
         // Arrange
         // Matrix: | 1  2 |
         //         | 3  4 |
@@ -289,7 +290,7 @@ mod tests {
     }
 
     #[test]
-    fn test_determinant_3x3_matrix() -> Result<(), Box<dyn Error>> {
+    fn test_determinant_3x3_matrix() -> Result<()> {
         // Arrange
         // Matrix: | 1  2  3 |
         //         | 4  5  6 |
@@ -318,7 +319,7 @@ mod tests {
     }
 
     #[test]
-    fn test_determinant_identity_matrix() -> Result<(), Box<dyn Error>> {
+    fn test_determinant_identity_matrix() -> Result<()> {
         // Arrange
         // Identity matrix has determinant = 1
         let mut matrix = SimpleMatrix::<f32>::new(3, 3)?;
@@ -343,7 +344,7 @@ mod tests {
         #[case] rows: usize,
         #[case] cols: usize,
         #[case] description: &str,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<()> {
         // Arrange
         let matrix = SimpleMatrix::<f32>::new(rows, cols)?;
 
@@ -363,7 +364,7 @@ mod tests {
     }
 
     #[test]
-    fn test_determinant_with_sparse_matrix() -> Result<(), Box<dyn Error>> {
+    fn test_determinant_with_sparse_matrix() -> Result<()> {
         // Arrange
         // Create a sparse 3x3 matrix with mostly zero values
         // Matrix: | 2  0  1 |
@@ -389,7 +390,7 @@ mod tests {
     }
 
     #[test]
-    fn test_mul_with_identity_matrix() -> Result<(), Box<dyn Error>> {
+    fn test_mul_with_identity_matrix() -> Result<()> {
         // Arrange
         // Matrix A (2x2):  | 3.0  4.0 |
         //                  | 5.0  6.0 |
@@ -418,7 +419,7 @@ mod tests {
     }
 
     #[test]
-    fn test_mul_with_sparse_matrices() -> Result<(), Box<dyn Error>> {
+    fn test_mul_with_sparse_matrices() -> Result<()> {
         // Arrange
         // Matrix A (2x3) with some None values:
         //   | 2.0  None  3.0 |
@@ -454,7 +455,7 @@ mod tests {
     }
 
     #[test]
-    fn test_mul_with_single_element_matrices() -> Result<(), Box<dyn Error>> {
+    fn test_mul_with_single_element_matrices() -> Result<()> {
         // Arrange
         let mut lhs = SimpleMatrix::<f32>::new(1, 1)?;
         lhs.set(0, 0, 5.0)?;
@@ -472,7 +473,7 @@ mod tests {
     }
 
     #[test]
-    fn test_solve_2x2_system() -> Result<(), Box<dyn Error>> {
+    fn test_solve_2x2_system() -> Result<()> {
         // Arrange
         // System of equations:
         //   x + 2y = 5
@@ -497,7 +498,7 @@ mod tests {
     }
 
     #[test]
-    fn test_solve_3x3_system() -> Result<(), Box<dyn Error>> {
+    fn test_solve_3x3_system() -> Result<()> {
         // Arrange
         // System of equations:
         //   2x + y + z = 5
@@ -529,7 +530,7 @@ mod tests {
     }
 
     #[test]
-    fn test_solve_with_singular_matrix() -> Result<(), Box<dyn Error>> {
+    fn test_solve_with_singular_matrix() -> Result<()> {
         // Arrange
         // Singular matrix (determinant = 0):
         //   1x + 2y + 3z = 1
@@ -569,7 +570,7 @@ mod tests {
     }
 
     #[test]
-    fn test_solve_with_identity_matrix() -> Result<(), Box<dyn Error>> {
+    fn test_solve_with_identity_matrix() -> Result<()> {
         // Arrange
         // Identity matrix system:
         //   1x + 0y + 0z = 3

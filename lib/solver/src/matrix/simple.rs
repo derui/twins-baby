@@ -1,4 +1,6 @@
-use std::{cmp::min, error::Error};
+use std::cmp::min;
+
+use anyhow::Result;
 
 use crate::matrix::{Matrix, size::Size};
 
@@ -20,9 +22,9 @@ impl<M: Clone> SimpleMatrix<M> {
     ///
     /// # Returns
     /// * A new simple matrix with specified size
-    pub fn new(row: usize, column: usize) -> Result<Self, Box<dyn Error>> {
+    pub fn new(row: usize, column: usize) -> Result<Self, anyhow::Error> {
         if row == 0 || column == 0 {
-            return Err("Row and column must be greater than zero".into());
+            return Err(anyhow::anyhow!("Row and column must be greater than zero"));
         }
 
         let values: Vec<Vec<Option<M>>> = vec![vec![None; column]; row];
@@ -62,21 +64,16 @@ impl<M: Clone> Matrix<M> for SimpleMatrix<M> {
         self.size
     }
 
-    fn get(&self, row: usize, col: usize) -> Result<Option<M>, Box<dyn Error>> {
+    fn get(&self, row: usize, col: usize) -> Result<Option<M>, anyhow::Error> {
         if row >= self.size.rows() || col >= self.size.columns() {
-            return Err("Index out of bounds".into());
+            return Err(anyhow::anyhow!("Index out of bounds"));
         }
         Ok(self.values[row][col].clone())
     }
 
-    fn set(
-        &mut self,
-        row: usize,
-        col: usize,
-        element: M,
-    ) -> Result<Option<M>, Box<dyn std::error::Error>> {
+    fn set(&mut self, row: usize, col: usize, element: M) -> Result<Option<M>, anyhow::Error> {
         if row >= self.size.rows() || col >= self.size.columns() {
-            return Err("Index out of bounds".into());
+            return Err(anyhow::anyhow!("Index out of bounds"));
         }
         let old_value = self.values[row][col].clone();
         self.values[row][col] = Some(element);
@@ -124,7 +121,7 @@ mod tests {
     use rstest::rstest;
 
     #[test]
-    fn test_new_creates_matrix_with_correct_size() -> Result<(), Box<dyn Error>> {
+    fn test_new_creates_matrix_with_correct_size() -> Result<(), anyhow::Error> {
         // Arrange
         let rows = 3;
         let cols = 4;
@@ -160,7 +157,7 @@ mod tests {
     }
 
     #[test]
-    fn test_get_returns_none_for_empty_matrix() -> Result<(), Box<dyn Error>> {
+    fn test_get_returns_none_for_empty_matrix() -> Result<(), anyhow::Error> {
         // Arrange
         let matrix = SimpleMatrix::<i32>::new(3, 3)?;
 
@@ -173,7 +170,7 @@ mod tests {
     }
 
     #[test]
-    fn test_set_stores_value_and_returns_none_for_empty_cell() -> Result<(), Box<dyn Error>> {
+    fn test_set_stores_value_and_returns_none_for_empty_cell() -> Result<(), anyhow::Error> {
         // Arrange
         let mut matrix = SimpleMatrix::<i32>::new(3, 3)?;
 
@@ -187,7 +184,7 @@ mod tests {
     }
 
     #[test]
-    fn test_set_overwrites_existing_value_and_returns_old_value() -> Result<(), Box<dyn Error>> {
+    fn test_set_overwrites_existing_value_and_returns_old_value() -> Result<(), anyhow::Error> {
         // Arrange
         let mut matrix = SimpleMatrix::<i32>::new(3, 3)?;
         matrix.set(1, 1, 10)?;
@@ -202,7 +199,7 @@ mod tests {
     }
 
     #[test]
-    fn test_extract_creates_f32_matrix_from_complex_type() -> Result<(), Box<dyn Error>> {
+    fn test_extract_creates_f32_matrix_from_complex_type() -> Result<(), anyhow::Error> {
         // Arrange
         let mut matrix = SimpleMatrix::<i32>::new(2, 2)?;
         matrix.set(0, 0, 10)?;
@@ -223,7 +220,7 @@ mod tests {
 
     #[test]
     fn test_diagonal_components_returns_diagonal_elements_for_square_matrix()
-    -> Result<(), Box<dyn Error>> {
+    -> Result<(), anyhow::Error> {
         // Arrange
         let mut matrix = SimpleMatrix::<i32>::new(3, 3)?;
         matrix.set(0, 0, 1)?;
@@ -244,8 +241,7 @@ mod tests {
     }
 
     #[test]
-    fn test_diagonal_components_returns_none_for_rectangular_matrix() -> Result<(), Box<dyn Error>>
-    {
+    fn test_diagonal_components_returns_none_for_rectangular_matrix() -> Result<(), anyhow::Error> {
         // Arrange
         let matrix = SimpleMatrix::<i32>::new(4, 2)?;
 
@@ -261,7 +257,7 @@ mod tests {
     }
 
     #[test]
-    fn test_diagonal_components_with_some_none_values() -> Result<(), Box<dyn Error>> {
+    fn test_diagonal_components_with_some_none_values() -> Result<(), anyhow::Error> {
         // Arrange
         let mut matrix = SimpleMatrix::<i32>::new(3, 3)?;
         matrix.set(0, 0, 1)?;
@@ -281,7 +277,7 @@ mod tests {
     }
 
     #[test]
-    fn test_extract_preserves_none_values() -> Result<(), Box<dyn Error>> {
+    fn test_extract_preserves_none_values() -> Result<(), anyhow::Error> {
         // Arrange
         let mut matrix = SimpleMatrix::<i32>::new(2, 3)?;
         matrix.set(0, 0, 5)?;
@@ -312,7 +308,7 @@ mod tests {
         #[case] row: usize,
         #[case] col: usize,
         #[case] description: &str,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<(), anyhow::Error> {
         // Arrange
         let matrix = SimpleMatrix::<i32>::new(3, 3)?;
 
@@ -339,7 +335,7 @@ mod tests {
         #[case] row: usize,
         #[case] col: usize,
         #[case] description: &str,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<(), anyhow::Error> {
         // Arrange
         let mut matrix = SimpleMatrix::<i32>::new(3, 3)?;
 
@@ -356,7 +352,7 @@ mod tests {
     }
 
     #[test]
-    fn test_from_mat_creates_copy_with_all_values() -> Result<(), Box<dyn Error>> {
+    fn test_from_mat_creates_copy_with_all_values() -> Result<(), anyhow::Error> {
         // Arrange
         let mut source = SimpleMatrix::<i32>::new(3, 2)?;
         source.set(0, 0, 10)?;
@@ -381,7 +377,7 @@ mod tests {
     }
 
     #[test]
-    fn test_from_mat_preserves_none_values() -> Result<(), Box<dyn Error>> {
+    fn test_from_mat_preserves_none_values() -> Result<(), anyhow::Error> {
         // Arrange
         let mut source = SimpleMatrix::<i32>::new(2, 3)?;
         source.set(0, 0, 5)?;
@@ -403,7 +399,7 @@ mod tests {
     }
 
     #[test]
-    fn test_from_mat_creates_independent_copy() -> Result<(), Box<dyn Error>> {
+    fn test_from_mat_creates_independent_copy() -> Result<(), anyhow::Error> {
         // Arrange
         let mut source = SimpleMatrix::<i32>::new(2, 2)?;
         source.set(0, 0, 100)?;

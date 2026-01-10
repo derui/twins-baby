@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use anyhow::Result;
+
 use crate::variable::Variable;
 
 /// The enviromnet that has all variables in a scope
@@ -60,12 +62,15 @@ impl Environment {
     ///
     /// # Returns
     /// * `Result<Variable, String>` - Ok if the variable was updated successfully, Err with a message if the variable was not found
-    pub fn update_variable(&mut self, name: &str, value: f32) -> Result<Variable, String> {
+    pub fn update_variable(&mut self, name: &str, value: f32) -> Result<Variable> {
         if let Some(var) = self.variables.get_mut(name) {
             var.update(value);
             Ok(var.clone())
         } else {
-            Err(format!("Variable '{}' not found in the environment", name))
+            Err(anyhow::anyhow!(
+                "Variable '{}' not found in the environment",
+                name
+            ))
         }
     }
 
@@ -258,8 +263,9 @@ mod tests {
         let result = env.update_variable("x", 10.0);
 
         // assert
+        assert!(result.is_err());
         assert_eq!(
-            result.unwrap_err(),
+            result.unwrap_err().to_string(),
             "Variable 'x' not found in the environment"
         );
     }

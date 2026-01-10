@@ -1,8 +1,9 @@
 use std::{
-    error::Error,
     f32,
     ops::{Add, Div, Index, IndexMut, Mul, Sub},
 };
+
+use anyhow::Result;
 
 use crate::matrix::{Matrix, simple::SimpleMatrix};
 
@@ -30,9 +31,9 @@ impl Vector {
     ///
     /// # Returns
     /// * new vector. Return `Err` when `vec` is 0-sized slice
-    pub fn new(vec: &[f32]) -> Result<Self, Box<dyn Error>> {
+    pub fn new(vec: &[f32]) -> Result<Self, anyhow::Error> {
         if vec.is_empty() {
-            return Err("Can not define 0-dimension vector".into());
+            return Err(anyhow::anyhow!("Can not define 0-dimension vector"));
         }
 
         Ok(Vector { vec: vec.to_vec() })
@@ -45,9 +46,9 @@ impl Vector {
     ///
     /// # Returns
     /// * new vector unless `size` is lesser than 1
-    pub fn zero(size: usize) -> Result<Self, Box<dyn Error>> {
+    pub fn zero(size: usize) -> Result<Self, anyhow::Error> {
         if size == 0 {
-            return Err("Can not define 0-dimension vector".into());
+            return Err(anyhow::anyhow!("Can not define 0-dimension vector"));
         }
 
         Ok(Vector {
@@ -142,16 +143,15 @@ impl Div<f32> for Vector {
 }
 
 impl Add<Vector> for Vector {
-    type Output = Result<Vector, Box<dyn Error>>;
+    type Output = Result<Vector, anyhow::Error>;
 
     fn add(self, rhs: Vector) -> Self::Output {
         if self.vec.len() != rhs.vec.len() {
-            return Err(format!(
+            return Err(anyhow::anyhow!(
                 "Can not add different dimension, {} <> {}",
                 self.vec.len(),
                 rhs.vec.len()
-            )
-            .into());
+            ));
         }
         let mut result = self.vec.clone();
 
@@ -164,16 +164,15 @@ impl Add<Vector> for Vector {
 }
 
 impl Sub<Vector> for Vector {
-    type Output = Result<Vector, Box<dyn Error>>;
+    type Output = Result<Vector, anyhow::Error>;
 
     fn sub(self, rhs: Vector) -> Self::Output {
         if self.vec.len() != rhs.vec.len() {
-            return Err(format!(
+            return Err(anyhow::anyhow!(
                 "Can not subtract different dimension, {} <> {}",
                 self.vec.len(),
                 rhs.vec.len()
-            )
-            .into());
+            ));
         }
         let mut result = self.vec.clone();
 
@@ -198,7 +197,7 @@ mod tests {
     fn test_new_creates_vector_with_correct_values(
         #[case] values: &[f32],
         #[case] expected_len: usize,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<(), anyhow::Error> {
         // Arrange & Act
         let vector = Vector::new(values)?;
 
@@ -223,7 +222,7 @@ mod tests {
     #[case(3)]
     #[case(1)]
     #[case(5)]
-    fn test_zero_creates_zero_vector(#[case] size: usize) -> Result<(), Box<dyn Error>> {
+    fn test_zero_creates_zero_vector(#[case] size: usize) -> Result<(), anyhow::Error> {
         // Arrange & Act
         let vector = Vector::zero(size)?;
 
@@ -257,7 +256,7 @@ mod tests {
         #[case] expected_rows: usize,
         #[case] expected_columns: usize,
         #[case] expected_values: Vec<(usize, usize, f32)>,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<(), anyhow::Error> {
         // Arrange
         let vector = Vector::new(values)?;
 
@@ -282,7 +281,7 @@ mod tests {
         #[case] values: &[f32],
         #[case] scalar: f32,
         #[case] expected: &[f32],
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<(), anyhow::Error> {
         // Arrange
         let vector = Vector::new(values)?;
 
@@ -305,7 +304,7 @@ mod tests {
         #[case] values: &[f32],
         #[case] scalar: f32,
         #[case] expected: &[f32],
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<(), anyhow::Error> {
         // Arrange
         let vector = Vector::new(values)?;
 
@@ -328,7 +327,7 @@ mod tests {
         #[case] values1: &[f32],
         #[case] values2: &[f32],
         #[case] expected: &[f32],
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<(), anyhow::Error> {
         // Arrange
         let vector1 = Vector::new(values1)?;
         let vector2 = Vector::new(values2)?;
@@ -345,7 +344,7 @@ mod tests {
     }
 
     #[test]
-    fn test_add_returns_error_for_different_dimensions() -> Result<(), Box<dyn Error>> {
+    fn test_add_returns_error_for_different_dimensions() -> Result<(), anyhow::Error> {
         // Arrange
         let vector1 = Vector::new(&[1.0, 2.0, 3.0])?;
         let vector2 = Vector::new(&[4.0, 5.0])?;
@@ -366,7 +365,7 @@ mod tests {
         #[case] values1: &[f32],
         #[case] values2: &[f32],
         #[case] expected: &[f32],
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<(), anyhow::Error> {
         // Arrange
         let vector1 = Vector::new(values1)?;
         let vector2 = Vector::new(values2)?;
@@ -383,7 +382,7 @@ mod tests {
     }
 
     #[test]
-    fn test_sub_returns_error_for_different_dimensions() -> Result<(), Box<dyn Error>> {
+    fn test_sub_returns_error_for_different_dimensions() -> Result<(), anyhow::Error> {
         // Arrange
         let vector1 = Vector::new(&[1.0, 2.0, 3.0])?;
         let vector2 = Vector::new(&[4.0, 5.0])?;
@@ -405,7 +404,7 @@ mod tests {
         #[case] values: &[f32],
         #[case] index: usize,
         #[case] expected: f32,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<(), anyhow::Error> {
         // Arrange
         let vector = Vector::new(values)?;
 
@@ -426,7 +425,7 @@ mod tests {
         #[case] values: &[f32],
         #[case] index: usize,
         #[case] new_value: f32,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<(), anyhow::Error> {
         // Arrange
         let mut vector = Vector::new(values)?;
 
@@ -442,7 +441,7 @@ mod tests {
     #[case(&[1.0, 2.0, 3.0], f32::sqrt(14.0))]
     #[case(&[42.0], 42.0)]
     #[case(&[-42.0], 42.0)]
-    fn test_compute_norm(#[case] values: &[f32], #[case] norm: f32) -> Result<(), Box<dyn Error>> {
+    fn test_compute_norm(#[case] values: &[f32], #[case] norm: f32) -> Result<(), anyhow::Error> {
         // Arrange
         let vector = Vector::new(values)?;
 

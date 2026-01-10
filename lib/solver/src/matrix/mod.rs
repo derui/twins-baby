@@ -1,4 +1,4 @@
-use std::error::Error;
+use anyhow::Result;
 
 use size::Size;
 
@@ -23,7 +23,7 @@ pub trait Matrix<Element> {
     ///
     /// # Returns
     /// * `Option<Element>` - Some(element) if the element exists at the specified position, None otherwise.
-    fn get(&self, row: usize, col: usize) -> Result<Option<Element>, Box<dyn Error>>;
+    fn get(&self, row: usize, col: usize) -> Result<Option<Element>, anyhow::Error>;
 
     /// Set the element to the position with value.
     ///
@@ -39,7 +39,7 @@ pub trait Matrix<Element> {
         row: usize,
         col: usize,
         element: Element,
-    ) -> Result<Option<Element>, Box<dyn Error>>;
+    ) -> Result<Option<Element>, anyhow::Error>;
 
     /// Extract a matrix of f32 from this matrix
     ///

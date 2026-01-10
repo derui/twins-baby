@@ -1,4 +1,6 @@
-use std::{collections::HashMap, error::Error};
+use std::collections::HashMap;
+
+use anyhow::Result;
 
 use crate::{
     environment::Environment,
@@ -24,9 +26,9 @@ impl Jacobian {
     fn from_equations(
         equations: &[Box<dyn Equation>],
         variables: &[Variable],
-    ) -> Result<Self, Box<dyn Error>> {
+    ) -> Result<Self, anyhow::Error> {
         if equations.len() != variables.len() {
-            return Err("Can not create valid jacobian".into());
+            return Err(anyhow::anyhow!("Can not create valid jacobian"));
         }
 
         let mut matrix = SimpleMatrix::new(equations.len(), equations.len())?;
@@ -258,9 +260,9 @@ impl Solver {
     }
 
     /// Solve current equations and get variables.
-    pub fn solve(&mut self) -> Result<Environment, Box<dyn Error>> {
+    pub fn solve(&mut self) -> Result<Environment, anyhow::Error> {
         if self.status != DimensionSpecificationStatus::Correct {
-            return Err("Can not solve incorrect solver".into());
+            return Err(anyhow::anyhow!("Can not solve incorrect solver"));
         }
 
         // make direct solve
