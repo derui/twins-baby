@@ -31,7 +31,7 @@ impl Equation for MonomialEquation {
             match self.exponent {
                 1 => {
                     // derivative of x^1 is 1
-                    Some(Box::new(ConstantEquation::new(self.factor)))
+                    Some(ConstantEquation::new(self.factor).into())
                 }
                 0 => {
                     // derivative of x^0 is 0
@@ -45,7 +45,7 @@ impl Equation for MonomialEquation {
                         &self.variable,
                         new_exponent,
                     );
-                    Some(Box::new(new_variable_equation))
+                    Some(new_variable_equation.into())
                 }
             }
         } else {
