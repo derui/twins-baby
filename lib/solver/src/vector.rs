@@ -31,7 +31,7 @@ impl Vector {
     ///
     /// # Returns
     /// * new vector. Return `Err` when `vec` is 0-sized slice
-    pub fn new(vec: &[f32]) -> Result<Self, anyhow::Error> {
+    pub fn from(vec: &[f32]) -> Result<Self, anyhow::Error> {
         if vec.is_empty() {
             return Err(anyhow::anyhow!("Can not define 0-dimension vector"));
         }
@@ -199,7 +199,7 @@ mod tests {
         #[case] expected_len: usize,
     ) -> Result<(), anyhow::Error> {
         // Arrange & Act
-        let vector = Vector::new(values)?;
+        let vector = Vector::from(values)?;
 
         // Assert
         assert_eq!(vector.len(), expected_len);
@@ -212,7 +212,7 @@ mod tests {
     #[test]
     fn test_new_returns_error_for_empty_slice() {
         // Arrange & Act
-        let result = Vector::new(&[]);
+        let result = Vector::from(&[]);
 
         // Assert
         assert!(result.is_err());
@@ -258,7 +258,7 @@ mod tests {
         #[case] expected_values: Vec<(usize, usize, f32)>,
     ) -> Result<(), anyhow::Error> {
         // Arrange
-        let vector = Vector::new(values)?;
+        let vector = Vector::from(values)?;
 
         // Act
         let matrix = vector.to_matrix(method);
@@ -283,7 +283,7 @@ mod tests {
         #[case] expected: &[f32],
     ) -> Result<(), anyhow::Error> {
         // Arrange
-        let vector = Vector::new(values)?;
+        let vector = Vector::from(values)?;
 
         // Act
         let result = vector * scalar;
@@ -306,7 +306,7 @@ mod tests {
         #[case] expected: &[f32],
     ) -> Result<(), anyhow::Error> {
         // Arrange
-        let vector = Vector::new(values)?;
+        let vector = Vector::from(values)?;
 
         // Act
         let result = vector / scalar;
@@ -329,8 +329,8 @@ mod tests {
         #[case] expected: &[f32],
     ) -> Result<(), anyhow::Error> {
         // Arrange
-        let vector1 = Vector::new(values1)?;
-        let vector2 = Vector::new(values2)?;
+        let vector1 = Vector::from(values1)?;
+        let vector2 = Vector::from(values2)?;
 
         // Act
         let result = (vector1 + vector2)?;
@@ -346,8 +346,8 @@ mod tests {
     #[test]
     fn test_add_returns_error_for_different_dimensions() -> Result<(), anyhow::Error> {
         // Arrange
-        let vector1 = Vector::new(&[1.0, 2.0, 3.0])?;
-        let vector2 = Vector::new(&[4.0, 5.0])?;
+        let vector1 = Vector::from(&[1.0, 2.0, 3.0])?;
+        let vector2 = Vector::from(&[4.0, 5.0])?;
 
         // Act
         let result = vector1 + vector2;
@@ -367,8 +367,8 @@ mod tests {
         #[case] expected: &[f32],
     ) -> Result<(), anyhow::Error> {
         // Arrange
-        let vector1 = Vector::new(values1)?;
-        let vector2 = Vector::new(values2)?;
+        let vector1 = Vector::from(values1)?;
+        let vector2 = Vector::from(values2)?;
 
         // Act
         let result = (vector1 - vector2)?;
@@ -384,8 +384,8 @@ mod tests {
     #[test]
     fn test_sub_returns_error_for_different_dimensions() -> Result<(), anyhow::Error> {
         // Arrange
-        let vector1 = Vector::new(&[1.0, 2.0, 3.0])?;
-        let vector2 = Vector::new(&[4.0, 5.0])?;
+        let vector1 = Vector::from(&[1.0, 2.0, 3.0])?;
+        let vector2 = Vector::from(&[4.0, 5.0])?;
 
         // Act
         let result = vector1 - vector2;
@@ -406,7 +406,7 @@ mod tests {
         #[case] expected: f32,
     ) -> Result<(), anyhow::Error> {
         // Arrange
-        let vector = Vector::new(values)?;
+        let vector = Vector::from(values)?;
 
         // Act
         let result = vector[index];
@@ -427,7 +427,7 @@ mod tests {
         #[case] new_value: f32,
     ) -> Result<(), anyhow::Error> {
         // Arrange
-        let mut vector = Vector::new(values)?;
+        let mut vector = Vector::from(values)?;
 
         // Act
         vector[index] = new_value;
@@ -443,7 +443,7 @@ mod tests {
     #[case(&[-42.0], 42.0)]
     fn test_compute_norm(#[case] values: &[f32], #[case] norm: f32) -> Result<(), anyhow::Error> {
         // Arrange
-        let vector = Vector::new(values)?;
+        let vector = Vector::from(values)?;
 
         // Act
         let ret = vector.norm();

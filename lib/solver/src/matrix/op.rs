@@ -491,7 +491,7 @@ mod tests {
         matrix.set(1, 0, 3.0)?;
         matrix.set(1, 1, 4.0)?;
 
-        let factors = Vector::new(&[5.0, 11.0])?;
+        let factors = Vector::from(&[5.0, 11.0])?;
 
         // Act
         let result = solve(&matrix, &factors)?;
@@ -522,7 +522,7 @@ mod tests {
         matrix.set(2, 1, 1.0)?;
         matrix.set(2, 2, 2.0)?;
 
-        let factors = Vector::new(&[5.0, 5.0, 6.0])?;
+        let factors = Vector::from(&[5.0, 5.0, 6.0])?;
 
         // Act
         let result = solve(&matrix, &factors)?;
@@ -554,7 +554,7 @@ mod tests {
         matrix.set(2, 1, 6.0)?;
         matrix.set(2, 2, 9.0)?;
 
-        let factors = Vector::new(&[1.0, 2.0, 3.0])?;
+        let factors = Vector::from(&[1.0, 2.0, 3.0])?;
 
         // Act
         let result = solve(&matrix, &factors)?;
@@ -588,7 +588,7 @@ mod tests {
         matrix.set(1, 1, 1.0)?;
         matrix.set(2, 2, 1.0)?;
 
-        let factors = Vector::new(&[3.0, 5.0, 7.0])?;
+        let factors = Vector::from(&[3.0, 5.0, 7.0])?;
 
         // Act
         let result = solve(&matrix, &factors)?;

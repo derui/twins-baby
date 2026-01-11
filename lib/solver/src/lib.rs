@@ -281,7 +281,7 @@ impl Solver {
             equation_order.iter().map(|k| &self.equations[k]).collect();
 
         // initial value
-        let mut x0 = Vector::new(&ordered.iter().map(|f| f.value()).collect::<Vec<_>>())?;
+        let mut x0 = Vector::from(&ordered.iter().map(|f| f.value()).collect::<Vec<_>>())?;
 
         let j0 = {
             let extractor = self.variables.clone().merge(&self.dimensions);
