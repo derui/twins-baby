@@ -3,6 +3,7 @@ use anyhow::Result;
 use size::Size;
 
 pub(crate) mod op;
+pub mod pos;
 pub mod simple;
 pub mod size;
 pub mod sparse;
