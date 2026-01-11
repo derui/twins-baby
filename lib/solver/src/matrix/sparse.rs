@@ -539,4 +539,64 @@ mod tests {
             description
         );
     }
+
+    /// Test that get_row returns correct row with mixed values
+    #[test]
+    fn test_get_row_returns_correct_row_with_mixed_values() -> Result<(), anyhow::Error> {
+        // Arrange
+        let mut source = SimpleMatrix::<i32>::new(3, 4)?;
+        source.set(1, 0, 10)?;
+        source.set(1, 1, 20)?;
+        source.set(1, 3, 40)?;
+        // (1, 2) is intentionally left as None
+        let sparse = SparseMatrix::from_matrix(&source);
+
+        // Act
+        let row = sparse.get_row(1)?;
+
+        // Assert
+        assert_eq!(row.len(), 4);
+        assert_eq!(row[0], Some(10));
+        assert_eq!(row[1], Some(20));
+        assert_eq!(row[2], None);
+        assert_eq!(row[3], Some(40));
+        Ok(())
+    }
+
+    /// Test that get_row returns all None values for empty row
+    #[test]
+    fn test_get_row_returns_all_none_for_empty_row() -> Result<(), anyhow::Error> {
+        // Arrange
+        let mut source = SimpleMatrix::<i32>::new(3, 4)?;
+        source.set(0, 0, 1)?;
+        source.set(2, 2, 9)?;
+        // Row 1 is intentionally left empty
+        let sparse = SparseMatrix::from_matrix(&source);
+
+        // Act
+        let row = sparse.get_row(1)?;
+
+        // Assert
+        assert_eq!(row.len(), 4);
+        assert_eq!(row[0], None);
+        assert_eq!(row[1], None);
+        assert_eq!(row[2], None);
+        assert_eq!(row[3], None);
+        Ok(())
+    }
+
+    /// Test that get_row returns error for out of bounds row index
+    #[test]
+    fn test_get_row_returns_error_for_out_of_bounds() -> Result<(), anyhow::Error> {
+        // Arrange
+        let source = SimpleMatrix::<i32>::new(3, 4)?;
+        let sparse = SparseMatrix::from_matrix(&source);
+
+        // Act
+        let result = sparse.get_row(3);
+
+        // Assert
+        assert!(result.is_err(), "Expected error for row index at boundary");
+        Ok(())
+    }
 }
