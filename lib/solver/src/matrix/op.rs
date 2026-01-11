@@ -55,15 +55,38 @@ pub fn solve<M: Matrix<f32>>(mat: &M, factors: &Vector) -> Result<Solve> {
 
     // forward deletion
     for k in 0..mat.size().rows() {
+        let kv = mat.get(k, k)?.copied();
+
         // pivotting
+        let mut max_value = kv.unwrap_or(0.0).abs();
+        let mut max_index = k;
 
+        for i in (k + 1)..mat.size().rows() {
+            let Some(v) = mat.get(i, k)?.copied() else {
+                continue;
+            };
+
+            if v.abs() > max_value {
+                max_value = v.abs();
+                max_index = i;
+            }
+        }
+
+        if max_index != k {
+            let old = mat.get_row(k)?;
+            let new = mat.get_row(max_index)?;
+
+            mat.set_row(k, &new)?;
+            mat.set_row(max_index, &old)?;
+
+            // re-order factors
+            let old = factors[k];
+            factors[k] = factors[max_index];
+            factors[max_index] = old;
+        }
         // normalize `k` row
-        let Some(kv) = mat.get(k, k)?.copied() else {
-            // When any (k, k) is not set or nearly 0, it is singular.
-            return Ok(Solve::Singular);
-        };
 
-        if kv.abs() < 1e-10 {
+        if max_value.abs() < 1e-10 {
             return Ok(Solve::Singular);
         }
 
@@ -72,9 +95,9 @@ pub fn solve<M: Matrix<f32>>(mat: &M, factors: &Vector) -> Result<Solve> {
                 continue;
             };
 
-            mat.set(k, i, v / kv)?;
+            mat.set(k, i, v / max_value)?;
         }
-        factors[k] /= kv;
+        factors[k] /= max_value;
 
         // delete `k` column
         for i in (k + 1)..mat.size().rows() {
