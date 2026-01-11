@@ -267,7 +267,7 @@ mod tests {
         assert_eq!(matrix.size().rows(), expected_rows);
         assert_eq!(matrix.size().columns(), expected_columns);
         for (row, col, expected_value) in expected_values {
-            assert_eq!(matrix.get(row, col)?, Some(expected_value));
+            assert_eq!(matrix.get(row, col)?.map(|v| *v), Some(expected_value));
         }
         Ok(())
     }

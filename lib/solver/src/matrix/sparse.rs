@@ -46,7 +46,7 @@ impl<M: Clone + std::fmt::Debug> SparseMatrix<M> {
                         ptr_recorded = true;
                         row_ptr.push(values.len())
                     }
-                    values.push(Some(v));
+                    values.push(Some(v.clone()));
                     col_indices.push(c);
                 }
             }
@@ -72,7 +72,7 @@ impl<M: Clone + std::fmt::Debug> Matrix<M> for SparseMatrix<M> {
         self.size
     }
 
-    fn get(&self, row: usize, col: usize) -> Result<Option<M>, anyhow::Error> {
+    fn get(&self, row: usize, col: usize) -> Result<Option<&M>, anyhow::Error> {
         if row >= self.size.rows() || col >= self.size.columns() {
             return Err(anyhow::anyhow!("Index out of bound"));
         }
@@ -87,7 +87,7 @@ impl<M: Clone + std::fmt::Debug> Matrix<M> for SparseMatrix<M> {
             [start_values_index_of_row..(start_values_index_of_row + value_count_of_row)];
 
         if let Some(v) = slice_col_indices.iter().position(|v| *v == col) {
-            Ok(Some(self.values[start_values_index_of_row + v].clone()))
+            Ok(Some(&self.values[start_values_index_of_row + v]))
         } else {
             Ok(None)
         }
@@ -108,15 +108,11 @@ impl<M: Clone + std::fmt::Debug> Matrix<M> for SparseMatrix<M> {
 
         for i in 0..len {
             if let Ok(v) = self.get(i, i) {
-                vec[i] = v;
+                vec[i] = v.cloned();
             }
         }
 
         Some(vec)
-    }
-
-    fn sub_matrix(&self, _rect: crate::matrix::rect::Rect) -> Result<&dyn Matrix<M>> {
-        todo!("sub_matrix not yet implemented for SparseMatrix")
     }
 }
 
@@ -171,10 +167,10 @@ mod tests {
         let sparse = SparseMatrix::from_matrix(&source);
 
         // Assert
-        assert_eq!(sparse.get(0, 0)?, Some(1));
-        assert_eq!(sparse.get(0, 2)?, Some(3));
-        assert_eq!(sparse.get(1, 1)?, Some(5));
-        assert_eq!(sparse.get(2, 0)?, Some(7));
+        assert_eq!(sparse.get(0, 0)?.map(|v| *v), Some(1));
+        assert_eq!(sparse.get(0, 2)?.map(|v| *v), Some(3));
+        assert_eq!(sparse.get(1, 1)?.map(|v| *v), Some(5));
+        assert_eq!(sparse.get(2, 0)?.map(|v| *v), Some(7));
         assert_eq!(sparse.get(0, 1)?, None);
         assert_eq!(sparse.get(1, 0)?, None);
         assert_eq!(sparse.get(2, 2)?, None);
@@ -211,10 +207,10 @@ mod tests {
         let sparse = SparseMatrix::from_matrix(&source);
 
         // Assert
-        assert_eq!(sparse.get(0, 0)?, Some(1));
-        assert_eq!(sparse.get(0, 1)?, Some(2));
-        assert_eq!(sparse.get(1, 0)?, Some(3));
-        assert_eq!(sparse.get(1, 1)?, Some(4));
+        assert_eq!(sparse.get(0, 0)?.map(|v| *v), Some(1));
+        assert_eq!(sparse.get(0, 1)?.map(|v| *v), Some(2));
+        assert_eq!(sparse.get(1, 0)?.map(|v| *v), Some(3));
+        assert_eq!(sparse.get(1, 1)?.map(|v| *v), Some(4));
         Ok(())
     }
 
@@ -282,8 +278,8 @@ mod tests {
         let extracted = sparse.extract(|&v| v as f32 * 2.0);
 
         // Assert
-        assert_eq!(extracted.get(0, 0)?, Some(20.0));
-        assert_eq!(extracted.get(1, 1)?, Some(40.0));
+        assert_eq!(extracted.get(0, 0)?.map(|v| *v), Some(20.0));
+        assert_eq!(extracted.get(1, 1)?.map(|v| *v), Some(40.0));
         assert_eq!(extracted.get(0, 1)?, None);
         Ok(())
     }
@@ -302,8 +298,8 @@ mod tests {
 
         // Assert
         assert_eq!(extracted.size(), Size::new(3, 4));
-        assert_eq!(extracted.get(0, 1)?, Some(5.0));
-        assert_eq!(extracted.get(2, 3)?, Some(15.0));
+        assert_eq!(extracted.get(0, 1)?.map(|v| *v), Some(5.0));
+        assert_eq!(extracted.get(2, 3)?.map(|v| *v), Some(15.0));
         assert_eq!(extracted.get(1, 1)?, None);
         Ok(())
     }
@@ -418,8 +414,8 @@ mod tests {
         let sparse = SparseMatrix::from_matrix(&source);
 
         // Assert
-        assert_eq!(sparse.get(0, 0)?, Some(1.5));
-        assert_eq!(sparse.get(1, 1)?, Some(2.7));
+        assert_eq!(sparse.get(0, 0)?.map(|v| *v), Some(1.5));
+        assert_eq!(sparse.get(1, 1)?.map(|v| *v), Some(2.7));
         assert_eq!(sparse.get(0, 1)?, None);
         Ok(())
     }
@@ -436,7 +432,7 @@ mod tests {
 
         // Assert
         assert_eq!(sparse.size(), Size::new(1, 1));
-        assert_eq!(sparse.get(0, 0)?, Some(42));
+        assert_eq!(sparse.get(0, 0)?.map(|v| *v), Some(42));
         Ok(())
     }
 
@@ -454,9 +450,9 @@ mod tests {
 
         // Assert
         dbg!(&sparse);
-        assert_eq!(sparse.get(0, 0)?, Some(1));
-        assert_eq!(sparse.get(0, 2)?, Some(3));
-        assert_eq!(sparse.get(0, 4)?, Some(5));
+        assert_eq!(sparse.get(0, 0)?.map(|v| *v), Some(1));
+        assert_eq!(sparse.get(0, 2)?.map(|v| *v), Some(3));
+        assert_eq!(sparse.get(0, 4)?.map(|v| *v), Some(5));
         assert_eq!(sparse.get(0, 1)?, None);
         assert_eq!(sparse.get(0, 3)?, None);
         Ok(())
@@ -475,9 +471,9 @@ mod tests {
         let sparse = SparseMatrix::from_matrix(&source);
 
         // Assert
-        assert_eq!(sparse.get(0, 0)?, Some(1));
-        assert_eq!(sparse.get(2, 0)?, Some(3));
-        assert_eq!(sparse.get(4, 0)?, Some(5));
+        assert_eq!(sparse.get(0, 0)?.map(|v| *v), Some(1));
+        assert_eq!(sparse.get(2, 0)?.map(|v| *v), Some(3));
+        assert_eq!(sparse.get(4, 0)?.map(|v| *v), Some(5));
         assert_eq!(sparse.get(1, 0)?, None);
         assert_eq!(sparse.get(3, 0)?, None);
         Ok(())

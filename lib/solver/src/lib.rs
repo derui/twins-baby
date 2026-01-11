@@ -5,7 +5,13 @@ use anyhow::{Result, anyhow};
 use crate::{
     environment::Environment,
     equation::Equation,
-    matrix::{Matrix, op::solve, simple::SimpleMatrix, size::Size, sparse::SparseMatrix},
+    matrix::{
+        Matrix, MatrixExtract,
+        op::{determinant, lu_split, solve},
+        simple::SimpleMatrix,
+        size::Size,
+        sparse::SparseMatrix,
+    },
     variable::Variable,
     vector::{TransposeMethod, Vector},
 };
@@ -16,7 +22,7 @@ pub mod matrix;
 pub mod variable;
 pub mod vector;
 
-const DEFAULT_EPSILON: f32 = 0.0000001;
+const DEFAULT_EPSILON: f32 = 1e-5;
 
 /// Internal Jacobian matrix. It is a matrix of constraint matrix.
 struct Jacobian(SparseMatrix<Box<dyn equation::Equation>>);
@@ -278,7 +284,7 @@ impl Solver {
         let mut x0 = Vector::new(&ordered.iter().map(|f| f.value()).collect::<Vec<_>>())?;
 
         let j0 = {
-            let extractor = self.variables.clone();
+            let extractor = self.variables.clone().merge(&self.dimensions);
             self.jacobian.0.extract(move |e| {
                 e.evaluate(&extractor)
                     .expect("this evaluation must success")
@@ -288,34 +294,48 @@ impl Solver {
         // resolve targets
         let x1 = Vector::zero(x0.len())?;
 
-        loop {
-            if (x1.norm() - x0.norm()).abs() < self.epsilon {
-                break;
-            }
+        dbg!(determinant(&j0));
 
-            // calculate rhs. this result is simple vector that is row-transposed
+        loop {
+            // calculate rhs. this result is simple vector that is column-transposed
             let b = {
-                let extractor = self.variables.clone();
+                let extractor = self.variables.clone().merge(&self.dimensions);
                 let f0 = equations
                     .iter()
                     .map(move |e| e.evaluate(&extractor).unwrap_or(0.0))
                     .collect::<Vec<_>>();
-                let x0 = x0.to_matrix(TransposeMethod::Row);
+                let x0 = x0.to_matrix(TransposeMethod::Column);
                 let b = matrix::op::mul(&j0, &x0)?;
                 let mut ret = Vector::zero(ordered.len())?;
 
                 for i in 0..ret.len() {
-                    ret[i] = b.get(i, 0)?.unwrap_or(0.0) - f0[i];
+                    ret[i] = b.get(i, 0)?.map(|v| *v).unwrap_or(0.0) - f0[i];
                 }
 
                 ret
             };
+
+            // direct solve x1
             let x1 = solve(&j0, &b)?;
 
+            dbg!("{:?}, {:?}, {:?}", &b, &x1, &self.jacobian.0);
+            println!(
+                "diff: {}, {}, {}",
+                x0.norm(),
+                x1.norm(),
+                (x1.norm() - x0.norm()).abs()
+            );
+            // check epsilon between norm
+            if (x1.norm() - x0.norm()).abs() < self.epsilon {
+                break;
+            }
+
+            // update variable for next loop
             for i in 0..(ordered.len()) {
                 self.variables.update_variable(&ordered[i].name(), x1[i])?;
                 x0[i] = x1[i]
             }
+            break;
         }
 
         let mut result = Environment::empty();
@@ -460,6 +480,7 @@ mod tests {
         use crate::equation::{self, Equation};
         use crate::variable::Variable;
         use crate::{DefaultEquationIdGenerator, DimensionSpecificationStatus, Solver};
+        use approx::assert_relative_eq;
         use pretty_assertions::assert_eq;
 
         #[test]
@@ -476,32 +497,98 @@ mod tests {
             solver.add_equation(Box::new(ArithmeticEquation::new(
                 arithmetic::Operator::Subtract,
                 &[
-                    Box::new(MonomialEquation::new(1.0, "x1", 1)),
-                    Box::new(ConstantEquation::new(3.0)),
+                    MonomialEquation::new(1.0, "x1", 1).into(),
+                    ConstantEquation::new(3.0).into(),
                 ],
             )?));
             // y1 - 0 = 0
             solver.add_equation(Box::new(ArithmeticEquation::new(
                 arithmetic::Operator::Subtract,
                 &[
-                    Box::new(MonomialEquation::new(1.0, "y1", 1)),
-                    Box::new(ConstantEquation::new(0.0)),
+                    MonomialEquation::new(1.0, "y1", 1).into(),
+                    ConstantEquation::new(0.0).into(),
                 ],
             )?));
             // (x2 - x1)^2 + (y2 - y1)^2 - d^2 = 0
             // = x2^2 - 2 * x2 * x1 + x1^2 + y2^2 - 2 * y2 * y1 + y1^2 - d^2 = 0
-            solver.add_equation(Box::new(ArithmeticEquation::new(
-                arithmetic::Operator::Subtract,
-                &[
-                    Box::new(MonomialEquation::new(1.0, "x1", 1)),
-                    Box::new(ConstantEquation::new(3.0)),
-                ],
-            )?));
+            solver.add_equation({
+                let first = ArithmeticEquation::new(
+                    arithmetic::Operator::Add,
+                    &[
+                        ArithmeticEquation::new(
+                            arithmetic::Operator::Subtract,
+                            &[
+                                MonomialEquation::new(1.0, "x2", 2).into(),
+                                ArithmeticEquation::new(
+                                    arithmetic::Operator::Multiply,
+                                    &[
+                                        ConstantEquation::new(2.0).into(),
+                                        MonomialEquation::new(1.0, "x2", 2).into(),
+                                        MonomialEquation::new(1.0, "x1", 2).into(),
+                                    ],
+                                )?
+                                .into(),
+                            ],
+                        )?
+                        .into(),
+                        MonomialEquation::new(1.0, "x1", 2).into(),
+                    ],
+                )?;
+                let second = ArithmeticEquation::new(
+                    arithmetic::Operator::Add,
+                    &[
+                        ArithmeticEquation::new(
+                            arithmetic::Operator::Subtract,
+                            &[
+                                MonomialEquation::new(1.0, "y2", 2).into(),
+                                ArithmeticEquation::new(
+                                    arithmetic::Operator::Multiply,
+                                    &[
+                                        ConstantEquation::new(2.0).into(),
+                                        MonomialEquation::new(1.0, "y2", 2).into(),
+                                        MonomialEquation::new(1.0, "y1", 2).into(),
+                                    ],
+                                )?
+                                .into(),
+                            ],
+                        )?
+                        .into(),
+                        MonomialEquation::new(1.0, "y1", 2).into(),
+                    ],
+                )?;
+                let third = MonomialEquation::new(1.0, "d", 2);
+
+                let forth = ArithmeticEquation::new(
+                    arithmetic::Operator::Add,
+                    &[first.into(), second.into()],
+                )?;
+                ArithmeticEquation::new(
+                    arithmetic::Operator::Subtract,
+                    &[forth.into(), third.into()],
+                )?
+                .into()
+            });
+            // y2 - y1 = 0
+            solver.add_equation(
+                ArithmeticEquation::new(
+                    arithmetic::Operator::Subtract,
+                    &[
+                        MonomialEquation::new(1.0, "y2", 1).into(),
+                        MonomialEquation::new(1.0, "y1", 1).into(),
+                    ],
+                )?
+                .into(),
+            );
 
             // Act
+            let ret = solver.solve()?;
 
             // Assert
-            assert_eq!(solver.status(), DimensionSpecificationStatus::Incorrect);
+            assert_eq!(solver.status(), DimensionSpecificationStatus::Correct);
+            assert_relative_eq!(ret.get_variable("x1").unwrap().value(), 3.0, epsilon = 1e-5);
+            assert_relative_eq!(ret.get_variable("y1").unwrap().value(), 0.0, epsilon = 1e-5);
+            assert_relative_eq!(ret.get_variable("x2").unwrap().value(), 2.0, epsilon = 1e-5);
+            assert_relative_eq!(ret.get_variable("y2").unwrap().value(), 4.0, epsilon = 1e-5);
             Ok(())
         }
 

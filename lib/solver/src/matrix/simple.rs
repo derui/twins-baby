@@ -54,7 +54,7 @@ impl<M: Clone + std::fmt::Debug> SimpleMatrix<M> {
                 let Some(m) = other.get(i, j).expect("must be valid") else {
                     continue;
                 };
-                mat.set(i, j, m).expect("must be valid");
+                mat.set(i, j, m.clone()).expect("must be valid");
             }
         }
 
@@ -67,11 +67,11 @@ impl<M: Clone + std::fmt::Debug> Matrix<M> for SimpleMatrix<M> {
         self.size
     }
 
-    fn get(&self, row: usize, col: usize) -> Result<Option<M>, anyhow::Error> {
+    fn get(&self, row: usize, col: usize) -> Result<Option<&M>, anyhow::Error> {
         if row >= self.size.rows() || col >= self.size.columns() {
             return Err(anyhow::anyhow!("Index out of bounds"));
         }
-        Ok(self.values[row][col].clone())
+        Ok(self.values[row][col].as_ref())
     }
 
     fn set(&mut self, row: usize, col: usize, element: M) -> Result<Option<M>, anyhow::Error> {
@@ -96,18 +96,6 @@ impl<M: Clone + std::fmt::Debug> Matrix<M> for SimpleMatrix<M> {
         }
 
         Some(ret)
-    }
-
-    fn sub_matrix(&self, rect: Rect) -> Result<&dyn Matrix<M>> {
-        if rect.as_size() > self.size {
-            return Err(anyhow!(
-                "Can not extract sub-matrix: {:?}, {:?}",
-                &rect,
-                &self.size
-            ));
-        }
-
-        todo!("sub_matrix not yet implemented for SimpleMatrix")
     }
 }
 
@@ -196,7 +184,7 @@ mod tests {
 
         // Assert
         assert_eq!(old_value, None);
-        assert_eq!(matrix.get(1, 2)?, Some(42));
+        assert_eq!(matrix.get(1, 2)?, Some(&42));
         Ok(())
     }
 
@@ -211,7 +199,7 @@ mod tests {
 
         // Assert
         assert_eq!(old_value, Some(10));
-        assert_eq!(matrix.get(1, 1)?, Some(20));
+        assert_eq!(matrix.get(1, 1)?.map(|v| *v), Some(20));
         Ok(())
     }
 
@@ -228,9 +216,9 @@ mod tests {
 
         // Assert
         assert_eq!(extracted.size(), Size::new(2, 2));
-        assert_eq!(extracted.get(0, 0)?, Some(20.0));
-        assert_eq!(extracted.get(0, 1)?, Some(40.0));
-        assert_eq!(extracted.get(1, 0)?, Some(60.0));
+        assert_eq!(extracted.get(0, 0)?.map(|v| *v), Some(20.0));
+        assert_eq!(extracted.get(0, 1)?.map(|v| *v), Some(40.0));
+        assert_eq!(extracted.get(1, 0)?.map(|v| *v), Some(60.0));
         assert_eq!(extracted.get(1, 1)?, None);
         Ok(())
     }
@@ -305,11 +293,11 @@ mod tests {
         let extracted = matrix.extract(|&val| val as f32);
 
         // Assert
-        assert_eq!(extracted.get(0, 0)?, Some(5.0));
+        assert_eq!(extracted.get(0, 0)?.map(|v| *v), Some(5.0));
         assert_eq!(extracted.get(0, 1)?, None);
         assert_eq!(extracted.get(0, 2)?, None);
         assert_eq!(extracted.get(1, 0)?, None);
-        assert_eq!(extracted.get(1, 1)?, Some(10.0));
+        assert_eq!(extracted.get(1, 1)?.map(|v| *v), Some(10.0));
         assert_eq!(extracted.get(1, 2)?, None);
         Ok(())
     }
@@ -384,12 +372,12 @@ mod tests {
 
         // Assert
         assert_eq!(copied.size(), Size::new(3, 2));
-        assert_eq!(copied.get(0, 0)?, Some(10));
-        assert_eq!(copied.get(0, 1)?, Some(20));
-        assert_eq!(copied.get(1, 0)?, Some(30));
-        assert_eq!(copied.get(1, 1)?, Some(40));
-        assert_eq!(copied.get(2, 0)?, Some(50));
-        assert_eq!(copied.get(2, 1)?, Some(60));
+        assert_eq!(copied.get(0, 0)?.map(|v| *v), Some(10));
+        assert_eq!(copied.get(0, 1)?.map(|v| *v), Some(20));
+        assert_eq!(copied.get(1, 0)?.map(|v| *v), Some(30));
+        assert_eq!(copied.get(1, 1)?.map(|v| *v), Some(40));
+        assert_eq!(copied.get(2, 0)?.map(|v| *v), Some(50));
+        assert_eq!(copied.get(2, 1)?.map(|v| *v), Some(60));
         Ok(())
     }
 
@@ -406,12 +394,12 @@ mod tests {
 
         // Assert
         assert_eq!(copied.size(), Size::new(2, 3));
-        assert_eq!(copied.get(0, 0)?, Some(5));
+        assert_eq!(copied.get(0, 0)?.map(|v| *v), Some(5));
         assert_eq!(copied.get(0, 1)?, None);
         assert_eq!(copied.get(0, 2)?, None);
         assert_eq!(copied.get(1, 0)?, None);
         assert_eq!(copied.get(1, 1)?, None);
-        assert_eq!(copied.get(1, 2)?, Some(15));
+        assert_eq!(copied.get(1, 2)?.map(|v| *v), Some(15));
         Ok(())
     }
 
@@ -427,8 +415,16 @@ mod tests {
         copied.set(0, 0, 999)?;
 
         // Assert
-        assert_eq!(source.get(0, 0)?, Some(100), "Source should be unchanged");
-        assert_eq!(copied.get(0, 0)?, Some(999), "Copy should be modified");
+        assert_eq!(
+            source.get(0, 0)?.map(|v| *v),
+            Some(100),
+            "Source should be unchanged"
+        );
+        assert_eq!(
+            copied.get(0, 0)?.map(|v| *v),
+            Some(999),
+            "Copy should be modified"
+        );
         Ok(())
     }
 }

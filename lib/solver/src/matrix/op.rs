@@ -32,7 +32,7 @@ where
 
             for k in 0..(lhs.size().columns()) {
                 if let (Ok(Some(lhs)), Ok(Some(rhs))) = (lhs.get(i, k), rhs.get(k, j)) {
-                    sum = sum + lhs * rhs;
+                    sum = sum + *lhs * *rhs;
                 }
             }
             ret.set(i, j, sum)?;
@@ -49,7 +49,7 @@ pub fn solve<M: Matrix<f32>>(mat: &M, factors: &Vector) -> Result<Vector, anyhow
 
     // forward deletion
     for k in 0..mat.size().rows() {
-        let Some(kv) = mat.get(k, k)? else {
+        let Some(kv) = mat.get(k, k)?.map(|v| *v) else {
             continue;
         };
 
@@ -57,7 +57,9 @@ pub fn solve<M: Matrix<f32>>(mat: &M, factors: &Vector) -> Result<Vector, anyhow
 
         // normalize `k` row
         for i in 0..mat.size().columns() {
-            let Some(v) = mat.get(k, i)? else { continue };
+            let Some(v) = mat.get(k, i)?.map(|v| *v) else {
+                continue;
+            };
 
             mat.set(k, i, v / kv)?;
         }
@@ -65,11 +67,13 @@ pub fn solve<M: Matrix<f32>>(mat: &M, factors: &Vector) -> Result<Vector, anyhow
 
         // delete `k` column
         for i in (k + 1)..mat.size().rows() {
-            let Some(kv) = mat.get(i, k)? else { continue };
+            let Some(kv) = mat.get(i, k)?.map(|v| *v) else {
+                continue;
+            };
 
             for j in 0..mat.size().columns() {
-                let kj = mat.get(k, j)?.unwrap_or(0.0);
-                let ij = mat.get(i, j)?.unwrap_or(0.0);
+                let kj = mat.get(k, j)?.map(|v| *v).unwrap_or(0.0);
+                let ij = mat.get(i, j)?.map(|v| *v).unwrap_or(0.0);
 
                 mat.set(i, j, ij - kv * kj)?;
             }
@@ -81,11 +85,11 @@ pub fn solve<M: Matrix<f32>>(mat: &M, factors: &Vector) -> Result<Vector, anyhow
     // backward substitution
     for k in (0..factors.len()).rev() {
         for i in 0..k {
-            let kv = mat.get(i, k)?.unwrap_or(0.0);
+            let kv = mat.get(i, k)?.map(|v| *v).unwrap_or(0.0);
 
             for j in 0..mat.size().columns() {
-                let kj = mat.get(k, j)?.unwrap_or(0.0);
-                let ij = mat.get(i, j)?.unwrap_or(0.0);
+                let kj = mat.get(k, j)?.map(|v| *v).unwrap_or(0.0);
+                let ij = mat.get(i, j)?.map(|v| *v).unwrap_or(0.0);
 
                 mat.set(i, j, ij - kv * kj)?;
             }
@@ -143,7 +147,7 @@ pub fn lu_split(mat: &impl Matrix<f32>) -> Result<LUSplit> {
                 };
             }
 
-            let u_ij = mat.get(i, j)?.unwrap_or(0.) - sum_u;
+            let u_ij = mat.get(i, j)?.map(|v| *v).unwrap_or(0.) - sum_u;
             let _ = u.set(i, j, u_ij);
         }
 
@@ -157,8 +161,8 @@ pub fn lu_split(mat: &impl Matrix<f32>) -> Result<LUSplit> {
                 };
             }
 
-            let l_ji = mat.get(j, i)?.unwrap_or(0.) - sum_l;
-            let _ = l.set(j, i, l_ji / u.get(i, i)?.unwrap_or(1.0));
+            let l_ji = mat.get(j, i)?.map(|v| *v).unwrap_or(0.) - sum_l;
+            let _ = l.set(j, i, l_ji / u.get(i, i)?.map(|v| *v).unwrap_or(1.0));
         }
     }
 
@@ -175,7 +179,7 @@ pub fn determinant(mat: &impl Matrix<f32>) -> Option<f32> {
 
         let mut sum = 1.0;
         for i in 0..(mat.size().min_row_or_col()) {
-            sum *= u.get(i, i).unwrap_or(None).unwrap_or(0.0);
+            sum *= u.get(i, i).unwrap_or(None).map(|v| *v).unwrap_or(0.0);
         }
 
         Some(sum)
@@ -218,10 +222,10 @@ mod tests {
         // Assert
         assert_eq!(result.size().rows(), 2);
         assert_eq!(result.size().columns(), 2);
-        assert_eq!(result.get(0, 0)?, Some(58));
-        assert_eq!(result.get(0, 1)?, Some(64));
-        assert_eq!(result.get(1, 0)?, Some(139));
-        assert_eq!(result.get(1, 1)?, Some(154));
+        assert_eq!(result.get(0, 0)?.map(|v| *v), Some(58));
+        assert_eq!(result.get(0, 1)?.map(|v| *v), Some(64));
+        assert_eq!(result.get(1, 0)?.map(|v| *v), Some(139));
+        assert_eq!(result.get(1, 1)?.map(|v| *v), Some(154));
         Ok(())
     }
 
@@ -250,10 +254,10 @@ mod tests {
         // Assert
         assert_eq!(result.size().rows(), 2);
         assert_eq!(result.size().columns(), 2);
-        assert_eq!(result.get(0, 0)?, Some(26.5));
-        assert_eq!(result.get(0, 1)?, Some(34.0));
-        assert_eq!(result.get(1, 0)?, Some(53.5));
-        assert_eq!(result.get(1, 1)?, Some(70.0));
+        assert_eq!(result.get(0, 0)?.map(|v| *v), Some(26.5));
+        assert_eq!(result.get(0, 1)?.map(|v| *v), Some(34.0));
+        assert_eq!(result.get(1, 0)?.map(|v| *v), Some(53.5));
+        assert_eq!(result.get(1, 1)?.map(|v| *v), Some(70.0));
         Ok(())
     }
 
@@ -413,10 +417,10 @@ mod tests {
 
         // Assert
         // Result should equal original matrix
-        assert_eq!(result.get(0, 0)?, Some(3.0));
-        assert_eq!(result.get(0, 1)?, Some(4.0));
-        assert_eq!(result.get(1, 0)?, Some(5.0));
-        assert_eq!(result.get(1, 1)?, Some(6.0));
+        assert_eq!(result.get(0, 0)?.map(|v| *v), Some(3.0));
+        assert_eq!(result.get(0, 1)?.map(|v| *v), Some(4.0));
+        assert_eq!(result.get(1, 0)?.map(|v| *v), Some(5.0));
+        assert_eq!(result.get(1, 1)?.map(|v| *v), Some(6.0));
         Ok(())
     }
 
@@ -449,10 +453,10 @@ mod tests {
         //   | 2.0*1.0 + 0 + 0           0 + 0 + 3.0*3.0      | = | 2.0  9.0  |
         //   | 0 + 5.0*4.0 + 0           0 + 5.0*2.0 + 0      |   | 20.0 10.0 |
         assert_eq!(result.size(), Size::new(2, 2));
-        assert_eq!(result.get(0, 0)?, Some(2.0));
-        assert_eq!(result.get(0, 1)?, Some(9.0));
-        assert_eq!(result.get(1, 0)?, Some(20.0));
-        assert_eq!(result.get(1, 1)?, Some(10.0));
+        assert_eq!(result.get(0, 0)?.map(|v| *v), Some(2.0));
+        assert_eq!(result.get(0, 1)?.map(|v| *v), Some(9.0));
+        assert_eq!(result.get(1, 0)?.map(|v| *v), Some(20.0));
+        assert_eq!(result.get(1, 1)?.map(|v| *v), Some(10.0));
         Ok(())
     }
 
@@ -470,7 +474,7 @@ mod tests {
 
         // Assert
         assert_eq!(result.size(), Size::new(1, 1));
-        assert_eq!(result.get(0, 0)?, Some(15.0));
+        assert_eq!(result.get(0, 0)?.map(|v| *v), Some(15.0));
         Ok(())
     }
 

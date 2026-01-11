@@ -27,8 +27,8 @@ where
     /// * `col` - The column index of the element to retrieve.
     ///
     /// # Returns
-    /// * `Option<Element>` - Some(element) if the element exists at the specified position, None otherwise.
-    fn get(&self, row: usize, col: usize) -> Result<Option<Element>, anyhow::Error>;
+    /// * `Option<&Element>` - Some(element) if the element exists at the specified position, None otherwise.
+    fn get(&self, row: usize, col: usize) -> Result<Option<&Element>, anyhow::Error>;
 
     /// Set the element to the position with value.
     ///
@@ -51,15 +51,6 @@ where
     /// # Description
     /// Returns the size of the matrix as a `Size` struct which first element is number of rows and second element is number of columns.
     fn size(&self) -> Size;
-
-    /// Get sub-matrix from `self`.
-    ///
-    /// # Arguments
-    /// * `rect` : sub-matrix rectangle
-    ///
-    /// # Returns
-    /// * A new sub-matrix of the matrix. The matrix is sharing reference as original, so same lifetime of self.
-    fn sub_matrix(&self, rect: Rect) -> Result<&dyn Matrix<Element>>;
 }
 
 pub trait MatrixExtract<Element> {
