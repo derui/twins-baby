@@ -463,7 +463,7 @@ mod tests {
         use pretty_assertions::assert_eq;
 
         #[test]
-        fn test_solve_line_diminsion() {
+        fn test_solve_line_diminsion() -> anyhow::Result<()> {
             // Arrange
             let generator = Box::new(DefaultEquationIdGenerator::default());
             let mut solver = Solver::new(generator);
@@ -479,7 +479,7 @@ mod tests {
                     Box::new(MonomialEquation::new(1.0, "x1", 1)),
                     Box::new(ConstantEquation::new(3.0)),
                 ],
-            )));
+            )?));
             // y1 - 0 = 0
             solver.add_equation(Box::new(ArithmeticEquation::new(
                 arithmetic::Operator::Subtract,
@@ -487,7 +487,7 @@ mod tests {
                     Box::new(MonomialEquation::new(1.0, "y1", 1)),
                     Box::new(ConstantEquation::new(0.0)),
                 ],
-            )));
+            )?));
             // (x2 - x1)^2 + (y2 - y1)^2 - d^2 = 0
             // = x2^2 - 2 * x2 * x1 + x1^2 + y2^2 - 2 * y2 * y1 + y1^2 - d^2 = 0
             solver.add_equation(Box::new(ArithmeticEquation::new(
@@ -496,12 +496,13 @@ mod tests {
                     Box::new(MonomialEquation::new(1.0, "x1", 1)),
                     Box::new(ConstantEquation::new(3.0)),
                 ],
-            )));
+            )?));
 
             // Act
 
             // Assert
             assert_eq!(solver.status(), DimensionSpecificationStatus::Incorrect);
+            Ok(())
         }
 
         #[test]

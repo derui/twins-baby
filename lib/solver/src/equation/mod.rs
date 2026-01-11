@@ -99,47 +99,49 @@ mod tests {
     }
 
     #[test]
-    fn test_arithmetic_equations_equal_with_same_structure() {
+    fn test_arithmetic_equations_equal_with_same_structure() -> anyhow::Result<()> {
         // arrange
         let const1 = Box::new(ConstantEquation::new(5.0));
         let const2 = Box::new(ConstantEquation::new(3.0));
         let eq1: Box<dyn Equation> = Box::new(ArithmeticEquation::new(
             Operator::Add,
             &[const1.clone(), const2.clone()],
-        ));
+        )?);
         let eq2: Box<dyn Equation> =
-            Box::new(ArithmeticEquation::new(Operator::Add, &[const1, const2]));
+            Box::new(ArithmeticEquation::new(Operator::Add, &[const1, const2])?);
 
         // act
         let result = eq1 == eq2;
 
         // assert
         assert_eq!(result, true);
+        Ok(())
     }
 
     #[test]
-    fn test_arithmetic_equations_not_equal_with_different_operators() {
+    fn test_arithmetic_equations_not_equal_with_different_operators() -> anyhow::Result<()> {
         // arrange
         let const1 = Box::new(ConstantEquation::new(5.0));
         let const2 = Box::new(ConstantEquation::new(3.0));
         let eq1: Box<dyn Equation> = Box::new(ArithmeticEquation::new(
             Operator::Add,
             &[const1.clone(), const2.clone()],
-        ));
+        )?);
         let eq2: Box<dyn Equation> = Box::new(ArithmeticEquation::new(
             Operator::Subtract,
             &[const1, const2],
-        ));
+        )?);
 
         // act
         let result = eq1 == eq2;
 
         // assert
         assert_eq!(result, false);
+        Ok(())
     }
 
     #[test]
-    fn test_arithmetic_equations_not_equal_with_different_operands() {
+    fn test_arithmetic_equations_not_equal_with_different_operands() -> anyhow::Result<()> {
         // arrange
         let const1 = Box::new(ConstantEquation::new(5.0));
         let const2 = Box::new(ConstantEquation::new(3.0));
@@ -147,36 +149,38 @@ mod tests {
         let eq1: Box<dyn Equation> = Box::new(ArithmeticEquation::new(
             Operator::Add,
             &[const1.clone(), const2],
-        ));
+        )?);
         let eq2: Box<dyn Equation> =
-            Box::new(ArithmeticEquation::new(Operator::Add, &[const1, const3]));
+            Box::new(ArithmeticEquation::new(Operator::Add, &[const1, const3])?);
 
         // act
         let result = eq1 == eq2;
 
         // assert
         assert_eq!(result, false);
+        Ok(())
     }
 
     #[test]
-    fn test_arithmetic_equations_not_equal_with_swapped_operands() {
+    fn test_arithmetic_equations_not_equal_with_swapped_operands() -> anyhow::Result<()> {
         // arrange
         let const1 = Box::new(ConstantEquation::new(5.0));
         let const2 = Box::new(ConstantEquation::new(3.0));
         let eq1: Box<dyn Equation> = Box::new(ArithmeticEquation::new(
             Operator::Subtract,
             &[const1.clone(), const2.clone()],
-        ));
+        )?);
         let eq2: Box<dyn Equation> = Box::new(ArithmeticEquation::new(
             Operator::Subtract,
             &[const2, const1],
-        ));
+        )?);
 
         // act
         let result = eq1 == eq2;
 
         // assert
         assert_eq!(result, false);
+        Ok(())
     }
 
     #[test]
@@ -219,7 +223,7 @@ mod tests {
     }
 
     #[test]
-    fn test_different_equation_types_not_equal() {
+    fn test_different_equation_types_not_equal() -> anyhow::Result<()> {
         // arrange
         let const_eq: Box<dyn Equation> = Box::new(ConstantEquation::new(6.0));
         let const1 = Box::new(ConstantEquation::new(2.0));
@@ -227,72 +231,76 @@ mod tests {
         let arith_eq: Box<dyn Equation> = Box::new(ArithmeticEquation::new(
             Operator::Multiply,
             &[const1, const2],
-        ));
+        )?);
 
         // act
         let result = const_eq == arith_eq;
 
         // assert
         assert_eq!(result, false);
+        Ok(())
     }
 
     #[test]
-    fn test_nested_arithmetic_equations_equal_with_same_structure() {
+    fn test_nested_arithmetic_equations_equal_with_same_structure() -> anyhow::Result<()> {
         // arrange
         let const1 = Box::new(ConstantEquation::new(2.0));
         let const2 = Box::new(ConstantEquation::new(3.0));
-        let inner1 = ArithmeticEquation::new(Operator::Add, &[const1.clone(), const2.clone()]);
+        let inner1 = ArithmeticEquation::new(Operator::Add, &[const1.clone(), const2.clone()])?;
         let const3 = Box::new(ConstantEquation::new(4.0));
         let eq1: Box<dyn Equation> = Box::new(ArithmeticEquation::new(
             Operator::Multiply,
             &[Box::new(inner1), const3.clone()],
-        ));
+        )?);
 
-        let inner2 = ArithmeticEquation::new(Operator::Add, &[const1, const2]);
+        let inner2 = ArithmeticEquation::new(Operator::Add, &[const1, const2])?;
         let eq2: Box<dyn Equation> = Box::new(ArithmeticEquation::new(
             Operator::Multiply,
             &[Box::new(inner2), const3],
-        ));
+        )?);
 
         // act
         let result = eq1 == eq2;
 
         // assert
         assert_eq!(result, true);
+        Ok(())
     }
 
     #[test]
-    fn test_nested_arithmetic_equations_not_equal_with_different_inner_structure() {
+    fn test_nested_arithmetic_equations_not_equal_with_different_inner_structure()
+    -> anyhow::Result<()> {
         // arrange
         let const1 = Box::new(ConstantEquation::new(2.0));
         let const2 = Box::new(ConstantEquation::new(3.0));
-        let inner1 = ArithmeticEquation::new(Operator::Add, &[const1.clone(), const2.clone()]);
+        let inner1 = ArithmeticEquation::new(Operator::Add, &[const1.clone(), const2.clone()])?;
         let const3 = Box::new(ConstantEquation::new(4.0));
         let eq1: Box<dyn Equation> = Box::new(ArithmeticEquation::new(
             Operator::Multiply,
             &[Box::new(inner1), const3.clone()],
-        ));
+        )?);
 
-        let inner2 = ArithmeticEquation::new(Operator::Subtract, &[const1, const2]);
+        let inner2 = ArithmeticEquation::new(Operator::Subtract, &[const1, const2])?;
         let eq2: Box<dyn Equation> = Box::new(ArithmeticEquation::new(
             Operator::Multiply,
             &[Box::new(inner2), const3],
-        ));
+        )?);
 
         // act
         let result = eq1 == eq2;
 
         // assert
         assert_eq!(result, false);
+        Ok(())
     }
 
     #[test]
-    fn test_cloned_equations_are_equal() {
+    fn test_cloned_equations_are_equal() -> anyhow::Result<()> {
         // arrange
         let const1 = Box::new(ConstantEquation::new(5.0));
         let const2 = Box::new(ConstantEquation::new(3.0));
         let eq1: Box<dyn Equation> =
-            Box::new(ArithmeticEquation::new(Operator::Add, &[const1, const2]));
+            Box::new(ArithmeticEquation::new(Operator::Add, &[const1, const2])?);
 
         // act
         let eq2 = eq1.clone();
@@ -300,6 +308,7 @@ mod tests {
 
         // assert
         assert_eq!(result, true);
+        Ok(())
     }
 
     #[test]
