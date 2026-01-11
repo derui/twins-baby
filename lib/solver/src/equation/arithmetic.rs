@@ -70,13 +70,15 @@ impl std::fmt::Display for ArithmeticEquation {
             Operator::Multiply => "*",
             Operator::Divide => "/",
         };
-        if self.operands.len() >= 2 {
-            write!(f, "{}{}{}", self.operands[0], op, self.operands[1])
-        } else if self.operands.len() == 1 {
-            write!(f, "{}", self.operands[0])
-        } else {
-            write!(f, "")
+
+        for (i, e) in self.operands.iter().enumerate() {
+            if i == self.operands.len() - 1 {
+                write!(f, "{}", e)?;
+            } else {
+                write!(f, "{}{}", e, op)?;
+            }
         }
+        Ok(())
     }
 }
 
