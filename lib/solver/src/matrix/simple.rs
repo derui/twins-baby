@@ -7,13 +7,16 @@ use crate::matrix::{Matrix, size::Size};
 /// implement simple matrix.
 
 #[derive(Debug, Clone)]
-pub struct SimpleMatrix<M> {
+pub struct SimpleMatrix<M>
+where
+    M: std::fmt::Debug,
+{
     size: Size,
     /// A simple 2D matrix
     values: Vec<Vec<Option<M>>>,
 }
 
-impl<M: Clone> SimpleMatrix<M> {
+impl<M: Clone + std::fmt::Debug> SimpleMatrix<M> {
     /// Create a new empty simple matrix
     ///
     /// # Arguments
@@ -59,7 +62,7 @@ impl<M: Clone> SimpleMatrix<M> {
     }
 }
 
-impl<M: Clone> Matrix<M> for SimpleMatrix<M> {
+impl<M: Clone + std::fmt::Debug> Matrix<M> for SimpleMatrix<M> {
     fn size(&self) -> Size {
         self.size
     }

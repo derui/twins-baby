@@ -8,12 +8,28 @@ pub mod size;
 pub mod sparse;
 
 /// A matrix trait to define standard behavior of matrix.
-pub trait Matrix<Element> {
-    /// Get the size of matrix.
+pub trait Matrix<Element>: std::fmt::Debug
+where
+    Element: std::fmt::Debug,
+{
+    /// Get diagonal components.
     ///
-    /// # Description
-    /// Returns the size of the matrix as a `Size` struct which first element is number of rows and second element is number of columns.
-    fn size(&self) -> Size;
+    /// # Returns
+    /// * Return compoments that is number of `row`. If the matrix is not square, return None
+    fn diagonal_components(&self) -> Option<Vec<Option<Element>>>;
+
+    /// Extract a matrix of f32 from this matrix
+    ///
+    /// This function to use specialized math function for f32, such as determinant calculation.
+    ///
+    /// # Arguments
+    /// * `extract` - a function to extract `f32` from the element.
+    ///
+    /// # Returns
+    /// * Return a new matrix of f32
+    fn extract<T>(&self, extract: T) -> impl Matrix<f32>
+    where
+        T: Fn(&Element) -> f32;
 
     /// Get the element of matrix at specified row and column.
     ///
@@ -41,22 +57,9 @@ pub trait Matrix<Element> {
         element: Element,
     ) -> Result<Option<Element>, anyhow::Error>;
 
-    /// Extract a matrix of f32 from this matrix
+    /// Get the size of matrix.
     ///
-    /// This function to use specialized math function for f32, such as determinant calculation.
-    ///
-    /// # Arguments
-    /// * `extract` - a function to extract `f32` from the element.
-    ///
-    /// # Returns
-    /// * Return a new matrix of f32
-    fn extract<T>(&self, extract: T) -> impl Matrix<f32>
-    where
-        T: Fn(&Element) -> f32;
-
-    /// Get diagonal components.
-    ///
-    /// # Returns
-    /// * Return compoments that is number of `row`. If the matrix is not square, return None
-    fn diagonal_components(&self) -> Option<Vec<Option<Element>>>;
+    /// # Description
+    /// Returns the size of the matrix as a `Size` struct which first element is number of rows and second element is number of columns.
+    fn size(&self) -> Size;
 }

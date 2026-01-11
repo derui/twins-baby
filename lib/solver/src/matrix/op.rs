@@ -9,7 +9,7 @@ use crate::{
 };
 
 /// Multiply operation between matrix
-pub fn mul<M, T: Matrix<M>, U: Matrix<M>>(
+pub fn mul<M: std::fmt::Debug, T: Matrix<M>, U: Matrix<M>>(
     lhs: &T,
     rhs: &U,
 ) -> Result<impl Matrix<M> + use<M, T, U>, anyhow::Error>
@@ -52,6 +52,8 @@ pub fn solve<M: Matrix<f32>>(mat: &M, factors: &Vector) -> Result<Vector, anyhow
         let Some(kv) = mat.get(k, k)? else {
             continue;
         };
+
+        // row povitting
 
         // normalize `k` row
         for i in 0..mat.size().columns() {

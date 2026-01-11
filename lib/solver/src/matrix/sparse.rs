@@ -8,7 +8,7 @@ use crate::matrix::{Matrix, simple::SimpleMatrix, size::Size};
 
 /// Sparse matrix model. This implementation is based on simple CSR model.
 #[derive(Debug, Clone)]
-pub struct SparseMatrix<M> {
+pub struct SparseMatrix<M: std::fmt::Debug> {
     size: Size,
     /// Values of row-ordered non-zero value. Zero is mean None in this type.
     values: Vec<M>,
@@ -18,7 +18,7 @@ pub struct SparseMatrix<M> {
     row_ptr: Vec<usize>,
 }
 
-impl<M: Clone> SparseMatrix<M> {
+impl<M: Clone + std::fmt::Debug> SparseMatrix<M> {
     /// Create a empty Sparse matrix
     pub fn empty(size: Size) -> Result<Self, anyhow::Error> {
         if size.columns() <= 0 || size.rows() <= 0 {
@@ -67,7 +67,7 @@ impl<M: Clone> SparseMatrix<M> {
     }
 }
 
-impl<M: Clone> Matrix<M> for SparseMatrix<M> {
+impl<M: Clone + std::fmt::Debug> Matrix<M> for SparseMatrix<M> {
     fn size(&self) -> super::size::Size {
         self.size
     }
