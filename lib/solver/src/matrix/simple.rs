@@ -1,8 +1,8 @@
 use std::cmp::min;
 
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 
-use crate::matrix::{Matrix, size::Size};
+use crate::matrix::{Matrix, MatrixExtract, rect::Rect, size::Size};
 
 /// implement simple matrix.
 
@@ -83,6 +83,35 @@ impl<M: Clone + std::fmt::Debug> Matrix<M> for SimpleMatrix<M> {
         Ok(old_value)
     }
 
+    fn diagonal_components(&self) -> Option<Vec<Option<M>>> {
+        if self.size.rows() != self.size.columns() {
+            return None;
+        }
+
+        let pos = min(self.size.rows(), self.size.columns());
+
+        let mut ret: Vec<Option<M>> = vec![None; pos];
+        for p in 0..pos {
+            ret[p] = self.values[p][p].clone();
+        }
+
+        Some(ret)
+    }
+
+    fn sub_matrix(&self, rect: Rect) -> Result<&dyn Matrix<M>> {
+        if rect.as_size() > self.size {
+            return Err(anyhow!(
+                "Can not extract sub-matrix: {:?}, {:?}",
+                &rect,
+                &self.size
+            ));
+        }
+
+        todo!("sub_matrix not yet implemented for SimpleMatrix")
+    }
+}
+
+impl<M: Clone + std::fmt::Debug> MatrixExtract<M> for SimpleMatrix<M> {
     fn extract<T>(&self, extract: T) -> impl Matrix<f32>
     where
         T: Fn(&M) -> f32,
@@ -99,21 +128,6 @@ impl<M: Clone + std::fmt::Debug> Matrix<M> for SimpleMatrix<M> {
         }
 
         new_matrix
-    }
-
-    fn diagonal_components(&self) -> Option<Vec<Option<M>>> {
-        if self.size.rows() != self.size.columns() {
-            return None;
-        }
-
-        let pos = min(self.size.rows(), self.size.columns());
-
-        let mut ret: Vec<Option<M>> = vec![None; pos];
-        for p in 0..pos {
-            ret[p] = self.values[p][p].clone();
-        }
-
-        Some(ret)
     }
 }
 

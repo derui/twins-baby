@@ -125,7 +125,7 @@ pub fn lu_split(mat: &impl Matrix<f32>) -> Result<LUSplit> {
 
     let mut l = SimpleMatrix::<f32>::new(mat.size().rows(), mat.size().columns())?;
     let mut u = SimpleMatrix::<f32>::new(mat.size().rows(), mat.size().columns())?;
-    let n = mat.size().min();
+    let n = mat.size().min_row_or_col();
 
     // initialize L/U matrix
     for i in 0..(n) {
@@ -174,7 +174,7 @@ pub fn determinant(mat: &impl Matrix<f32>) -> Option<f32> {
         let u = splited.u();
 
         let mut sum = 1.0;
-        for i in 0..(mat.size().min()) {
+        for i in 0..(mat.size().min_row_or_col()) {
             sum *= u.get(i, i).unwrap_or(None).unwrap_or(0.0);
         }
 

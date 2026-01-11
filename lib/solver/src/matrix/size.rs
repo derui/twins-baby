@@ -1,5 +1,5 @@
 /// A representation of size.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Size(usize, usize);
 
 impl Size {
@@ -22,7 +22,7 @@ impl Size {
 
     /// Get minimum value of the size
     #[inline]
-    pub fn min(&self) -> usize {
+    pub fn min_row_or_col(&self) -> usize {
         if self.0 >= self.1 { self.1 } else { self.0 }
     }
 }

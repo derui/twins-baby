@@ -2,7 +2,7 @@ use std::cmp::min;
 
 use anyhow::Result;
 
-use crate::matrix::{Matrix, simple::SimpleMatrix, size::Size};
+use crate::matrix::{Matrix, MatrixExtract, simple::SimpleMatrix, size::Size};
 
 /// implement sparse matrix
 
@@ -98,18 +98,6 @@ impl<M: Clone + std::fmt::Debug> Matrix<M> for SparseMatrix<M> {
         todo!()
     }
 
-    fn extract<T>(&self, extract: T) -> impl Matrix<f32>
-    where
-        T: Fn(&M) -> f32,
-    {
-        SparseMatrix::<f32> {
-            size: self.size,
-            values: self.values.iter().map(extract).collect(),
-            col_indices: self.col_indices.clone(),
-            row_ptr: self.row_ptr.clone(),
-        }
-    }
-
     fn diagonal_components(&self) -> Option<Vec<Option<M>>> {
         if self.size.rows() != self.size.columns() {
             return None;
@@ -125,6 +113,24 @@ impl<M: Clone + std::fmt::Debug> Matrix<M> for SparseMatrix<M> {
         }
 
         Some(vec)
+    }
+
+    fn sub_matrix(&self, _rect: crate::matrix::rect::Rect) -> Result<&dyn Matrix<M>> {
+        todo!("sub_matrix not yet implemented for SparseMatrix")
+    }
+}
+
+impl<M: Clone + std::fmt::Debug> MatrixExtract<M> for SparseMatrix<M> {
+    fn extract<T>(&self, extract: T) -> impl Matrix<f32>
+    where
+        T: Fn(&M) -> f32,
+    {
+        SparseMatrix::<f32> {
+            size: self.size,
+            values: self.values.iter().map(extract).collect(),
+            col_indices: self.col_indices.clone(),
+            row_ptr: self.row_ptr.clone(),
+        }
     }
 }
 
