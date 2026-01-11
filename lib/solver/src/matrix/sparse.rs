@@ -1,6 +1,6 @@
 use std::cmp::min;
 
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 
 use crate::matrix::{Matrix, MatrixExtract, simple::SimpleMatrix, size::Size};
 
@@ -113,6 +113,23 @@ impl<M: Clone + std::fmt::Debug> Matrix<M> for SparseMatrix<M> {
         }
 
         Some(vec)
+    }
+
+    fn get_row(&self, row: usize) -> Result<Vec<Option<M>>> {
+        if row >= self.size.rows() {
+            return Err(anyhow!("Can not get row : {}", &row));
+        }
+
+        let mut ret = vec![None; self.size.columns()];
+        for (i, e) in ret.as_mut_slice().iter_mut().enumerate() {
+            *e = self.get(row, i)?.cloned();
+        }
+
+        Ok(ret)
+    }
+
+    fn set_row(&mut self, _row: usize, _elements: &[Option<M>]) -> Result<()> {
+        Err(anyhow!("Sparse matrix can not set now"))
     }
 }
 

@@ -2,7 +2,7 @@ use std::cmp::min;
 
 use anyhow::{Result, anyhow};
 
-use crate::matrix::{Matrix, MatrixExtract, rect::Rect, size::Size};
+use crate::matrix::{Matrix, MatrixExtract, size::Size};
 
 /// implement simple matrix.
 
@@ -96,6 +96,26 @@ impl<M: Clone + std::fmt::Debug> Matrix<M> for SimpleMatrix<M> {
         }
 
         Some(ret)
+    }
+
+    fn get_row(&self, row: usize) -> Result<Vec<Option<M>>> {
+        if row >= self.size.rows() {
+            return Err(anyhow!("Can not get row : {}", &row));
+        }
+
+        Ok(self.values[row].clone())
+    }
+
+    fn set_row(&mut self, row: usize, elements: &[Option<M>]) -> Result<()> {
+        if row >= self.size.rows() {
+            return Err(anyhow!("Can not get row : {}", &row));
+        }
+
+        for (i, e) in elements.iter().enumerate() {
+            self.values[row][i] = e.clone();
+        }
+
+        Ok(())
     }
 }
 
@@ -425,6 +445,97 @@ mod tests {
             Some(999),
             "Copy should be modified"
         );
+        Ok(())
+    }
+
+    #[test]
+    fn test_get_row_returns_correct_row_with_mixed_values() -> Result<(), anyhow::Error> {
+        // Arrange
+        let mut matrix = SimpleMatrix::<i32>::new(3, 4)?;
+        matrix.set(1, 0, 10)?;
+        matrix.set(1, 1, 20)?;
+        matrix.set(1, 3, 40)?;
+        // (1, 2) is intentionally left as None
+
+        // Act
+        let row = matrix.get_row(1)?;
+
+        // Assert
+        assert_eq!(row.len(), 4);
+        assert_eq!(row[0], Some(10));
+        assert_eq!(row[1], Some(20));
+        assert_eq!(row[2], None);
+        assert_eq!(row[3], Some(40));
+        Ok(())
+    }
+
+    #[test]
+    fn test_get_row_returns_error_for_out_of_bounds() -> Result<(), anyhow::Error> {
+        // Arrange
+        let matrix = SimpleMatrix::<i32>::new(3, 4)?;
+
+        // Act
+        let result = matrix.get_row(3);
+
+        // Assert
+        assert!(result.is_err(), "Expected error for row index at boundary");
+        Ok(())
+    }
+
+    #[test]
+    fn test_set_row_updates_row_with_new_values() -> Result<(), anyhow::Error> {
+        // Arrange
+        let mut matrix = SimpleMatrix::<i32>::new(3, 4)?;
+        matrix.set(1, 0, 10)?;
+        matrix.set(1, 1, 20)?;
+        let new_row = vec![Some(100), Some(200), None, Some(400)];
+
+        // Act
+        matrix.set_row(1, &new_row)?;
+
+        // Assert
+        assert_eq!(matrix.get(1, 0)?, Some(&100));
+        assert_eq!(matrix.get(1, 1)?, Some(&200));
+        assert_eq!(matrix.get(1, 2)?, None);
+        assert_eq!(matrix.get(1, 3)?, Some(&400));
+        Ok(())
+    }
+
+    #[test]
+    fn test_set_row_preserves_other_rows() -> Result<(), anyhow::Error> {
+        // Arrange
+        let mut matrix = SimpleMatrix::<i32>::new(3, 3)?;
+        matrix.set(0, 0, 1)?;
+        matrix.set(0, 1, 2)?;
+        matrix.set(2, 0, 7)?;
+        matrix.set(2, 1, 8)?;
+        let new_row = vec![Some(10), Some(20), Some(30)];
+
+        // Act
+        matrix.set_row(1, &new_row)?;
+
+        // Assert
+        assert_eq!(matrix.get(0, 0)?, Some(&1));
+        assert_eq!(matrix.get(0, 1)?, Some(&2));
+        assert_eq!(matrix.get(1, 0)?, Some(&10));
+        assert_eq!(matrix.get(1, 1)?, Some(&20));
+        assert_eq!(matrix.get(1, 2)?, Some(&30));
+        assert_eq!(matrix.get(2, 0)?, Some(&7));
+        assert_eq!(matrix.get(2, 1)?, Some(&8));
+        Ok(())
+    }
+
+    #[test]
+    fn test_set_row_returns_error_for_out_of_bounds() -> Result<(), anyhow::Error> {
+        // Arrange
+        let mut matrix = SimpleMatrix::<i32>::new(3, 4)?;
+        let new_row = vec![Some(1), Some(2), Some(3), Some(4)];
+
+        // Act
+        let result = matrix.set_row(3, &new_row);
+
+        // Assert
+        assert!(result.is_err(), "Expected error for row index at boundary");
         Ok(())
     }
 }

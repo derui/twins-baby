@@ -1,10 +1,8 @@
 use anyhow::Result;
 
-use rect::Rect;
 use size::Size;
 
 pub(crate) mod op;
-pub mod rect;
 pub mod simple;
 pub mod size;
 pub mod sparse;
@@ -30,6 +28,9 @@ where
     /// * `Option<&Element>` - Some(element) if the element exists at the specified position, None otherwise.
     fn get(&self, row: usize, col: usize) -> Result<Option<&Element>, anyhow::Error>;
 
+    /// Get the row from matrix. result is copy of element, so does not reflect change for it.
+    fn get_row(&self, row: usize) -> Result<Vec<Option<Element>>>;
+
     /// Set the element to the position with value.
     ///
     /// # Arguments
@@ -45,6 +46,9 @@ where
         col: usize,
         element: Element,
     ) -> Result<Option<Element>, anyhow::Error>;
+
+    /// Set the elements to the row.
+    fn set_row(&mut self, row: usize, elements: &[Option<Element>]) -> Result<()>;
 
     /// Get the size of matrix.
     ///
