@@ -64,6 +64,12 @@ impl std::fmt::Display for MonomialEquation {
     }
 }
 
+impl From<MonomialEquation> for Box<dyn Equation> {
+    fn from(value: MonomialEquation) -> Self {
+        Box::new(value.clone())
+    }
+}
+
 impl MonomialEquation {
     pub(crate) fn new(factor: f32, variable: &str, exponent: i32) -> Self {
         Self {

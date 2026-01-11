@@ -31,6 +31,12 @@ impl std::fmt::Display for ConstantEquation {
     }
 }
 
+impl From<ConstantEquation> for Box<dyn Equation> {
+    fn from(value: ConstantEquation) -> Self {
+        Box::new(value.clone())
+    }
+}
+
 impl ConstantEquation {
     /// Get a new constant equation with value
     pub(crate) fn new(value: f32) -> Self {

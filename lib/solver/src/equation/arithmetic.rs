@@ -178,8 +178,8 @@ mod tests {
     #[test]
     fn test_evaluate_mixed_constant_and_variable() -> Result<()> {
         // arrange
-        let first = Box::new(ConstantEquation::new(10.0));
-        let second = Box::new(MonomialEquation::new(1.0, "x", 1));
+        let first = ConstantEquation::new(10.0).into();
+        let second = MonomialEquation::new(1.0, "x", 1).into();
         let equation = ArithmeticEquation::new(Operator::Add, &[first, second])?;
         let var = Variable::new("x", 5.0);
         let env = Environment::from_variables(vec![var]);
@@ -203,10 +203,10 @@ mod tests {
         let first: Box<dyn Equation> = if first_is_variable {
             Box::new(MonomialEquation::new(1.0, var_name, 1))
         } else {
-            Box::new(ConstantEquation::new(10.0))
+            ConstantEquation::new(10.0).into()
         };
         let second: Box<dyn Equation> = if first_is_variable {
-            Box::new(ConstantEquation::new(5.0))
+            ConstantEquation::new(5.0).into()
         } else {
             Box::new(MonomialEquation::new(1.0, var_name, 1))
         };
