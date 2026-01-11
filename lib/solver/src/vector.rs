@@ -10,7 +10,7 @@ use crate::matrix::{Matrix, simple::SimpleMatrix};
 /// Offer simple multi-dimension vector. This works with `matrix` module in this library.
 
 /// A simple vector type
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Vector {
     // A simple element holder
     vec: Vec<f32>,

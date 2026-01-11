@@ -44,7 +44,7 @@ impl Equation for ArithmeticEquation {
             .flat_map(|e| e.derive(variable))
             .collect::<Vec<_>>();
 
-        if ret.len() == 0 {
+        if ret.is_empty() {
             None
         } else if ret.len() == 1 {
             Some(ret.into_iter().next().unwrap())

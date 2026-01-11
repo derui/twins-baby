@@ -42,22 +42,33 @@ where
     Ok(ret)
 }
 
-/// Solve the matrix and return result as vector
-pub fn solve<M: Matrix<f32>>(mat: &M, factors: &Vector) -> Result<Vector, anyhow::Error> {
+#[derive(Debug, Clone, PartialEq)]
+pub enum Solve {
+    Singular,
+    Solved(Vector),
+}
+
+/// Solve the matrix and return result as vector. If can not solve the matrix (when all values in the column are 0), Err with error.
+pub fn solve<M: Matrix<f32>>(mat: &M, factors: &Vector) -> Result<Solve> {
     let mut mat = SimpleMatrix::from_matrix(mat);
     let mut factors = factors.clone();
 
     // forward deletion
     for k in 0..mat.size().rows() {
-        let Some(kv) = mat.get(k, k)?.map(|v| *v) else {
-            continue;
-        };
-
-        // row povitting
+        // pivotting
 
         // normalize `k` row
+        let Some(kv) = mat.get(k, k)?.copied() else {
+            // When any (k, k) is not set or nearly 0, it is singular.
+            return Ok(Solve::Singular);
+        };
+
+        if kv.abs() < 1e-10 {
+            return Ok(Solve::Singular);
+        }
+
         for i in 0..mat.size().columns() {
-            let Some(v) = mat.get(k, i)?.map(|v| *v) else {
+            let Some(v) = mat.get(k, i)?.copied() else {
                 continue;
             };
 
@@ -67,13 +78,13 @@ pub fn solve<M: Matrix<f32>>(mat: &M, factors: &Vector) -> Result<Vector, anyhow
 
         // delete `k` column
         for i in (k + 1)..mat.size().rows() {
-            let Some(kv) = mat.get(i, k)?.map(|v| *v) else {
+            let Some(kv) = mat.get(i, k)?.copied() else {
                 continue;
             };
 
             for j in 0..mat.size().columns() {
-                let kj = mat.get(k, j)?.map(|v| *v).unwrap_or(0.0);
-                let ij = mat.get(i, j)?.map(|v| *v).unwrap_or(0.0);
+                let kj = mat.get(k, j)?.copied().unwrap_or(0.0);
+                let ij = mat.get(i, j)?.copied().unwrap_or(0.0);
 
                 mat.set(i, j, ij - kv * kj)?;
             }
@@ -85,11 +96,11 @@ pub fn solve<M: Matrix<f32>>(mat: &M, factors: &Vector) -> Result<Vector, anyhow
     // backward substitution
     for k in (0..factors.len()).rev() {
         for i in 0..k {
-            let kv = mat.get(i, k)?.map(|v| *v).unwrap_or(0.0);
+            let kv = mat.get(i, k)?.copied().unwrap_or(0.0);
 
             for j in 0..mat.size().columns() {
-                let kj = mat.get(k, j)?.map(|v| *v).unwrap_or(0.0);
-                let ij = mat.get(i, j)?.map(|v| *v).unwrap_or(0.0);
+                let kj = mat.get(k, j)?.copied().unwrap_or(0.0);
+                let ij = mat.get(i, j)?.copied().unwrap_or(0.0);
 
                 mat.set(i, j, ij - kv * kj)?;
             }
@@ -98,7 +109,7 @@ pub fn solve<M: Matrix<f32>>(mat: &M, factors: &Vector) -> Result<Vector, anyhow
         }
     }
 
-    Ok(factors)
+    Ok(Solve::Solved(factors))
 }
 
 /// New type for LU Splitted matrix to reuse
@@ -147,7 +158,7 @@ pub fn lu_split(mat: &impl Matrix<f32>) -> Result<LUSplit> {
                 };
             }
 
-            let u_ij = mat.get(i, j)?.map(|v| *v).unwrap_or(0.) - sum_u;
+            let u_ij = mat.get(i, j)?.copied().unwrap_or(0.) - sum_u;
             let _ = u.set(i, j, u_ij);
         }
 
@@ -161,8 +172,8 @@ pub fn lu_split(mat: &impl Matrix<f32>) -> Result<LUSplit> {
                 };
             }
 
-            let l_ji = mat.get(j, i)?.map(|v| *v).unwrap_or(0.) - sum_l;
-            let _ = l.set(j, i, l_ji / u.get(i, i)?.map(|v| *v).unwrap_or(1.0));
+            let l_ji = mat.get(j, i)?.copied().unwrap_or(0.) - sum_l;
+            let _ = l.set(j, i, l_ji / u.get(i, i)?.copied().unwrap_or(1.0));
         }
     }
 
@@ -179,7 +190,7 @@ pub fn determinant(mat: &impl Matrix<f32>) -> Option<f32> {
 
         let mut sum = 1.0;
         for i in 0..(mat.size().min_row_or_col()) {
-            sum *= u.get(i, i).unwrap_or(None).map(|v| *v).unwrap_or(0.0);
+            sum *= u.get(i, i).unwrap_or(None).copied().unwrap_or(0.0);
         }
 
         Some(sum)
@@ -192,7 +203,7 @@ pub fn determinant(mat: &impl Matrix<f32>) -> Option<f32> {
 mod tests {
     use super::*;
     use crate::matrix::{size::Size, sparse::SparseMatrix};
-    use anyhow::Result;
+    use anyhow::{Result, anyhow};
     use approx::assert_relative_eq;
     use pretty_assertions::assert_eq;
     use rstest::rstest;
@@ -494,7 +505,9 @@ mod tests {
         let factors = Vector::from(&[5.0, 11.0])?;
 
         // Act
-        let result = solve(&matrix, &factors)?;
+        let Solve::Solved(result) = solve(&matrix, &factors)? else {
+            return Err(anyhow!("should be solved"));
+        };
 
         // Assert
         assert_eq!(result.len(), 2);
@@ -525,7 +538,9 @@ mod tests {
         let factors = Vector::from(&[5.0, 5.0, 6.0])?;
 
         // Act
-        let result = solve(&matrix, &factors)?;
+        let Solve::Solved(result) = solve(&matrix, &factors)? else {
+            return Err(anyhow!("should be solved"));
+        };
 
         // Assert
         assert_eq!(result.len(), 3);
@@ -557,21 +572,10 @@ mod tests {
         let factors = Vector::from(&[1.0, 2.0, 3.0])?;
 
         // Act
-        let result = solve(&matrix, &factors)?;
+        let ret = solve(&matrix, &factors)?;
 
         // Assert
-        // For a singular matrix, the solve function may return values
-        // but they involve division by zero or near-zero values
-        // Check that result contains NaN or Inf values
-        assert_eq!(result.len(), 3);
-        assert!(
-            result[0].is_nan()
-                || result[0].is_infinite()
-                || result[1].is_nan()
-                || result[1].is_infinite()
-                || result[2].is_nan()
-                || result[2].is_infinite()
-        );
+        assert_eq!(ret, Solve::Singular);
         Ok(())
     }
 
@@ -591,7 +595,9 @@ mod tests {
         let factors = Vector::from(&[3.0, 5.0, 7.0])?;
 
         // Act
-        let result = solve(&matrix, &factors)?;
+        let Solve::Solved(result) = solve(&matrix, &factors)? else {
+            return Err(anyhow!("should be solved"));
+        };
 
         // Assert
         assert_eq!(result.len(), 3);

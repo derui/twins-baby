@@ -7,7 +7,7 @@ use crate::{
     equation::Equation,
     matrix::{
         Matrix, MatrixExtract,
-        op::{determinant, lu_split, solve},
+        op::{Solve, determinant, solve},
         simple::SimpleMatrix,
         size::Size,
         sparse::SparseMatrix,
@@ -309,14 +309,16 @@ impl Solver {
                 let mut ret = Vector::zero(ordered.len())?;
 
                 for i in 0..ret.len() {
-                    ret[i] = b.get(i, 0)?.map(|v| *v).unwrap_or(0.0) - f0[i];
+                    ret[i] = b.get(i, 0)?.copied().unwrap_or(0.0) - f0[i];
                 }
 
                 ret
             };
 
             // direct solve x1
-            let x1 = solve(&j0, &b)?;
+            let Solve::Solved(x1) = solve(&j0, &b)? else {
+                return Err(anyhow!("Can not solve in this equation"));
+            };
 
             dbg!("{:?}, {:?}, {:?}", &b, &x1, &self.jacobian.0);
             println!(
