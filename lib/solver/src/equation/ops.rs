@@ -1,14 +1,12 @@
 use std::{
     fmt::Display,
-    ops::{Add, Div, DivAssign, Mul, Sub},
-    path::PrefixComponent,
+    ops::{Add, Div, Mul, Sub},
 };
 
 use crate::{
     environment::Environment,
     equation::{
         arithmetic::{ArithmeticEquation, Operator},
-        constant::ConstantEquation,
         monomial::MonomialEquation,
     },
     variable::Variable,

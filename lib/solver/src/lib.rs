@@ -22,7 +22,7 @@ pub mod matrix;
 pub mod variable;
 pub mod vector;
 
-const DEFAULT_EPSILON: f32 = 1e-10;
+const DEFAULT_EPSILON: f32 = 1e-5;
 
 /// Internal Jacobian matrix. It is a matrix of constraint matrix.
 struct Jacobian(SparseMatrix<(Box<dyn equation::Equation>, String)>, f32);
@@ -48,6 +48,7 @@ impl Jacobian {
                 if !equation.is_variable_related(variable) {
                     continue;
                 }
+
                 matrix.set(i, j, (equation.clone(), variable.name()))?;
             }
         }
@@ -66,7 +67,8 @@ impl Jacobian {
             }
 
             let origin = e.evaluate(&env).unwrap_or(0.0);
-            (e.evaluate(&new_env).unwrap_or(0.0) - origin) / self.1
+            let forwarded = e.evaluate(&new_env).unwrap_or(0.0);
+            (forwarded - origin) / self.1
         })
     }
 }
@@ -306,7 +308,6 @@ impl Solver {
         loop {
             // calculate rhs. this result is simple vector that is column-transposed
             let extractor = self.variables.merge(&self.dimensions);
-            dbg!(&extractor);
             let b = {
                 let f0 = equations
                     .iter()
@@ -317,22 +318,14 @@ impl Solver {
             };
 
             let j0 = self.jacobian.forward(extractor);
-            dbg!(&j0);
 
             // direct solve x1
             let Solve::Solved(x_delta) = solve(&j0, &b)? else {
                 break;
             };
 
-            let x1 = (x0.clone() + x_delta)?;
+            let x1 = (x0.clone() + x_delta.clone())?;
 
-            dbg!("{:?}, {:?}", &b, &x1);
-            println!(
-                "diff: {}, {}, {}",
-                x0.norm(),
-                x1.norm(),
-                (x1.norm() - x0.norm()).abs()
-            );
             // check epsilon between norm
             if (x1.norm() - x0.norm()).abs() < self.epsilon {
                 break;
@@ -500,27 +493,18 @@ mod tests {
             solver.add_equation({
                 let first: Ops = Into::<Ops>::into(("x2", 2))
                     - (Ops::constant(2.0) * "x2".into() * "x1".into())
-                    + ("x2", 2).into();
+                    + ("x1", 2).into();
 
                 let second: Ops = Into::<Ops>::into(("y2", 2))
                     - (Ops::constant(2.0) * "y2".into() * "y1".into())
-                    + ("y2", 2).into();
+                    + ("y1", 2).into();
 
                 let third = Into::<Ops>::into(("d", 2));
 
                 (first + second - third).into()
             });
             // y2 - y1 = 0
-            solver.add_equation(
-                ArithmeticEquation::new(
-                    arithmetic::Operator::Subtract,
-                    &[
-                        MonomialEquation::new(1.0, "y2", 1).into(),
-                        MonomialEquation::new(1.0, "y1", 1).into(),
-                    ],
-                )?
-                .into(),
-            );
+            solver.add_equation((Into::<Ops>::into("y2") - "y1".into()).into());
 
             // Act
             let ret = solver.solve()?;
@@ -529,7 +513,7 @@ mod tests {
             assert_eq!(solver.status(), DimensionSpecificationStatus::Correct);
             assert_relative_eq!(ret.get_variable("x1").unwrap().value(), 3.0, epsilon = 1e-5);
             assert_relative_eq!(ret.get_variable("y1").unwrap().value(), 0.0, epsilon = 1e-5);
-            assert_relative_eq!(ret.get_variable("x2").unwrap().value(), 0.0, epsilon = 1e-5);
+            assert_relative_eq!(ret.get_variable("x2").unwrap().value(), 7.5, epsilon = 1e-5);
             assert_relative_eq!(ret.get_variable("y2").unwrap().value(), 0.0, epsilon = 1e-5);
             Ok(())
         }

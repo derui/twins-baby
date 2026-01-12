@@ -33,7 +33,7 @@ impl<M: Clone + std::fmt::Debug> SparseMatrix<M> {
     /// Create a sparse matrix from other matrix
     pub fn from_matrix(mat: &impl Matrix<M>) -> Self {
         let size = mat.size();
-        let mut values: Vec<Option<M>> = vec![];
+        let mut values: Vec<M> = vec![];
         let mut col_indices: Vec<usize> = vec![];
         let mut row_ptr: Vec<usize> = vec![];
 
@@ -46,7 +46,7 @@ impl<M: Clone + std::fmt::Debug> SparseMatrix<M> {
                         ptr_recorded = true;
                         row_ptr.push(values.len())
                     }
-                    values.push(Some(v.clone()));
+                    values.push(v.clone());
                     col_indices.push(c);
                 }
             }
@@ -56,11 +56,11 @@ impl<M: Clone + std::fmt::Debug> SparseMatrix<M> {
             }
         }
 
-        row_ptr.push(values.iter().filter_map(Option::Some).count());
+        row_ptr.push(values.len());
 
         SparseMatrix {
             size,
-            values: values.iter().flatten().cloned().collect(),
+            values,
             col_indices,
             row_ptr,
         }
