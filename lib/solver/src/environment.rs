@@ -81,10 +81,10 @@ impl Environment {
     ///
     /// # Returns
     /// * `Result<Variable, String>` - Ok if the variable was updated successfully, Err with a message if the variable was not found
-    pub fn update_variable(&mut self, name: &str, value: f32) -> Result<Variable> {
+    pub fn update_variable(&mut self, name: &str, value: f32) -> Result<()> {
         if let Some(var) = self.variables.get_mut(name) {
             var.update(value);
-            Ok(var.clone())
+            Ok(())
         } else {
             Err(anyhow::anyhow!(
                 "Variable '{}' not found in the environment",
@@ -265,7 +265,7 @@ mod tests {
         env.add_variable(var);
 
         // act
-        let result = env.update_variable("x", 25.0);
+        let _ = env.update_variable("x", 25.0);
 
         // assert
         let updated_var = env.get_variable("x").unwrap();
@@ -417,7 +417,7 @@ mod tests {
         let env2 = Environment::from_variables(vec![var2.clone()]);
 
         // act
-        let merged = env1.merge(&env2);
+        let _ = env1.merge(&env2);
 
         // assert
         assert_eq!(env1.list_variables().len(), 1);
