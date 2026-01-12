@@ -1,6 +1,6 @@
 use crate::{
     environment::Environment,
-    equation::{Equation, EquationError, constant::ConstantEquation},
+    equation::{Equation, EquationError},
     variable::Variable,
 };
 
@@ -24,33 +24,6 @@ impl Equation for MonomialEquation {
             .ok_or_else(|| EquationError::NoVariableInEnvironment(vec![self.variable.clone()]))?;
 
         Ok(self.factor * variable.value().powf(self.exponent as f32))
-    }
-
-    fn derive(&self, variable: &Variable) -> Option<Box<dyn Equation>> {
-        if self.variable == variable.name() {
-            match self.exponent {
-                1 => {
-                    // derivative of x^1 is 1
-                    Some(ConstantEquation::new(self.factor).into())
-                }
-                0 => {
-                    // derivative of x^0 is 0
-                    None
-                }
-                _ => {
-                    // power rule: d/dx [x^n] = n*x^(n-1)
-                    let new_exponent = self.exponent - 1;
-                    let new_variable_equation = MonomialEquation::new(
-                        self.factor * (self.exponent as f32),
-                        &self.variable,
-                        new_exponent,
-                    );
-                    Some(new_variable_equation.into())
-                }
-            }
-        } else {
-            None
-        }
     }
 
     fn is_variable_related(&self, variable: &Variable) -> bool {
@@ -281,89 +254,6 @@ mod tests {
         assert_eq!(result1.unwrap(), 75.0); // 3 * 5^2 = 3 * 25 = 75
         assert_eq!(result2.unwrap(), 75.0);
         assert_eq!(result3.unwrap(), 75.0);
-    }
-
-    mod derive_tests {
-        use super::*;
-        use pretty_assertions::assert_eq;
-        use rstest::rstest;
-
-        #[rstest]
-        #[case(1.0, "x", 1, "x", Some("1"))]
-        #[case(5.0, "x", 1, "x", Some("5"))]
-        #[case(1.0, "x", 2, "x", Some("2x^1"))]
-        #[case(1.0, "x", 3, "x", Some("3x^2"))]
-        #[case(3.0, "x", 2, "x", Some("6x^1"))]
-        #[case(2.0, "x", 3, "x", Some("6x^2"))]
-        #[case(4.0, "y", 2, "y", Some("8y^1"))]
-        fn test_derive_with_power_rule(
-            #[case] factor: f32,
-            #[case] var_name: &str,
-            #[case] exponent: i32,
-            #[case] derive_var: &str,
-            #[case] expected: Option<&str>,
-        ) {
-            // arrange
-            let equation = MonomialEquation::new(factor, var_name, exponent);
-            let variable = Variable::new(derive_var, 0.0);
-
-            // act
-            let result = equation.derive(&variable);
-
-            // assert
-            match expected {
-                Some(expected_str) => {
-                    assert!(result.is_some());
-                    assert_eq!(format!("{}", result.unwrap()), expected_str);
-                }
-                None => {
-                    assert_eq!(result, None);
-                }
-            }
-        }
-
-        #[rstest]
-        #[case(5.0, "x", 0, "x")]
-        #[case(10.0, "x", 0, "x")]
-        #[case(1.0, "y", 0, "y")]
-        fn test_derive_with_zero_exponent_returns_none(
-            #[case] factor: f32,
-            #[case] var_name: &str,
-            #[case] exponent: i32,
-            #[case] derive_var: &str,
-        ) {
-            // arrange
-            let equation = MonomialEquation::new(factor, var_name, exponent);
-            let variable = Variable::new(derive_var, 0.0);
-
-            // act
-            let result = equation.derive(&variable);
-
-            // assert
-            assert_eq!(result, None);
-        }
-
-        #[rstest]
-        #[case(2.0, "x", 2, "y")]
-        #[case(3.0, "x", 3, "z")]
-        #[case(1.0, "a", 1, "b")]
-        #[case(5.0, "foo", 2, "bar")]
-        fn test_derive_with_different_variable_returns_none(
-            #[case] factor: f32,
-            #[case] var_name: &str,
-            #[case] exponent: i32,
-            #[case] derive_var: &str,
-        ) {
-            // arrange
-            let equation = MonomialEquation::new(factor, var_name, exponent);
-            let variable = Variable::new(derive_var, 0.0);
-
-            // act
-            let result = equation.derive(&variable);
-
-            // assert
-            assert_eq!(result, None);
-        }
     }
 
     mod is_variable_related_tests {

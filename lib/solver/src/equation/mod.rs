@@ -24,15 +24,6 @@ pub trait Equation: std::fmt::Debug + EquationClone + Display {
     /// result of equation with the environment. Error when some errors
     fn evaluate(&self, env: &Environment) -> Result<f32, EquationError>;
 
-    /// derive a derivative for the equation with respect to the variable
-    ///
-    /// # Arguments
-    /// * `variable` - The variable to derive with respect to
-    ///
-    /// # Returns
-    /// The derived equation. None if it can not be derived.
-    fn derive(&self, variable: &Variable) -> Option<Box<dyn Equation>>;
-
     /// return the equation related or not
     fn is_variable_related(&self, variable: &Variable) -> bool;
 }
