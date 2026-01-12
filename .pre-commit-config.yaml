@@ -13,10 +13,3 @@ repos:
       entry: leptosfmt
       language: system
       files: "\\.rs$"
-    - id: clippy
-      name: clippy
-      entry: cargo
-      language: system
-      files: "\\.rs$"
-      pass_filenames: false
-      args: ["clippy", "--fix", "--workspace", "--allow-dirty", "--allow-staged"]
