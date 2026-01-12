@@ -43,13 +43,13 @@ where
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum Solve {
+pub(crate) enum Solve {
     Singular,
     Solved(Vector),
 }
 
 /// Solve the matrix and return result as vector. If can not solve the matrix (when all values in the column are 0), Err with error.
-pub fn solve<M: Matrix<f32>>(mat: &M, factors: &Vector) -> Result<Solve> {
+pub(crate) fn solve<M: Matrix<f32>>(mat: &M, factors: &Vector) -> Result<Solve> {
     let mut mat = SimpleMatrix::from_matrix(mat);
     let mut factors = factors.clone();
 
@@ -66,8 +66,8 @@ pub fn solve<M: Matrix<f32>>(mat: &M, factors: &Vector) -> Result<Solve> {
                 continue;
             };
 
-            if v.abs() > max_value {
-                max_value = v.abs();
+            if v.abs() > max_value.abs() {
+                max_value = v;
                 max_index = i;
             }
         }
@@ -85,7 +85,6 @@ pub fn solve<M: Matrix<f32>>(mat: &M, factors: &Vector) -> Result<Solve> {
             factors[max_index] = old;
         }
         // normalize `k` row
-
         if max_value.abs() < 1e-10 {
             return Ok(Solve::Singular);
         }
@@ -119,7 +118,9 @@ pub fn solve<M: Matrix<f32>>(mat: &M, factors: &Vector) -> Result<Solve> {
     // backward substitution
     for k in (0..factors.len()).rev() {
         for i in 0..k {
-            let kv = mat.get(i, k)?.copied().unwrap_or(0.0);
+            let Some(kv) = mat.get(i, k)?.copied() else {
+                continue;
+            };
 
             for j in 0..mat.size().columns() {
                 let kj = mat.get(k, j)?.copied().unwrap_or(0.0);
