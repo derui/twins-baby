@@ -15,8 +15,8 @@ repos:
       files: "\\.rs$"
     - id: clippy
       name: clippy
-      entry: cargo clippy
+      entry: cargo
       language: system
       files: "\\.rs$"
       pass_filenames: false
-      args: ["--fix", "--workspace"]
+      args: ["clippy", "--fix", "--workspace", "--allow-dirty", "--allow-staged"]
