@@ -7,13 +7,13 @@ use crate::{
     equation::Equation,
     matrix::{
         Matrix, MatrixExtract,
-        op::{Solve, determinant, solve},
+        op::{Solve, solve},
         simple::SimpleMatrix,
         size::Size,
         sparse::SparseMatrix,
     },
     variable::Variable,
-    vector::{TransposeMethod, Vector},
+    vector::Vector,
 };
 
 pub mod environment;
@@ -22,34 +22,52 @@ pub mod matrix;
 pub mod variable;
 pub mod vector;
 
-const DEFAULT_EPSILON: f32 = 1e-5;
+const DEFAULT_EPSILON: f32 = 1e-10;
 
 /// Internal Jacobian matrix. It is a matrix of constraint matrix.
-struct Jacobian(SparseMatrix<Box<dyn equation::Equation>>);
+struct Jacobian(SparseMatrix<(Box<dyn equation::Equation>, String)>, f32);
 
 impl Jacobian {
     /// Create Jacobian from equations and variables
     fn from_equations(
         equations: &[Box<dyn Equation>],
         variables: &[Variable],
+        accuracy: f32,
     ) -> Result<Self, anyhow::Error> {
         if equations.len() != variables.len() {
             return Err(anyhow!("Can not create valid jacobian"));
         }
+        let mut variables = Vec::from(variables);
+        variables.sort_by_key(|v| v.name());
 
         let mut matrix = SimpleMatrix::new(equations.len(), equations.len())?;
 
         for (i, equation) in equations.iter().enumerate() {
             for (j, variable) in variables.iter().enumerate() {
-                // keep empty when can not derive
-                let Some(derived) = equation.derive(variable) else {
+                // keep empty when the equation is not contains the variable
+                if !equation.is_variable_related(variable) {
                     continue;
-                };
-                matrix.set(i, j, derived)?;
+                }
+                matrix.set(i, j, (equation.clone(), variable.name()))?;
             }
         }
 
-        Ok(Jacobian(SparseMatrix::from_matrix(&matrix)))
+        Ok(Jacobian(SparseMatrix::from_matrix(&matrix), accuracy))
+    }
+
+    /// Resolve forwarded
+    fn forward(&self, env: Environment) -> impl Matrix<f32> {
+        self.0.extract(move |(e, name)| {
+            let mut new_env = env.clone();
+            if let Some(v) = new_env.get_variable(name) {
+                new_env
+                    .update_variable(name, v.value() + self.1)
+                    .expect("must be valid");
+            }
+
+            let origin = e.evaluate(&env).unwrap_or(0.0);
+            (e.evaluate(&new_env).unwrap_or(0.0) - origin) / self.1
+        })
     }
 }
 
@@ -155,7 +173,10 @@ impl Solver {
     pub fn new(generator: Box<dyn EquationIdGenerator>) -> Self {
         Solver {
             status: DimensionSpecificationStatus::Incorrect,
-            jacobian: Jacobian(SparseMatrix::empty(Size::new(1, 1)).expect("should be suceess")),
+            jacobian: Jacobian(
+                SparseMatrix::empty(Size::new(1, 1)).expect("should be suceess"),
+                DEFAULT_EPSILON,
+            ),
             variables: Environment::empty(),
             dimensions: Environment::empty(),
             equations: HashMap::new(),
@@ -211,17 +232,16 @@ impl Solver {
         match self.status {
             DimensionSpecificationStatus::Incorrect => (),
             DimensionSpecificationStatus::Correct => {
-                let mut equations = self.equations.iter().collect::<Vec<_>>();
+                let mut equations: Vec<_> = self.equations.iter().collect();
                 equations.sort_by_key(|(k, _)| *k);
-                let equations = equations
-                    .iter()
-                    .map(|(_, v)| *v)
-                    .cloned()
-                    .collect::<Vec<_>>();
+                let equations: Vec<_> = equations.iter().map(|(_, v)| *v).cloned().collect();
 
-                self.jacobian =
-                    Jacobian::from_equations(&equations, &self.variables.list_variables())
-                        .expect("Must be valid")
+                self.jacobian = Jacobian::from_equations(
+                    &equations,
+                    &self.variables.list_variables(),
+                    self.epsilon,
+                )
+                .expect("Must be valid")
             }
         }
     }
@@ -272,55 +292,41 @@ impl Solver {
         }
 
         // make direct solve
-        // x_1 = x_0 - J_0^-1 * f_0 -> J_0 * x_1 = J_0 * x_0 - f_0 -> Ax = b
+        // x_1 = x_0 - J_0^-1 * f_0 -> J_0 * x_delta = - f_0
         let mut ordered = self.variables.list_variables();
         ordered.sort_by_key(|f| f.name());
         let mut equation_order = self.equations.keys().collect::<Vec<_>>();
         equation_order.sort();
-        let equations: Vec<&Box<dyn Equation>> =
-            equation_order.iter().map(|k| &self.equations[k]).collect();
+        let equations: Vec<_> = equation_order.iter().map(|k| &self.equations[k]).collect();
 
         // initial value
         let mut x0 = Vector::from(&ordered.iter().map(|f| f.value()).collect::<Vec<_>>())?;
 
-        let j0 = {
-            let extractor = self.variables.clone().merge(&self.dimensions);
-            self.jacobian.0.extract(move |e| {
-                e.evaluate(&extractor)
-                    .expect("this evaluation must success")
-            })
-        };
-
-        // resolve targets
-        let x1 = Vector::zero(x0.len())?;
-
-        dbg!(determinant(&j0));
-
+        // Do newton-rhapson method
         loop {
             // calculate rhs. this result is simple vector that is column-transposed
+            let extractor = self.variables.merge(&self.dimensions);
+            dbg!(&extractor);
             let b = {
-                let extractor = self.variables.clone().merge(&self.dimensions);
                 let f0 = equations
                     .iter()
-                    .map(move |e| e.evaluate(&extractor).unwrap_or(0.0))
+                    .map(|e| e.evaluate(&extractor).unwrap_or(0.0))
                     .collect::<Vec<_>>();
-                let x0 = x0.to_matrix(TransposeMethod::Column);
-                let b = matrix::op::mul(&j0, &x0)?;
-                let mut ret = Vector::zero(ordered.len())?;
 
-                for i in 0..ret.len() {
-                    ret[i] = b.get(i, 0)?.copied().unwrap_or(0.0) - f0[i];
-                }
-
-                ret
+                Vector::from(&f0)? * -1.0
             };
+
+            let j0 = self.jacobian.forward(extractor);
+            dbg!(&j0);
 
             // direct solve x1
-            let Solve::Solved(x1) = solve(&j0, &b)? else {
-                return Err(anyhow!("Can not solve in this equation"));
+            let Solve::Solved(x_delta) = solve(&j0, &b)? else {
+                break;
             };
 
-            dbg!("{:?}, {:?}, {:?}", &b, &x1, &self.jacobian.0);
+            let x1 = (x0.clone() + x_delta)?;
+
+            dbg!("{:?}, {:?}", &b, &x1);
             println!(
                 "diff: {}, {}, {}",
                 x0.norm(),
@@ -335,20 +341,11 @@ impl Solver {
             // update variable for next loop
             for i in 0..(ordered.len()) {
                 self.variables.update_variable(&ordered[i].name(), x1[i])?;
-                x0[i] = x1[i]
             }
-            break;
+            x0 = x1.clone();
         }
 
-        let mut result = Environment::empty();
-
-        for i in 0..(ordered.len()) {
-            let mut v = ordered[i].clone();
-            v.update(x1[i]);
-            result.add_variable(v);
-        }
-
-        Ok(result)
+        Ok(self.variables.clone())
     }
 }
 
@@ -357,7 +354,6 @@ mod tests {
     mod status {
         use crate::environment::Environment;
         use crate::equation::Equation;
-        use crate::equation::constant::ConstantEquation;
         use crate::variable::Variable;
         use crate::{DefaultEquationIdGenerator, DimensionSpecificationStatus, Solver};
         use pretty_assertions::assert_eq;
@@ -393,7 +389,7 @@ mod tests {
             // Arrange
             let generator = Box::new(DefaultEquationIdGenerator::default());
             let mut solver = Solver::new(generator);
-            let equation: Box<dyn Equation> = Box::new(ConstantEquation::new(1.0));
+            let equation: Box<dyn Equation> = 1.0.into();
 
             // Act
             solver.add_equation(equation);
@@ -408,7 +404,7 @@ mod tests {
             let generator = Box::new(DefaultEquationIdGenerator::default());
             let mut solver = Solver::new(generator);
             let env = Environment::from_variables(vec![Variable::new("x", 1.0)]);
-            let equation: Box<dyn Equation> = Box::new(ConstantEquation::new(1.0));
+            let equation: Box<dyn Equation> = 1.0.into();
 
             // Act
             solver.add_equation(equation);
@@ -430,9 +426,9 @@ mod tests {
             ]);
 
             // Act
-            solver.add_equation(Box::new(ConstantEquation::new(1.0)));
-            solver.add_equation(Box::new(ConstantEquation::new(2.0)));
-            solver.add_equation(Box::new(ConstantEquation::new(3.0)));
+            solver.add_equation(1.0.into());
+            solver.add_equation(2.0.into());
+            solver.add_equation(3.0.into());
             solver.update_variables(&env);
 
             // Assert
@@ -445,7 +441,7 @@ mod tests {
             let generator = Box::new(DefaultEquationIdGenerator::default());
             let mut solver = Solver::new(generator);
             let env1 = Environment::from_variables(vec![Variable::new("x", 1.0)]);
-            solver.add_equation(Box::new(ConstantEquation::new(1.0)));
+            solver.add_equation(1.0.into());
             solver.update_variables(&env1);
 
             // Act
@@ -463,7 +459,7 @@ mod tests {
             let generator = Box::new(DefaultEquationIdGenerator::default());
             let mut solver = Solver::new(generator);
             let env = Environment::from_variables(vec![Variable::new("x", 1.0)]);
-            let eq_id = solver.add_equation(Box::new(ConstantEquation::new(1.0)));
+            let eq_id = solver.add_equation(1.0.into());
             solver.update_variables(&env);
 
             // Act
@@ -477,9 +473,8 @@ mod tests {
     mod solve {
         use crate::environment::Environment;
         use crate::equation::arithmetic::{self, ArithmeticEquation};
-        use crate::equation::constant::ConstantEquation;
         use crate::equation::monomial::MonomialEquation;
-        use crate::equation::{self, Equation};
+        use crate::equation::{Equation, Ops};
         use crate::variable::Variable;
         use crate::{DefaultEquationIdGenerator, DimensionSpecificationStatus, Solver};
         use approx::assert_relative_eq;
@@ -492,83 +487,28 @@ mod tests {
             let mut solver = Solver::new(generator);
             let env =
                 Environment::from_tuples(&[("x1", 0.0), ("y1", 0.0), ("x2", 1.0), ("y2", 1.0)]);
-            let dimension = Environment::from_tuples(&[("d", 3.0)]);
+            let dimension = Environment::from_tuples(&[("d", 4.5)]);
             solver.update_variables(&env);
             solver.update_dimensions(&dimension);
             // x1 - 3 = 0
-            solver.add_equation(Box::new(ArithmeticEquation::new(
-                arithmetic::Operator::Subtract,
-                &[
-                    MonomialEquation::new(1.0, "x1", 1).into(),
-                    ConstantEquation::new(3.0).into(),
-                ],
-            )?));
+            solver.add_equation((Into::<Ops>::into("x1") - 3.0.into()).into());
             // y1 - 0 = 0
-            solver.add_equation(Box::new(ArithmeticEquation::new(
-                arithmetic::Operator::Subtract,
-                &[
-                    MonomialEquation::new(1.0, "y1", 1).into(),
-                    ConstantEquation::new(0.0).into(),
-                ],
-            )?));
+            solver.add_equation(Into::<Ops>::into("y1").into());
+
             // (x2 - x1)^2 + (y2 - y1)^2 - d^2 = 0
             // = x2^2 - 2 * x2 * x1 + x1^2 + y2^2 - 2 * y2 * y1 + y1^2 - d^2 = 0
             solver.add_equation({
-                let first = ArithmeticEquation::new(
-                    arithmetic::Operator::Add,
-                    &[
-                        ArithmeticEquation::new(
-                            arithmetic::Operator::Subtract,
-                            &[
-                                MonomialEquation::new(1.0, "x2", 2).into(),
-                                ArithmeticEquation::new(
-                                    arithmetic::Operator::Multiply,
-                                    &[
-                                        ConstantEquation::new(2.0).into(),
-                                        MonomialEquation::new(1.0, "x2", 2).into(),
-                                        MonomialEquation::new(1.0, "x1", 2).into(),
-                                    ],
-                                )?
-                                .into(),
-                            ],
-                        )?
-                        .into(),
-                        MonomialEquation::new(1.0, "x1", 2).into(),
-                    ],
-                )?;
-                let second = ArithmeticEquation::new(
-                    arithmetic::Operator::Add,
-                    &[
-                        ArithmeticEquation::new(
-                            arithmetic::Operator::Subtract,
-                            &[
-                                MonomialEquation::new(1.0, "y2", 2).into(),
-                                ArithmeticEquation::new(
-                                    arithmetic::Operator::Multiply,
-                                    &[
-                                        ConstantEquation::new(2.0).into(),
-                                        MonomialEquation::new(1.0, "y2", 2).into(),
-                                        MonomialEquation::new(1.0, "y1", 2).into(),
-                                    ],
-                                )?
-                                .into(),
-                            ],
-                        )?
-                        .into(),
-                        MonomialEquation::new(1.0, "y1", 2).into(),
-                    ],
-                )?;
-                let third = MonomialEquation::new(1.0, "d", 2);
+                let first: Ops = Into::<Ops>::into(("x2", 2))
+                    - (Ops::constant(2.0) * "x2".into() * "x1".into())
+                    + ("x2", 2).into();
 
-                let forth = ArithmeticEquation::new(
-                    arithmetic::Operator::Add,
-                    &[first.into(), second.into()],
-                )?;
-                ArithmeticEquation::new(
-                    arithmetic::Operator::Subtract,
-                    &[forth.into(), third.into()],
-                )?
-                .into()
+                let second: Ops = Into::<Ops>::into(("y2", 2))
+                    - (Ops::constant(2.0) * "y2".into() * "y1".into())
+                    + ("y2", 2).into();
+
+                let third = Into::<Ops>::into(("d", 2));
+
+                (first + second - third).into()
             });
             // y2 - y1 = 0
             solver.add_equation(
@@ -589,8 +529,8 @@ mod tests {
             assert_eq!(solver.status(), DimensionSpecificationStatus::Correct);
             assert_relative_eq!(ret.get_variable("x1").unwrap().value(), 3.0, epsilon = 1e-5);
             assert_relative_eq!(ret.get_variable("y1").unwrap().value(), 0.0, epsilon = 1e-5);
-            assert_relative_eq!(ret.get_variable("x2").unwrap().value(), 2.0, epsilon = 1e-5);
-            assert_relative_eq!(ret.get_variable("y2").unwrap().value(), 4.0, epsilon = 1e-5);
+            assert_relative_eq!(ret.get_variable("x2").unwrap().value(), 0.0, epsilon = 1e-5);
+            assert_relative_eq!(ret.get_variable("y2").unwrap().value(), 0.0, epsilon = 1e-5);
             Ok(())
         }
 
@@ -613,7 +553,7 @@ mod tests {
             // Arrange
             let generator = Box::new(DefaultEquationIdGenerator::default());
             let mut solver = Solver::new(generator);
-            let equation: Box<dyn Equation> = Box::new(ConstantEquation::new(1.0));
+            let equation: Box<dyn Equation> = 1.0.into();
 
             // Act
             solver.add_equation(equation);
@@ -628,7 +568,7 @@ mod tests {
             let generator = Box::new(DefaultEquationIdGenerator::default());
             let mut solver = Solver::new(generator);
             let env = Environment::from_variables(vec![Variable::new("x", 1.0)]);
-            let equation: Box<dyn Equation> = Box::new(ConstantEquation::new(1.0));
+            let equation: Box<dyn Equation> = 1.0.into();
 
             // Act
             solver.add_equation(equation);
@@ -650,9 +590,9 @@ mod tests {
             ]);
 
             // Act
-            solver.add_equation(Box::new(ConstantEquation::new(1.0)));
-            solver.add_equation(Box::new(ConstantEquation::new(2.0)));
-            solver.add_equation(Box::new(ConstantEquation::new(3.0)));
+            solver.add_equation(1.0.into());
+            solver.add_equation(2.0.into());
+            solver.add_equation(3.0.into());
             solver.update_variables(&env);
 
             // Assert
@@ -665,7 +605,7 @@ mod tests {
             let generator = Box::new(DefaultEquationIdGenerator::default());
             let mut solver = Solver::new(generator);
             let env1 = Environment::from_variables(vec![Variable::new("x", 1.0)]);
-            solver.add_equation(Box::new(ConstantEquation::new(1.0)));
+            solver.add_equation(1.0.into());
             solver.update_variables(&env1);
 
             // Act
@@ -683,7 +623,7 @@ mod tests {
             let generator = Box::new(DefaultEquationIdGenerator::default());
             let mut solver = Solver::new(generator);
             let env = Environment::from_variables(vec![Variable::new("x", 1.0)]);
-            let eq_id = solver.add_equation(Box::new(ConstantEquation::new(1.0)));
+            let eq_id = solver.add_equation(1.0.into());
             solver.update_variables(&env);
 
             // Act

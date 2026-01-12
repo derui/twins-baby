@@ -10,9 +10,9 @@ pub(crate) struct ConstantEquation {
     value: f32,
 }
 
-impl Equation for ConstantEquation {
+impl Equation for f32 {
     fn evaluate(&self, _env: &Environment) -> Result<f32, EquationError> {
-        Ok(self.value)
+        Ok(*self)
     }
 
     fn is_variable_related(&self, _variable: &Variable) -> bool {
@@ -26,16 +26,9 @@ impl std::fmt::Display for ConstantEquation {
     }
 }
 
-impl From<ConstantEquation> for Box<dyn Equation> {
-    fn from(value: ConstantEquation) -> Self {
-        Box::new(value.clone())
-    }
-}
-
-impl ConstantEquation {
-    /// Get a new constant equation with value
-    pub(crate) fn new(value: f32) -> Self {
-        ConstantEquation { value }
+impl From<f32> for Box<dyn Equation> {
+    fn from(value: f32) -> Self {
+        Box::new(value)
     }
 }
 
@@ -47,42 +40,9 @@ mod tests {
     use pretty_assertions::assert_eq;
 
     #[test]
-    fn test_new_creates_constant_equation_with_positive_value() {
-        // arrange
-
-        // act
-        let equation = ConstantEquation::new(42.5);
-
-        // assert
-        assert_eq!(equation.value, 42.5);
-    }
-
-    #[test]
-    fn test_new_creates_constant_equation_with_negative_value() {
-        // arrange
-
-        // act
-        let equation = ConstantEquation::new(-15.3);
-
-        // assert
-        assert_eq!(equation.value, -15.3);
-    }
-
-    #[test]
-    fn test_new_creates_constant_equation_with_zero() {
-        // arrange
-
-        // act
-        let equation = ConstantEquation::new(0.0);
-
-        // assert
-        assert_eq!(equation.value, 0.0);
-    }
-
-    #[test]
     fn test_evaluate_returns_constant_value_with_empty_environment() {
         // arrange
-        let equation = ConstantEquation::new(100.0);
+        let equation = 100.0;
         let env = Environment::empty();
 
         // act
@@ -95,7 +55,7 @@ mod tests {
     #[test]
     fn test_evaluate_returns_constant_value_with_populated_environment() {
         // arrange
-        let equation = ConstantEquation::new(25.0);
+        let equation = 25.0;
         let var1 = Variable::new("x", 10.0);
         let var2 = Variable::new("y", 20.0);
         let env = Environment::from_variables(vec![var1, var2]);
@@ -110,7 +70,7 @@ mod tests {
     #[test]
     fn test_evaluate_returns_same_value_on_multiple_calls() {
         // arrange
-        let equation = ConstantEquation::new(7.5);
+        let equation = 7.5;
         let env = Environment::empty();
 
         // act
@@ -127,7 +87,7 @@ mod tests {
     #[test]
     fn test_evaluate_with_different_environments_returns_same_value() {
         // arrange
-        let equation = ConstantEquation::new(50.0);
+        let equation = 50.0;
         let env1 = Environment::empty();
         let env2 = Environment::from_variables(vec![Variable::new("x", 100.0)]);
         let env3 = Environment::from_variables(vec![
@@ -150,7 +110,7 @@ mod tests {
     #[test]
     fn test_is_variable_related_returns_false_for_any_variable() {
         // arrange
-        let equation = ConstantEquation::new(42.0);
+        let equation = 42.0;
         let var_x = Variable::new("x", 0.0);
 
         // act
