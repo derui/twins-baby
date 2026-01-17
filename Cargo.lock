@@ -2461,6 +2461,10 @@ dependencies = [
 [[package]]
 name = "epsilon"
 version = "0.1.0"
+dependencies = [
+ "pretty_assertions",
+ "rstest",
+]
 
 [[package]]
 name = "equivalent"
