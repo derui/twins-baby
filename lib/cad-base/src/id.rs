@@ -1,4 +1,4 @@
-use std::marker::PhantomData;
+use std::{fmt::Display, marker::PhantomData};
 
 /// A unique identifier for a plane.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -14,6 +14,12 @@ impl PlaneId {
 impl From<u64> for PlaneId {
     fn from(id: u64) -> Self {
         PlaneId(id)
+    }
+}
+
+impl Display for PlaneId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Plane{}", self.0)
     }
 }
 
@@ -34,6 +40,12 @@ impl From<u64> for EdgeId {
     }
 }
 
+impl Display for EdgeId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Edge{}", self.0)
+    }
+}
+
 /// A unique identifier for a point.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PointId(u64);
@@ -48,6 +60,12 @@ impl PointId {
 impl From<u64> for PointId {
     fn from(id: u64) -> Self {
         PointId(id)
+    }
+}
+
+impl Display for PointId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Point{}", self.0)
     }
 }
 
