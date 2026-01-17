@@ -14,12 +14,10 @@ This is a Rust web application that combines Leptos (frontend framework) with Be
 - `trunk build --release` - Build optimized release version
 
 ### Code Formatting and Linting
-- `rustfmt --edition 2024 src/**/*.rs` - Format Rust code
-- `leptosfmt src/**/*.rs` - Format Leptos components
-- `pre-commit run --all-files` - Run all pre-commit hooks
+- `task lint` - Format and lint Rust code
 
 ### Testing
-No specific test commands are configured in this project yet.
+- `task test` - to run test.
 
 ## Architecture
 
