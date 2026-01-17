@@ -1740,6 +1740,7 @@ dependencies = [
  "anyhow",
  "approx",
  "pretty_assertions",
+ "rstest",
 ]
 
 [[package]]
