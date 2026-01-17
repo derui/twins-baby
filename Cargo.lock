@@ -1741,6 +1741,7 @@ dependencies = [
  "approx",
  "epsilon",
  "pretty_assertions",
+ "rand",
  "rstest",
 ]
 
