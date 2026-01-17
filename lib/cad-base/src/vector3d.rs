@@ -74,6 +74,21 @@ impl Vector3d {
 
         self / norm
     }
+
+    pub fn add(&self, rhs: &Vector3d) -> Self {
+        Vector3d::new(self.x() + rhs.x(), self.y() + rhs.y(), self.z() + rhs.z())
+    }
+
+    pub fn subtract(&self, rhs: &Vector3d) -> Self {
+        Vector3d::new(self.x() - rhs.x(), self.y() - rhs.y(), self.z() - rhs.z())
+    }
+
+    pub fn multiply(&self, rhs: f32) -> Self {
+        Vector3d::new(self.x() * rhs, self.y() * rhs, self.z() * rhs)
+    }
+    pub fn divide(&self, rhs: f32) -> Self {
+        Vector3d::new(self.x() / rhs, self.y() / rhs, self.z() / rhs)
+    }
 }
 
 impl From<(f32, f32, f32)> for Vector3d {
@@ -107,7 +122,7 @@ impl Add<&Vector3d> for &Vector3d {
     type Output = Vector3d;
 
     fn add(self, rhs: &Vector3d) -> Self::Output {
-        Vector3d::new(self.x() + rhs.x(), self.y() + rhs.y(), self.z() + rhs.z())
+        self.add(rhs)
     }
 }
 
@@ -115,7 +130,7 @@ impl Add<Vector3d> for &Vector3d {
     type Output = Vector3d;
 
     fn add(self, rhs: Vector3d) -> Self::Output {
-        self + rhs
+        self.add(&rhs)
     }
 }
 
@@ -123,7 +138,7 @@ impl Add<&Vector3d> for Vector3d {
     type Output = Vector3d;
 
     fn add(self, rhs: &Vector3d) -> Self::Output {
-        self + rhs
+        Vector3d::add(&self, rhs)
     }
 }
 
@@ -140,7 +155,7 @@ impl Sub<&Vector3d> for &Vector3d {
     type Output = Vector3d;
 
     fn sub(self, rhs: &Vector3d) -> Self::Output {
-        Vector3d::new(self.x() - rhs.x(), self.y() - rhs.y(), self.z() - rhs.z())
+        self.subtract(rhs)
     }
 }
 
@@ -148,7 +163,7 @@ impl Sub<Vector3d> for &Vector3d {
     type Output = Vector3d;
 
     fn sub(self, rhs: Vector3d) -> Self::Output {
-        self - rhs
+        self.subtract(&rhs)
     }
 }
 impl Sub<Vector3d> for Vector3d {
@@ -163,7 +178,7 @@ impl Sub<&Vector3d> for Vector3d {
     type Output = Vector3d;
 
     fn sub(self, rhs: &Vector3d) -> Self::Output {
-        self - rhs
+        self.subtract(rhs)
     }
 }
 
@@ -172,7 +187,7 @@ impl Mul<f32> for &Vector3d {
     type Output = Vector3d;
 
     fn mul(self, rhs: f32) -> Self::Output {
-        Vector3d::new(self.0 * rhs, self.1 * rhs, self.2 * rhs)
+        self.multiply(rhs)
     }
 }
 
@@ -180,7 +195,7 @@ impl Mul<f32> for Vector3d {
     type Output = Vector3d;
 
     fn mul(self, rhs: f32) -> Self::Output {
-        self * rhs
+        self.multiply(rhs)
     }
 }
 
@@ -204,7 +219,7 @@ impl Div<f32> for &Vector3d {
     type Output = Vector3d;
 
     fn div(self, rhs: f32) -> Self::Output {
-        Vector3d::new(self.0 / rhs, self.1 / rhs, self.2 / rhs)
+        self.divide(rhs)
     }
 }
 
@@ -219,7 +234,7 @@ impl Div<f32> for Vector3d {
     type Output = Vector3d;
 
     fn div(self, rhs: f32) -> Self::Output {
-        &self / rhs
+        self.divide(rhs)
     }
 }
 
