@@ -12,6 +12,11 @@ impl Point {
         Point(x, y, z)
     }
 
+    /// Get a new zero point
+    pub fn zero() -> Self {
+        Point(0.0, 0.0, 0.0)
+    }
+
     /// Get X of the [Point]
     #[inline]
     pub fn x(&self) -> &f32 {

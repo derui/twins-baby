@@ -11,6 +11,21 @@ impl Vector3d {
         Vector3d(x, y, z)
     }
 
+    /// Get a new X unit vector
+    pub fn new_x_unit() -> Self {
+        Vector3d(1.0, 0.0, 0.0)
+    }
+
+    /// Get a new Y unit vector
+    pub fn new_y_unit() -> Self {
+        Vector3d(0.0, 1.0, 0.0)
+    }
+
+    /// Get a new Z unit vector
+    pub fn new_z_unit() -> Self {
+        Vector3d(0.0, 0.0, 1.0)
+    }
+
     /// Get reference of X
     pub fn x(&self) -> &f32 {
         &self.0
@@ -100,7 +115,7 @@ impl Add<Vector3d> for &Vector3d {
     type Output = Vector3d;
 
     fn add(self, rhs: Vector3d) -> Self::Output {
-        self + &rhs
+        self + rhs
     }
 }
 
@@ -108,7 +123,7 @@ impl Add<&Vector3d> for Vector3d {
     type Output = Vector3d;
 
     fn add(self, rhs: &Vector3d) -> Self::Output {
-        &self + rhs
+        self + rhs
     }
 }
 
@@ -133,7 +148,7 @@ impl Sub<Vector3d> for &Vector3d {
     type Output = Vector3d;
 
     fn sub(self, rhs: Vector3d) -> Self::Output {
-        self - &rhs
+        self - rhs
     }
 }
 impl Sub<Vector3d> for Vector3d {
@@ -148,7 +163,7 @@ impl Sub<&Vector3d> for Vector3d {
     type Output = Vector3d;
 
     fn sub(self, rhs: &Vector3d) -> Self::Output {
-        &self - rhs
+        self - rhs
     }
 }
 
@@ -165,7 +180,7 @@ impl Mul<f32> for Vector3d {
     type Output = Vector3d;
 
     fn mul(self, rhs: f32) -> Self::Output {
-        &self * rhs
+        self * rhs
     }
 }
 
