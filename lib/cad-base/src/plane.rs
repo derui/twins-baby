@@ -1,18 +1,23 @@
+use std::marker::PhantomData;
+
 use anyhow::{self, Result};
+use epsilon::{DefaultEpsilon, Epsilon, approx_zero};
 
 use crate::{edge::Edge, point::Point, vector3d::Vector3d};
 
 /// Simple plane definition.
 #[derive(Debug, Clone, PartialEq)]
-pub struct Plane {
+pub struct Plane<E: Epsilon = DefaultEpsilon> {
     /// normal vector of the vector
     normal: Vector3d,
 
     /// point on the plane
     r0: Point,
+
+    _data: PhantomData<E>,
 }
 
-impl Plane {
+impl<E: Epsilon> Plane<E> {
     /// Create a new plane that makes 2 edges and crossed the 2 edges.
     pub fn new(edge1: &Edge, edge2: &Edge) -> Result<Self> {
         let v1 = Vector3d::from_edge(edge1);
@@ -27,6 +32,7 @@ impl Plane {
             Ok(Plane {
                 normal: crossed.unit(),
                 r0: *edge1.start(),
+                _data: PhantomData,
             })
         }
     }
@@ -36,6 +42,7 @@ impl Plane {
         Plane {
             normal: Vector3d::new_z_unit(),
             r0: Point::zero(),
+            _data: PhantomData,
         }
     }
 
@@ -44,6 +51,7 @@ impl Plane {
         Plane {
             normal: Vector3d::new_y_unit(),
             r0: Point::zero(),
+            _data: PhantomData,
         }
     }
 
@@ -52,12 +60,23 @@ impl Plane {
         Plane {
             normal: Vector3d::new_x_unit(),
             r0: Point::zero(),
+            _data: PhantomData,
         }
     }
 
     /// Get normal
     pub fn normal(&self) -> &Vector3d {
         &self.normal
+    }
+
+    /// Check the [point] on the plane or not
+    pub fn is_on_plane(&self, point: &Point) -> bool {
+        let r0: Vector3d = self.r0.into();
+        let r: Vector3d = point.into();
+
+        let ret = self.normal.dot(&(r0 - r));
+
+        approx_zero::<E>(ret.abs())
     }
 }
 
@@ -73,6 +92,8 @@ mod tests {
     fn edge(x1: f32, y1: f32, z1: f32, x2: f32, y2: f32, z2: f32) -> Edge {
         Edge::new(p(x1, y1, z1), p(x2, y2, z2)).unwrap()
     }
+
+    type Plane = super::Plane<DefaultEpsilon>;
 
     mod construction {
         use super::*;
@@ -266,6 +287,146 @@ mod tests {
             assert_relative_eq!(*normal1.x(), *normal2.x(), epsilon = 1e-5);
             assert_relative_eq!(*normal1.y(), *normal2.y(), epsilon = 1e-5);
             assert_relative_eq!(*normal1.z(), *normal2.z(), epsilon = 1e-5);
+        }
+    }
+
+    mod is_on_plane {
+        use super::*;
+
+        #[test]
+        fn returns_true_for_point_at_origin_on_xy_plane() {
+            // Arrange
+            let plane = Plane::new_xy();
+            let point = p(0.0, 0.0, 0.0);
+
+            // Act
+            let result = plane.is_on_plane(&point);
+
+            // Assert
+            assert!(result);
+        }
+
+        #[test]
+        fn returns_true_for_point_on_xy_plane() {
+            // Arrange
+            let plane = Plane::new_xy();
+            let point = p(5.0, 3.0, 0.0);
+
+            // Act
+            let result = plane.is_on_plane(&point);
+
+            // Assert
+            assert!(result);
+        }
+
+        #[test]
+        fn returns_false_for_point_above_xy_plane() {
+            // Arrange
+            let plane = Plane::new_xy();
+            let point = p(1.0, 1.0, 1.0);
+
+            // Act
+            let result = plane.is_on_plane(&point);
+
+            // Assert
+            assert!(!result);
+        }
+
+        #[test]
+        fn returns_false_for_point_below_xy_plane() {
+            // Arrange
+            let plane = Plane::new_xy();
+            let point = p(0.0, 0.0, -2.0);
+
+            // Act
+            let result = plane.is_on_plane(&point);
+
+            // Assert
+            assert!(!result);
+        }
+
+        #[test]
+        fn returns_true_for_point_on_xz_plane() {
+            // Arrange
+            let plane = Plane::new_xz();
+            let point = p(3.0, 0.0, 5.0);
+
+            // Act
+            let result = plane.is_on_plane(&point);
+
+            // Assert
+            assert!(result);
+        }
+
+        #[test]
+        fn returns_true_for_point_on_yz_plane() {
+            // Arrange
+            let plane = Plane::new_yz();
+            let point = p(0.0, 2.0, 4.0);
+
+            // Act
+            let result = plane.is_on_plane(&point);
+
+            // Assert
+            assert!(result);
+        }
+
+        #[test]
+        fn returns_true_for_edge_start_point() {
+            // Arrange
+            let edge1 = edge(1.0, 2.0, 3.0, 4.0, 2.0, 3.0);
+            let edge2 = edge(1.0, 2.0, 3.0, 1.0, 5.0, 3.0);
+            let plane = Plane::new(&edge1, &edge2).expect("should create plane");
+
+            // Act
+            let result = plane.is_on_plane(edge1.start());
+
+            // Assert
+            assert!(result);
+        }
+
+        #[test]
+        fn returns_true_for_edge_end_point() {
+            // Arrange
+            let edge1 = edge(0.0, 0.0, 0.0, 1.0, 0.0, 0.0);
+            let edge2 = edge(0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+            let plane = Plane::new(&edge1, &edge2).expect("should create plane");
+
+            // Act
+            let result = plane.is_on_plane(edge1.end());
+
+            // Assert
+            assert!(result);
+        }
+
+        #[test]
+        fn returns_true_for_point_on_custom_plane() {
+            // Arrange
+            let edge1 = edge(1.0, 1.0, 1.0, 2.0, 1.0, 1.0);
+            let edge2 = edge(1.0, 1.0, 1.0, 1.0, 2.0, 1.0);
+            let plane = Plane::new(&edge1, &edge2).expect("should create plane");
+            let point = p(5.0, 5.0, 1.0); // Any point with z=1
+
+            // Act
+            let result = plane.is_on_plane(&point);
+
+            // Assert
+            assert!(result);
+        }
+
+        #[test]
+        fn returns_false_for_point_not_on_custom_plane() {
+            // Arrange
+            let edge1 = edge(1.0, 1.0, 1.0, 2.0, 1.0, 1.0);
+            let edge2 = edge(1.0, 1.0, 1.0, 1.0, 2.0, 1.0);
+            let plane = Plane::new(&edge1, &edge2).expect("should create plane");
+            let point = p(5.0, 5.0, 2.0); // z != 1
+
+            // Act
+            let result = plane.is_on_plane(&point);
+
+            // Assert
+            assert!(!result);
         }
     }
 }
