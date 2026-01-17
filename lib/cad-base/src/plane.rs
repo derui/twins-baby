@@ -95,6 +95,42 @@ mod tests {
         }
 
         #[test]
+        fn new_xy_creates_plane_with_z_normal() {
+            // Arrange & Act
+            let plane = Plane::new_xy();
+
+            // Assert
+            let normal = plane.normal();
+            assert_relative_eq!(*normal.x(), 0.0, epsilon = 1e-5);
+            assert_relative_eq!(*normal.y(), 0.0, epsilon = 1e-5);
+            assert_relative_eq!(*normal.z(), 1.0, epsilon = 1e-5);
+        }
+
+        #[test]
+        fn new_xz_creates_plane_with_y_normal() {
+            // Arrange & Act
+            let plane = Plane::new_xz();
+
+            // Assert
+            let normal = plane.normal();
+            assert_relative_eq!(*normal.x(), 0.0, epsilon = 1e-5);
+            assert_relative_eq!(*normal.y(), 1.0, epsilon = 1e-5);
+            assert_relative_eq!(*normal.z(), 0.0, epsilon = 1e-5);
+        }
+
+        #[test]
+        fn new_yz_creates_plane_with_x_normal() {
+            // Arrange & Act
+            let plane = Plane::new_yz();
+
+            // Assert
+            let normal = plane.normal();
+            assert_relative_eq!(*normal.x(), 1.0, epsilon = 1e-5);
+            assert_relative_eq!(*normal.y(), 0.0, epsilon = 1e-5);
+            assert_relative_eq!(*normal.z(), 0.0, epsilon = 1e-5);
+        }
+
+        #[test]
         fn new_from_two_non_perpendicular_edges() {
             // Arrange
             let edge1 = edge(0.0, 0.0, 0.0, 1.0, 0.0, 0.0); // X-axis
