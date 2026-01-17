@@ -5,15 +5,22 @@ edition = "2024"
 
 [workspace]
 
-members = [
+members = ["lib/cad-base",
    "lib/solver"
 ]
+
+[workspace.dependencies]
+anyhow = "1.0"
+approx = "0.5.1"
+pretty_assertions = "1.4.1"
+rstest = "0.26.1"
 
 [dependencies]
 coarsetime = "0.1.36"
 console_error_panic_hook = "0.1.7"
 leptos = { version = "0.8.8", features = ["csr"] }
 leptos-bevy-canvas = "0.4.0"
+
 
 [dependencies.bevy]
 version = "0.17.3"
@@ -26,3 +33,4 @@ features = [
     "tonemapping_luts",
     "webgpu",
 ]
+
