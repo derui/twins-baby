@@ -4,18 +4,21 @@ pub trait Epsilon {
 }
 
 /// Default precision of Epsilon
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct DefaultEpsilon;
 impl Epsilon for DefaultEpsilon {
     const EPSILON: f32 = 1e-5;
 }
 
 /// High precision of Epsilon
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct HighPrecisionEpsitlon;
 impl Epsilon for HighPrecisionEpsitlon {
     const EPSILON: f32 = 1e-9;
 }
 
 /// Low precision of Epsilon
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct LowPrecisionEpsitlon;
 impl Epsilon for LowPrecisionEpsitlon {
     const EPSILON: f32 = 1e-3;
