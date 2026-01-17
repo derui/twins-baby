@@ -14,20 +14,20 @@ impl Point {
 
     /// Get X of the [Point]
     #[inline]
-    pub fn x(&self) -> f32 {
-        self.0
+    pub fn x(&self) -> &f32 {
+        &self.0
     }
 
     /// Get Y of the [Point]
     #[inline]
-    pub fn y(&self) -> f32 {
-        self.1
+    pub fn y(&self) -> &f32 {
+        &self.1
     }
 
     /// Get Z of the [Point]
     #[inline]
-    pub fn z(&self) -> f32 {
-        self.2
+    pub fn z(&self) -> &f32 {
+        &self.2
     }
 }
 
@@ -66,9 +66,9 @@ mod tests {
         let point = Point::new(x, y, z);
 
         // Assert
-        assert_relative_eq!(point.x(), 1.0);
-        assert_relative_eq!(point.y(), 2.0);
-        assert_relative_eq!(point.z(), 3.0);
+        assert_relative_eq!(*point.x(), 1.0);
+        assert_relative_eq!(*point.y(), 2.0);
+        assert_relative_eq!(*point.z(), 3.0);
     }
 
     #[test]
@@ -80,9 +80,9 @@ mod tests {
         let point: Point = tuple.into();
 
         // Assert
-        assert_relative_eq!(point.x(), 1.0);
-        assert_relative_eq!(point.y(), 2.0);
-        assert_relative_eq!(point.z(), 3.0);
+        assert_relative_eq!(*point.x(), 1.0);
+        assert_relative_eq!(*point.y(), 2.0);
+        assert_relative_eq!(*point.z(), 3.0);
     }
 
     #[test]
