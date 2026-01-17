@@ -20,13 +20,13 @@ impl Edge {
     }
 
     #[inline]
-    pub fn start(&self) -> Point {
-        self.0
+    pub fn start(&self) -> &Point {
+        &self.0
     }
 
     #[inline]
-    pub fn end(&self) -> Point {
-        self.1
+    pub fn end(&self) -> &Point {
+        &self.1
     }
 
     /// Create a new [Edge] with the given start point.
@@ -78,8 +78,8 @@ mod tests {
 
         // Assert
         let edge = edge.expect("should create edge");
-        assert_eq!(edge.start(), start);
-        assert_eq!(edge.end(), end);
+        assert_eq!(*edge.start(), start);
+        assert_eq!(*edge.end(), end);
     }
 
     #[test]
@@ -106,8 +106,8 @@ mod tests {
 
         // Assert
         let new_edge = new_edge.expect("should create edge");
-        assert_eq!(new_edge.start(), new_start);
-        assert_eq!(new_edge.end(), edge.end());
+        assert_eq!(*new_edge.start(), new_start);
+        assert_eq!(*new_edge.end(), *edge.end());
     }
 
     #[test]
@@ -116,7 +116,7 @@ mod tests {
         let edge = Edge::new(p(0.0, 0.0, 0.0), p(1.0, 1.0, 1.0)).unwrap();
 
         // Act
-        let result = edge.with_start(edge.end());
+        let result = edge.with_start(*edge.end());
 
         // Assert
         assert!(result.is_err());
@@ -133,8 +133,8 @@ mod tests {
 
         // Assert
         let new_edge = new_edge.expect("should create edge");
-        assert_eq!(new_edge.start(), edge.start());
-        assert_eq!(new_edge.end(), new_end);
+        assert_eq!(*new_edge.start(), *edge.start());
+        assert_eq!(*new_edge.end(), new_end);
     }
 
     #[test]
@@ -143,7 +143,7 @@ mod tests {
         let edge = Edge::new(p(0.0, 0.0, 0.0), p(1.0, 1.0, 1.0)).unwrap();
 
         // Act
-        let result = edge.with_end(edge.start());
+        let result = edge.with_end(*edge.start());
 
         // Assert
         assert!(result.is_err());
@@ -159,8 +159,8 @@ mod tests {
         let edge: Edge = (start, end).into();
 
         // Assert
-        assert_eq!(edge.start(), start);
-        assert_eq!(edge.end(), end);
+        assert_eq!(*edge.start(), start);
+        assert_eq!(*edge.end(), end);
     }
 
     #[test]
@@ -172,7 +172,7 @@ mod tests {
         let tuple: (Point, Point) = edge.clone().into();
 
         // Assert
-        assert_eq!(tuple, (edge.start(), edge.end()));
+        assert_eq!(tuple, (*edge.start(), *edge.end()));
     }
 
     #[test]

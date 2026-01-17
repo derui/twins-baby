@@ -1,5 +1,7 @@
 use std::ops::{Add, Div, Mul, Sub};
 
+use crate::{edge::Edge, point::Point};
+
 /// f32-specialized 3D vector
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Vector3d(f32, f32, f32);
@@ -42,6 +44,21 @@ impl Vector3d {
     pub fn norm2(&self) -> f32 {
         self.0 * self.0 + self.1 * self.1 + self.2 * self.2
     }
+
+    /// From edge to a new [Vector3d]
+    pub fn from_edge(edge: &Edge) -> Self {
+        let start: Vector3d = edge.start().into();
+        let end: Vector3d = edge.end().into();
+
+        end - start
+    }
+
+    /// Convert to a new unit vector
+    pub fn unit(&self) -> Vector3d {
+        let norm = self.norm2().sqrt();
+
+        self / norm
+    }
 }
 
 impl From<(f32, f32, f32)> for Vector3d {
@@ -53,6 +70,18 @@ impl From<(f32, f32, f32)> for Vector3d {
 impl From<Vector3d> for (f32, f32, f32) {
     fn from(value: Vector3d) -> Self {
         (value.0, value.1, value.2)
+    }
+}
+
+impl From<Point> for Vector3d {
+    fn from(value: Point) -> Self {
+        Vector3d(*value.x(), *value.y(), *value.z())
+    }
+}
+
+impl From<&Point> for Vector3d {
+    fn from(value: &Point) -> Self {
+        Vector3d(*value.x(), *value.y(), *value.z())
     }
 }
 
@@ -71,7 +100,7 @@ impl Add<Vector3d> for &Vector3d {
     type Output = Vector3d;
 
     fn add(self, rhs: Vector3d) -> Self::Output {
-        self + rhs
+        self + &rhs
     }
 }
 
@@ -79,7 +108,7 @@ impl Add<&Vector3d> for Vector3d {
     type Output = Vector3d;
 
     fn add(self, rhs: &Vector3d) -> Self::Output {
-        self + rhs
+        &self + rhs
     }
 }
 
@@ -104,7 +133,7 @@ impl Sub<Vector3d> for &Vector3d {
     type Output = Vector3d;
 
     fn sub(self, rhs: Vector3d) -> Self::Output {
-        self - rhs
+        self - &rhs
     }
 }
 impl Sub<Vector3d> for Vector3d {
@@ -119,7 +148,7 @@ impl Sub<&Vector3d> for Vector3d {
     type Output = Vector3d;
 
     fn sub(self, rhs: &Vector3d) -> Self::Output {
-        self - rhs
+        &self - rhs
     }
 }
 
@@ -136,7 +165,7 @@ impl Mul<f32> for Vector3d {
     type Output = Vector3d;
 
     fn mul(self, rhs: f32) -> Self::Output {
-        self * rhs
+        &self * rhs
     }
 }
 
@@ -175,7 +204,7 @@ impl Div<f32> for Vector3d {
     type Output = Vector3d;
 
     fn div(self, rhs: f32) -> Self::Output {
-        self / rhs
+        &self / rhs
     }
 }
 
@@ -744,6 +773,120 @@ mod tests {
 
             // Assert
             assert_eq!(v1, v2);
+        }
+    }
+
+    mod unit {
+        use super::*;
+        use approx::assert_relative_eq;
+
+        #[test]
+        fn unit_of_x_axis_vector() {
+            // Arrange
+            let v = Vector3d::new(3.0, 0.0, 0.0);
+
+            // Act
+            let result = v.unit();
+
+            // Assert
+            assert_relative_eq!(*result.x(), 1.0);
+            assert_relative_eq!(*result.y(), 0.0);
+            assert_relative_eq!(*result.z(), 0.0);
+        }
+
+        #[test]
+        fn unit_of_general_vector() {
+            // Arrange
+            // (1, 2, 2) has norm = sqrt(1 + 4 + 4) = 3
+            let v = Vector3d::new(1.0, 2.0, 2.0);
+
+            // Act
+            let result = v.unit();
+
+            // Assert
+            assert_relative_eq!(*result.x(), 1.0 / 3.0);
+            assert_relative_eq!(*result.y(), 2.0 / 3.0);
+            assert_relative_eq!(*result.z(), 2.0 / 3.0);
+        }
+
+        #[test]
+        fn unit_of_already_unit_vector() {
+            // Arrange
+            let v = Vector3d::new(1.0, 0.0, 0.0);
+
+            // Act
+            let result = v.unit();
+
+            // Assert
+            assert_relative_eq!(*result.x(), 1.0);
+            assert_relative_eq!(*result.y(), 0.0);
+            assert_relative_eq!(*result.z(), 0.0);
+        }
+
+        #[test]
+        fn unit_of_negative_vector() {
+            // Arrange
+            let v = Vector3d::new(-3.0, 0.0, 0.0);
+
+            // Act
+            let result = v.unit();
+
+            // Assert
+            assert_relative_eq!(*result.x(), -1.0);
+            assert_relative_eq!(*result.y(), 0.0);
+            assert_relative_eq!(*result.z(), 0.0);
+        }
+    }
+
+    mod from_edge {
+        use super::*;
+        use crate::point::Point;
+        use approx::assert_relative_eq;
+
+        fn p(x: f32, y: f32, z: f32) -> Point {
+            Point::new(x, y, z)
+        }
+
+        #[test]
+        fn from_edge_along_x_axis() {
+            // Arrange
+            let edge = Edge::new(p(0.0, 0.0, 0.0), p(3.0, 0.0, 0.0)).unwrap();
+
+            // Act
+            let result = Vector3d::from_edge(&edge);
+
+            // Assert
+            assert_relative_eq!(*result.x(), 3.0);
+            assert_relative_eq!(*result.y(), 0.0);
+            assert_relative_eq!(*result.z(), 0.0);
+        }
+
+        #[test]
+        fn from_edge_general_case() {
+            // Arrange
+            let edge = Edge::new(p(1.0, 2.0, 3.0), p(4.0, 6.0, 8.0)).unwrap();
+
+            // Act
+            let result = Vector3d::from_edge(&edge);
+
+            // Assert
+            assert_relative_eq!(*result.x(), 3.0);
+            assert_relative_eq!(*result.y(), 4.0);
+            assert_relative_eq!(*result.z(), 5.0);
+        }
+
+        #[test]
+        fn from_edge_negative_direction() {
+            // Arrange
+            let edge = Edge::new(p(3.0, 0.0, 0.0), p(0.0, 0.0, 0.0)).unwrap();
+
+            // Act
+            let result = Vector3d::from_edge(&edge);
+
+            // Assert
+            assert_relative_eq!(*result.x(), -3.0);
+            assert_relative_eq!(*result.y(), 0.0);
+            assert_relative_eq!(*result.z(), 0.0);
         }
     }
 }
