@@ -107,6 +107,9 @@ All test case must follow these styles:
 - **Do not write overly engineering test** 
   - Always write effective test, such as use paratemerized test for patterns
 - **Write more careful test cases for edge cases, MECE conditions**
+- **When large number of test cases (> 10), split it to dedicated test module**
+  - if the module was a single file, make module directory and tests module.
+  - E.g. When `foo.rs` has large tests, split it as `foo/mod.rs` and `foo/tests.rs`, and all test cases into `tests.rs`
 
 ### Libraries
 - Use `pretty_assertions::assert_eq` instead of `std::assert_eq` in Rust test modules
