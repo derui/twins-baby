@@ -106,6 +106,9 @@ All test case must follow these styles:
 - Use `AAA` Pattern, there are `Arrange`, `Act`, and `Assert`
   - Must add comment for each block
 - When assertion for Rust's `Result`, avoid `is_ok` or `is_err` for assert generally.
+- **Do not write overly engineering test** 
+  - Always write effective test, such as use paratemerized test for patterns
+- **Write more careful test cases for edge cases, MECE conditions**
 
 ### Libraries
 - Use `pretty_assertions::assert_eq` instead of `std::assert_eq` in Rust test modules
