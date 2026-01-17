@@ -78,6 +78,26 @@ Pre-commit hooks are configured to automatically format code:
 
 Both formatters run on `.rs` files to ensure consistent code style.
 
+## Cargo Workspace Dependencies
+
+This project uses Cargo workspace to manage shared dependencies across multiple crates. Common dependencies are defined in the root `Cargo.toml` under `[workspace.dependencies]`.
+
+When adding dependencies to workspace member crates (`lib/cad-base`, `lib/solver`, etc.):
+- **Always check** if the dependency is already defined in `[workspace.dependencies]` in the root `Cargo.toml`
+- **If defined**, use `<dependency>.workspace = true` syntax instead of specifying the version directly
+- **If not defined**, consider adding it to `[workspace.dependencies]` first if it will be used by multiple crates
+
+Example usage in member crates:
+```toml
+[dependencies]
+anyhow.workspace = true
+
+[dev-dependencies]
+approx.workspace = true
+pretty_assertions.workspace = true
+rstest.workspace = true
+```
+
 # Coding Preferences
 
 ## Testing
