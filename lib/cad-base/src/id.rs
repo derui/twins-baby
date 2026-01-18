@@ -70,7 +70,7 @@ impl Display for PointId {
 }
 
 /// Generator trait for creating unique identifiers.
-pub trait IdGenerator<T>
+pub trait GenerateId<T>
 where
     T: From<u64>,
 {
@@ -78,20 +78,31 @@ where
     ///
     /// # Returns
     /// A new unique identifier of type T.
-    fn generate<R: rand::Rng + ?Sized>(rng: &mut R) -> T;
+    fn generate(&mut self) -> T;
 }
 
 /// Default implementation of id generator with rng.
 pub struct DefaultIdGenerator<T: From<u64>> {
+    current: u64,
     _marker: PhantomData<T>,
 }
 
-impl<T> IdGenerator<T> for DefaultIdGenerator<T>
+impl<T: From<u64>> Default for DefaultIdGenerator<T> {
+    fn default() -> Self {
+        Self {
+            current: Default::default(),
+            _marker: PhantomData,
+        }
+    }
+}
+
+impl<T> GenerateId<T> for DefaultIdGenerator<T>
 where
     T: From<u64>,
 {
-    fn generate<R: rand::Rng + ?Sized>(rng: &mut R) -> T {
-        let id: u64 = rng.next_u64();
+    fn generate(&mut self) -> T {
+        let id: u64 = self.current + 1;
+        self.current += 1;
 
         T::from(id)
     }
