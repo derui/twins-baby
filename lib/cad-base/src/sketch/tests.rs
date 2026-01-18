@@ -1,4 +1,7 @@
 use super::*;
+use crate::point::Point;
+use anyhow::{Context, Result};
+use approx::assert_relative_eq;
 use pretty_assertions::assert_eq;
 
 #[test]
@@ -13,7 +16,7 @@ fn sketch_builder_default_creates_with_default_values() {
 }
 
 #[test]
-fn new_creates_sketch_with_attached_plane() {
+fn new_creates_sketch_with_attached_plane() -> Result<()> {
     // Arrange
     let sketch_id = SketchId::new(1);
     let plane_id = PlaneId::new(10);
@@ -23,14 +26,15 @@ fn new_creates_sketch_with_attached_plane() {
     };
 
     // Act
-    let result = Sketch::new(sketch_id, builder);
+    let sketch = Sketch::new(sketch_id, builder)?;
 
     // Assert
-    let sketch = result.expect("should create sketch");
     assert_eq!(sketch.id, sketch_id);
     assert_eq!(sketch.attached_plane, plane_id);
     assert_eq!(sketch.points.len(), 0);
     assert_eq!(sketch.edges.len(), 0);
+
+    Ok(())
 }
 
 #[test]
@@ -51,7 +55,7 @@ fn new_fails_when_attached_plane_is_none() {
 }
 
 #[test]
-fn new_initializes_empty_collections() {
+fn new_initializes_empty_collections() -> Result<()> {
     // Arrange
     let sketch_id = SketchId::new(42);
     let builder = SketchBuilder {
@@ -60,16 +64,17 @@ fn new_initializes_empty_collections() {
     };
 
     // Act
-    let result = Sketch::new(sketch_id, builder);
+    let sketch = Sketch::new(sketch_id, builder)?;
 
     // Assert
-    let sketch = result.expect("should create sketch");
     assert!(sketch.points.is_empty());
     assert!(sketch.edges.is_empty());
+
+    Ok(())
 }
 
 #[test]
-fn new_uses_provided_id_generators() {
+fn new_uses_provided_id_generators() -> Result<()> {
     // Arrange
     let sketch_id = SketchId::new(1);
     let edge_id_gen = Box::new(DefaultIdGenerator::<EdgeId>::default());
@@ -81,16 +86,17 @@ fn new_uses_provided_id_generators() {
     };
 
     // Act
-    let result = Sketch::new(sketch_id, builder);
+    let mut sketch = Sketch::new(sketch_id, builder)?;
 
     // Assert
-    let mut sketch = result.expect("should create sketch");
     assert_eq!(sketch.edge_id_gen.generate(), EdgeId::new(1));
     assert_eq!(sketch.point_id_gen.generate(), PointId::new(1));
+
+    Ok(())
 }
 
 #[test]
-fn sketch_can_be_cloned() {
+fn sketch_can_be_cloned() -> Result<()> {
     // Arrange
     let sketch_id = SketchId::new(1);
     let plane_id = PlaneId::new(10);
@@ -98,7 +104,7 @@ fn sketch_can_be_cloned() {
         attached_plane: Some(plane_id),
         ..Default::default()
     };
-    let sketch = Sketch::new(sketch_id, builder).expect("should create sketch");
+    let sketch = Sketch::new(sketch_id, builder)?;
 
     // Act
     let cloned = sketch.clone();
@@ -108,4 +114,215 @@ fn sketch_can_be_cloned() {
     assert_eq!(cloned.attached_plane, sketch.attached_plane);
     assert_eq!(cloned.points.len(), sketch.points.len());
     assert_eq!(cloned.edges.len(), sketch.edges.len());
+
+    Ok(())
+}
+
+#[test]
+fn add_point_stores_point_in_sketch() -> Result<()> {
+    // Arrange
+    let mut sketch = Sketch::new(
+        SketchId::new(1),
+        SketchBuilder {
+            attached_plane: Some(PlaneId::new(1)),
+            ..Default::default()
+        },
+    )?;
+    let point = Point::new(1.0, 2.0, 3.0);
+
+    // Act
+    sketch.add_point(&point);
+
+    // Assert
+    assert_eq!(sketch.points.len(), 1);
+
+    Ok(())
+}
+
+#[test]
+fn add_point_creates_xyz_variables_in_environment() -> Result<()> {
+    // Arrange
+    let mut sketch = Sketch::new(
+        SketchId::new(1),
+        SketchBuilder {
+            attached_plane: Some(PlaneId::new(1)),
+            ..Default::default()
+        },
+    )?;
+    let point = Point::new(10.0, 20.0, 30.0);
+
+    // Act
+    sketch.add_point(&point);
+
+    // Assert
+    let x_var = sketch.variables.get_variable("x1");
+    let y_var = sketch.variables.get_variable("y1");
+    let z_var = sketch.variables.get_variable("z1");
+    assert!(x_var.is_some());
+    assert!(y_var.is_some());
+    assert!(z_var.is_some());
+
+    Ok(())
+}
+
+#[test]
+fn add_point_variables_have_correct_values() -> Result<()> {
+    // Arrange
+    let mut sketch = Sketch::new(
+        SketchId::new(1),
+        SketchBuilder {
+            attached_plane: Some(PlaneId::new(1)),
+            ..Default::default()
+        },
+    )?;
+    let point = Point::new(10.0, 20.0, 30.0);
+
+    // Act
+    sketch.add_point(&point);
+
+    // Assert
+    let x_var = sketch
+        .variables
+        .get_variable("x1")
+        .context("x1 not found")?;
+    let y_var = sketch
+        .variables
+        .get_variable("y1")
+        .context("y1 not found")?;
+    let z_var = sketch
+        .variables
+        .get_variable("z1")
+        .context("z1 not found")?;
+    assert_relative_eq!(x_var.value(), 10.0);
+    assert_relative_eq!(y_var.value(), 20.0);
+    assert_relative_eq!(z_var.value(), 30.0);
+
+    Ok(())
+}
+
+#[test]
+fn add_point_multiple_points_have_sequential_ids() -> Result<()> {
+    // Arrange
+    let mut sketch = Sketch::new(
+        SketchId::new(1),
+        SketchBuilder {
+            attached_plane: Some(PlaneId::new(1)),
+            ..Default::default()
+        },
+    )?;
+    let point1 = Point::new(1.0, 2.0, 3.0);
+    let point2 = Point::new(4.0, 5.0, 6.0);
+
+    // Act
+    sketch.add_point(&point1);
+    sketch.add_point(&point2);
+
+    // Assert
+    assert_eq!(sketch.points.len(), 2);
+    assert!(sketch.variables.get_variable("x1").is_some());
+    assert!(sketch.variables.get_variable("x2").is_some());
+
+    Ok(())
+}
+
+#[test]
+fn add_point_multiple_points_have_separate_variables() -> Result<()> {
+    // Arrange
+    let mut sketch = Sketch::new(
+        SketchId::new(1),
+        SketchBuilder {
+            attached_plane: Some(PlaneId::new(1)),
+            ..Default::default()
+        },
+    )?;
+    let point1 = Point::new(1.0, 2.0, 3.0);
+    let point2 = Point::new(10.0, 20.0, 30.0);
+
+    // Act
+    sketch.add_point(&point1);
+    sketch.add_point(&point2);
+
+    // Assert
+    let x1 = sketch
+        .variables
+        .get_variable("x1")
+        .context("x1 not found")?;
+    let x2 = sketch
+        .variables
+        .get_variable("x2")
+        .context("x2 not found")?;
+    assert_relative_eq!(x1.value(), 1.0);
+    assert_relative_eq!(x2.value(), 10.0);
+
+    Ok(())
+}
+
+#[test]
+fn add_point_with_zero_coordinates() -> Result<()> {
+    // Arrange
+    let mut sketch = Sketch::new(
+        SketchId::new(1),
+        SketchBuilder {
+            attached_plane: Some(PlaneId::new(1)),
+            ..Default::default()
+        },
+    )?;
+    let point = Point::zero();
+
+    // Act
+    sketch.add_point(&point);
+
+    // Assert
+    let x_var = sketch
+        .variables
+        .get_variable("x1")
+        .context("x1 not found")?;
+    let y_var = sketch
+        .variables
+        .get_variable("y1")
+        .context("y1 not found")?;
+    let z_var = sketch
+        .variables
+        .get_variable("z1")
+        .context("z1 not found")?;
+    assert_relative_eq!(x_var.value(), 0.0);
+    assert_relative_eq!(y_var.value(), 0.0);
+    assert_relative_eq!(z_var.value(), 0.0);
+
+    Ok(())
+}
+
+#[test]
+fn add_point_with_negative_coordinates() -> Result<()> {
+    // Arrange
+    let mut sketch = Sketch::new(
+        SketchId::new(1),
+        SketchBuilder {
+            attached_plane: Some(PlaneId::new(1)),
+            ..Default::default()
+        },
+    )?;
+    let point = Point::new(-5.0, -10.0, -15.0);
+
+    // Act
+    sketch.add_point(&point);
+
+    // Assert
+    let x_var = sketch
+        .variables
+        .get_variable("x1")
+        .context("x1 not found")?;
+    let y_var = sketch
+        .variables
+        .get_variable("y1")
+        .context("y1 not found")?;
+    let z_var = sketch
+        .variables
+        .get_variable("z1")
+        .context("z1 not found")?;
+    assert_relative_eq!(x_var.value(), -5.0);
+    assert_relative_eq!(y_var.value(), -10.0);
+    assert_relative_eq!(z_var.value(), -15.0);
+
+    Ok(())
 }
