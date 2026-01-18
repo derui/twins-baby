@@ -64,13 +64,13 @@ impl Environment {
     ///
     /// This method will override variable if there is already a variable with the same name.
     pub fn add_variable(&mut self, variable: Variable) {
-        self.variables.insert(variable.name(), variable);
+        self.variables.insert(variable.name().to_string(), variable);
     }
 
     /// Remove a variable from the environment
-    pub fn remove_variable(&mut self, variable: &Variable) {
+    pub fn remove_variable(&mut self, variable: &str) {
         // ignore errors
-        self.variables.remove(&variable.name());
+        self.variables.remove(variable);
     }
 
     /// Update the variable
@@ -234,7 +234,7 @@ mod tests {
         env.add_variable(var.clone());
 
         // act
-        env.remove_variable(&var);
+        env.remove_variable(var.name());
 
         // assert
         assert_eq!(env.variables.len(), 0);
@@ -250,7 +250,7 @@ mod tests {
         env.add_variable(var1.clone());
 
         // act
-        env.remove_variable(&var2);
+        env.remove_variable(var2.name());
 
         // assert
         assert_eq!(env.variables.len(), 1);

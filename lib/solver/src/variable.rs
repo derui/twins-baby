@@ -26,8 +26,8 @@ impl Variable {
     }
 
     /// Get the name of variable
-    pub fn name(&self) -> String {
-        self.name.to_string()
+    pub fn name(&self) -> &str {
+        &self.name
     }
 
     /// Get the value of the variable

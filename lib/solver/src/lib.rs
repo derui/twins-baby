@@ -38,7 +38,7 @@ impl Jacobian {
             return Err(anyhow!("Can not create valid jacobian"));
         }
         let mut variables = Vec::from(variables);
-        variables.sort_by_key(|v| v.name());
+        variables.sort_by_key(|v| v.name().to_string());
 
         let mut matrix = SimpleMatrix::new(equations.len(), equations.len())?;
 
@@ -49,7 +49,7 @@ impl Jacobian {
                     continue;
                 }
 
-                matrix.set(i, j, (equation.clone(), variable.name()))?;
+                matrix.set(i, j, (equation.clone(), variable.name().to_string()))?;
             }
         }
 
@@ -296,7 +296,7 @@ impl Solver {
         // make direct solve
         // x_1 = x_0 - J_0^-1 * f_0 -> J_0 * x_delta = - f_0
         let mut ordered = self.variables.list_variables();
-        ordered.sort_by_key(|f| f.name());
+        ordered.sort_by_key(|f| f.name().to_string());
         let mut equation_order = self.equations.keys().collect::<Vec<_>>();
         equation_order.sort();
         let equations: Vec<_> = equation_order.iter().map(|k| &self.equations[k]).collect();
@@ -333,7 +333,7 @@ impl Solver {
 
             // update variable for next loop
             for i in 0..(ordered.len()) {
-                self.variables.update_variable(&ordered[i].name(), x1[i])?;
+                self.variables.update_variable(ordered[i].name(), x1[i])?;
             }
             x0 = x1.clone();
         }
@@ -465,8 +465,7 @@ mod tests {
 
     mod solve {
         use crate::environment::Environment;
-        use crate::equation::arithmetic::{self, ArithmeticEquation};
-        use crate::equation::monomial::MonomialEquation;
+
         use crate::equation::{Equation, Ops};
         use crate::variable::Variable;
         use crate::{DefaultEquationIdGenerator, DimensionSpecificationStatus, Solver};
