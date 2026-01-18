@@ -35,6 +35,11 @@ impl EdgeId {
     pub fn new(id: u64) -> Self {
         EdgeId(id)
     }
+
+    #[inline]
+    pub fn id(&self) -> &u64 {
+        &self.0
+    }
 }
 
 impl From<u64> for EdgeId {
@@ -57,6 +62,11 @@ impl PointId {
     /// Creates a new PointId.
     pub fn new(id: u64) -> Self {
         PointId(id)
+    }
+
+    #[inline]
+    pub fn id(&self) -> &u64 {
+        &self.0
     }
 }
 
