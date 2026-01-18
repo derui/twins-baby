@@ -105,7 +105,7 @@ impl Sketch {
     }
 
     fn add_point_raw(&mut self, id: PointId, point: &Point) {
-        self.points.insert(id, point.clone());
+        self.points.insert(id, *point);
 
         // make variables with id.
         let id = id.id();
