@@ -1,4 +1,7 @@
-use std::{fmt::Display, marker::PhantomData};
+use std::{
+    fmt::{Debug, Display},
+    marker::PhantomData,
+};
 
 /// A unique identifier for a plane.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -69,10 +72,33 @@ impl Display for PointId {
     }
 }
 
+/// A unique identifier for a sketch.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct SketchId(u64);
+
+impl SketchId {
+    /// Creates a new SketchId.
+    pub fn new(id: u64) -> Self {
+        SketchId(id)
+    }
+}
+
+impl From<u64> for SketchId {
+    fn from(id: u64) -> Self {
+        SketchId(id)
+    }
+}
+
+impl Display for SketchId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Point{}", self.0)
+    }
+}
+
 /// Generator trait for creating unique identifiers.
-pub trait GenerateId<T>
+pub trait GenerateId<T>: std::fmt::Debug + GenerateIdClone<T>
 where
-    T: From<u64>,
+    T: From<u64> + Clone,
 {
     /// Generates a new unique identifier.
     ///
@@ -81,7 +107,21 @@ where
     fn generate(&mut self) -> T;
 }
 
+pub trait GenerateIdClone<T>
+where
+    T: From<u64>,
+{
+    fn clone_box(&self) -> Box<dyn GenerateId<T>>;
+}
+
+impl<T: From<u64> + Clone> Clone for Box<dyn GenerateIdClone<T>> {
+    fn clone(&self) -> Self {
+        self.clone_box()
+    }
+}
+
 /// Default implementation of id generator with rng.
+#[derive(Debug, Clone)]
 pub struct DefaultIdGenerator<T: From<u64>> {
     current: u64,
     _marker: PhantomData<T>,
@@ -90,18 +130,34 @@ pub struct DefaultIdGenerator<T: From<u64>> {
 impl<T: From<u64>> Default for DefaultIdGenerator<T> {
     fn default() -> Self {
         Self {
-            current: Default::default(),
+            current: 1,
             _marker: PhantomData,
         }
     }
 }
 
+impl<T, V> GenerateIdClone<T> for V
+where
+    T: From<u64> + Debug + Clone,
+    V: 'static + Clone + GenerateId<T>,
+{
+    fn clone_box(&self) -> Box<dyn GenerateId<T>> {
+        Box::new(self.clone())
+    }
+}
+
+impl<T: From<u64> + Debug> Clone for Box<dyn GenerateId<T>> {
+    fn clone(&self) -> Self {
+        self.clone_box()
+    }
+}
+
 impl<T> GenerateId<T> for DefaultIdGenerator<T>
 where
-    T: From<u64>,
+    T: From<u64> + std::fmt::Debug + Clone + 'static,
 {
     fn generate(&mut self) -> T {
-        let id: u64 = self.current + 1;
+        let id: u64 = self.current;
         self.current += 1;
 
         T::from(id)
