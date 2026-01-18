@@ -38,6 +38,14 @@ impl Edge {
     pub fn with_end(&self, point: Point) -> Result<Self> {
         Self::new(self.0, point)
     }
+
+    /// Get length of the edge
+    pub fn len(&self) -> f32 {
+        let l = (self.1.x() - self.0.x()).powi(2)
+            + (self.1.y() - self.0.y()).powi(2)
+            + (self.1.z() - self.0.z()).powi(2);
+        l.sqrt()
+    }
 }
 
 impl From<(Point, Point)> for Edge {
@@ -61,6 +69,7 @@ impl Display for Edge {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use approx::assert_relative_eq;
     use pretty_assertions::assert_eq;
 
     fn p(x: f32, y: f32, z: f32) -> Point {
@@ -195,5 +204,65 @@ mod tests {
 
         // Act & Assert
         assert_eq!(e1, e2);
+    }
+
+    #[test]
+    fn len_calculates_length_along_single_axis() {
+        // Arrange
+        let edge = Edge::new(p(0.0, 0.0, 0.0), p(3.0, 0.0, 0.0)).unwrap();
+
+        // Act
+        let length = edge.len();
+
+        // Assert
+        assert_relative_eq!(length, 3.0, epsilon = 1e-6);
+    }
+
+    #[test]
+    fn len_calculates_length_in_2d_plane() {
+        // Arrange
+        let edge = Edge::new(p(0.0, 0.0, 0.0), p(3.0, 4.0, 0.0)).unwrap();
+
+        // Act
+        let length = edge.len();
+
+        // Assert
+        assert_relative_eq!(length, 5.0, epsilon = 1e-6);
+    }
+
+    #[test]
+    fn len_calculates_length_in_3d_space() {
+        // Arrange
+        let edge = Edge::new(p(0.0, 0.0, 0.0), p(1.0, 1.0, 1.0)).unwrap();
+
+        // Act
+        let length = edge.len();
+
+        // Assert
+        assert_relative_eq!(length, 3.0_f32.sqrt(), epsilon = 1e-6);
+    }
+
+    #[test]
+    fn len_handles_negative_coordinates() {
+        // Arrange
+        let edge = Edge::new(p(-1.0, -1.0, -1.0), p(1.0, 1.0, 1.0)).unwrap();
+
+        // Act
+        let length = edge.len();
+
+        // Assert
+        assert_relative_eq!(length, 12.0_f32.sqrt(), epsilon = 1e-6);
+    }
+
+    #[test]
+    fn len_calculates_unit_length() {
+        // Arrange
+        let edge = Edge::new(p(0.0, 0.0, 0.0), p(1.0, 0.0, 0.0)).unwrap();
+
+        // Act
+        let length = edge.len();
+
+        // Assert
+        assert_relative_eq!(length, 1.0, epsilon = 1e-6);
     }
 }
