@@ -326,3 +326,204 @@ fn add_point_with_negative_coordinates() -> Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn remove_point_returns_removed_point() -> Result<()> {
+    // Arrange
+    let mut sketch = Sketch::new(
+        SketchId::new(1),
+        SketchBuilder {
+            attached_plane: Some(PlaneId::new(1)),
+            ..Default::default()
+        },
+    )?;
+    let point = Point::new(10.0, 20.0, 30.0);
+    let point_id = sketch.add_point(&point);
+
+    // Act
+    let removed_point = sketch.remove_point(point_id);
+
+    // Assert
+    let removed = removed_point.context("should return removed point")?;
+    assert_relative_eq!(*removed.x(), 10.0);
+    assert_relative_eq!(*removed.y(), 20.0);
+    assert_relative_eq!(*removed.z(), 30.0);
+
+    Ok(())
+}
+
+#[test]
+fn remove_point_returns_none_for_nonexistent_point() -> Result<()> {
+    // Arrange
+    let mut sketch = Sketch::new(
+        SketchId::new(1),
+        SketchBuilder {
+            attached_plane: Some(PlaneId::new(1)),
+            ..Default::default()
+        },
+    )?;
+    let nonexistent_id = PointId::new(999);
+
+    // Act
+    let result = sketch.remove_point(nonexistent_id);
+
+    // Assert
+    assert!(result.is_none());
+
+    Ok(())
+}
+
+#[test]
+fn remove_point_from_empty_sketch_returns_none() -> Result<()> {
+    // Arrange
+    let mut sketch = Sketch::new(
+        SketchId::new(1),
+        SketchBuilder {
+            attached_plane: Some(PlaneId::new(1)),
+            ..Default::default()
+        },
+    )?;
+    let point_id = PointId::new(1);
+
+    // Act
+    let result = sketch.remove_point(point_id);
+
+    // Assert
+    assert!(result.is_none());
+
+    Ok(())
+}
+
+#[test]
+fn remove_point_removes_point_so_second_removal_returns_none() -> Result<()> {
+    // Arrange
+    let mut sketch = Sketch::new(
+        SketchId::new(1),
+        SketchBuilder {
+            attached_plane: Some(PlaneId::new(1)),
+            ..Default::default()
+        },
+    )?;
+    let point = Point::new(1.0, 2.0, 3.0);
+    let point_id = sketch.add_point(&point);
+
+    // Act
+    let first_removal = sketch.remove_point(point_id);
+    let second_removal = sketch.remove_point(point_id);
+
+    // Assert
+    assert!(first_removal.is_some());
+    assert!(second_removal.is_none());
+
+    Ok(())
+}
+
+#[test]
+fn remove_point_with_zero_coordinates() -> Result<()> {
+    // Arrange
+    let mut sketch = Sketch::new(
+        SketchId::new(1),
+        SketchBuilder {
+            attached_plane: Some(PlaneId::new(1)),
+            ..Default::default()
+        },
+    )?;
+    let point = Point::zero();
+    let point_id = sketch.add_point(&point);
+
+    // Act
+    let removed_point = sketch.remove_point(point_id);
+
+    // Assert
+    let removed = removed_point.context("should return removed point")?;
+    assert_relative_eq!(*removed.x(), 0.0);
+    assert_relative_eq!(*removed.y(), 0.0);
+    assert_relative_eq!(*removed.z(), 0.0);
+
+    Ok(())
+}
+
+#[test]
+fn remove_point_with_negative_coordinates() -> Result<()> {
+    // Arrange
+    let mut sketch = Sketch::new(
+        SketchId::new(1),
+        SketchBuilder {
+            attached_plane: Some(PlaneId::new(1)),
+            ..Default::default()
+        },
+    )?;
+    let point = Point::new(-5.0, -10.0, -15.0);
+    let point_id = sketch.add_point(&point);
+
+    // Act
+    let removed_point = sketch.remove_point(point_id);
+
+    // Assert
+    let removed = removed_point.context("should return removed point")?;
+    assert_relative_eq!(*removed.x(), -5.0);
+    assert_relative_eq!(*removed.y(), -10.0);
+    assert_relative_eq!(*removed.z(), -15.0);
+
+    Ok(())
+}
+
+#[test]
+fn remove_point_only_removes_specified_point() -> Result<()> {
+    // Arrange
+    let mut sketch = Sketch::new(
+        SketchId::new(1),
+        SketchBuilder {
+            attached_plane: Some(PlaneId::new(1)),
+            ..Default::default()
+        },
+    )?;
+    let point1 = Point::new(1.0, 2.0, 3.0);
+    let point2 = Point::new(10.0, 20.0, 30.0);
+    let point3 = Point::new(100.0, 200.0, 300.0);
+    let id1 = sketch.add_point(&point1);
+    let id2 = sketch.add_point(&point2);
+    let id3 = sketch.add_point(&point3);
+
+    // Act
+    let removed = sketch.remove_point(id2);
+
+    // Assert
+    let removed_point = removed.context("should return removed point")?;
+    assert_relative_eq!(*removed_point.x(), 10.0);
+    assert_relative_eq!(*removed_point.y(), 20.0);
+    assert_relative_eq!(*removed_point.z(), 30.0);
+    assert!(sketch.remove_point(id1).is_some());
+    assert!(sketch.remove_point(id2).is_none());
+    assert!(sketch.remove_point(id3).is_some());
+
+    Ok(())
+}
+
+#[test]
+fn remove_point_can_remove_all_points_sequentially() -> Result<()> {
+    // Arrange
+    let mut sketch = Sketch::new(
+        SketchId::new(1),
+        SketchBuilder {
+            attached_plane: Some(PlaneId::new(1)),
+            ..Default::default()
+        },
+    )?;
+    let point1 = Point::new(1.0, 2.0, 3.0);
+    let point2 = Point::new(10.0, 20.0, 30.0);
+    let id1 = sketch.add_point(&point1);
+    let id2 = sketch.add_point(&point2);
+
+    // Act
+    let removed1 = sketch.remove_point(id1);
+    let removed2 = sketch.remove_point(id2);
+
+    // Assert
+    assert!(removed1.is_some());
+    assert!(removed2.is_some());
+    assert!(sketch.remove_point(id1).is_none());
+    assert!(sketch.remove_point(id2).is_none());
+
+    Ok(())
+}

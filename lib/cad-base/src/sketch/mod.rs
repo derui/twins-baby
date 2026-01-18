@@ -94,6 +94,11 @@ impl Sketch {
         })
     }
 
+    /// Return reference of variables in the sketch
+    pub fn variables(&self) -> &Environment {
+        &self.variables
+    }
+
     /// Add a point to sketch.
     ///
     /// # Summary
@@ -109,7 +114,7 @@ impl Sketch {
     ///
     /// # Summary
     /// Remove the point from sketch, and remove variables are related the point
-    pub fn remove_pont(&mut self, id: PointId) -> Option<Point> {
+    pub fn remove_point(&mut self, id: PointId) -> Option<Point> {
         let id_value = id.id();
         self.variables.remove_variable(&format!("x{}", id_value));
         self.variables.remove_variable(&format!("y{}", id_value));
