@@ -17,7 +17,10 @@ This is a Rust web application that combines Leptos (frontend framework) with Be
 - `task lint` - Format and lint Rust code
 
 ### Testing
-- `task test` - to run test.
+- `task test` - Run all tests in the workspace
+- `task test -- -p <crate_name>` - Run tests for a specific crate only (recommended when editing a single crate)
+- `task test -- --filter <test_name>` - Run specific tests matching the filter
+- `task test -- --no-fail-fast` - Continue running all tests even after failures
 
 ## Architecture
 

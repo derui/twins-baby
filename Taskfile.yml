@@ -14,4 +14,4 @@ tasks:
   test:
     desc: Run test all workspace
     cmds:
-      - cargo nextest run --workspace
+      - cargo nextest run --workspace {{.CLI_ARGS}}
