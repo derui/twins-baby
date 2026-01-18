@@ -114,13 +114,13 @@ impl Sketch {
     ///
     /// # Summary
     /// Remove the point from sketch, and remove variables are related the point
-    pub fn remove_point(&mut self, id: PointId) -> Option<Point> {
+    pub fn remove_point(&mut self, id: &PointId) -> Option<Point> {
         let id_value = id.id();
         self.variables.remove_variable(&format!("x{}", id_value));
         self.variables.remove_variable(&format!("y{}", id_value));
         self.variables.remove_variable(&format!("z{}", id_value));
 
-        self.points.remove(&id)
+        self.points.remove(id)
     }
 
     fn add_point_raw(&mut self, id: PointId, point: &Point) {
@@ -159,5 +159,26 @@ impl Sketch {
             .add_variable(Variable::new(&extraction.length_variable_name, edge.len()));
         self.edges.insert(id, extraction);
         id
+    }
+
+    /// Remove the edge from the sketch
+    ///
+    /// # Summary
+    /// Remove the edge of [id] from this sketch, and remove variables related of this.
+    pub fn remove_edge(&mut self, id: &EdgeId) -> Option<Edge> {
+        let Some(edge) = self.edges.remove(&id) else {
+            return None;
+        };
+
+        // remove points
+        let Some(start) = self.remove_point(&edge.start_point_id) else {
+            return None;
+        };
+        let Some(end) = self.remove_point(&edge.end_point_id) else {
+            return None;
+        };
+        self.variables.remove_variable(&format!("edge_{}", id.id()));
+
+        Some(Edge::new(start, end).expect("Should be valid edge"))
     }
 }
