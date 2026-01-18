@@ -106,6 +106,10 @@ All test case must follow these styles:
 
 - Use `AAA` Pattern, there are `Arrange`, `Act`, and `Assert`
   - Must add comment for each block
+- **Avoid accessing internal state in tests as much as possible**
+  - Test behavior through public APIs rather than inspecting private fields
+  - Focus on observable outcomes and side effects
+  - Only access internal state when absolutely necessary for validation
 - When assertion for Rust's `Result`, avoid `is_ok` or `is_err` for assert generally.
 - **Do not write overly engineering test** 
   - Always write effective test, such as use paratemerized test for patterns
