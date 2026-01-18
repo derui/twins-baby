@@ -98,10 +98,24 @@ impl Sketch {
     ///
     /// # Summary
     /// Add a point to sketch and define variables from the point.
-    pub fn add_point(&mut self, point: &Point) {
+    pub fn add_point(&mut self, point: &Point) -> PointId {
         let id = self.point_id_gen.generate();
 
         self.add_point_raw(id, point);
+        id
+    }
+
+    /// Remove the point from sketch
+    ///
+    /// # Summary
+    /// Remove the point from sketch, and remove variables are related the point
+    pub fn remove_pont(&mut self, id: PointId) -> Option<Point> {
+        let id_value = id.id();
+        self.variables.remove_variable(&format!("x{}", id_value));
+        self.variables.remove_variable(&format!("y{}", id_value));
+        self.variables.remove_variable(&format!("z{}", id_value));
+
+        self.points.remove(&id)
     }
 
     fn add_point_raw(&mut self, id: PointId, point: &Point) {
@@ -110,11 +124,11 @@ impl Sketch {
         // make variables with id.
         let id = id.id();
         self.variables
-            .add_variable(Variable::new(&format!("{}{}", "x", id), *point.x()));
+            .add_variable(Variable::new(&format!("x{}", id), *point.x()));
         self.variables
-            .add_variable(Variable::new(&format!("{}{}", "y", id), *point.y()));
+            .add_variable(Variable::new(&format!("y{}", id), *point.y()));
         self.variables
-            .add_variable(Variable::new(&format!("{}{}", "z", id), *point.z()));
+            .add_variable(Variable::new(&format!("z{}", id), *point.z()));
     }
 
     /// Add a edge to sketch.
