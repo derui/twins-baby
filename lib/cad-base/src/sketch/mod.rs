@@ -4,12 +4,23 @@ mod tests;
 use std::collections::HashMap;
 
 use anyhow::Result;
+use solver::{environment::Environment, variable::Variable};
 
 use crate::{
     edge::Edge,
     id::{DefaultIdGenerator, EdgeId, GenerateId, PlaneId, PointId, SketchId},
     point::Point,
 };
+
+/// A internal information of edge.
+///
+/// Sketch do not have original edge information as is, need in sketch operation.
+#[derive(Debug, Clone)]
+struct EdgeExtraction {
+    start_point_id: PointId,
+    end_point_id: PointId,
+    length_variable_name: String,
+}
 
 /// The sketch of base of modeling.
 ///
@@ -31,7 +42,10 @@ pub struct Sketch {
     points: HashMap<PointId, Point>,
 
     /// Edges in this sketch
-    edges: HashMap<EdgeId, Edge>,
+    edges: HashMap<EdgeId, EdgeExtraction>,
+
+    /// variables for solver
+    variables: Environment,
 
     /// A plane atteched to sketch
     attached_plane: PlaneId,
@@ -75,7 +89,56 @@ impl Sketch {
             point_id_gen: builder.point_id_gen,
             points: HashMap::new(),
             edges: HashMap::new(),
+            variables: Environment::empty(),
             attached_plane,
         })
+    }
+
+    /// Add a point to sketch.
+    ///
+    /// # Summary
+    /// Add a point to sketch and define variables from the point.
+    pub fn add_point(&mut self, point: &Point) {
+        let id = self.point_id_gen.generate();
+
+        self.add_point_raw(id, point);
+    }
+
+    fn add_point_raw(&mut self, id: PointId, point: &Point) {
+        self.points.insert(id, point.clone());
+
+        // make variables with id.
+        let id = id.id();
+        self.variables
+            .add_variable(Variable::new(&format!("{}{}", "x", id), *point.x()));
+        self.variables
+            .add_variable(Variable::new(&format!("{}{}", "y", id), *point.y()));
+        self.variables
+            .add_variable(Variable::new(&format!("{}{}", "z", id), *point.z()));
+    }
+
+    /// Add a edge to sketch.
+    ///
+    /// # Summary
+    /// Add a edge to sketch and define variables from the edge.
+    pub fn add_edge(&mut self, edge: &Edge) -> EdgeId {
+        let id = self.edge_id_gen.generate();
+        let start_id = self.point_id_gen.generate();
+        let end_id = self.point_id_gen.generate();
+
+        let extraction = EdgeExtraction {
+            start_point_id: start_id,
+            end_point_id: end_id,
+            length_variable_name: format!("edge_{}", id.id()),
+        };
+
+        self.add_point_raw(start_id, edge.start());
+        self.add_point_raw(end_id, edge.end());
+
+        // define variable with current length of edge
+        self.variables
+            .add_variable(Variable::new(&extraction.length_variable_name, edge.len()));
+        self.edges.insert(id, extraction);
+        id
     }
 }

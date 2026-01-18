@@ -7,6 +7,7 @@ edition = "2024"
 anyhow.workspace = true
 epsilon = { version = "0.1.0", path = "../epsilon" }
 rand.workspace = true
+solver = { version = "0.1.0", path = "../solver" }
 
 [dev-dependencies]
 approx.workspace = true
