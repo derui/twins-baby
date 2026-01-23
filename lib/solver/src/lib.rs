@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use anyhow::{Result, anyhow};
+use epsilon::Epsilon;
 
 use crate::{
     environment::Environment,
@@ -172,7 +173,7 @@ impl Solver {
     /// # Initial State
     /// * Status is set to `Incorrect` until variables match equation count
     /// * Jacobian is initialized with minimal 1x1 sparse matrix
-    pub fn new(generator: Box<dyn EquationIdGenerator>) -> Self {
+    pub fn new<E: Epsilon>(generator: Box<dyn EquationIdGenerator>) -> Self {
         Solver {
             status: DimensionSpecificationStatus::Incorrect,
             jacobian: Jacobian(
@@ -183,7 +184,7 @@ impl Solver {
             dimensions: Environment::empty(),
             equations: HashMap::new(),
             generator: generator.clone(),
-            epsilon: DEFAULT_EPSILON,
+            epsilon: E::EPSILON,
         }
     }
 
@@ -349,6 +350,7 @@ mod tests {
         use crate::equation::Equation;
         use crate::variable::Variable;
         use crate::{DefaultEquationIdGenerator, DimensionSpecificationStatus, Solver};
+        use epsilon::DefaultEpsilon;
         use pretty_assertions::assert_eq;
 
         #[test]
@@ -357,7 +359,7 @@ mod tests {
             let generator = Box::new(DefaultEquationIdGenerator::default());
 
             // Act
-            let solver = Solver::new(generator);
+            let solver = Solver::new::<DefaultEpsilon>(generator);
 
             // Assert
             assert_eq!(solver.status(), DimensionSpecificationStatus::Incorrect);
@@ -367,7 +369,7 @@ mod tests {
         fn test_status_remains_incorrect_with_only_variables() {
             // Arrange
             let generator = Box::new(DefaultEquationIdGenerator::default());
-            let mut solver = Solver::new(generator);
+            let mut solver = Solver::new::<DefaultEpsilon>(generator);
             let env = Environment::from_variables(vec![Variable::new("x", 1.0)]);
 
             // Act
@@ -381,7 +383,7 @@ mod tests {
         fn test_status_remains_incorrect_with_only_equations() {
             // Arrange
             let generator = Box::new(DefaultEquationIdGenerator::default());
-            let mut solver = Solver::new(generator);
+            let mut solver = Solver::new::<DefaultEpsilon>(generator);
             let equation: Box<dyn Equation> = 1.0.into();
 
             // Act
@@ -395,7 +397,7 @@ mod tests {
         fn test_status_becomes_correct_when_variable_and_equation_counts_match() {
             // Arrange
             let generator = Box::new(DefaultEquationIdGenerator::default());
-            let mut solver = Solver::new(generator);
+            let mut solver = Solver::new::<DefaultEpsilon>(generator);
             let env = Environment::from_variables(vec![Variable::new("x", 1.0)]);
             let equation: Box<dyn Equation> = 1.0.into();
 
@@ -411,7 +413,7 @@ mod tests {
         fn test_status_becomes_correct_with_multiple_variables_and_equations() {
             // Arrange
             let generator = Box::new(DefaultEquationIdGenerator::default());
-            let mut solver = Solver::new(generator);
+            let mut solver = Solver::new::<DefaultEpsilon>(generator);
             let env = Environment::from_variables(vec![
                 Variable::new("x", 1.0),
                 Variable::new("y", 2.0),
@@ -432,7 +434,7 @@ mod tests {
         fn test_status_becomes_incorrect_when_adding_more_variables() {
             // Arrange
             let generator = Box::new(DefaultEquationIdGenerator::default());
-            let mut solver = Solver::new(generator);
+            let mut solver = Solver::new::<DefaultEpsilon>(generator);
             let env1 = Environment::from_variables(vec![Variable::new("x", 1.0)]);
             solver.add_equation(1.0.into());
             solver.update_variables(&env1);
@@ -450,7 +452,7 @@ mod tests {
         fn test_status_becomes_incorrect_after_removing_equation() {
             // Arrange
             let generator = Box::new(DefaultEquationIdGenerator::default());
-            let mut solver = Solver::new(generator);
+            let mut solver = Solver::new::<DefaultEpsilon>(generator);
             let env = Environment::from_variables(vec![Variable::new("x", 1.0)]);
             let eq_id = solver.add_equation(1.0.into());
             solver.update_variables(&env);
@@ -470,13 +472,14 @@ mod tests {
         use crate::variable::Variable;
         use crate::{DefaultEquationIdGenerator, DimensionSpecificationStatus, Solver};
         use approx::assert_relative_eq;
+        use epsilon::DefaultEpsilon;
         use pretty_assertions::assert_eq;
 
         #[test]
         fn test_solve_line_diminsion() -> anyhow::Result<()> {
             // Arrange
             let generator = Box::new(DefaultEquationIdGenerator::default());
-            let mut solver = Solver::new(generator);
+            let mut solver = Solver::new::<DefaultEpsilon>(generator);
             let env =
                 Environment::from_tuples(&[("x1", 0.0), ("y1", 0.0), ("x2", 1.0), ("y2", 1.0)]);
             let dimension = Environment::from_tuples(&[("d", 4.5)]);
@@ -521,7 +524,7 @@ mod tests {
         fn test_status_remains_incorrect_with_only_variables() {
             // Arrange
             let generator = Box::new(DefaultEquationIdGenerator::default());
-            let mut solver = Solver::new(generator);
+            let mut solver = Solver::new::<DefaultEpsilon>(generator);
             let env = Environment::from_variables(vec![Variable::new("x", 1.0)]);
 
             // Act
@@ -535,7 +538,7 @@ mod tests {
         fn test_status_remains_incorrect_with_only_equations() {
             // Arrange
             let generator = Box::new(DefaultEquationIdGenerator::default());
-            let mut solver = Solver::new(generator);
+            let mut solver = Solver::new::<DefaultEpsilon>(generator);
             let equation: Box<dyn Equation> = 1.0.into();
 
             // Act
@@ -549,7 +552,7 @@ mod tests {
         fn test_status_becomes_correct_when_variable_and_equation_counts_match() {
             // Arrange
             let generator = Box::new(DefaultEquationIdGenerator::default());
-            let mut solver = Solver::new(generator);
+            let mut solver = Solver::new::<DefaultEpsilon>(generator);
             let env = Environment::from_variables(vec![Variable::new("x", 1.0)]);
             let equation: Box<dyn Equation> = 1.0.into();
 
@@ -565,7 +568,7 @@ mod tests {
         fn test_status_becomes_correct_with_multiple_variables_and_equations() {
             // Arrange
             let generator = Box::new(DefaultEquationIdGenerator::default());
-            let mut solver = Solver::new(generator);
+            let mut solver = Solver::new::<DefaultEpsilon>(generator);
             let env = Environment::from_variables(vec![
                 Variable::new("x", 1.0),
                 Variable::new("y", 2.0),
@@ -586,7 +589,7 @@ mod tests {
         fn test_status_becomes_incorrect_when_adding_more_variables() {
             // Arrange
             let generator = Box::new(DefaultEquationIdGenerator::default());
-            let mut solver = Solver::new(generator);
+            let mut solver = Solver::new::<DefaultEpsilon>(generator);
             let env1 = Environment::from_variables(vec![Variable::new("x", 1.0)]);
             solver.add_equation(1.0.into());
             solver.update_variables(&env1);
@@ -604,7 +607,7 @@ mod tests {
         fn test_status_becomes_incorrect_after_removing_equation() {
             // Arrange
             let generator = Box::new(DefaultEquationIdGenerator::default());
-            let mut solver = Solver::new(generator);
+            let mut solver = Solver::new::<DefaultEpsilon>(generator);
             let env = Environment::from_variables(vec![Variable::new("x", 1.0)]);
             let eq_id = solver.add_equation(1.0.into());
             solver.update_variables(&env);
