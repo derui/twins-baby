@@ -6,7 +6,7 @@ use solver::{environment::Environment, variable::Variable};
 use crate::id::GenerateId;
 
 /// Internal id for manage variable in sketch
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub struct VariableId(u64);
 
 impl Display for VariableId {
@@ -40,18 +40,14 @@ pub struct PropagatableEnv<T: GenerateId<VariableId>> {
     environment: Environment,
 }
 
-impl<T: GenerateId<VariableId>> PropagatableEnv<T> {
-    /// Make a new [PropagatableEnv] with a [GenerateId] trait
-    pub fn from_id_gen(id_gen: T) -> Self {
-        PropagatableEnv {
-            _id_gen: id_gen,
-            id_map: HashMap::new(),
-            environment: Environment::empty(),
-        }
-    }
+/// Single responsibility trait to register a variable
+pub trait RegisterVariable {
+    fn register(&mut self, var: &Variable) -> VariableId;
+}
 
+impl<T: GenerateId<VariableId>> RegisterVariable for PropagatableEnv<T> {
     /// Register a variable to the env.
-    pub fn register(&mut self, var: &Variable) -> VariableId {
+    fn register(&mut self, var: &Variable) -> VariableId {
         let id = self._id_gen.generate();
         let new_name = format!("{}_{}", id, var.name());
 
@@ -60,6 +56,17 @@ impl<T: GenerateId<VariableId>> PropagatableEnv<T> {
         self.id_map.insert(id, new_name);
 
         id
+    }
+}
+
+impl<T: GenerateId<VariableId>> PropagatableEnv<T> {
+    /// Make a new [PropagatableEnv] with a [GenerateId] trait
+    pub fn from_id_gen(id_gen: T) -> Self {
+        PropagatableEnv {
+            _id_gen: id_gen,
+            id_map: HashMap::new(),
+            environment: Environment::empty(),
+        }
     }
 
     /// De-register the variable from env.
