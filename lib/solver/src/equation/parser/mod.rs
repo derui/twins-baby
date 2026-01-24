@@ -8,7 +8,7 @@ use nom::{
     character::complete::{char, multispace0, one_of},
     combinator::{map, opt, recognize},
     error::ParseError,
-    multi::{many0, many1},
+    multi::many0,
     number::complete::recognize_float,
     sequence::delimited,
 };
@@ -135,7 +135,7 @@ fn construct_equation(syntax: &[Syntax]) -> Result<Equation> {
     let mut current: Equation = match syntax.first() {
         Some(Syntax::Constant(v)) => v.clone(),
         Some(Syntax::Monomial(v)) => v.clone(),
-        Some(Syntax::Paren(v)) => construct_equation(&v)?,
+        Some(Syntax::Paren(v)) => construct_equation(v)?,
         Some(Syntax::WithOp(_, _)) => unreachable!("This case is parse error"),
         None => unreachable!("Must be able to get first syntax"),
     };
@@ -149,9 +149,9 @@ fn construct_equation(syntax: &[Syntax]) -> Result<Equation> {
             Syntax::Monomial(equation) => unreachable!("This case is parse error : {}", equation),
             Syntax::WithOp(operator, syntax) => ArithmeticEquation::new(
                 *operator,
-                &vec![current, construct_equation(&[*syntax.clone()])?],
+                &[current, construct_equation(&[*syntax.clone()])?],
             )
-            .map(|v| Equation::Arithmetic(v))?,
+            .map(Equation::Arithmetic)?,
             Syntax::Paren(items) => unreachable!("This case is parse error : {:?}", items),
         };
 
