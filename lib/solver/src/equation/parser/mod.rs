@@ -1,14 +1,14 @@
 use std::error::Error;
 
 use nom::{
-    AsChar, IResult, Parser,
+    AsChar, Finish, IResult, Parser,
     branch::alt,
-    bytes::take_while1,
-    character::{char, complete::multispace0, one_of},
+    bytes::complete::take_while1,
+    character::complete::{char, multispace0, one_of},
     combinator::{map, opt, recognize},
     error::ParseError,
     multi::many0,
-    number::recognize_float,
+    number::complete::recognize_float,
     sequence::delimited,
 };
 
@@ -19,7 +19,7 @@ use crate::equation::{
 };
 
 fn number(input: &str) -> IResult<&str, f32> {
-    let (input, f) = recognize_float().parse(input)?;
+    let (input, f) = recognize_float(input)?;
     let v: f32 = f.parse().expect("should be parsable");
 
     Ok((input, v))
@@ -116,17 +116,26 @@ fn paren_equation(input: &str) -> IResult<&str, Equation> {
 fn equation(input: &str) -> IResult<&str, Equation> {
     alt((
         paren_equation,
-        high_arithmetic,
         low_arithmetic,
+        high_arithmetic,
         monomial,
         constant,
     ))
     .parse(input)
 }
 
+fn high_equation(input: &str) -> IResult<&str, Equation> {
+    alt((paren_equation, monomial, constant)).parse(input)
+}
+
+fn low_equation(input: &str) -> IResult<&str, Equation> {
+    alt((paren_equation, high_equation, monomial, constant)).parse(input)
+}
+
 /// Parse an arithmetic equation with high priority
 fn high_arithmetic(input: &str) -> IResult<&str, Equation> {
-    let (input, (left, operator, right)) = (equation, ws(high_op), equation).parse(input)?;
+    let (input, (left, operator, right)) =
+        (high_equation, ws(high_op), high_equation).parse(input)?;
 
     Ok((
         input,
@@ -138,7 +147,7 @@ fn high_arithmetic(input: &str) -> IResult<&str, Equation> {
 
 /// Parse an arithmetic equation with preceding priority
 fn low_arithmetic(input: &str) -> IResult<&str, Equation> {
-    let (input, (left, operator, right)) = (equation, ws(low_op), equation).parse(input)?;
+    let (input, (left, operator, right)) = (low_equation, ws(low_op), low_equation).parse(input)?;
 
     Ok((
         input,
@@ -156,7 +165,10 @@ fn low_arithmetic(input: &str) -> IResult<&str, Equation> {
 /// # Returns
 /// * `Result<Equation, Box<dyn Error>>` - Parsed Equation or an error
 pub fn parse(input: &str) -> Result<Equation, Box<dyn Error>> {
-    let (rest, eq) = equation(input).map_err(|e| format!("Parse error: {:?}", e))?;
+    println!("{:?}", equation(input));
+    let (rest, eq) = equation(input)
+        .finish()
+        .map_err(|e| format!("Parse error: {:?}", e))?;
 
     if !rest.trim().is_empty() {
         return Err(format!("Unparsed input remaining: {}", rest).into());
@@ -164,3 +176,6 @@ pub fn parse(input: &str) -> Result<Equation, Box<dyn Error>> {
 
     Ok(eq)
 }
+
+#[cfg(test)]
+mod tests;
