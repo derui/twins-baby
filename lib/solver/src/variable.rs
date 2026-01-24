@@ -25,6 +25,14 @@ impl Variable {
         }
     }
 
+    /// Make a new variable with new name
+    pub fn with_name(&self, name: &str) -> Self {
+        Variable {
+            name: name.to_string(),
+            value: self.value,
+        }
+    }
+
     /// Get the name of variable
     pub fn name(&self) -> &str {
         &self.name

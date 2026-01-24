@@ -1,3 +1,4 @@
+mod propagation;
 #[cfg(test)]
 mod tests;
 
