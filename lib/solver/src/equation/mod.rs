@@ -2,6 +2,7 @@ pub(crate) mod arithmetic;
 pub(crate) mod constant;
 pub(crate) mod monomial;
 mod ops;
+mod parser;
 
 pub use ops::*;
 

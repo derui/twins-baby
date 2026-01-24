@@ -32,6 +32,12 @@ impl From<f32> for Box<dyn Equation> {
     }
 }
 
+impl From<f32> for ConstantEquation {
+    fn from(value: f32) -> Self {
+        ConstantEquation { value }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
