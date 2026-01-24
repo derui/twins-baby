@@ -41,11 +41,11 @@ pub struct PropagatableEnv<T: GenerateId<VariableId>> {
 }
 
 /// Single responsibility trait to register a variable
-pub trait RegisterVariable {
+pub trait VariableRegister {
     fn register(&mut self, var: &Variable) -> VariableId;
 }
 
-impl<T: GenerateId<VariableId>> RegisterVariable for PropagatableEnv<T> {
+impl<T: GenerateId<VariableId>> VariableRegister for PropagatableEnv<T> {
     /// Register a variable to the env.
     fn register(&mut self, var: &Variable) -> VariableId {
         let id = self._id_gen.generate();
