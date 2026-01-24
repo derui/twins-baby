@@ -3,66 +3,20 @@ use std::{
     ops::{Add, Div, Mul, Sub},
 };
 
+use ambassador::{delegatable_trait, delegatable_trait_remote};
+
 use crate::{
     environment::Environment,
     equation::{
+        Equation,
         arithmetic::{ArithmeticEquation, Operator},
         monomial::MonomialEquation,
     },
     variable::Variable,
 };
 
-/// Error cases for solving equation
-#[derive(Debug, Clone)]
-pub enum EquationError {
-    /// Can not found variables in the environment
-    NoVariableInEnvironment(Vec<String>),
-}
-
-/// Equation trait should provide some of the equation behavior of the solver
-pub trait Equation: std::fmt::Debug + EquationClone + Display {
-    /// Evaluate the equation.
-    ///
-    /// # Arguments
-    /// * `env` - current environment
-    ///
-    /// # Returns
-    /// result of equation with the environment. Error when some errors
-    fn evaluate(&self, env: &Environment) -> Result<f32, EquationError>;
-
-    /// return the equation related or not
-    fn is_variable_related(&self, variable: &Variable) -> bool;
-}
-
-/// A support trait to define Clone for Box<dyn Equation>
-pub trait EquationClone {
-    /// Clone the equation into a boxed equation
-    fn clone_box(&self) -> Box<dyn Equation>;
-}
-
-impl<T> EquationClone for T
-where
-    T: 'static + Equation + Clone,
-{
-    fn clone_box(&self) -> Box<dyn Equation> {
-        Box::new(self.clone())
-    }
-}
-
-impl Clone for Box<dyn Equation> {
-    fn clone(&self) -> Self {
-        self.clone_box()
-    }
-}
-
-impl PartialEq for Box<dyn Equation> {
-    fn eq(&self, other: &Self) -> bool {
-        format!("{}", self) == format!("{}", other)
-    }
-}
-
 /// Operation wrapper
-pub struct Ops(Box<dyn Equation>);
+pub struct Ops(Equation);
 
 impl Ops {
     /// Make constant from the value
@@ -100,7 +54,7 @@ impl From<f32> for Ops {
     }
 }
 
-impl From<Ops> for Box<dyn Equation> {
+impl From<Ops> for Equation {
     fn from(value: Ops) -> Self {
         value.0
     }

@@ -73,7 +73,7 @@ fn signed_digit(input: &str) -> IResult<&str, i32> {
 }
 
 /// Parse a monomial equation
-fn monomial(input: &str) -> IResult<&str, Box<dyn Equation>> {
+fn monomial(input: &str) -> IResult<&str, Equation> {
     let coeff = opt(number);
     let exponent = map(opt((char('^'), signed_digit)), |v| match v {
         Some(v) => Some(v.1),
@@ -84,31 +84,27 @@ fn monomial(input: &str) -> IResult<&str, Box<dyn Equation>> {
 
     Ok((
         input,
-        Box::new(MonomialEquation::new(
-            coeff.unwrap_or(1.0),
-            &var,
-            exp.unwrap_or(1_i32),
-        )),
+        MonomialEquation::new(coeff.unwrap_or(1.0), &var, exp.unwrap_or(1_i32)).into(),
     ))
 }
 
-fn constant(input: &str) -> IResult<&str, Box<dyn Equation>> {
+fn constant(input: &str) -> IResult<&str, Equation> {
     let (input, value) = number(input)?;
 
-    Ok((input, Box::new(value)))
+    Ok((input, value.into()))
 }
 
 /// parse (...) equation
-fn paren_equation(input: &str) -> IResult<&str, Box<dyn Equation>> {
+fn paren_equation(input: &str) -> IResult<&str, Equation> {
     let (input, _) = char('(').parse(input)?;
     let (input, eq) = equation(input)?;
     let (input, _) = char(')').parse(input)?;
 
-    Ok((input, eq))
+    Ok((input, eq.into()))
 }
 
 /// Parse equation from string.
-pub fn equation(input: &str) -> IResult<&str, Box<dyn Equation>> {
+pub fn equation(input: &str) -> IResult<&str, Equation> {
     alt((
         paren_equation,
         high_arithmetic,
@@ -120,21 +116,25 @@ pub fn equation(input: &str) -> IResult<&str, Box<dyn Equation>> {
 }
 
 /// Parse an arithmetic equation
-fn high_arithmetic(input: &str) -> IResult<&str, Box<dyn Equation>> {
+fn high_arithmetic(input: &str) -> IResult<&str, Equation> {
     let (input, (left, operator, right)) = (equation, high_op, equation).parse(input)?;
 
     Ok((
         input,
-        Box::new(ArithmeticEquation::new(operator, &vec![left, right]).expect("should be success")),
+        ArithmeticEquation::new(operator, &vec![left, right])
+            .expect("should be success")
+            .into(),
     ))
 }
 
 /// Parse an arithmetic equation
-fn arithmetic(input: &str) -> IResult<&str, Box<dyn Equation>> {
+fn arithmetic(input: &str) -> IResult<&str, Equation> {
     let (input, (left, operator, right)) = (equation, low_op, equation).parse(input)?;
 
     Ok((
         input,
-        Box::new(ArithmeticEquation::new(operator, &vec![left, right]).expect("should be success")),
+        ArithmeticEquation::new(operator, &vec![left, right])
+            .expect("should be success")
+            .into(),
     ))
 }

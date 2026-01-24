@@ -5,7 +5,7 @@ use epsilon::Epsilon;
 
 use crate::{
     environment::Environment,
-    equation::Equation,
+    equation::{Equation, Evaluate},
     matrix::{
         Matrix, MatrixExtract,
         op::{Solve, solve},
@@ -26,12 +26,12 @@ pub mod vector;
 const DEFAULT_EPSILON: f32 = 1e-5;
 
 /// Internal Jacobian matrix. It is a matrix of constraint matrix.
-struct Jacobian(SparseMatrix<(Box<dyn equation::Equation>, String)>, f32);
+struct Jacobian(SparseMatrix<(Equation, String)>, f32);
 
 impl Jacobian {
     /// Create Jacobian from equations and variables
     fn from_equations(
-        equations: &[Box<dyn Equation>],
+        equations: &[Equation],
         variables: &[Variable],
         accuracy: f32,
     ) -> Result<Self, anyhow::Error> {
@@ -115,7 +115,7 @@ pub struct Solver {
 
     /// current equations with equation id. Currently, equation id is not
     /// member of equation mod, because equation does not have identity of it.
-    equations: HashMap<EquationId, Box<dyn Equation>>,
+    equations: HashMap<EquationId, Equation>,
 
     generator: Box<dyn EquationIdGenerator>,
 
@@ -252,17 +252,17 @@ impl Solver {
     /// Adds an equation to the solver and returns its unique identifier.
     ///
     /// # Parameters
-    /// * `equation` - Boxed equation trait object to add to the system
+    /// * `equation` - Equation to add to the system
     ///
     /// # Returns
     /// * `EquationId` - Unique identifier for the added equation
     ///
     /// # Example
     /// ```ignore
-    /// let id = solver.add_equation(Box::new(my_equation));
+    /// let id = solver.add_equation(my_equation);
     /// // Use id to reference or remove the equation later
     /// ```
-    pub fn add_equation(&mut self, equation: Box<dyn Equation>) -> EquationId {
+    pub fn add_equation(&mut self, equation: Equation) -> EquationId {
         let new_id = self.generator.generate();
 
         self.equations.insert(new_id, equation.clone());
@@ -278,9 +278,9 @@ impl Solver {
     /// * `id` - Unique identifier of the equation to remove
     ///
     /// # Returns
-    /// * `Some(Box<dyn Equation>)` - The removed equation if it existed
+    /// * `Some(Equation)` - The removed equation if it existed
     /// * `None` - If no equation with the given ID was found
-    pub fn remove_equation(&mut self, id: EquationId) -> Option<Box<dyn Equation>> {
+    pub fn remove_equation(&mut self, id: EquationId) -> Option<Equation> {
         let v = self.equations.remove(&id);
 
         self.recaluculate_status();
@@ -384,7 +384,7 @@ mod tests {
             // Arrange
             let generator = Box::new(DefaultEquationIdGenerator::default());
             let mut solver = Solver::new::<DefaultEpsilon>(generator);
-            let equation: Box<dyn Equation> = 1.0.into();
+            let equation: Equation = 1.0.into();
 
             // Act
             solver.add_equation(equation);
@@ -399,7 +399,7 @@ mod tests {
             let generator = Box::new(DefaultEquationIdGenerator::default());
             let mut solver = Solver::new::<DefaultEpsilon>(generator);
             let env = Environment::from_variables(vec![Variable::new("x", 1.0)]);
-            let equation: Box<dyn Equation> = 1.0.into();
+            let equation: Equation = 1.0.into();
 
             // Act
             solver.add_equation(equation);
@@ -539,7 +539,7 @@ mod tests {
             // Arrange
             let generator = Box::new(DefaultEquationIdGenerator::default());
             let mut solver = Solver::new::<DefaultEpsilon>(generator);
-            let equation: Box<dyn Equation> = 1.0.into();
+            let equation: Equation = 1.0.into();
 
             // Act
             solver.add_equation(equation);
@@ -554,7 +554,7 @@ mod tests {
             let generator = Box::new(DefaultEquationIdGenerator::default());
             let mut solver = Solver::new::<DefaultEpsilon>(generator);
             let env = Environment::from_variables(vec![Variable::new("x", 1.0)]);
-            let equation: Box<dyn Equation> = 1.0.into();
+            let equation: Equation = 1.0.into();
 
             // Act
             solver.add_equation(equation);

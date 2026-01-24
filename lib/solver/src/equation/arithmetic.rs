@@ -2,7 +2,7 @@ use anyhow::{Result, anyhow};
 
 use crate::{
     environment::Environment,
-    equation::{Equation, EquationError},
+    equation::{Equation, EquationError, Evaluate},
     variable::Variable,
 };
 
@@ -16,13 +16,13 @@ pub(crate) enum Operator {
 }
 
 /// Implementation of arithmetic equation
-#[derive(Debug, Clone)]
-pub(crate) struct ArithmeticEquation {
+#[derive(Debug, Clone, PartialEq)]
+pub struct ArithmeticEquation {
     operator: Operator,
-    operands: Vec<Box<dyn Equation>>,
+    operands: Vec<Equation>,
 }
 
-impl Equation for ArithmeticEquation {
+impl Evaluate for ArithmeticEquation {
     fn evaluate(&self, env: &Environment) -> Result<f32, EquationError> {
         let values: Result<Vec<_>, _> = self.operands.iter().map(|e| e.evaluate(env)).collect();
         let values = values?;
@@ -64,12 +64,6 @@ impl std::fmt::Display for ArithmeticEquation {
     }
 }
 
-impl From<ArithmeticEquation> for Box<dyn Equation> {
-    fn from(value: ArithmeticEquation) -> Self {
-        Box::new(value.clone())
-    }
-}
-
 impl ArithmeticEquation {
     /// Create a new arithmetic equation with the given operator and operands.
     ///
@@ -80,7 +74,7 @@ impl ArithmeticEquation {
     ///
     /// # Returns
     /// A new instance of `ArithmeticEquation`
-    pub(crate) fn new(operator: Operator, operands: &[Box<dyn Equation>]) -> Result<Self> {
+    pub(crate) fn new(operator: Operator, operands: &[Equation]) -> Result<Self> {
         if operands.len() < 2 {
             return Err(anyhow!("Operands must be greater or equal 2"));
         }
@@ -181,12 +175,12 @@ mod tests {
         #[case] first_is_variable: bool,
     ) -> Result<()> {
         // arrange
-        let first: Box<dyn Equation> = if first_is_variable {
+        let first: Equation = if first_is_variable {
             MonomialEquation::new(1.0, var_name, 1).into()
         } else {
             10.0.into()
         };
-        let second: Box<dyn Equation> = if first_is_variable {
+        let second: Equation = if first_is_variable {
             5.0.into()
         } else {
             MonomialEquation::new(1.0, var_name, 1).into()

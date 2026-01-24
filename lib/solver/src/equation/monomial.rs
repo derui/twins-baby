@@ -1,12 +1,12 @@
 use crate::{
     environment::Environment,
-    equation::{Equation, EquationError},
+    equation::{EquationError, Evaluate},
     variable::Variable,
 };
 
 /// Implementation of monomial equation
-#[derive(Debug, Clone)]
-pub(crate) struct MonomialEquation {
+#[derive(Debug, Clone, PartialEq)]
+pub struct MonomialEquation {
     /// The factor of thisequesion
     factor: f32,
 
@@ -17,7 +17,7 @@ pub(crate) struct MonomialEquation {
     exponent: i32,
 }
 
-impl Equation for MonomialEquation {
+impl Evaluate for MonomialEquation {
     fn evaluate(&self, env: &Environment) -> Result<f32, EquationError> {
         let variable = env
             .get_variable(&self.variable)
@@ -34,12 +34,6 @@ impl Equation for MonomialEquation {
 impl std::fmt::Display for MonomialEquation {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}{}^{}", self.factor, self.variable, self.exponent)
-    }
-}
-
-impl From<MonomialEquation> for Box<dyn Equation> {
-    fn from(value: MonomialEquation) -> Self {
-        Box::new(value.clone())
     }
 }
 
