@@ -4,8 +4,10 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+ambassador.workspace = true
 anyhow.workspace = true
 epsilon = { version = "0.1.0", path = "../epsilon" }
+nom.workspace = true
 
 [dev-dependencies]
 approx.workspace = true
