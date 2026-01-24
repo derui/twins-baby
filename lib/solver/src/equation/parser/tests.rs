@@ -1,29 +1,8 @@
 use anyhow::{Result, anyhow};
 use approx::assert_relative_eq;
-use nom::{IResult, Parser, number::complete::recognize_float};
 
 use super::parse;
-use crate::{
-    environment::Environment,
-    equation::{Evaluate, parser::number},
-};
-
-#[test]
-fn test_parse_number() -> Result<()> {
-    // Arrange
-    let input = "42.0";
-    let env = Environment::empty();
-
-    // Act
-    let p = |s| -> IResult<&str, &str> { recognize_float(s) };
-    let (input, v): (&str, &str) = p(input)?;
-
-    // Assert
-    assert_eq!(v, "42.0");
-    assert_eq!(input, "");
-
-    Ok(())
-}
+use crate::{environment::Environment, equation::Evaluate};
 
 #[test]
 fn test_parse_constant() -> Result<()> {
@@ -300,6 +279,230 @@ fn test_parse_unparsed_input_remaining() -> Result<()> {
 
     // Act
     let result = parse(input);
+
+    // Assert
+    assert!(result.is_err());
+
+    Ok(())
+}
+
+#[test]
+fn test_parse_complex_arithmetic_expression() -> Result<()> {
+    // Arrange
+    let input = "2.0 * x + 3.0";
+    let env = Environment::from_tuples(&[("x", 5.0)]);
+
+    // Act
+    let eq = parse(input).map_err(|e| anyhow!("{}", e))?;
+    let result = eq.evaluate(&env).map_err(|e| anyhow!("{:?}", e))?;
+
+    // Assert
+    assert_relative_eq!(result, 13.0);
+
+    Ok(())
+}
+
+#[test]
+fn test_parse_nested_parentheses() -> Result<()> {
+    // Arrange
+    let input = "((x + 1.0) * 2.0)";
+    let env = Environment::from_tuples(&[("x", 3.0)]);
+
+    // Act
+    let eq = parse(input).map_err(|e| anyhow!("{}", e))?;
+    let result = eq.evaluate(&env).map_err(|e| anyhow!("{:?}", e))?;
+
+    // Assert
+    assert_relative_eq!(result, 8.0);
+
+    Ok(())
+}
+
+#[test]
+fn test_parse_division_by_constant() -> Result<()> {
+    // Arrange
+    let input = "10.0 / 4.0";
+    let env = Environment::empty();
+
+    // Act
+    let eq = parse(input).map_err(|e| anyhow!("{}", e))?;
+    let result = eq.evaluate(&env).map_err(|e| anyhow!("{:?}", e))?;
+
+    // Assert
+    assert_relative_eq!(result, 2.5);
+
+    Ok(())
+}
+
+#[test]
+fn test_parse_monomial_zero_exponent() -> Result<()> {
+    // Arrange
+    let input = "x^0";
+    let env = Environment::from_tuples(&[("x", 100.0)]);
+
+    // Act
+    let eq = parse(input).map_err(|e| anyhow!("{}", e))?;
+    let result = eq.evaluate(&env).map_err(|e| anyhow!("{:?}", e))?;
+
+    // Assert
+    assert_relative_eq!(result, 1.0);
+
+    Ok(())
+}
+
+#[test]
+fn test_parse_large_coefficient() -> Result<()> {
+    // Arrange
+    let input = "1000.5x";
+    let env = Environment::from_tuples(&[("x", 2.0)]);
+
+    // Act
+    let eq = parse(input).map_err(|e| anyhow!("{}", e))?;
+    let result = eq.evaluate(&env).map_err(|e| anyhow!("{:?}", e))?;
+
+    // Assert
+    assert_relative_eq!(result, 2001.0);
+
+    Ok(())
+}
+
+#[test]
+fn test_parse_fractional_coefficient() -> Result<()> {
+    // Arrange
+    let input = "0.5x";
+    let env = Environment::from_tuples(&[("x", 10.0)]);
+
+    // Act
+    let eq = parse(input).map_err(|e| anyhow!("{}", e))?;
+    let result = eq.evaluate(&env).map_err(|e| anyhow!("{:?}", e))?;
+
+    // Assert
+    assert_relative_eq!(result, 5.0);
+
+    Ok(())
+}
+
+#[test]
+fn test_parse_multiple_variables() -> Result<()> {
+    // Arrange
+    let input = "x + y";
+    let env = Environment::from_tuples(&[("x", 3.0), ("y", 7.0)]);
+
+    // Act
+    let eq = parse(input).map_err(|e| anyhow!("{}", e))?;
+    let result = eq.evaluate(&env).map_err(|e| anyhow!("{:?}", e))?;
+
+    // Assert
+    assert_relative_eq!(result, 10.0);
+
+    Ok(())
+}
+
+#[test]
+fn test_parse_variable_multiplication() -> Result<()> {
+    // Arrange
+    let input = "x * y";
+    let env = Environment::from_tuples(&[("x", 4.0), ("y", 5.0)]);
+
+    // Act
+    let eq = parse(input).map_err(|e| anyhow!("{}", e))?;
+    let result = eq.evaluate(&env).map_err(|e| anyhow!("{:?}", e))?;
+
+    // Assert
+    assert_relative_eq!(result, 20.0);
+
+    Ok(())
+}
+
+#[test]
+fn test_parse_uppercase_variable() -> Result<()> {
+    // Arrange
+    let input = "X";
+    let env = Environment::from_tuples(&[("X", 15.0)]);
+
+    // Act
+    let eq = parse(input).map_err(|e| anyhow!("{}", e))?;
+    let result = eq.evaluate(&env).map_err(|e| anyhow!("{:?}", e))?;
+
+    // Assert
+    assert_relative_eq!(result, 15.0);
+
+    Ok(())
+}
+
+#[test]
+fn test_parse_mixed_case_variable() -> Result<()> {
+    // Arrange
+    let input = "MyVar";
+    let env = Environment::from_tuples(&[("MyVar", 25.0)]);
+
+    // Act
+    let eq = parse(input).map_err(|e| anyhow!("{}", e))?;
+    let result = eq.evaluate(&env).map_err(|e| anyhow!("{:?}", e))?;
+
+    // Assert
+    assert_relative_eq!(result, 25.0);
+
+    Ok(())
+}
+
+#[test]
+fn test_parse_subtraction_resulting_negative() -> Result<()> {
+    // Arrange
+    let input = "x - 10.0";
+    let env = Environment::from_tuples(&[("x", 3.0)]);
+
+    // Act
+    let eq = parse(input).map_err(|e| anyhow!("{}", e))?;
+    let result = eq.evaluate(&env).map_err(|e| anyhow!("{:?}", e))?;
+
+    // Assert
+    assert_relative_eq!(result, -7.0);
+
+    Ok(())
+}
+
+#[test]
+fn test_parse_high_exponent() -> Result<()> {
+    // Arrange
+    let input = "x^5";
+    let env = Environment::from_tuples(&[("x", 2.0)]);
+
+    // Act
+    let eq = parse(input).map_err(|e| anyhow!("{}", e))?;
+    let result = eq.evaluate(&env).map_err(|e| anyhow!("{:?}", e))?;
+
+    // Assert
+    assert_relative_eq!(result, 32.0);
+
+    Ok(())
+}
+
+#[test]
+fn test_parse_parentheses_with_multiplication() -> Result<()> {
+    // Arrange
+    let input = "(x + 2.0) * 3.0";
+    let env = Environment::from_tuples(&[("x", 4.0)]);
+
+    // Act
+    let eq = parse(input).map_err(|e| anyhow!("{}", e))?;
+    let result = eq.evaluate(&env).map_err(|e| anyhow!("{:?}", e))?;
+
+    // Assert
+    assert_relative_eq!(result, 18.0);
+
+    Ok(())
+}
+
+#[test]
+fn test_parse_missing_variable_in_environment() -> Result<()> {
+    // Arrange
+    let input = "x + y";
+    let env = Environment::from_tuples(&[("x", 3.0)]);
+
+    // Act
+    let eq = parse(input).map_err(|e| anyhow!("{}", e))?;
+    let result = eq.evaluate(&env);
 
     // Assert
     assert!(result.is_err());

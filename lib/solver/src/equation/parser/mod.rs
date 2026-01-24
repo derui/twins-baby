@@ -1,5 +1,6 @@
 use std::error::Error;
 
+use anyhow::Result;
 use nom::{
     AsChar, Finish, IResult, Parser,
     branch::alt,
@@ -7,7 +8,7 @@ use nom::{
     character::complete::{char, multispace0, one_of},
     combinator::{map, opt, recognize},
     error::ParseError,
-    multi::many0,
+    multi::{many0, many1},
     number::complete::recognize_float,
     sequence::delimited,
 };
@@ -17,6 +18,16 @@ use crate::equation::{
     arithmetic::{ArithmeticEquation, Operator},
     monomial::MonomialEquation,
 };
+
+#[derive(Debug, Clone)]
+enum Syntax {
+    // direct representation for constant/monomial
+    Constant(Equation),
+    Monomial(Equation),
+    // operator should be construct with a equation
+    WithOp(Operator, Box<Syntax>),
+    Paren(Vec<Syntax>),
+}
 
 fn number(input: &str) -> IResult<&str, f32> {
     let (input, f) = recognize_float(input)?;
@@ -40,18 +51,10 @@ fn variable(input: &str) -> IResult<&str, String> {
 }
 
 /// Parse an operator
-fn high_op(input: &str) -> IResult<&str, Operator> {
-    map(one_of("*/"), |v| match v {
+fn op(input: &str) -> IResult<&str, Operator> {
+    map(one_of("-+*/"), |v| match v {
         '*' => Operator::Multiply,
         '/' => Operator::Divide,
-        _ => unreachable!("do not come here!"),
-    })
-    .parse(input)
-}
-
-/// Parse an operator
-fn low_op(input: &str) -> IResult<&str, Operator> {
-    map(one_of("-+"), |v| match v {
         '-' => Operator::Subtract,
         '+' => Operator::Add,
         _ => unreachable!("do not come here!"),
@@ -83,7 +86,7 @@ fn signed_digit(input: &str) -> IResult<&str, i32> {
 }
 
 /// Parse a monomial equation
-fn monomial(input: &str) -> IResult<&str, Equation> {
+fn monomial(input: &str) -> IResult<&str, Syntax> {
     let coeff = opt(number);
     let exponent = map(opt((char('^'), signed_digit)), |v| v.map(|v| v.1));
 
@@ -91,70 +94,71 @@ fn monomial(input: &str) -> IResult<&str, Equation> {
 
     Ok((
         input,
-        MonomialEquation::new(coeff.unwrap_or(1.0), &var, exp.unwrap_or(1_i32)).into(),
+        Syntax::Monomial(
+            MonomialEquation::new(coeff.unwrap_or(1.0), &var, exp.unwrap_or(1_i32)).into(),
+        ),
     ))
 }
 
-fn constant(input: &str) -> IResult<&str, Equation> {
+fn constant(input: &str) -> IResult<&str, Syntax> {
     let (input, value) = ws(number).parse(input)?;
 
-    Ok((input, value.into()))
+    Ok((input, Syntax::Constant(value.into())))
 }
 
 /// parse (...) equation
-fn paren_equation(input: &str) -> IResult<&str, Equation> {
+fn paren_syntax(input: &str) -> IResult<&str, Syntax> {
     let lparen = ws(char('('));
     let rparen = ws(char(')'));
-    let mut eq = delimited(lparen, equation, rparen);
+    let mut eq = delimited(lparen, (equation, many0(equation_with_op)), rparen);
 
-    let (input, eq) = eq.parse(input)?;
+    let (input, (op, ops)) = eq.parse(input)?;
+    let ret = vec![vec![op], ops].into_iter().flatten().collect();
 
-    Ok((input, eq))
+    Ok((input, Syntax::Paren(ret)))
 }
 
 /// Parse equation from string.
-fn equation(input: &str) -> IResult<&str, Equation> {
-    alt((
-        paren_equation,
-        low_arithmetic,
-        high_arithmetic,
-        monomial,
-        constant,
-    ))
-    .parse(input)
+fn equation(input: &str) -> IResult<&str, Syntax> {
+    alt((paren_syntax, monomial, constant)).parse(input)
 }
 
-fn high_equation(input: &str) -> IResult<&str, Equation> {
-    alt((paren_equation, monomial, constant)).parse(input)
+/// Parse equation from string.
+fn equation_with_op(input: &str) -> IResult<&str, Syntax> {
+    let (input, (op, syntax)) = (ws(op), equation).parse(input)?;
+
+    Ok((input, Syntax::WithOp(op, Box::new(syntax))))
 }
 
-fn low_equation(input: &str) -> IResult<&str, Equation> {
-    alt((paren_equation, high_equation, monomial, constant)).parse(input)
-}
+/// Construct an equation with parsed syntaxs.
+fn construct_equation(syntax: &[Syntax]) -> Result<Equation> {
+    let mut current: Equation = match syntax.first() {
+        Some(Syntax::Constant(v)) => v.clone(),
+        Some(Syntax::Monomial(v)) => v.clone(),
+        Some(Syntax::Paren(v)) => construct_equation(&v)?,
+        Some(Syntax::WithOp(_, _)) => unreachable!("This case is parse error"),
+        None => unreachable!("Must be able to get first syntax"),
+    };
+    let mut index = 1;
 
-/// Parse an arithmetic equation with high priority
-fn high_arithmetic(input: &str) -> IResult<&str, Equation> {
-    let (input, (left, operator, right)) =
-        (high_equation, ws(high_op), high_equation).parse(input)?;
+    while index < syntax.len() {
+        let next = &syntax[index];
 
-    Ok((
-        input,
-        ArithmeticEquation::new(operator, &[left, right])
-            .expect("should be success")
-            .into(),
-    ))
-}
+        current = match next {
+            Syntax::Constant(equation) => unreachable!("This case is parse error : {}", equation),
+            Syntax::Monomial(equation) => unreachable!("This case is parse error : {}", equation),
+            Syntax::WithOp(operator, syntax) => ArithmeticEquation::new(
+                *operator,
+                &vec![current, construct_equation(&[*syntax.clone()])?],
+            )
+            .map(|v| Equation::Arithmetic(v))?,
+            Syntax::Paren(items) => unreachable!("This case is parse error : {:?}", items),
+        };
 
-/// Parse an arithmetic equation with preceding priority
-fn low_arithmetic(input: &str) -> IResult<&str, Equation> {
-    let (input, (left, operator, right)) = (low_equation, ws(low_op), low_equation).parse(input)?;
+        index += 1;
+    }
 
-    Ok((
-        input,
-        ArithmeticEquation::new(operator, &[left, right])
-            .expect("should be success")
-            .into(),
-    ))
+    Ok(current)
 }
 
 /// Parse an equation from input string
@@ -164,15 +168,22 @@ fn low_arithmetic(input: &str) -> IResult<&str, Equation> {
 ///
 /// # Returns
 /// * `Result<Equation, Box<dyn Error>>` - Parsed Equation or an error
-pub fn parse(input: &str) -> Result<Equation, Box<dyn Error>> {
-    println!("{:?}", equation(input));
-    let (rest, eq) = equation(input)
+pub fn parse(input: &str) -> Result<Equation, Box<dyn Error + '_>> {
+    let (rest, syntax) = equation(input)?;
+    let (rest, rest_syntax) = many0(equation_with_op)
+        .parse(rest)
         .finish()
         .map_err(|e| format!("Parse error: {:?}", e))?;
 
     if !rest.trim().is_empty() {
         return Err(format!("Unparsed input remaining: {}", rest).into());
     }
+
+    let syntaxes: Vec<Syntax> = vec![vec![syntax], rest_syntax]
+        .into_iter()
+        .flatten()
+        .collect();
+    let eq = construct_equation(&syntaxes)?;
 
     Ok(eq)
 }
