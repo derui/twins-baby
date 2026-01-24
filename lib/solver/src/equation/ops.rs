@@ -1,18 +1,9 @@
-use std::{
-    fmt::Display,
-    ops::{Add, Div, Mul, Sub},
-};
+use std::ops::{Add, Div, Mul, Sub};
 
-use ambassador::{delegatable_trait, delegatable_trait_remote};
-
-use crate::{
-    environment::Environment,
-    equation::{
-        Equation,
-        arithmetic::{ArithmeticEquation, Operator},
-        monomial::MonomialEquation,
-    },
-    variable::Variable,
+use crate::equation::{
+    Equation,
+    arithmetic::{ArithmeticEquation, Operator},
+    monomial::MonomialEquation,
 };
 
 /// Operation wrapper

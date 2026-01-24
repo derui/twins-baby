@@ -46,6 +46,7 @@ pub enum Equation {
 
 use ambassador::{Delegate, delegatable_trait, delegatable_trait_remote};
 pub use ops::*;
+pub use parser::*;
 
 use crate::{
     environment::Environment,
