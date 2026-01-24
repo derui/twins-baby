@@ -110,8 +110,12 @@ All test case must follow these styles:
   - Test behavior through public APIs rather than inspecting private fields
   - Focus on observable outcomes and side effects
   - Only access internal state when absolutely necessary for validation
+- **Do not test simple getters**
+  - Skip tests for trivial getter methods that only return a field value without any logic
+  - Example: `pub fn name(&self) -> &str { &self.name }` does not need a test
+  - Focus testing efforts on methods with actual behavior and logic
 - When assertion for Rust's `Result`, avoid `is_ok` or `is_err` for assert generally.
-- **Do not write overly engineering test** 
+- **Do not write overly engineering test**
   - Always write effective test, such as use paratemerized test for patterns
 - **Write more careful test cases for edge cases, MECE conditions**
 - **When large number of test cases (> 10), split it to dedicated test module**
