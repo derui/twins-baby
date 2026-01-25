@@ -3,29 +3,10 @@ use std::{collections::HashMap, fmt::Display};
 use anyhow::{Result, anyhow};
 use solver::{environment::Environment, variable::Variable};
 
-use crate::id::GenerateId;
-
-/// Internal id for manage variable in sketch
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
-pub struct VariableId(u64);
-
-impl Display for VariableId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "var{}", self.0)
-    }
-}
-
-impl From<u64> for VariableId {
-    fn from(value: u64) -> Self {
-        VariableId(value)
-    }
-}
-
-impl From<VariableId> for u64 {
-    fn from(value: VariableId) -> Self {
-        value.0
-    }
-}
+use crate::{
+    id::{GenerateId, VariableId},
+    sketch::registrar::VariableRegistrar,
+};
 
 #[derive(Debug, Clone)]
 pub struct PropagatableEnv<T: GenerateId<VariableId>> {
@@ -40,12 +21,7 @@ pub struct PropagatableEnv<T: GenerateId<VariableId>> {
     environment: Environment,
 }
 
-/// Single responsibility trait to register a variable
-pub trait VariableRegister {
-    fn register(&mut self, var: &Variable) -> VariableId;
-}
-
-impl<T: GenerateId<VariableId>> VariableRegister for PropagatableEnv<T> {
+impl<T: GenerateId<VariableId>> VariableRegistrar for PropagatableEnv<T> {
     /// Register a variable to the env.
     fn register(&mut self, var: &Variable) -> VariableId {
         let id = self._id_gen.generate();
@@ -56,6 +32,12 @@ impl<T: GenerateId<VariableId>> VariableRegister for PropagatableEnv<T> {
         self.id_map.insert(id, new_name);
 
         id
+    }
+
+    fn deregister(&mut self, id: &VariableId) -> Option<Variable> {
+        let var = self.id_map.remove(id)?;
+
+        self.environment.remove_variable(&var)
     }
 }
 

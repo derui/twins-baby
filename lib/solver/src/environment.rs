@@ -68,9 +68,9 @@ impl Environment {
     }
 
     /// Remove a variable from the environment
-    pub fn remove_variable(&mut self, variable: &str) {
+    pub fn remove_variable(&mut self, variable: &str) -> Option<Variable> {
         // ignore errors
-        self.variables.remove(variable);
+        self.variables.remove(variable)
     }
 
     /// Update the variable

@@ -1,4 +1,6 @@
 mod propagation;
+mod registrar;
+mod shape;
 #[cfg(test)]
 mod tests;
 
@@ -167,7 +169,7 @@ impl Sketch {
     /// # Summary
     /// Remove the edge of [id] from this sketch, and remove variables related of this.
     pub fn remove_edge(&mut self, id: &EdgeId) -> Option<Edge> {
-        let Some(edge) = self.edges.remove(&id) else {
+        let Some(edge) = self.edges.remove(id) else {
             return None;
         };
 
