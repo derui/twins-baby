@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fmt::Display};
+use std::collections::HashMap;
 
 use anyhow::{Result, anyhow};
 use solver::{environment::Environment, variable::Variable};

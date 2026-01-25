@@ -151,7 +151,7 @@ fn construct_equation(syntax: &[Syntax]) -> Result<Equation> {
     let first: Equation = to_eq(first);
 
     // short cut to stop infinite recursion
-    if rest.len() == 0 {
+    if rest.is_empty() {
         return Ok(first);
     }
 
