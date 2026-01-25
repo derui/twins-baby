@@ -1,7 +1,6 @@
 pub(crate) mod arithmetic;
 pub(crate) mod constant;
 pub(crate) mod monomial;
-mod ops;
 mod parser;
 
 use std::fmt::Display;
@@ -45,7 +44,6 @@ pub enum Equation {
 }
 
 use ambassador::{Delegate, delegatable_trait, delegatable_trait_remote};
-pub use ops::*;
 pub use parser::*;
 
 use crate::{

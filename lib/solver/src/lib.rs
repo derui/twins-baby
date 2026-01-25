@@ -468,7 +468,7 @@ mod tests {
     mod solve {
         use crate::environment::Environment;
 
-        use crate::equation::{Equation, Ops};
+        use crate::equation::{Equation, parse};
         use crate::variable::Variable;
         use crate::{DefaultEquationIdGenerator, DimensionSpecificationStatus, Solver};
         use approx::assert_relative_eq;
@@ -486,27 +486,16 @@ mod tests {
             solver.update_variables(&env);
             solver.update_dimensions(&dimension);
             // x1 - 3 = 0
-            solver.add_equation((Into::<Ops>::into("x1") - 3.0.into()).into());
+            solver.add_equation(parse("x1 - 3.0").unwrap());
             // y1 - 0 = 0
-            solver.add_equation(Into::<Ops>::into("y1").into());
-
+            solver.add_equation(parse("y1").unwrap());
             // (x2 - x1)^2 + (y2 - y1)^2 - d^2 = 0
             // = x2^2 - 2 * x2 * x1 + x1^2 + y2^2 - 2 * y2 * y1 + y1^2 - d^2 = 0
-            solver.add_equation({
-                let first: Ops = Into::<Ops>::into(("x2", 2))
-                    - (Ops::constant(2.0) * "x2".into() * "x1".into())
-                    + ("x1", 2).into();
-
-                let second: Ops = Into::<Ops>::into(("y2", 2))
-                    - (Ops::constant(2.0) * "y2".into() * "y1".into())
-                    + ("y1", 2).into();
-
-                let third = Into::<Ops>::into(("d", 2));
-
-                (first + second - third).into()
-            });
+            solver.add_equation(
+                parse("x2^2 - 2.0 * x2 * x1 + x1^2 + y2^2 - 2.0 * y2 * y1 + y1^2 - d^2").unwrap(),
+            );
             // y2 - y1 = 0
-            solver.add_equation((Into::<Ops>::into("y2") - "y1".into()).into());
+            solver.add_equation(parse("y2 - y1").unwrap());
 
             // Act
             let ret = solver.solve()?;
