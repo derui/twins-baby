@@ -111,7 +111,8 @@
 
             shellHook = ''
               pre-commit install
-              cargo install cargo-nextest cargo-watch cargo-llvm-cov leptosfmt
+              cargo install cargo-nextest@0.9.122 --locked
+              cargo install cargo-watch cargo-llvm-cov leptosfmt
             '';
           };
         }
