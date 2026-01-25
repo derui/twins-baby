@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 use anyhow::{Result, anyhow};
 
 use crate::{
@@ -7,12 +9,35 @@ use crate::{
 };
 
 /// Operator of arithmetic
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Ord)]
 pub(crate) enum Operator {
     Add,
     Subtract,
     Multiply,
     Divide,
+}
+
+impl PartialOrd for Operator {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        match (self, other) {
+            (Operator::Add, Operator::Add) => Some(Ordering::Equal),
+            (Operator::Add, Operator::Subtract) => Some(Ordering::Equal),
+            (Operator::Add, Operator::Multiply) => Some(Ordering::Less),
+            (Operator::Add, Operator::Divide) => Some(Ordering::Less),
+            (Operator::Subtract, Operator::Add) => Some(Ordering::Equal),
+            (Operator::Subtract, Operator::Subtract) => Some(Ordering::Equal),
+            (Operator::Subtract, Operator::Multiply) => Some(Ordering::Less),
+            (Operator::Subtract, Operator::Divide) => Some(Ordering::Less),
+            (Operator::Multiply, Operator::Add) => Some(Ordering::Greater),
+            (Operator::Multiply, Operator::Subtract) => Some(Ordering::Greater),
+            (Operator::Multiply, Operator::Multiply) => Some(Ordering::Equal),
+            (Operator::Multiply, Operator::Divide) => Some(Ordering::Equal),
+            (Operator::Divide, Operator::Add) => Some(Ordering::Greater),
+            (Operator::Divide, Operator::Subtract) => Some(Ordering::Greater),
+            (Operator::Divide, Operator::Multiply) => Some(Ordering::Equal),
+            (Operator::Divide, Operator::Divide) => Some(Ordering::Equal),
+        }
+    }
 }
 
 /// Implementation of arithmetic equation

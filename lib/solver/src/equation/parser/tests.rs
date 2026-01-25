@@ -509,3 +509,19 @@ fn test_parse_missing_variable_in_environment() -> Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn test_parse_natural_computation_order() -> Result<()> {
+    // Arrange
+    let input = "1 + 2 * 3";
+    let env = Environment::empty();
+
+    // Act
+    let eq = parse(input).map_err(|e| anyhow!("{}", e))?;
+    let result = eq.evaluate(&env).map_err(|e| anyhow!("{:?}", e))?;
+
+    // Assert
+    assert_relative_eq!(result, 7.0);
+
+    Ok(())
+}

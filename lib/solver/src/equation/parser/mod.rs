@@ -25,7 +25,7 @@ enum Syntax {
     Constant(Equation),
     Monomial(Equation),
     // operator should be construct with a equation
-    WithOp(Operator, Box<Syntax>),
+    Op(Operator),
     Paren(Vec<Syntax>),
 }
 
@@ -113,7 +113,10 @@ fn paren_syntax(input: &str) -> IResult<&str, Syntax> {
     let mut eq = delimited(lparen, (equation, many0(equation_with_op)), rparen);
 
     let (input, (op, ops)) = eq.parse(input)?;
-    let ret = vec![vec![op], ops].into_iter().flatten().collect();
+    let ret = vec![vec![op], ops.into_iter().flatten().collect()]
+        .into_iter()
+        .flatten()
+        .collect();
 
     Ok((input, Syntax::Paren(ret)))
 }
@@ -124,41 +127,63 @@ fn equation(input: &str) -> IResult<&str, Syntax> {
 }
 
 /// Parse equation from string.
-fn equation_with_op(input: &str) -> IResult<&str, Syntax> {
+fn equation_with_op(input: &str) -> IResult<&str, Vec<Syntax>> {
     let (input, (op, syntax)) = (ws(op), equation).parse(input)?;
 
-    Ok((input, Syntax::WithOp(op, Box::new(syntax))))
+    Ok((input, vec![Syntax::Op(op), syntax]))
 }
 
 /// Construct an equation with parsed syntaxs.
 fn construct_equation(syntax: &[Syntax]) -> Result<Equation> {
-    let mut current: Equation = match syntax.first() {
-        Some(Syntax::Constant(v)) => v.clone(),
-        Some(Syntax::Monomial(v)) => v.clone(),
-        Some(Syntax::Paren(v)) => construct_equation(v)?,
-        Some(Syntax::WithOp(_, _)) => unreachable!("This case is parse error"),
-        None => unreachable!("Must be able to get first syntax"),
+    let Some((first, rest)) = syntax.split_first() else {
+        return Err(anyhow::anyhow!("Must not empty"));
     };
-    let mut index = 1;
 
-    while index < syntax.len() {
-        let next = &syntax[index];
-
-        current = match next {
-            Syntax::Constant(equation) => unreachable!("This case is parse error : {}", equation),
-            Syntax::Monomial(equation) => unreachable!("This case is parse error : {}", equation),
-            Syntax::WithOp(operator, syntax) => ArithmeticEquation::new(
-                *operator,
-                &[current, construct_equation(&[*syntax.clone()])?],
-            )
-            .map(Equation::Arithmetic)?,
-            Syntax::Paren(items) => unreachable!("This case is parse error : {:?}", items),
-        };
-
-        index += 1;
+    fn to_eq(v: &Syntax) -> Equation {
+        match v {
+            Syntax::Constant(v) => v.clone(),
+            Syntax::Monomial(v) => v.clone(),
+            Syntax::Paren(v) => construct_equation(v).unwrap(),
+            Syntax::Op(_) => unreachable!("This case is parse error"),
+        }
     }
 
-    Ok(current)
+    let first: Equation = to_eq(first);
+
+    // short cut to stop infinite recursion
+    if rest.len() == 0 {
+        return Ok(first);
+    }
+
+    fn make_tree(syntax: &[Syntax]) -> Equation {
+        if syntax.len() == 1 {
+            return to_eq(&syntax[0]);
+        }
+        let mut ordered_ops = syntax
+            .iter()
+            .enumerate()
+            .filter_map(|(i, v)| match v {
+                Syntax::Constant(_) => None,
+                Syntax::Monomial(_) => None,
+                Syntax::Op(operator) => Some((i, operator)),
+                Syntax::Paren(_) => None,
+            })
+            .collect::<Vec<_>>();
+
+        // ordered by less-operator, and greater(right most) index.
+        ordered_ops.sort_by(|(idx1, v1), (idx2, v2)| v1.cmp(v2).then(idx1.cmp(idx2).reverse()));
+
+        let (first, rest) = syntax.split_at(ordered_ops[0].0);
+
+        ArithmeticEquation::new(
+            *ordered_ops[0].1,
+            &[make_tree(first), make_tree(&rest[1..])],
+        )
+        .expect("Should be convertable")
+        .into()
+    }
+
+    Ok(make_tree(syntax))
 }
 
 /// Parse an equation from input string
@@ -169,9 +194,8 @@ fn construct_equation(syntax: &[Syntax]) -> Result<Equation> {
 /// # Returns
 /// * `Result<Equation, Box<dyn Error>>` - Parsed Equation or an error
 pub fn parse(input: &str) -> Result<Equation, Box<dyn Error + '_>> {
-    let (rest, syntax) = equation(input)?;
-    let (rest, rest_syntax) = many0(equation_with_op)
-        .parse(rest)
+    let (rest, (syntax, syntaxes)) = (equation, many0(equation_with_op))
+        .parse(input)
         .finish()
         .map_err(|e| format!("Parse error: {:?}", e))?;
 
@@ -179,7 +203,7 @@ pub fn parse(input: &str) -> Result<Equation, Box<dyn Error + '_>> {
         return Err(format!("Unparsed input remaining: {}", rest).into());
     }
 
-    let syntaxes: Vec<Syntax> = vec![vec![syntax], rest_syntax]
+    let syntaxes: Vec<Syntax> = vec![vec![syntax], syntaxes.into_iter().flatten().collect()]
         .into_iter()
         .flatten()
         .collect();
