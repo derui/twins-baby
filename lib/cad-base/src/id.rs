@@ -127,6 +127,28 @@ impl From<VariableId> for u64 {
     }
 }
 
+/// Internal id for manage shape in sketch
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+pub struct ShapeId(u64);
+
+impl Display for ShapeId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "shape{}", self.0)
+    }
+}
+
+impl From<u64> for ShapeId {
+    fn from(value: u64) -> Self {
+        ShapeId(value)
+    }
+}
+
+impl From<ShapeId> for u64 {
+    fn from(value: ShapeId) -> Self {
+        value.0
+    }
+}
+
 /// Generator trait for creating unique identifiers.
 pub trait GenerateId<T>: std::fmt::Debug + GenerateIdClone<T>
 where
