@@ -9,7 +9,7 @@ use crate::{
 };
 
 /// Operator of arithmetic
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Ord)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub(crate) enum Operator {
     Add,
     Subtract,
@@ -37,6 +37,12 @@ impl PartialOrd for Operator {
             (Operator::Divide, Operator::Multiply) => Some(Ordering::Equal),
             (Operator::Divide, Operator::Divide) => Some(Ordering::Equal),
         }
+    }
+}
+
+impl Ord for Operator {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.partial_cmp(other).expect("should be success")
     }
 }
 
@@ -300,6 +306,136 @@ mod tests {
         // assert
         assert_eq!(result.unwrap(), 28.0);
         Ok(())
+    }
+
+    mod operator_ordering_tests {
+        use super::*;
+        use pretty_assertions::assert_eq;
+        use rstest::rstest;
+        use std::cmp::Ordering;
+
+        #[rstest]
+        #[case(Operator::Add, Operator::Add, Ordering::Equal)]
+        #[case(Operator::Add, Operator::Subtract, Ordering::Equal)]
+        #[case(Operator::Subtract, Operator::Add, Ordering::Equal)]
+        #[case(Operator::Subtract, Operator::Subtract, Ordering::Equal)]
+        #[case(Operator::Multiply, Operator::Multiply, Ordering::Equal)]
+        #[case(Operator::Multiply, Operator::Divide, Ordering::Equal)]
+        #[case(Operator::Divide, Operator::Multiply, Ordering::Equal)]
+        #[case(Operator::Divide, Operator::Divide, Ordering::Equal)]
+        fn test_operators_with_equal_precedence(
+            #[case] op1: Operator,
+            #[case] op2: Operator,
+            #[case] expected: Ordering,
+        ) {
+            // arrange & act
+            let result = op1.partial_cmp(&op2);
+
+            // assert
+            assert_eq!(result, Some(expected));
+        }
+
+        #[rstest]
+        #[case(Operator::Multiply, Operator::Add, Ordering::Greater)]
+        #[case(Operator::Multiply, Operator::Subtract, Ordering::Greater)]
+        #[case(Operator::Divide, Operator::Add, Ordering::Greater)]
+        #[case(Operator::Divide, Operator::Subtract, Ordering::Greater)]
+        fn test_multiplication_and_division_have_higher_precedence_than_addition_and_subtraction(
+            #[case] higher_op: Operator,
+            #[case] lower_op: Operator,
+            #[case] expected: Ordering,
+        ) {
+            // arrange & act
+            let result = higher_op.partial_cmp(&lower_op);
+
+            // assert
+            assert_eq!(result, Some(expected));
+        }
+
+        #[rstest]
+        #[case(Operator::Add, Operator::Multiply, Ordering::Less)]
+        #[case(Operator::Add, Operator::Divide, Ordering::Less)]
+        #[case(Operator::Subtract, Operator::Multiply, Ordering::Less)]
+        #[case(Operator::Subtract, Operator::Divide, Ordering::Less)]
+        fn test_addition_and_subtraction_have_lower_precedence_than_multiplication_and_division(
+            #[case] lower_op: Operator,
+            #[case] higher_op: Operator,
+            #[case] expected: Ordering,
+        ) {
+            // arrange & act
+            let result = lower_op.partial_cmp(&higher_op);
+
+            // assert
+            assert_eq!(result, Some(expected));
+        }
+
+        #[test]
+        fn test_ord_is_consistent_with_partial_ord() {
+            // arrange
+            let operators = vec![
+                Operator::Add,
+                Operator::Subtract,
+                Operator::Multiply,
+                Operator::Divide,
+            ];
+
+            // act & assert
+            for op1 in &operators {
+                for op2 in &operators {
+                    let ord_result = op1.cmp(op2);
+                    let partial_ord_result = op1.partial_cmp(op2);
+                    assert_eq!(Some(ord_result), partial_ord_result);
+                }
+            }
+        }
+
+        #[test]
+        fn test_operators_can_be_sorted_by_precedence() {
+            // arrange
+            let mut operators = vec![
+                Operator::Add,
+                Operator::Divide,
+                Operator::Subtract,
+                Operator::Multiply,
+            ];
+
+            // act
+            operators.sort();
+
+            // assert
+            // After sorting, operators with lower precedence should come first
+            // Add and Subtract have equal precedence (lower)
+            assert!(operators[0] == Operator::Add || operators[0] == Operator::Subtract);
+            assert!(operators[1] == Operator::Add || operators[1] == Operator::Subtract);
+            // Multiply and Divide have equal precedence (higher)
+            assert!(operators[2] == Operator::Multiply || operators[2] == Operator::Divide);
+            assert!(operators[3] == Operator::Multiply || operators[3] == Operator::Divide);
+            // Ensure the two groups are distinct
+            assert_ne!(operators[0], operators[2]);
+            assert_ne!(operators[1], operators[3]);
+        }
+
+        #[test]
+        fn test_max_returns_higher_precedence_operator() {
+            // arrange & act
+            let result1 = Operator::Add.max(Operator::Multiply);
+            let result2 = Operator::Divide.max(Operator::Subtract);
+
+            // assert
+            assert_eq!(result1, Operator::Multiply);
+            assert_eq!(result2, Operator::Divide);
+        }
+
+        #[test]
+        fn test_min_returns_lower_precedence_operator() {
+            // arrange & act
+            let result1 = Operator::Add.min(Operator::Multiply);
+            let result2 = Operator::Divide.min(Operator::Subtract);
+
+            // assert
+            assert_eq!(result1, Operator::Add);
+            assert_eq!(result2, Operator::Subtract);
+        }
     }
 
     mod is_variable_related_tests {
