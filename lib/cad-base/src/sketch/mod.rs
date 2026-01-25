@@ -1,3 +1,4 @@
+mod point2d;
 mod propagation;
 mod registrar;
 mod shape;
@@ -14,6 +15,8 @@ use crate::{
     id::{DefaultIdGenerator, EdgeId, GenerateId, PlaneId, PointId, SketchId},
     point::Point,
 };
+
+pub use point2d::*;
 
 /// A internal information of edge.
 ///
