@@ -96,8 +96,15 @@ impl Environment {
     /// Get a variable copy by name
     ///
     /// Updating returned variable will not update the variable in environment.
-    pub fn get_variable(&self, name: &str) -> Option<Variable> {
-        self.variables.get(name).cloned()
+    pub fn get_variable(&self, name: &str) -> Option<&Variable> {
+        self.variables.get(name)
+    }
+
+    /// Get a variable copy by name
+    ///
+    /// Updating returned variable will not update the variable in environment.
+    pub fn get_variable_mut(&mut self, name: &str) -> Option<&mut Variable> {
+        self.variables.get_mut(name)
     }
 
     /// Get list of varibles. This is not reference.
@@ -176,9 +183,9 @@ mod tests {
 
         // assert
         assert_eq!(env.variables.len(), 3);
-        assert_eq!(env.get_variable("x"), Some(var1));
-        assert_eq!(env.get_variable("y"), Some(var2));
-        assert_eq!(env.get_variable("z"), Some(var3));
+        assert_eq!(env.get_variable("x").cloned(), Some(var1));
+        assert_eq!(env.get_variable("y").cloned(), Some(var2));
+        assert_eq!(env.get_variable("z").cloned(), Some(var3));
     }
 
     #[test]
@@ -193,7 +200,7 @@ mod tests {
 
         // assert
         assert_eq!(env.variables.len(), 1);
-        assert_eq!(env.get_variable("x"), Some(var3));
+        assert_eq!(env.get_variable("x").cloned(), Some(var3));
     }
 
     #[test]
@@ -207,7 +214,7 @@ mod tests {
 
         // assert
         assert_eq!(env.variables.len(), 1);
-        assert_eq!(env.get_variable("x"), Some(var));
+        assert_eq!(env.get_variable("x").cloned(), Some(var));
     }
 
     #[test]
@@ -223,7 +230,7 @@ mod tests {
 
         // assert
         assert_eq!(env.variables.len(), 1);
-        assert_eq!(env.get_variable("x"), Some(var2));
+        assert_eq!(env.get_variable("x").cloned(), Some(var2));
     }
 
     #[test]
@@ -254,7 +261,7 @@ mod tests {
 
         // assert
         assert_eq!(env.variables.len(), 1);
-        assert_eq!(env.get_variable("x"), Some(var1));
+        assert_eq!(env.get_variable("x").cloned(), Some(var1));
     }
 
     #[test]
@@ -268,7 +275,7 @@ mod tests {
         let _ = env.update_variable("x", 25.0);
 
         // assert
-        let updated_var = env.get_variable("x").unwrap();
+        let updated_var = env.get_variable("x").unwrap().clone();
         let expected_var = Variable::new("x", 25.0);
         assert_eq!(updated_var, expected_var);
     }
@@ -297,7 +304,7 @@ mod tests {
         env.add_variable(var.clone());
 
         // act
-        let result = env.get_variable("x");
+        let result = env.get_variable("x").cloned();
 
         // assert
         assert_eq!(result, Some(var));
@@ -323,11 +330,11 @@ mod tests {
         env.add_variable(var);
 
         // act
-        let mut copied_var = env.get_variable("x").unwrap();
+        let copied_var = env.get_variable_mut("x").unwrap();
         copied_var.update(20.0);
 
         // assert
-        let original_var = env.get_variable("x").unwrap();
+        let original_var = env.get_variable("x").cloned().unwrap();
         let expected_original = Variable::new("x", 10.0);
         assert_eq!(original_var, expected_original);
     }
@@ -357,7 +364,7 @@ mod tests {
 
         // assert
         assert_eq!(merged.list_variables().len(), 1);
-        assert_eq!(merged.get_variable("x"), Some(var));
+        assert_eq!(merged.get_variable("x").cloned(), Some(var));
     }
 
     #[test]
@@ -372,7 +379,7 @@ mod tests {
 
         // assert
         assert_eq!(merged.list_variables().len(), 1);
-        assert_eq!(merged.get_variable("x"), Some(var));
+        assert_eq!(merged.get_variable("x").cloned(), Some(var));
     }
 
     #[test]
@@ -388,8 +395,8 @@ mod tests {
 
         // assert
         assert_eq!(merged.list_variables().len(), 2);
-        assert_eq!(merged.get_variable("x"), Some(var1));
-        assert_eq!(merged.get_variable("y"), Some(var2));
+        assert_eq!(merged.get_variable("x").cloned(), Some(var1));
+        assert_eq!(merged.get_variable("y").cloned(), Some(var2));
     }
 
     #[test]
@@ -405,7 +412,7 @@ mod tests {
 
         // assert
         assert_eq!(merged.list_variables().len(), 1);
-        assert_eq!(merged.get_variable("x"), Some(var2));
+        assert_eq!(merged.get_variable("x").cloned(), Some(var2));
     }
 
     #[test]
@@ -421,9 +428,9 @@ mod tests {
 
         // assert
         assert_eq!(env1.list_variables().len(), 1);
-        assert_eq!(env1.get_variable("x"), Some(var1));
+        assert_eq!(env1.get_variable("x").cloned(), Some(var1));
         assert_eq!(env2.list_variables().len(), 1);
-        assert_eq!(env2.get_variable("y"), Some(var2));
+        assert_eq!(env2.get_variable("y").cloned(), Some(var2));
     }
 
     #[test]
@@ -441,8 +448,8 @@ mod tests {
 
         // assert
         assert_eq!(merged.list_variables().len(), 3);
-        assert_eq!(merged.get_variable("x"), Some(var_x1));
-        assert_eq!(merged.get_variable("y"), Some(var_y2));
-        assert_eq!(merged.get_variable("z"), Some(var_z2));
+        assert_eq!(merged.get_variable("x").cloned(), Some(var_x1));
+        assert_eq!(merged.get_variable("y").cloned(), Some(var_y2));
+        assert_eq!(merged.get_variable("z").cloned(), Some(var_z2));
     }
 }
