@@ -5,6 +5,23 @@ mod parser;
 
 use std::fmt::Display;
 
+use enum_dispatch::enum_dispatch;
+pub use parser::*;
+
+use crate::{
+    environment::Environment,
+    equation::{
+        arithmetic::ArithmeticEquation, constant::ConstantEquation, monomial::MonomialEquation,
+    },
+    variable::Variable,
+};
+
+impl From<f32> for Equation {
+    fn from(value: f32) -> Self {
+        Equation::Constant(value.into())
+    }
+}
+
 /// Error cases for solving equation
 #[derive(Debug, Clone)]
 pub enum EquationError {
@@ -44,23 +61,6 @@ impl Display for Equation {
             Equation::Monomial(eq) => write!(f, "{}", eq),
             Equation::Arithmetic(eq) => write!(f, "{}", eq),
         }
-    }
-}
-
-use enum_dispatch::enum_dispatch;
-pub use parser::*;
-
-use crate::{
-    environment::Environment,
-    equation::{
-        arithmetic::ArithmeticEquation, constant::ConstantEquation, monomial::MonomialEquation,
-    },
-    variable::Variable,
-};
-
-impl From<f32> for Equation {
-    fn from(value: f32) -> Self {
-        Equation::Constant(value.into())
     }
 }
 
