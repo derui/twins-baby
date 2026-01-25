@@ -13,7 +13,7 @@ pub enum EquationError {
 }
 
 /// Equation trait should provide some of the equation behavior of the solver
-#[delegatable_trait]
+#[enum_dispatch]
 pub trait Evaluate {
     /// Evaluate the equation.
     ///
@@ -28,22 +28,26 @@ pub trait Evaluate {
     fn is_variable_related(&self, variable: &Variable) -> bool;
 }
 
-#[delegatable_trait_remote]
-trait Display {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> Result<(), ::std::fmt::Error>;
-}
-
 /// A central Equation, it avoid to Boxing
-#[derive(Debug, Clone, PartialEq, Delegate)]
-#[delegate(Evaluate)]
-#[delegate(std::fmt::Display)]
+#[derive(Debug, Clone, PartialEq)]
+#[enum_dispatch(Evaluate)]
 pub enum Equation {
     Constant(ConstantEquation),
     Monomial(MonomialEquation),
     Arithmetic(ArithmeticEquation),
 }
 
-use ambassador::{Delegate, delegatable_trait, delegatable_trait_remote};
+impl Display for Equation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Equation::Constant(eq) => write!(f, "{}", eq),
+            Equation::Monomial(eq) => write!(f, "{}", eq),
+            Equation::Arithmetic(eq) => write!(f, "{}", eq),
+        }
+    }
+}
+
+use enum_dispatch::enum_dispatch;
 pub use parser::*;
 
 use crate::{
@@ -57,24 +61,6 @@ use crate::{
 impl From<f32> for Equation {
     fn from(value: f32) -> Self {
         Equation::Constant(value.into())
-    }
-}
-
-impl From<ConstantEquation> for Equation {
-    fn from(value: ConstantEquation) -> Self {
-        Equation::Constant(value)
-    }
-}
-
-impl From<MonomialEquation> for Equation {
-    fn from(value: MonomialEquation) -> Self {
-        Equation::Monomial(value)
-    }
-}
-
-impl From<ArithmeticEquation> for Equation {
-    fn from(value: ArithmeticEquation) -> Self {
-        Equation::Arithmetic(value)
     }
 }
 
