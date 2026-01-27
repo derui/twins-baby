@@ -43,13 +43,12 @@ impl<S: Snapshot> SnapshotHistory<S> {
     /// Push the cloned history to stack. This truncates redo stack.
     pub fn push_history(&mut self, current: &S) {
         // remove overflowed histories
-        if self.undo_stack.len() >= self.max_history {
-            if let Some((_, rest)) = self
+        if self.undo_stack.len() >= self.max_history
+            && let Some((_, rest)) = self
                 .undo_stack
                 .split_at_checked(self.undo_stack.len() - self.max_history + 1)
-            {
-                self.undo_stack = rest.to_vec();
-            }
+        {
+            self.undo_stack = rest.to_vec();
         }
 
         let current = replace(&mut self.current, current.clone());
@@ -65,7 +64,7 @@ impl<S: Snapshot> SnapshotHistory<S> {
 
         let current = replace(&mut self.current, undo);
         self.redo_stack.push(current);
-        return true;
+        true
     }
 
     /// Redo the history. Return if the history done redo
@@ -77,7 +76,7 @@ impl<S: Snapshot> SnapshotHistory<S> {
         let current = replace(&mut self.current, redo);
         self.undo_stack.push(current);
 
-        return true;
+        true
     }
 }
 
