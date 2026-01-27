@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use std::{any::Any, mem::replace};
 
 /// Marker trait for snapshot
