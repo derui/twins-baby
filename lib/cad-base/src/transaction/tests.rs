@@ -42,27 +42,27 @@ fn test_new_with_zero_max_history_panics() {
     SnapshotHistory::new(initial, max_history);
 }
 
-// Tests for push_history()
+// Tests for save()
 
 #[test]
-fn test_push_history_updates_current_state() {
+fn test_save_updates_current_state() {
     // Arrange
     let mut history = SnapshotHistory::new(1, 10);
 
     // Act
-    history.push_history(&2);
+    history.save(&2);
 
     // Assert
     assert_eq!(*history.current(), 2);
 }
 
 #[test]
-fn test_push_history_allows_undo() {
+fn test_save_allows_undo() {
     // Arrange
     let mut history = SnapshotHistory::new(1, 10);
 
     // Act
-    history.push_history(&2);
+    history.save(&2);
     let can_undo = history.undo();
 
     // Assert
@@ -71,15 +71,15 @@ fn test_push_history_allows_undo() {
 }
 
 #[test]
-fn test_push_history_clears_redo_stack() {
+fn test_save_clears_redo_stack() {
     // Arrange
     let mut history = SnapshotHistory::new(1, 10);
-    history.push_history(&2);
-    history.push_history(&3);
+    history.save(&2);
+    history.save(&3);
     history.undo(); // Now redo is available
 
     // Act
-    history.push_history(&4);
+    history.save(&4);
     let can_redo = history.redo();
 
     // Assert - redo should not be available
@@ -88,13 +88,13 @@ fn test_push_history_clears_redo_stack() {
 }
 
 #[test]
-fn test_push_history_multiple_times_maintains_order() {
+fn test_save_multiple_times_maintains_order() {
     // Arrange
     let mut history = SnapshotHistory::new(0, 10);
 
     // Act
     for i in 1..=5 {
-        history.push_history(&i);
+        history.save(&i);
     }
 
     // Assert - verify by undoing in reverse order
@@ -116,7 +116,7 @@ fn test_push_history_multiple_times_maintains_order() {
 #[case(2, vec![1, 2, 3], vec![2, 1])]
 #[case(3, vec![1, 2, 3, 4, 5], vec![4, 3, 2])]
 #[case(5, vec![1, 2, 3], vec![2, 1, 0])]
-fn test_push_history_respects_max_history(
+fn test_save_respects_max_history(
     #[case] max_history: usize,
     #[case] pushes: Vec<i32>,
     #[case] expected_undo_sequence: Vec<i32>,
@@ -126,7 +126,7 @@ fn test_push_history_respects_max_history(
 
     // Act
     for &value in &pushes {
-        history.push_history(&value);
+        history.save(&value);
     }
 
     // Assert - verify by undoing and checking sequence
@@ -144,8 +144,8 @@ fn test_max_history_boundary() {
     let mut history = SnapshotHistory::new(0, 2);
 
     // Act - push exactly max_history items
-    history.push_history(&1);
-    history.push_history(&2);
+    history.save(&1);
+    history.save(&2);
 
     // Assert - should be able to undo max_history times
     assert!(history.undo()); // 2 -> 1
@@ -160,7 +160,7 @@ fn test_max_history_boundary() {
 fn test_undo_restores_previous_state() {
     // Arrange
     let mut history = SnapshotHistory::new(1, 10);
-    history.push_history(&2);
+    history.save(&2);
 
     // Act
     let result = history.undo();
@@ -187,7 +187,7 @@ fn test_undo_returns_false_when_no_history() {
 fn test_undo_enables_redo() {
     // Arrange
     let mut history = SnapshotHistory::new(1, 10);
-    history.push_history(&2);
+    history.save(&2);
 
     // Act
     history.undo();
@@ -202,9 +202,9 @@ fn test_undo_enables_redo() {
 fn test_undo_multiple_times() {
     // Arrange
     let mut history = SnapshotHistory::new(0, 10);
-    history.push_history(&1);
-    history.push_history(&2);
-    history.push_history(&3);
+    history.save(&1);
+    history.save(&2);
+    history.save(&3);
 
     // Act
     let result1 = history.undo();
@@ -220,8 +220,8 @@ fn test_undo_multiple_times() {
 fn test_undo_until_initial_state() {
     // Arrange
     let mut history = SnapshotHistory::new(0, 10);
-    history.push_history(&1);
-    history.push_history(&2);
+    history.save(&1);
+    history.save(&2);
 
     // Act & Assert
     history.undo();
@@ -239,7 +239,7 @@ fn test_undo_until_initial_state() {
 fn test_redo_restores_undone_state() {
     // Arrange
     let mut history = SnapshotHistory::new(1, 10);
-    history.push_history(&2);
+    history.save(&2);
     history.undo();
 
     // Act
@@ -267,7 +267,7 @@ fn test_redo_returns_false_when_no_redo_available() {
 fn test_redo_enables_undo() {
     // Arrange
     let mut history = SnapshotHistory::new(1, 10);
-    history.push_history(&2);
+    history.save(&2);
     history.undo();
 
     // Act
@@ -283,9 +283,9 @@ fn test_redo_enables_undo() {
 fn test_redo_multiple_times() {
     // Arrange
     let mut history = SnapshotHistory::new(0, 10);
-    history.push_history(&1);
-    history.push_history(&2);
-    history.push_history(&3);
+    history.save(&1);
+    history.save(&2);
+    history.save(&3);
     history.undo();
     history.undo();
 
@@ -303,8 +303,8 @@ fn test_redo_multiple_times() {
 fn test_redo_exhausts_all_redos() {
     // Arrange
     let mut history = SnapshotHistory::new(0, 10);
-    history.push_history(&1);
-    history.push_history(&2);
+    history.save(&1);
+    history.save(&2);
     history.undo();
     history.undo();
 
@@ -323,8 +323,8 @@ fn test_redo_exhausts_all_redos() {
 fn test_undo_then_redo_cycle() {
     // Arrange
     let mut history = SnapshotHistory::new(1, 10);
-    history.push_history(&2);
-    history.push_history(&3);
+    history.save(&2);
+    history.save(&3);
 
     // Act
     history.undo();
@@ -341,12 +341,12 @@ fn test_undo_then_redo_cycle() {
 fn test_push_after_undo_clears_redo() {
     // Arrange
     let mut history = SnapshotHistory::new(1, 10);
-    history.push_history(&2);
-    history.push_history(&3);
+    history.save(&2);
+    history.save(&3);
     history.undo();
 
     // Act
-    history.push_history(&4);
+    history.save(&4);
 
     // Assert
     assert_eq!(*history.current(), 4);
@@ -359,9 +359,9 @@ fn test_complex_history_manipulation() {
     let mut history = SnapshotHistory::new(0, 5);
 
     // Act & Assert - Build history
-    history.push_history(&1);
-    history.push_history(&2);
-    history.push_history(&3);
+    history.save(&1);
+    history.save(&2);
+    history.save(&3);
     assert_eq!(*history.current(), 3);
 
     // Undo twice
@@ -374,7 +374,7 @@ fn test_complex_history_manipulation() {
     assert_eq!(*history.current(), 2);
 
     // Push new state (should clear remaining redo)
-    history.push_history(&10);
+    history.save(&10);
     assert_eq!(*history.current(), 10);
     assert!(!history.redo()); // No redo available
 
@@ -399,7 +399,7 @@ fn test_snapshot_works_with_custom_types() {
     let mut history = SnapshotHistory::new(initial, 10);
 
     // Act
-    history.push_history(&State { value: 2 });
+    history.save(&State { value: 2 });
     history.undo();
 
     // Assert
@@ -410,8 +410,8 @@ fn test_snapshot_works_with_custom_types() {
 fn test_alternating_undo_redo() {
     // Arrange
     let mut history = SnapshotHistory::new(1, 10);
-    history.push_history(&2);
-    history.push_history(&3);
+    history.save(&2);
+    history.save(&3);
 
     // Act & Assert - alternate between undo and redo
     history.undo();
@@ -430,7 +430,7 @@ fn test_alternating_undo_redo() {
 fn test_single_undo_redo_cycle() {
     // Arrange
     let mut history = SnapshotHistory::new(1, 10);
-    history.push_history(&2);
+    history.save(&2);
 
     // Act & Assert
     let can_undo = history.undo();

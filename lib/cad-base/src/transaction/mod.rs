@@ -41,7 +41,7 @@ impl<S: Snapshot> SnapshotHistory<S> {
     }
 
     /// Push the cloned history to stack. This truncates redo stack.
-    pub fn push_history(&mut self, current: &S) {
+    pub fn save(&mut self, current: &S) {
         // remove overflowed histories
         if self.undo_stack.len() >= self.max_history
             && let Some((_, rest)) = self
