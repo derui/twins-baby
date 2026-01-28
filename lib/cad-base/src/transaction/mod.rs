@@ -10,6 +10,7 @@ trait Snapshot: Clone + Send + Sync + 'static {}
 impl<T: Clone + Send + Sync + 'static> Snapshot for T {}
 
 /// A simple snapshot history
+#[derive(Debug, Clone)]
 pub struct SnapshotHistory<S: Snapshot> {
     /// Current one
     current: S,
@@ -113,6 +114,7 @@ pub struct TypedPerspective<S: Snapshot> {
     history: SnapshotHistory<S>,
 }
 
+// A default wrapper implementation of TypedPerspective
 impl<S: Snapshot> PerspectiveHistory for TypedPerspective<S> {
     fn save_snapshot(&mut self) {
         self.history.save_snapshot();

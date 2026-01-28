@@ -1,6 +1,6 @@
 use std::{any::TypeId, collections::HashMap};
 
-use crate::transaction::{PerspectiveHistory, Snapshot};
+use crate::transaction::{PerspectiveHistory, Snapshot, SnapshotHistory, TypedPerspective};
 
 /// Simple registry implementation for perspective
 pub(crate) struct PerspectiveRegistry {
@@ -29,15 +29,15 @@ impl PerspectiveRegistry {
     /// # Summary
     /// This function will register a history for the type `P` . This will replace the history if already exists.
     /// Old transaction and redo logs must be trancated. because it can not be restored
-    pub fn register<P: Snapshot>(
-        &mut self,
-        history: Box<dyn PerspectiveHistory>,
-    ) -> Option<Box<dyn PerspectiveHistory>> {
-        let type_id = TypeId::of::<P>();
+    pub fn register<S: Snapshot>(&mut self, initial: S) {
+        let history = TypedPerspective {
+            history: SnapshotHistory::new(initial, 100),
+        };
+        let type_id = TypeId::of::<TypedPerspective<S>>();
 
         self.transaction_log.clear();
         self.redo_log.clear();
-        self.perspectives.insert(type_id, history)
+        self.perspectives.insert(type_id, Box::new(history));
     }
 
     /// Get a current reference of a snapshot.
@@ -48,7 +48,9 @@ impl PerspectiveRegistry {
             return None;
         };
 
-        s.as_any().downcast_ref::<S>()
+        s.as_any()
+            .downcast_ref::<TypedPerspective<S>>()
+            .map(|v| v.history.state())
     }
 
     /// Get a current mutable reference of a snapshot.
@@ -59,6 +61,8 @@ impl PerspectiveRegistry {
             return None;
         };
 
-        s.as_any_mut().downcast_mut::<S>()
+        s.as_any_mut()
+            .downcast_mut::<TypedPerspective<S>>()
+            .map(|v| v.history.state_mut())
     }
 }
