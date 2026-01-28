@@ -38,12 +38,17 @@ impl<S: Snapshot> SnapshotHistory<S> {
     }
 
     /// Read the current snapshot. Snapshot in history can not edit.
-    pub fn current(&self) -> &S {
+    pub fn state(&self) -> &S {
         &self.current
     }
 
+    /// Read the current snapshot. Snapshot in history can not edit.
+    pub fn state_mut(&mut self) -> &mut S {
+        &mut self.current
+    }
+
     /// Push the cloned history to stack. This truncates redo stack.
-    pub fn save(&mut self, current: &S) {
+    pub fn save_snapshot(&mut self) {
         // remove overflowed histories
         if self.undo_stack.len() >= self.max_history
             && let Some((_, rest)) = self
@@ -53,8 +58,7 @@ impl<S: Snapshot> SnapshotHistory<S> {
             self.undo_stack = rest.to_vec();
         }
 
-        let current = replace(&mut self.current, current.clone());
-        self.undo_stack.push(current);
+        self.undo_stack.push(self.current.clone());
         self.redo_stack.clear();
     }
 
@@ -107,4 +111,26 @@ pub trait PerspectiveHistory: Any + Send + Sync {
 /// Wrapping state of snapshot. This struct should contain implementation of `PerspectiveHistory`
 pub struct TypedPerspective<S: Snapshot> {
     history: SnapshotHistory<S>,
+}
+
+impl<S: Snapshot> PerspectiveHistory for TypedPerspective<S> {
+    fn save_snapshot(&mut self) {
+        self.history.save_snapshot();
+    }
+
+    fn undo(&mut self) -> bool {
+        self.history.undo()
+    }
+
+    fn redo(&mut self) -> bool {
+        self.history.redo()
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
 }
