@@ -1,6 +1,8 @@
 #[cfg(test)]
 mod tests;
 
+mod registry;
+
 use std::{any::Any, mem::replace};
 
 /// Marker trait for snapshot
@@ -81,7 +83,7 @@ impl<S: Snapshot> SnapshotHistory<S> {
 }
 
 /// Basic transactoin history of perspective's state
-pub trait PerspectiveHistory: Any + Send + Sync + 'static {
+pub trait PerspectiveHistory: Any + Send + Sync {
     /// Save a current snap shot to undo
     fn save_snapshot(&mut self);
 
@@ -102,6 +104,7 @@ pub trait PerspectiveHistory: Any + Send + Sync + 'static {
     fn as_any_mut(&mut self) -> &mut dyn Any;
 }
 
+/// Wrapping state of snapshot. This struct should contain implementation of `PerspectiveHistory`
 pub struct TypedPerspective<S: Snapshot> {
     history: SnapshotHistory<S>,
 }
