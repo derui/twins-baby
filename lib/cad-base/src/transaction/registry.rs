@@ -14,6 +14,8 @@ pub(crate) struct PerspectiveRegistry {
 
     /// All redo logs for affected perspectives
     pub(crate) redo_log: Vec<Vec<TypeId>>,
+
+    _private: (),
 }
 
 impl PerspectiveRegistry {
@@ -23,6 +25,7 @@ impl PerspectiveRegistry {
             perspectives: HashMap::new(),
             transaction_log: Vec::new(),
             redo_log: Vec::new(),
+            _private: (),
         }
     }
 
