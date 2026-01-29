@@ -3,10 +3,15 @@ mod tests;
 
 mod registry;
 
-use std::{any::Any, mem::replace};
+use std::{
+    any::{Any, TypeId},
+    mem::replace,
+};
+
+use crate::transaction::registry::PerspectiveRegistry;
 
 /// Marker trait for snapshot
-trait Snapshot: Clone + Send + Sync + 'static {}
+pub trait Snapshot: Clone + Send + Sync + 'static {}
 impl<T: Clone + Send + Sync + 'static> Snapshot for T {}
 
 /// A simple snapshot history
@@ -134,5 +139,64 @@ impl<S: Snapshot> PerspectiveHistory for TypedPerspective<S> {
 
     fn as_any_mut(&mut self) -> &mut dyn Any {
         self
+    }
+}
+
+/// A transaction to manage some changes commit/restore.
+pub struct Transaction<'a> {
+    register: &'a mut PerspectiveRegistry,
+    affected: Vec<TypeId>,
+    committed: bool,
+}
+
+impl<'a> Transaction<'a> {
+    /// Get a mutable reference to modify the perspective. If call this method after committed, this do not anything
+    pub fn modify<S: Snapshot>(&mut self) -> Option<&mut S> {
+        // can not change after committed
+        if self.committed {
+            return None;
+        }
+
+        let type_id = TypeId::of::<S>();
+        if !self.affected.contains(&type_id) {
+            if let Some(perspective) = self.register.perspectives.get_mut(&type_id) {
+                perspective.save_snapshot();
+            }
+            self.affected.push(type_id);
+        }
+
+        self.register.get_mut::<S>()
+    }
+
+    /// Get a read reference. This method can call anytimes/anywhere in this transaction.
+    pub fn read<S: Snapshot>(&self) -> Option<&S> {
+        self.register.get::<S>()
+    }
+
+    /// Commit this transaction
+    pub fn commit(&mut self) {
+        if self.committed {
+            // can not commit twice
+            return;
+        }
+
+        self.register.transaction_log.push(self.affected.clone());
+        self.register.redo_log.clear();
+        self.committed = true;
+    }
+}
+
+impl Drop for Transaction<'_> {
+    fn drop(&mut self) {
+        if self.committed {
+            return;
+        }
+
+        // undo all affected types
+        for type_id in &self.affected {
+            if let Some(history) = self.register.perspectives.get_mut(type_id) {
+                history.undo();
+            }
+        }
     }
 }
