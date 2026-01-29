@@ -110,9 +110,9 @@ mod tests {
             // Assert
             let plane = plane.expect("should create plane");
             let normal = plane.normal();
-            assert_relative_eq!(*normal.x(), 0.0, epsilon = 1e-5);
-            assert_relative_eq!(*normal.y(), 0.0, epsilon = 1e-5);
-            assert_relative_eq!(*normal.z(), 1.0, epsilon = 1e-5);
+            assert_relative_eq!(normal.x, 0.0, epsilon = 1e-5);
+            assert_relative_eq!(normal.y, 0.0, epsilon = 1e-5);
+            assert_relative_eq!(normal.z, 1.0, epsilon = 1e-5);
         }
 
         #[test]
@@ -122,9 +122,9 @@ mod tests {
 
             // Assert
             let normal = plane.normal();
-            assert_relative_eq!(*normal.x(), 0.0, epsilon = 1e-5);
-            assert_relative_eq!(*normal.y(), 0.0, epsilon = 1e-5);
-            assert_relative_eq!(*normal.z(), 1.0, epsilon = 1e-5);
+            assert_relative_eq!(normal.x, 0.0, epsilon = 1e-5);
+            assert_relative_eq!(normal.y, 0.0, epsilon = 1e-5);
+            assert_relative_eq!(normal.z, 1.0, epsilon = 1e-5);
         }
 
         #[test]
@@ -134,9 +134,9 @@ mod tests {
 
             // Assert
             let normal = plane.normal();
-            assert_relative_eq!(*normal.x(), 0.0, epsilon = 1e-5);
-            assert_relative_eq!(*normal.y(), 1.0, epsilon = 1e-5);
-            assert_relative_eq!(*normal.z(), 0.0, epsilon = 1e-5);
+            assert_relative_eq!(normal.x, 0.0, epsilon = 1e-5);
+            assert_relative_eq!(normal.y, 1.0, epsilon = 1e-5);
+            assert_relative_eq!(normal.z, 0.0, epsilon = 1e-5);
         }
 
         #[test]
@@ -146,9 +146,9 @@ mod tests {
 
             // Assert
             let normal = plane.normal();
-            assert_relative_eq!(*normal.x(), 1.0, epsilon = 1e-5);
-            assert_relative_eq!(*normal.y(), 0.0, epsilon = 1e-5);
-            assert_relative_eq!(*normal.z(), 0.0, epsilon = 1e-5);
+            assert_relative_eq!(normal.x, 1.0, epsilon = 1e-5);
+            assert_relative_eq!(normal.y, 0.0, epsilon = 1e-5);
+            assert_relative_eq!(normal.z, 0.0, epsilon = 1e-5);
         }
 
         #[test]
@@ -164,9 +164,9 @@ mod tests {
             let plane = plane.expect("should create plane");
             let normal = plane.normal();
 
-            assert_relative_eq!(*normal.x(), 0.0, epsilon = 1e-5);
-            assert_relative_eq!(*normal.y(), 0.0, epsilon = 1e-5);
-            assert_relative_eq!(*normal.z(), 1.0, epsilon = 1e-5);
+            assert_relative_eq!(normal.x, 0.0, epsilon = 1e-5);
+            assert_relative_eq!(normal.y, 0.0, epsilon = 1e-5);
+            assert_relative_eq!(normal.z, 1.0, epsilon = 1e-5);
         }
 
         #[test]
@@ -264,9 +264,9 @@ mod tests {
             let normal2 = plane2.normal();
 
             // Assert
-            assert_relative_eq!(*normal1.x(), -*normal2.x(), epsilon = 1e-5);
-            assert_relative_eq!(*normal1.y(), -*normal2.y(), epsilon = 1e-5);
-            assert_relative_eq!(*normal1.z(), -*normal2.z(), epsilon = 1e-5);
+            assert_relative_eq!(normal1.x, -normal2.x, epsilon = 1e-5);
+            assert_relative_eq!(normal1.y, -normal2.y, epsilon = 1e-5);
+            assert_relative_eq!(normal1.z, -normal2.z, epsilon = 1e-5);
         }
 
         #[test]
@@ -284,9 +284,9 @@ mod tests {
             let normal2 = plane2.normal();
 
             // Assert
-            assert_relative_eq!(*normal1.x(), *normal2.x(), epsilon = 1e-5);
-            assert_relative_eq!(*normal1.y(), *normal2.y(), epsilon = 1e-5);
-            assert_relative_eq!(*normal1.z(), *normal2.z(), epsilon = 1e-5);
+            assert_relative_eq!(normal1.x, normal2.x, epsilon = 1e-5);
+            assert_relative_eq!(normal1.y, normal2.y, epsilon = 1e-5);
+            assert_relative_eq!(normal1.z, normal2.z, epsilon = 1e-5);
         }
     }
 

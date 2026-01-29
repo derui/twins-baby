@@ -14,9 +14,9 @@ mod construction {
         let v = Vector3d::new(x, y, z);
 
         // Assert
-        assert_relative_eq!(*v.x(), 1.0);
-        assert_relative_eq!(*v.y(), 2.0);
-        assert_relative_eq!(*v.z(), 3.0);
+        assert_relative_eq!(v.x, 1.0);
+        assert_relative_eq!(v.y, 2.0);
+        assert_relative_eq!(v.z, 3.0);
     }
 
     #[test]
@@ -28,9 +28,9 @@ mod construction {
         let v: Vector3d = tuple.into();
 
         // Assert
-        assert_relative_eq!(*v.x(), 1.0);
-        assert_relative_eq!(*v.y(), 2.0);
-        assert_relative_eq!(*v.z(), 3.0);
+        assert_relative_eq!(v.x, 1.0);
+        assert_relative_eq!(v.y, 2.0);
+        assert_relative_eq!(v.z, 3.0);
     }
 
     #[test]
@@ -149,9 +149,9 @@ mod cross_product {
         let result = v1.cross(&v2);
 
         // Assert
-        assert_relative_eq!(*result.x(), 0.0);
-        assert_relative_eq!(*result.y(), 0.0);
-        assert_relative_eq!(*result.z(), 1.0);
+        assert_relative_eq!(result.x, 0.0);
+        assert_relative_eq!(result.y, 0.0);
+        assert_relative_eq!(result.z, 1.0);
     }
 
     #[test]
@@ -164,9 +164,9 @@ mod cross_product {
         let result = v1.cross(&v2);
 
         // Assert
-        assert_relative_eq!(*result.x(), 0.0);
-        assert_relative_eq!(*result.y(), 0.0);
-        assert_relative_eq!(*result.z(), 0.0);
+        assert_relative_eq!(result.x, 0.0);
+        assert_relative_eq!(result.y, 0.0);
+        assert_relative_eq!(result.z, 0.0);
     }
 
     #[test]
@@ -180,9 +180,9 @@ mod cross_product {
         let result2 = v2.cross(&v1);
 
         // Assert
-        assert_relative_eq!(*result1.x(), -*result2.x());
-        assert_relative_eq!(*result1.y(), -*result2.y());
-        assert_relative_eq!(*result1.z(), -*result2.z());
+        assert_relative_eq!(result1.x, -result2.x);
+        assert_relative_eq!(result1.y, -result2.y);
+        assert_relative_eq!(result1.z, -result2.z);
     }
 }
 
@@ -202,9 +202,9 @@ mod addition {
         let result = &v1 + &v2;
 
         // Assert
-        assert_relative_eq!(*result.x(), 5.0);
-        assert_relative_eq!(*result.y(), 7.0);
-        assert_relative_eq!(*result.z(), 9.0);
+        assert_relative_eq!(result.x, 5.0);
+        assert_relative_eq!(result.y, 7.0);
+        assert_relative_eq!(result.z, 9.0);
     }
 
     #[test]
@@ -217,9 +217,9 @@ mod addition {
         let result = &v1 + v2;
 
         // Assert
-        assert_relative_eq!(*result.x(), 5.0);
-        assert_relative_eq!(*result.y(), 7.0);
-        assert_relative_eq!(*result.z(), 9.0);
+        assert_relative_eq!(result.x, 5.0);
+        assert_relative_eq!(result.y, 7.0);
+        assert_relative_eq!(result.z, 9.0);
     }
 
     #[test]
@@ -232,9 +232,9 @@ mod addition {
         let result = v1 + &v2;
 
         // Assert
-        assert_relative_eq!(*result.x(), 5.0);
-        assert_relative_eq!(*result.y(), 7.0);
-        assert_relative_eq!(*result.z(), 9.0);
+        assert_relative_eq!(result.x, 5.0);
+        assert_relative_eq!(result.y, 7.0);
+        assert_relative_eq!(result.z, 9.0);
     }
 
     #[test]
@@ -247,9 +247,9 @@ mod addition {
         let result = v1 + v2;
 
         // Assert
-        assert_relative_eq!(*result.x(), 5.0);
-        assert_relative_eq!(*result.y(), 7.0);
-        assert_relative_eq!(*result.z(), 9.0);
+        assert_relative_eq!(result.x, 5.0);
+        assert_relative_eq!(result.y, 7.0);
+        assert_relative_eq!(result.z, 9.0);
     }
 
     #[test]
@@ -262,9 +262,9 @@ mod addition {
         let result = v1 + zero;
 
         // Assert
-        assert_relative_eq!(*result.x(), 1.0);
-        assert_relative_eq!(*result.y(), 2.0);
-        assert_relative_eq!(*result.z(), 3.0);
+        assert_relative_eq!(result.x, 1.0);
+        assert_relative_eq!(result.y, 2.0);
+        assert_relative_eq!(result.z, 3.0);
     }
 }
 
@@ -284,9 +284,9 @@ mod subtraction {
         let result = &v1 - &v2;
 
         // Assert
-        assert_relative_eq!(*result.x(), 3.0);
-        assert_relative_eq!(*result.y(), 3.0);
-        assert_relative_eq!(*result.z(), 3.0);
+        assert_relative_eq!(result.x, 3.0);
+        assert_relative_eq!(result.y, 3.0);
+        assert_relative_eq!(result.z, 3.0);
     }
 
     #[test]
@@ -299,9 +299,9 @@ mod subtraction {
         let result = &v1 - v2;
 
         // Assert
-        assert_relative_eq!(*result.x(), 3.0);
-        assert_relative_eq!(*result.y(), 3.0);
-        assert_relative_eq!(*result.z(), 3.0);
+        assert_relative_eq!(result.x, 3.0);
+        assert_relative_eq!(result.y, 3.0);
+        assert_relative_eq!(result.z, 3.0);
     }
 
     #[test]
@@ -314,9 +314,9 @@ mod subtraction {
         let result = v1 - &v2;
 
         // Assert
-        assert_relative_eq!(*result.x(), 3.0);
-        assert_relative_eq!(*result.y(), 3.0);
-        assert_relative_eq!(*result.z(), 3.0);
+        assert_relative_eq!(result.x, 3.0);
+        assert_relative_eq!(result.y, 3.0);
+        assert_relative_eq!(result.z, 3.0);
     }
 
     #[test]
@@ -329,9 +329,9 @@ mod subtraction {
         let result = v1 - v2;
 
         // Assert
-        assert_relative_eq!(*result.x(), 3.0);
-        assert_relative_eq!(*result.y(), 3.0);
-        assert_relative_eq!(*result.z(), 3.0);
+        assert_relative_eq!(result.x, 3.0);
+        assert_relative_eq!(result.y, 3.0);
+        assert_relative_eq!(result.z, 3.0);
     }
 
     #[test]
@@ -343,9 +343,9 @@ mod subtraction {
         let result = &v - &v;
 
         // Assert
-        assert_relative_eq!(*result.x(), 0.0);
-        assert_relative_eq!(*result.y(), 0.0);
-        assert_relative_eq!(*result.z(), 0.0);
+        assert_relative_eq!(result.x, 0.0);
+        assert_relative_eq!(result.y, 0.0);
+        assert_relative_eq!(result.z, 0.0);
     }
 }
 
@@ -364,9 +364,9 @@ mod scalar_multiplication {
         let result = &v * 2.0;
 
         // Assert
-        assert_relative_eq!(*result.x(), 2.0);
-        assert_relative_eq!(*result.y(), 4.0);
-        assert_relative_eq!(*result.z(), 6.0);
+        assert_relative_eq!(result.x, 2.0);
+        assert_relative_eq!(result.y, 4.0);
+        assert_relative_eq!(result.z, 6.0);
     }
 
     #[test]
@@ -378,9 +378,9 @@ mod scalar_multiplication {
         let result = v * 2.0;
 
         // Assert
-        assert_relative_eq!(*result.x(), 2.0);
-        assert_relative_eq!(*result.y(), 4.0);
-        assert_relative_eq!(*result.z(), 6.0);
+        assert_relative_eq!(result.x, 2.0);
+        assert_relative_eq!(result.y, 4.0);
+        assert_relative_eq!(result.z, 6.0);
     }
 
     #[test]
@@ -392,9 +392,9 @@ mod scalar_multiplication {
         let result = &v * 2;
 
         // Assert
-        assert_relative_eq!(*result.x(), 2.0);
-        assert_relative_eq!(*result.y(), 4.0);
-        assert_relative_eq!(*result.z(), 6.0);
+        assert_relative_eq!(result.x, 2.0);
+        assert_relative_eq!(result.y, 4.0);
+        assert_relative_eq!(result.z, 6.0);
     }
 
     #[test]
@@ -406,9 +406,9 @@ mod scalar_multiplication {
         let result = v * 2;
 
         // Assert
-        assert_relative_eq!(*result.x(), 2.0);
-        assert_relative_eq!(*result.y(), 4.0);
-        assert_relative_eq!(*result.z(), 6.0);
+        assert_relative_eq!(result.x, 2.0);
+        assert_relative_eq!(result.y, 4.0);
+        assert_relative_eq!(result.z, 6.0);
     }
 
     #[test]
@@ -420,9 +420,9 @@ mod scalar_multiplication {
         let result = v * 0.0;
 
         // Assert
-        assert_relative_eq!(*result.x(), 0.0);
-        assert_relative_eq!(*result.y(), 0.0);
-        assert_relative_eq!(*result.z(), 0.0);
+        assert_relative_eq!(result.x, 0.0);
+        assert_relative_eq!(result.y, 0.0);
+        assert_relative_eq!(result.z, 0.0);
     }
 }
 
@@ -441,9 +441,9 @@ mod scalar_division {
         let result = &v / 2.0;
 
         // Assert
-        assert_relative_eq!(*result.x(), 1.0);
-        assert_relative_eq!(*result.y(), 2.0);
-        assert_relative_eq!(*result.z(), 3.0);
+        assert_relative_eq!(result.x, 1.0);
+        assert_relative_eq!(result.y, 2.0);
+        assert_relative_eq!(result.z, 3.0);
     }
 
     #[test]
@@ -455,9 +455,9 @@ mod scalar_division {
         let result = v / 2.0;
 
         // Assert
-        assert_relative_eq!(*result.x(), 1.0);
-        assert_relative_eq!(*result.y(), 2.0);
-        assert_relative_eq!(*result.z(), 3.0);
+        assert_relative_eq!(result.x, 1.0);
+        assert_relative_eq!(result.y, 2.0);
+        assert_relative_eq!(result.z, 3.0);
     }
 
     #[test]
@@ -469,9 +469,9 @@ mod scalar_division {
         let result = &v / 2;
 
         // Assert
-        assert_relative_eq!(*result.x(), 1.0);
-        assert_relative_eq!(*result.y(), 2.0);
-        assert_relative_eq!(*result.z(), 3.0);
+        assert_relative_eq!(result.x, 1.0);
+        assert_relative_eq!(result.y, 2.0);
+        assert_relative_eq!(result.z, 3.0);
     }
 
     #[test]
@@ -483,9 +483,9 @@ mod scalar_division {
         let result = v / 2;
 
         // Assert
-        assert_relative_eq!(*result.x(), 1.0);
-        assert_relative_eq!(*result.y(), 2.0);
-        assert_relative_eq!(*result.z(), 3.0);
+        assert_relative_eq!(result.x, 1.0);
+        assert_relative_eq!(result.y, 2.0);
+        assert_relative_eq!(result.z, 3.0);
     }
 
     #[test]
@@ -497,9 +497,9 @@ mod scalar_division {
         let result = v / 0.0;
 
         // Assert
-        assert!(result.x().is_infinite());
-        assert!(result.y().is_infinite());
-        assert!(result.z().is_infinite());
+        assert!(result.x.is_infinite());
+        assert!(result.y.is_infinite());
+        assert!(result.z.is_infinite());
     }
 }
 
@@ -577,9 +577,9 @@ mod unit {
         let result = v.unit();
 
         // Assert
-        assert_relative_eq!(*result.x(), 1.0);
-        assert_relative_eq!(*result.y(), 0.0);
-        assert_relative_eq!(*result.z(), 0.0);
+        assert_relative_eq!(result.x, 1.0);
+        assert_relative_eq!(result.y, 0.0);
+        assert_relative_eq!(result.z, 0.0);
     }
 
     #[test]
@@ -592,9 +592,9 @@ mod unit {
         let result = v.unit();
 
         // Assert
-        assert_relative_eq!(*result.x(), 1.0 / 3.0);
-        assert_relative_eq!(*result.y(), 2.0 / 3.0);
-        assert_relative_eq!(*result.z(), 2.0 / 3.0);
+        assert_relative_eq!(result.x, 1.0 / 3.0);
+        assert_relative_eq!(result.y, 2.0 / 3.0);
+        assert_relative_eq!(result.z, 2.0 / 3.0);
     }
 
     #[test]
@@ -606,9 +606,9 @@ mod unit {
         let result = v.unit();
 
         // Assert
-        assert_relative_eq!(*result.x(), 1.0);
-        assert_relative_eq!(*result.y(), 0.0);
-        assert_relative_eq!(*result.z(), 0.0);
+        assert_relative_eq!(result.x, 1.0);
+        assert_relative_eq!(result.y, 0.0);
+        assert_relative_eq!(result.z, 0.0);
     }
 
     #[test]
@@ -620,9 +620,9 @@ mod unit {
         let result = v.unit();
 
         // Assert
-        assert_relative_eq!(*result.x(), -1.0);
-        assert_relative_eq!(*result.y(), 0.0);
-        assert_relative_eq!(*result.z(), 0.0);
+        assert_relative_eq!(result.x, -1.0);
+        assert_relative_eq!(result.y, 0.0);
+        assert_relative_eq!(result.z, 0.0);
     }
 }
 
@@ -644,9 +644,9 @@ mod from_edge {
         let result = Vector3d::from_edge(&edge);
 
         // Assert
-        assert_relative_eq!(*result.x(), 3.0);
-        assert_relative_eq!(*result.y(), 0.0);
-        assert_relative_eq!(*result.z(), 0.0);
+        assert_relative_eq!(result.x, 3.0);
+        assert_relative_eq!(result.y, 0.0);
+        assert_relative_eq!(result.z, 0.0);
     }
 
     #[test]
@@ -658,9 +658,9 @@ mod from_edge {
         let result = Vector3d::from_edge(&edge);
 
         // Assert
-        assert_relative_eq!(*result.x(), 3.0);
-        assert_relative_eq!(*result.y(), 4.0);
-        assert_relative_eq!(*result.z(), 5.0);
+        assert_relative_eq!(result.x, 3.0);
+        assert_relative_eq!(result.y, 4.0);
+        assert_relative_eq!(result.z, 5.0);
     }
 
     #[test]
@@ -672,8 +672,8 @@ mod from_edge {
         let result = Vector3d::from_edge(&edge);
 
         // Assert
-        assert_relative_eq!(*result.x(), -3.0);
-        assert_relative_eq!(*result.y(), 0.0);
-        assert_relative_eq!(*result.z(), 0.0);
+        assert_relative_eq!(result.x, -3.0);
+        assert_relative_eq!(result.y, 0.0);
+        assert_relative_eq!(result.z, 0.0);
     }
 }
