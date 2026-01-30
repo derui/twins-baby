@@ -3274,6 +3274,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "immutable"
+version = "0.1.0"
+dependencies = [
+ "pretty_assertions",
+ "rstest",
+]
+
+[[package]]
 name = "indexmap"
 version = "2.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

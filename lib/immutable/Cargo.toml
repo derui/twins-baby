@@ -1,0 +1,10 @@
+[package]
+name = "immutable"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+
+[dev-dependencies]
+pretty_assertions.workspace = true
+rstest.workspace = true
