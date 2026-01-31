@@ -1,33 +1,27 @@
 use std::{clone::Clone, ops::Deref};
 
 #[derive(Debug, Clone)]
-pub struct Immutable<T: Clone> {
-    value: T,
-    _immutable: (),
-}
+pub struct Im<T: Clone>(T);
 
-impl<T: Clone> Immutable<T> {
+impl<T: Clone> Im<T> {
     /// Get a new immutable
     pub fn new(initial: T) -> Self {
-        Immutable {
-            value: initial,
-            _immutable: (),
-        }
+        Im(initial)
     }
 }
 
 /// Only deref, without mut.
-impl<T: Clone> Deref for Immutable<T> {
+impl<T: Clone> Deref for Im<T> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
-        &self.value
+        &self.0
     }
 }
 
-impl<T: Clone> From<T> for Immutable<T> {
+impl<T: Clone> From<T> for Im<T> {
     fn from(value: T) -> Self {
-        Immutable::new(value)
+        Im::new(value)
     }
 }
 
@@ -41,7 +35,7 @@ mod tests {
     #[case(42)]
     fn test_new_creates_immutable_with_value(#[case] value: i32) {
         // Arrange & Act
-        let immutable = Immutable::new(value);
+        let immutable = Im::new(value);
 
         // Assert
         assert_eq!(*immutable, value);
@@ -51,7 +45,7 @@ mod tests {
     #[case(42)]
     fn test_new_creates_immutable_from_value(#[case] value: i32) {
         // Arrange & Act
-        let immutable: Immutable<_> = value.into();
+        let immutable: Im<_> = value.into();
 
         // Assert
         assert_eq!(*immutable, value);
@@ -60,7 +54,7 @@ mod tests {
     #[test]
     fn test_deref_provides_read_access_to_value() {
         // Arrange
-        let immutable = Immutable::new(String::from("Hello, World!"));
+        let immutable = Im::new(String::from("Hello, World!"));
 
         // Act
         let lowercase = immutable.to_lowercase();
@@ -74,7 +68,7 @@ mod tests {
     #[test]
     fn test_deref_allows_multiple_reads() {
         // Arrange
-        let immutable = Immutable::new(vec![1, 2, 3, 4, 5]);
+        let immutable = Im::new(vec![1, 2, 3, 4, 5]);
 
         // Act
         let sum: i32 = immutable.iter().sum();
@@ -102,7 +96,7 @@ mod tests {
         };
 
         // Act
-        let immutable = Immutable::new(custom);
+        let immutable = Im::new(custom);
 
         // Assert
         assert_eq!(immutable.id, 1);
@@ -115,7 +109,7 @@ mod tests {
         let empty_vec: Vec<i32> = vec![];
 
         // Act
-        let immutable = Immutable::new(empty_vec);
+        let immutable = Im::new(empty_vec);
 
         // Assert
         assert_eq!(immutable.len(), 0);
@@ -125,8 +119,8 @@ mod tests {
     #[test]
     fn test_immutable_with_option_types() {
         // Arrange
-        let some_value = Immutable::new(Some(42));
-        let none_value: Immutable<Option<i32>> = Immutable::new(None);
+        let some_value = Im::new(Some(42));
+        let none_value: Im<Option<i32>> = Im::new(None);
 
         // Act & Assert
         assert_eq!(some_value.is_some(), true);
