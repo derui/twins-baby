@@ -78,7 +78,7 @@ impl PerspectiveRegistry {
         };
 
         for type_id in &affected {
-            if let Some(history) = self.perspectives.get_mut(&type_id) {
+            if let Some(history) = self.perspectives.get_mut(type_id) {
                 history.undo();
             }
         }
@@ -93,7 +93,7 @@ impl PerspectiveRegistry {
         };
 
         for type_id in &affected {
-            if let Some(history) = self.perspectives.get_mut(&type_id) {
+            if let Some(history) = self.perspectives.get_mut(type_id) {
                 history.redo();
             }
         }
