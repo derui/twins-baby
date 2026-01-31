@@ -8,4 +8,5 @@
 target/
 /dist
 /node_modules
+.FCBak
 #*#
