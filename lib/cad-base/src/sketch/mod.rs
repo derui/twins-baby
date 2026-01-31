@@ -10,7 +10,7 @@ use std::collections::HashMap;
 
 use crate::{
     id::{GeometryId, IdStore, PlaneId, SketchId},
-    sketch::{geometry::Basic, scope::VariableScope},
+    sketch::{geometry::Geometry, scope::VariableScope},
 };
 
 pub use point2::*;
@@ -70,7 +70,7 @@ pub struct Sketch {
     geometory_id_gen: IdStore<GeometryId>,
 
     /// Geometries in this sketch
-    geometries: HashMap<GeometryId, Box<Basic>>,
+    geometries: HashMap<GeometryId, Box<Geometry>>,
 
     /// variable scope.
     variables: VariableScope,
