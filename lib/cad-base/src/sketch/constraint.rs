@@ -47,7 +47,7 @@ impl Constraint {
             }
         }
 
-        if related.len() != vars.len() {
+        if !vars.is_empty() {
             let vars = vars.iter().cloned().collect::<Vec<_>>();
             return Err(anyhow::anyhow!(
                 "Do not found variables {}",
@@ -60,5 +60,131 @@ impl Constraint {
             equation: equation.into(),
             related_variables: related.into(),
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use pretty_assertions::assert_eq;
+    use solver::equation::parse;
+
+    #[test]
+    fn creates_constraint_with_no_variables() {
+        // Arrange
+        let equation = parse("5.0").unwrap();
+        let scope = VariableScope::new();
+
+        // Act
+        let result = Constraint::new(ConstraintId::from(1), equation.clone(), &scope);
+
+        // Assert
+        let constraint = result.unwrap();
+        assert_eq!(*constraint.id, ConstraintId::from(1));
+        assert_eq!(*constraint.equation, equation);
+        assert_eq!(constraint.related_variables.len(), 0);
+    }
+
+    #[test]
+    fn creates_constraint_with_single_variable() {
+        // Arrange
+        let mut scope = VariableScope::new();
+        let var_id = scope.register(5.0);
+        let equation = parse(&var_id.to_string()).unwrap();
+
+        // Act
+        let result = Constraint::new(ConstraintId::from(1), equation, &scope);
+
+        // Assert
+        let constraint = result.unwrap();
+        assert_eq!(constraint.related_variables.len(), 1);
+        assert_eq!(constraint.related_variables[0], var_id);
+    }
+
+    #[test]
+    fn creates_constraint_with_multiple_variables() {
+        // Arrange
+        let mut scope = VariableScope::new();
+        let var1 = scope.register(1.0);
+        let var2 = scope.register(2.0);
+        let var3 = scope.register(3.0);
+        let equation = parse(&format!("{} + {} + {}", var1, var2, var3)).unwrap();
+
+        // Act
+        let result = Constraint::new(ConstraintId::from(1), equation, &scope);
+
+        // Assert
+        let constraint = result.unwrap();
+        assert_eq!(constraint.related_variables.len(), 3);
+        assert!(constraint.related_variables.contains(&var1));
+        assert!(constraint.related_variables.contains(&var2));
+        assert!(constraint.related_variables.contains(&var3));
+    }
+
+    #[test]
+    fn deduplicates_repeated_variables() {
+        // Arrange
+        let mut scope = VariableScope::new();
+        let var_id = scope.register(5.0);
+        let equation = parse(&format!("{} + {} * 2.0", var_id, var_id)).unwrap();
+
+        // Act
+        let result = Constraint::new(ConstraintId::from(1), equation, &scope);
+
+        // Assert
+        let constraint = result.unwrap();
+        assert_eq!(constraint.related_variables.len(), 1);
+        assert_eq!(constraint.related_variables[0], var_id);
+    }
+
+    #[test]
+    fn returns_error_when_all_variables_missing_from_scope() {
+        // Arrange
+        let equation = parse("x").unwrap();
+        let scope = VariableScope::new();
+
+        // Act
+        let result = Constraint::new(ConstraintId::from(1), equation, &scope);
+
+        // Assert
+        assert!(result.is_err());
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Do not found variables")
+        );
+    }
+
+    #[test]
+    fn returns_error_when_some_variables_missing_from_scope() {
+        // Arrange
+        let mut scope = VariableScope::new();
+        let var1 = scope.register(1.0);
+        let equation = parse(&format!("{} + unknown", var1)).unwrap();
+
+        // Act
+        let result = Constraint::new(ConstraintId::from(1), equation, &scope);
+
+        // Assert
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn uses_only_relevant_variables_from_scope() {
+        // Arrange
+        let mut scope = VariableScope::new();
+        let var1 = scope.register(1.0);
+        scope.register(2.0); // var2 - not used
+        scope.register(3.0); // var3 - not used
+        let equation = parse(&var1.to_string()).unwrap();
+
+        // Act
+        let result = Constraint::new(ConstraintId::from(1), equation, &scope);
+
+        // Assert
+        let constraint = result.unwrap();
+        assert_eq!(constraint.related_variables.len(), 1);
+        assert_eq!(constraint.related_variables[0], var1);
     }
 }
