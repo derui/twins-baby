@@ -1,4 +1,5 @@
 use enum_dispatch::enum_dispatch;
+use immutable::Im;
 use solver::equation::Equation;
 
 use crate::{
@@ -24,8 +25,8 @@ pub trait Constraint {
 pub struct LineSegment {
     id: GeometryId,
     /// ID mapping for points.
-    start_vars: (VariableId, VariableId),
-    end_vars: (VariableId, VariableId),
+    pub start_points: Im<(VariableId, VariableId)>,
+    pub end_points: Im<(VariableId, VariableId)>,
 }
 
 impl LineSegment {
@@ -41,19 +42,9 @@ impl LineSegment {
 
         LineSegment {
             id,
-            start_vars: start_ids,
-            end_vars: end_ids,
+            start_points: start_ids.into(),
+            end_points: end_ids.into(),
         }
-    }
-
-    /// Get variable ids of the start point of this segment
-    pub fn start_point(&self) -> (VariableId, VariableId) {
-        self.start_vars
-    }
-
-    /// Get variable ids of the end point of this segment
-    pub fn end_point(&self) -> (VariableId, VariableId) {
-        self.end_vars
     }
 }
 
