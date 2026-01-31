@@ -149,71 +149,31 @@ impl From<GeometryId> for u64 {
     }
 }
 
-/// Generator trait for creating unique identifiers.
-pub trait GenerateId<T>: std::fmt::Debug + GenerateIdClone<T>
-where
-    T: From<u64> + Clone,
-{
-    /// Generates a new unique identifier.
-    ///
-    /// # Returns
-    /// A new unique identifier of type T.
-    fn generate(&mut self) -> T;
-}
+pub trait Id: Clone + Copy + From<u64> + Debug {}
+impl<T: Clone + Copy + From<u64> + Debug> Id for T {}
 
-pub trait GenerateIdClone<T>
-where
-    T: From<u64>,
-{
-    fn clone_box(&self) -> Box<dyn GenerateId<T>>;
-}
-
-impl<T: From<u64> + Clone> Clone for Box<dyn GenerateIdClone<T>> {
-    fn clone(&self) -> Self {
-        self.clone_box()
-    }
-}
-
-/// Default implementation of id generator with rng.
+/// An ID store for each concrete Id types.
 #[derive(Debug, Clone)]
-pub struct DefaultIdGenerator<T: From<u64>> {
+pub struct IdStore<T: Id> {
     current: u64,
     _marker: PhantomData<T>,
 }
 
-impl<T: From<u64>> Default for DefaultIdGenerator<T> {
-    fn default() -> Self {
-        Self {
+impl<T: Id> IdStore<T> {
+    pub fn of() -> IdStore<T> {
+        IdStore {
             current: 1,
             _marker: PhantomData,
         }
     }
-}
 
-impl<T, V> GenerateIdClone<T> for V
-where
-    T: From<u64> + Debug + Clone,
-    V: 'static + Clone + GenerateId<T>,
-{
-    fn clone_box(&self) -> Box<dyn GenerateId<T>> {
-        Box::new(self.clone())
-    }
-}
-
-impl<T: From<u64> + Debug> Clone for Box<dyn GenerateId<T>> {
-    fn clone(&self) -> Self {
-        self.clone_box()
-    }
-}
-
-impl<T> GenerateId<T> for DefaultIdGenerator<T>
-where
-    T: From<u64> + std::fmt::Debug + Clone + 'static,
-{
-    fn generate(&mut self) -> T {
-        let id: u64 = self.current;
+    /// Generates a new unique identifier.
+    ///
+    /// # Returns
+    /// A new unique identifier of type T.
+    pub fn generate(&mut self) -> T {
+        let current = self.current;
         self.current += 1;
-
-        T::from(id)
+        T::from(current)
     }
 }

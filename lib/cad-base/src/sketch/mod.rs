@@ -1,5 +1,5 @@
-mod point2;
-mod registrar;
+pub mod point2;
+pub mod scope;
 mod shape;
 #[cfg(test)]
 mod tests;
@@ -11,9 +11,12 @@ use solver::{environment::Environment, variable::Variable};
 
 use crate::{
     edge::Edge,
-    id::{DefaultIdGenerator, EdgeId, GenerateId, GeometryId, PlaneId, PointId, SketchId},
+    id::{EdgeId, GeometryId, IdStore, PlaneId, PointId, SketchId},
     point::Point,
-    sketch::shape::{Basic, Shape},
+    sketch::{
+        scope::VariableScope,
+        shape::{Basic, Shape},
+    },
 };
 
 pub use point2::*;
@@ -22,38 +25,17 @@ pub use point2::*;
 #[derive(Debug, Clone)]
 pub struct SketchPerspective {
     sketches: HashMap<SketchId, Sketch>,
-    sketch_id_gen: Box<dyn GenerateId<SketchId>>,
-    geometry_id_gen: Box<dyn GenerateId<GeometryId>>,
-}
-
-/// Builder of perspective
-#[derive(Debug)]
-pub struct SketchPerspectiveBuilder {
-    pub sketch_id_gen: Box<dyn GenerateId<SketchId>>,
-    pub geometry_id_gen: Box<dyn GenerateId<GeometryId>>,
-}
-
-impl Default for SketchPerspectiveBuilder {
-    fn default() -> Self {
-        Self {
-            sketch_id_gen: Box::new(DefaultIdGenerator::default()),
-            geometry_id_gen: Box::new(DefaultIdGenerator::default()),
-        }
-    }
-}
-
-impl SketchPerspectiveBuilder {
-    /// Build a [SketchPerspective] with variables
-    pub fn build(self) -> Result<SketchPerspective> {
-        Ok(SketchPerspective {
-            sketches: HashMap::new(),
-            sketch_id_gen: self.sketch_id_gen,
-            geometry_id_gen: self.geometry_id_gen,
-        })
-    }
+    sketch_id_gen: IdStore<SketchId>,
 }
 
 impl SketchPerspective {
+    pub fn new() -> Self {
+        SketchPerspective {
+            sketches: HashMap::new(),
+            sketch_id_gen: IdStore::of(),
+        }
+    }
+
     /// Get a sketch reference of the id
     pub fn get(&self, id: &SketchId) -> Option<&Sketch> {
         self.sketches.get(id)
@@ -67,7 +49,7 @@ impl SketchPerspective {
     /// Add a new sketch to the perpective
     pub fn add_sketch<F>(&mut self, plane: &PlaneId) -> SketchId {
         let id = self.sketch_id_gen.generate();
-        let sketch = Sketch::new(id, plane, self.geometry_id_gen.clone());
+        let sketch = Sketch::new(id, plane);
 
         self.sketches.insert(id, sketch);
         id
@@ -90,13 +72,14 @@ impl SketchPerspective {
 #[derive(Debug, Clone)]
 pub struct Sketch {
     id: SketchId,
-    geometory_id_gen: Box<dyn GenerateId<GeometryId>>,
+
+    geometory_id_gen: IdStore<GeometryId>,
 
     /// Geometries in this sketch
     geometries: HashMap<GeometryId, Box<Basic>>,
 
-    /// variables for solver
-    variables: Environment,
+    /// variable scope.
+    variables: VariableScope,
 
     /// A plane atteched to sketch
     attached_plane: PlaneId,
@@ -104,23 +87,12 @@ pub struct Sketch {
 
 impl Sketch {
     /// Create a new sketch with builder
-    ///
-    /// ```rust
-    /// Sketch::new(SketchId::new(1), SketchBuilder {
-    ///   attached_plane: Some(PlaneId(3)),
-    ///   ..Default::default()
-    /// })
-    /// ```
-    fn new(
-        id: SketchId,
-        attached_plane: &PlaneId,
-        id_gen: Box<dyn GenerateId<GeometryId>>,
-    ) -> Self {
+    fn new(id: SketchId, attached_plane: &PlaneId) -> Self {
         Sketch {
             id,
-            geometory_id_gen: id_gen,
+            geometory_id_gen: IdStore::of(),
             geometries: HashMap::new(),
-            variables: Environment::empty(),
+            variables: VariableScope::new(),
             attached_plane: *attached_plane,
         }
     }
