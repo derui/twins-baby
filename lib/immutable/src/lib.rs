@@ -1,11 +1,12 @@
-use std::ops::Deref;
+use std::{clone::Clone, ops::Deref};
 
-pub struct Immutable<T> {
+#[derive(Debug, Clone)]
+pub struct Immutable<T: Clone> {
     value: T,
     _immutable: (),
 }
 
-impl<T> Immutable<T> {
+impl<T: Clone> Immutable<T> {
     /// Get a new immutable
     pub fn new(initial: T) -> Self {
         Immutable {
@@ -16,11 +17,17 @@ impl<T> Immutable<T> {
 }
 
 /// Only deref, without mut.
-impl<T> Deref for Immutable<T> {
+impl<T: Clone> Deref for Immutable<T> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
         &self.value
+    }
+}
+
+impl<T: Clone> From<T> for Immutable<T> {
+    fn from(value: T) -> Self {
+        Immutable::new(value)
     }
 }
 
@@ -35,6 +42,16 @@ mod tests {
     fn test_new_creates_immutable_with_value(#[case] value: i32) {
         // Arrange & Act
         let immutable = Immutable::new(value);
+
+        // Assert
+        assert_eq!(*immutable, value);
+    }
+
+    #[rstest]
+    #[case(42)]
+    fn test_new_creates_immutable_from_value(#[case] value: i32) {
+        // Arrange & Act
+        let immutable: Immutable<_> = value.into();
 
         // Assert
         assert_eq!(*immutable, value);
@@ -70,7 +87,7 @@ mod tests {
         assert_eq!(first, Some(&1));
     }
 
-    #[derive(Debug, PartialEq)]
+    #[derive(Debug, PartialEq, Clone)]
     struct CustomStruct {
         id: u32,
         name: String,
