@@ -101,7 +101,7 @@ impl From<u64> for SketchId {
 
 impl Display for SketchId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Point{}", self.0)
+        write!(f, "Sketch{}", self.0)
     }
 }
 
@@ -133,7 +133,7 @@ pub struct GeometryId(u64);
 
 impl Display for GeometryId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "shape{}", self.0)
+        write!(f, "Geo{}", self.0)
     }
 }
 
@@ -155,7 +155,7 @@ pub struct ConstraintId(u64);
 
 impl Display for ConstraintId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "shape{}", self.0)
+        write!(f, "Constraint{}", self.0)
     }
 }
 

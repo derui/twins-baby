@@ -26,6 +26,7 @@ pub struct SketchPerspective {
 }
 
 impl SketchPerspective {
+    /// Create a new perspective
     pub fn new() -> Self {
         SketchPerspective {
             sketches: HashMap::new(),
@@ -46,7 +47,7 @@ impl SketchPerspective {
     /// Add a new sketch to the perpective
     pub fn add_sketch(&mut self, plane: &PlaneId) -> SketchId {
         let id = self.sketch_id_gen.generate();
-        let sketch = Sketch::new(plane);
+        let sketch = Sketch::new(&id.to_string(), plane);
 
         self.sketches.insert(id, sketch);
         id
@@ -68,6 +69,9 @@ impl SketchPerspective {
 ///
 #[derive(Debug, Clone)]
 pub struct Sketch {
+    /// Name of this sketch
+    name: String,
+
     geometory_id_gen: IdStore<GeometryId>,
 
     /// Geometries in this sketch
@@ -85,8 +89,9 @@ pub struct Sketch {
 
 impl Sketch {
     /// Create a new sketch with builder
-    fn new(attached_plane: &PlaneId) -> Self {
+    fn new(name: &str, attached_plane: &PlaneId) -> Self {
         Sketch {
+            name: name.to_string(),
             geometory_id_gen: IdStore::of(),
             geometries: HashMap::new(),
             variables: VariableScope::new(),
