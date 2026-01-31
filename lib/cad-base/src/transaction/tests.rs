@@ -477,3 +477,419 @@ fn test_single_undo_redo_cycle() {
     assert!(can_redo);
     assert_eq!(*history.state(), 2);
 }
+
+// Tests for PerspectiveRegistry
+
+// Tests for new()
+
+#[test]
+fn test_new_creates_empty_registry() {
+    // Arrange & Act
+    let registry = PerspectiveRegistry::new();
+
+    // Assert
+    assert!(registry.perspectives.is_empty());
+    assert!(registry.transaction_log.is_empty());
+    assert!(registry.redo_log.is_empty());
+}
+
+// Tests for register()
+
+#[test]
+fn test_register_adds_new_type() {
+    // Arrange
+    let mut registry = PerspectiveRegistry::new();
+
+    // Act
+    registry.register(42);
+
+    // Assert
+    assert_eq!(registry.get::<i32>(), Some(&42));
+}
+
+#[test]
+fn test_register_replaces_existing_type() {
+    // Arrange
+    let mut registry = PerspectiveRegistry::new();
+    registry.register(42);
+
+    // Act
+    registry.register(100);
+
+    // Assert
+    assert_eq!(registry.get::<i32>(), Some(&100));
+}
+
+#[test]
+fn test_register_clears_transaction_log() {
+    // Arrange
+    let mut registry = PerspectiveRegistry::new();
+    registry.register(1);
+    {
+        let mut tx = registry.begin();
+        *tx.modify::<i32>().unwrap() = 2;
+        tx.commit();
+    }
+
+    // Act
+    registry.register(42);
+
+    // Assert
+    assert!(registry.transaction_log.is_empty());
+}
+
+#[test]
+fn test_register_clears_redo_log() {
+    // Arrange
+    let mut registry = PerspectiveRegistry::new();
+    registry.register(1);
+    {
+        let mut tx = registry.begin();
+        *tx.modify::<i32>().unwrap() = 2;
+        tx.commit();
+    }
+    registry.undo();
+
+    // Act
+    registry.register(42);
+
+    // Assert
+    assert!(registry.redo_log.is_empty());
+}
+
+#[test]
+fn test_register_multiple_types() {
+    // Arrange
+    let mut registry = PerspectiveRegistry::new();
+
+    // Act
+    registry.register(42);
+    registry.register("hello");
+
+    // Assert
+    assert_eq!(registry.get::<i32>(), Some(&42));
+    assert_eq!(registry.get::<&str>(), Some(&"hello"));
+}
+
+// Tests for get()
+
+#[test]
+fn test_get_returns_registered_type() {
+    // Arrange
+    let mut registry = PerspectiveRegistry::new();
+    registry.register(42);
+
+    // Act
+    let value = registry.get::<i32>();
+
+    // Assert
+    assert_eq!(value, Some(&42));
+}
+
+#[test]
+fn test_get_returns_none_for_unregistered_type() {
+    // Arrange
+    let registry = PerspectiveRegistry::new();
+
+    // Act
+    let value = registry.get::<i32>();
+
+    // Assert
+    assert_eq!(value, None);
+}
+
+// Tests for get_mut()
+
+#[test]
+fn test_get_mut_returns_registered_type() {
+    // Arrange
+    let mut registry = PerspectiveRegistry::new();
+    registry.register(42);
+
+    // Act
+    let value = registry.get_mut::<i32>();
+
+    // Assert
+    assert_eq!(value, Some(&mut 42));
+}
+
+#[test]
+fn test_get_mut_returns_none_for_unregistered_type() {
+    // Arrange
+    let mut registry = PerspectiveRegistry::new();
+
+    // Act
+    let value = registry.get_mut::<i32>();
+
+    // Assert
+    assert_eq!(value, None);
+}
+
+#[test]
+fn test_get_mut_allows_modification() {
+    // Arrange
+    let mut registry = PerspectiveRegistry::new();
+    registry.register(42);
+
+    // Act
+    *registry.get_mut::<i32>().unwrap() = 100;
+
+    // Assert
+    assert_eq!(registry.get::<i32>(), Some(&100));
+}
+
+// Tests for undo()
+
+#[test]
+fn test_undo_returns_false_when_no_transaction_log() {
+    // Arrange
+    let mut registry = PerspectiveRegistry::new();
+
+    // Act
+    let result = registry.undo();
+
+    // Assert
+    assert!(!result);
+}
+
+#[test]
+fn test_registry_undo_restores_previous_state() {
+    // Arrange
+    let mut registry = PerspectiveRegistry::new();
+    registry.register(1);
+    {
+        let mut tx = registry.begin();
+        *tx.modify::<i32>().unwrap() = 2;
+        tx.commit();
+    }
+
+    // Act
+    let result = registry.undo();
+
+    // Assert
+    assert!(result);
+    assert_eq!(registry.get::<i32>(), Some(&1));
+}
+
+#[test]
+fn test_undo_moves_transaction_to_redo_log() {
+    // Arrange
+    let mut registry = PerspectiveRegistry::new();
+    registry.register(1);
+    {
+        let mut tx = registry.begin();
+        *tx.modify::<i32>().unwrap() = 2;
+        tx.commit();
+    }
+
+    // Act
+    registry.undo();
+
+    // Assert
+    assert_eq!(registry.redo_log.len(), 1);
+}
+
+#[test]
+fn test_undo_multiple_transactions() {
+    // Arrange
+    let mut registry = PerspectiveRegistry::new();
+    registry.register(1);
+    {
+        let mut tx1 = registry.begin();
+        *tx1.modify::<i32>().unwrap() = 2;
+        tx1.commit();
+    }
+    {
+        let mut tx2 = registry.begin();
+        *tx2.modify::<i32>().unwrap() = 3;
+        tx2.commit();
+    }
+
+    // Act
+    registry.undo();
+    registry.undo();
+
+    // Assert
+    assert_eq!(registry.get::<i32>(), Some(&1));
+}
+
+#[test]
+fn test_undo_affects_multiple_types() {
+    // Arrange
+    let mut registry = PerspectiveRegistry::new();
+    registry.register(1);
+    registry.register("hello");
+    {
+        let mut tx = registry.begin();
+        *tx.modify::<i32>().unwrap() = 2;
+        *tx.modify::<&str>().unwrap() = "world";
+        tx.commit();
+    }
+
+    // Act
+    registry.undo();
+
+    // Assert
+    assert_eq!(registry.get::<i32>(), Some(&1));
+    assert_eq!(registry.get::<&str>(), Some(&"hello"));
+}
+
+// Tests for redo()
+
+#[test]
+fn test_redo_returns_false_when_no_redo_log() {
+    // Arrange
+    let mut registry = PerspectiveRegistry::new();
+
+    // Act
+    let result = registry.redo();
+
+    // Assert
+    assert!(!result);
+}
+
+#[test]
+fn test_registry_redo_restores_undone_state() {
+    // Arrange
+    let mut registry = PerspectiveRegistry::new();
+    registry.register(1);
+    {
+        let mut tx = registry.begin();
+        *tx.modify::<i32>().unwrap() = 2;
+        tx.commit();
+    }
+    registry.undo();
+
+    // Act
+    let result = registry.redo();
+
+    // Assert
+    assert!(result);
+    assert_eq!(registry.get::<i32>(), Some(&2));
+}
+
+#[test]
+fn test_redo_moves_to_transaction_log() {
+    // Arrange
+    let mut registry = PerspectiveRegistry::new();
+    registry.register(1);
+    {
+        let mut tx = registry.begin();
+        *tx.modify::<i32>().unwrap() = 2;
+        tx.commit();
+    }
+    registry.undo();
+
+    // Act
+    registry.redo();
+
+    // Assert
+    assert_eq!(registry.transaction_log.len(), 1);
+}
+
+#[test]
+fn test_redo_multiple_transactions() {
+    // Arrange
+    let mut registry = PerspectiveRegistry::new();
+    registry.register(1);
+    {
+        let mut tx1 = registry.begin();
+        *tx1.modify::<i32>().unwrap() = 2;
+        tx1.commit();
+    }
+    {
+        let mut tx2 = registry.begin();
+        *tx2.modify::<i32>().unwrap() = 3;
+        tx2.commit();
+    }
+    registry.undo();
+    registry.undo();
+
+    // Act
+    registry.redo();
+    registry.redo();
+
+    // Assert
+    assert_eq!(registry.get::<i32>(), Some(&3));
+}
+
+#[test]
+fn test_redo_affects_multiple_types() {
+    // Arrange
+    let mut registry = PerspectiveRegistry::new();
+    registry.register(1);
+    registry.register("hello");
+    {
+        let mut tx = registry.begin();
+        *tx.modify::<i32>().unwrap() = 2;
+        *tx.modify::<&str>().unwrap() = "world";
+        tx.commit();
+    }
+    registry.undo();
+
+    // Act
+    registry.redo();
+
+    // Assert
+    assert_eq!(registry.get::<i32>(), Some(&2));
+    assert_eq!(registry.get::<&str>(), Some(&"world"));
+}
+
+// Tests for begin()
+
+#[test]
+fn test_begin_creates_transaction() {
+    // Arrange
+    let mut registry = PerspectiveRegistry::new();
+
+    // Act
+    let tx = registry.begin();
+
+    // Assert
+    assert_eq!(tx.affected.len(), 0);
+    assert!(!tx.committed);
+}
+
+// Integration tests
+
+#[test]
+fn test_registry_undo_redo_cycle() {
+    // Arrange
+    let mut registry = PerspectiveRegistry::new();
+    registry.register(1);
+    {
+        let mut tx = registry.begin();
+        *tx.modify::<i32>().unwrap() = 2;
+        tx.commit();
+    }
+
+    // Act
+    registry.undo();
+    registry.redo();
+
+    // Assert
+    assert_eq!(registry.get::<i32>(), Some(&2));
+}
+
+#[test]
+fn test_transaction_clears_redo_log_on_commit() {
+    // Arrange
+    let mut registry = PerspectiveRegistry::new();
+    registry.register(1);
+    {
+        let mut tx1 = registry.begin();
+        *tx1.modify::<i32>().unwrap() = 2;
+        tx1.commit();
+    }
+    registry.undo();
+
+    // Act
+    {
+        let mut tx2 = registry.begin();
+        *tx2.modify::<i32>().unwrap() = 3;
+        tx2.commit();
+    }
+
+    // Assert
+    assert!(registry.redo_log.is_empty());
+}
