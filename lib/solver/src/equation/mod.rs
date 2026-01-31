@@ -43,6 +43,12 @@ pub trait Evaluate {
 
     /// return the equation related or not
     fn is_variable_related(&self, variable: &Variable) -> bool;
+
+    /// return all variables that this equation depends on
+    ///
+    /// # Returns
+    /// A vector of variable names that appear in this equation (without duplicates)
+    fn related_variables(&self) -> Vec<String>;
 }
 
 /// A central Equation, it avoid to Boxing

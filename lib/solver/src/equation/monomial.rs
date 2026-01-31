@@ -29,6 +29,10 @@ impl Evaluate for MonomialEquation {
     fn is_variable_related(&self, variable: &Variable) -> bool {
         self.variable == *variable.name
     }
+
+    fn related_variables(&self) -> Vec<String> {
+        vec![self.variable.clone()]
+    }
 }
 
 impl std::fmt::Display for MonomialEquation {
@@ -294,6 +298,23 @@ mod tests {
             // assert
             assert_eq!(result_lowercase, false);
             assert_eq!(result_correct, true);
+        }
+    }
+
+    mod related_variables_tests {
+        use super::*;
+        use pretty_assertions::assert_eq;
+
+        #[test]
+        fn test_related_variables_returns_single_variable() {
+            // arrange
+            let equation = MonomialEquation::new(2.0, "x", 1);
+
+            // act
+            let result = equation.related_variables();
+
+            // assert
+            assert_eq!(result, vec!["x".to_string()]);
         }
     }
 }

@@ -16,6 +16,10 @@ impl Evaluate for ConstantEquation {
     fn is_variable_related(&self, _variable: &Variable) -> bool {
         false
     }
+
+    fn related_variables(&self) -> Vec<String> {
+        vec![]
+    }
 }
 
 impl std::fmt::Display for ConstantEquation {
@@ -116,5 +120,17 @@ mod tests {
 
         // assert
         assert_eq!(result, false);
+    }
+
+    #[test]
+    fn test_related_variables_returns_empty_vector() {
+        // arrange
+        let equation: ConstantEquation = 42.0.into();
+
+        // act
+        let result = equation.related_variables();
+
+        // assert
+        assert_eq!(result, Vec::<String>::new());
     }
 }

@@ -1,4 +1,5 @@
 use std::cmp::Ordering;
+use std::collections::HashSet;
 
 use anyhow::{Result, anyhow};
 
@@ -72,6 +73,16 @@ impl Evaluate for ArithmeticEquation {
         self.operands
             .iter()
             .any(|o| o.is_variable_related(variable))
+    }
+
+    fn related_variables(&self) -> Vec<String> {
+        let mut variables: HashSet<String> = HashSet::new();
+        for operand in &self.operands {
+            for var in operand.related_variables() {
+                variables.insert(var);
+            }
+        }
+        variables.into_iter().collect()
     }
 }
 
@@ -565,6 +576,143 @@ mod tests {
             // assert
             assert_eq!(result_x, true);
             assert_eq!(result_y, false);
+            Ok(())
+        }
+    }
+
+    mod related_variables_tests {
+        use super::*;
+        use crate::equation::monomial::MonomialEquation;
+        use pretty_assertions::assert_eq;
+
+        #[test]
+        fn test_related_variables_returns_empty_for_constants_only() -> Result<()> {
+            // arrange
+            let first = 5.0.into();
+            let second = 3.0.into();
+            let equation = ArithmeticEquation::new(Operator::Add, &[first, second])?;
+
+            // act
+            let result = equation.related_variables();
+
+            // assert
+            assert_eq!(result, Vec::<String>::new());
+            Ok(())
+        }
+
+        #[test]
+        fn test_related_variables_returns_single_variable_from_first_operand() -> Result<()> {
+            // arrange
+            let first = MonomialEquation::new(2.0, "x", 1).into();
+            let second = 3.0.into();
+            let equation = ArithmeticEquation::new(Operator::Add, &[first, second])?;
+
+            // act
+            let mut result = equation.related_variables();
+            result.sort();
+
+            // assert
+            assert_eq!(result, vec!["x".to_string()]);
+            Ok(())
+        }
+
+        #[test]
+        fn test_related_variables_returns_single_variable_from_second_operand() -> Result<()> {
+            // arrange
+            let first = 5.0.into();
+            let second = MonomialEquation::new(3.0, "y", 1).into();
+            let equation = ArithmeticEquation::new(Operator::Multiply, &[first, second])?;
+
+            // act
+            let mut result = equation.related_variables();
+            result.sort();
+
+            // assert
+            assert_eq!(result, vec!["y".to_string()]);
+            Ok(())
+        }
+
+        #[test]
+        fn test_related_variables_returns_multiple_unique_variables() -> Result<()> {
+            // arrange
+            let first = MonomialEquation::new(2.0, "x", 1).into();
+            let second = MonomialEquation::new(3.0, "y", 1).into();
+            let equation = ArithmeticEquation::new(Operator::Add, &[first, second])?;
+
+            // act
+            let mut result = equation.related_variables();
+            result.sort();
+
+            // assert
+            assert_eq!(result, vec!["x".to_string(), "y".to_string()]);
+            Ok(())
+        }
+
+        #[test]
+        fn test_related_variables_deduplicates_same_variable() -> Result<()> {
+            // arrange
+            let first = MonomialEquation::new(2.0, "x", 1).into();
+            let second = MonomialEquation::new(3.0, "x", 2).into();
+            let equation = ArithmeticEquation::new(Operator::Add, &[first, second])?;
+
+            // act
+            let mut result = equation.related_variables();
+            result.sort();
+
+            // assert
+            assert_eq!(result, vec!["x".to_string()]);
+            Ok(())
+        }
+
+        #[test]
+        fn test_related_variables_with_nested_equations() -> Result<()> {
+            // arrange
+            // (x + y) * z
+            let inner_first = MonomialEquation::new(1.0, "x", 1).into();
+            let inner_second = MonomialEquation::new(1.0, "y", 1).into();
+            let inner_equation =
+                ArithmeticEquation::new(Operator::Add, &[inner_first, inner_second])?;
+            let outer_second = MonomialEquation::new(1.0, "z", 1).into();
+            let outer_equation = ArithmeticEquation::new(
+                Operator::Multiply,
+                &[inner_equation.into(), outer_second],
+            )?;
+
+            // act
+            let mut result = outer_equation.related_variables();
+            result.sort();
+
+            // assert
+            assert_eq!(
+                result,
+                vec!["x".to_string(), "y".to_string(), "z".to_string()]
+            );
+            Ok(())
+        }
+
+        #[test]
+        fn test_related_variables_with_nested_equations_and_duplicates() -> Result<()> {
+            // arrange
+            // (x + 2) * (x + 3)
+            let left_var = MonomialEquation::new(1.0, "x", 1).into();
+            let left_const = 2.0.into();
+            let left_equation = ArithmeticEquation::new(Operator::Add, &[left_var, left_const])?;
+
+            let right_var = MonomialEquation::new(1.0, "x", 1).into();
+            let right_const = 3.0.into();
+            let right_equation = ArithmeticEquation::new(Operator::Add, &[right_var, right_const])?;
+
+            let outer_equation = ArithmeticEquation::new(
+                Operator::Multiply,
+                &[left_equation.into(), right_equation.into()],
+            )?;
+
+            // act
+            let mut result = outer_equation.related_variables();
+            result.sort();
+
+            // assert
+            assert_eq!(result, vec!["x".to_string()]);
             Ok(())
         }
     }
