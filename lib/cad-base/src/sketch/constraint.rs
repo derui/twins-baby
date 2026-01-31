@@ -4,10 +4,7 @@ use anyhow::Result;
 use immutable::Im;
 use solver::equation::{Equation, Evaluate};
 
-use crate::{
-    id::{ConstraintId, VariableId},
-    sketch::scope::VariableScope,
-};
+use crate::{id::VariableId, sketch::scope::VariableScope};
 
 /// Constraint between variables
 #[derive(Debug, Clone)]

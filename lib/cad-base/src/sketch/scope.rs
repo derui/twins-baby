@@ -64,6 +64,7 @@ impl VariableScope {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct ConstraintScope {
     /// Gene
     id_gen: IdStore<ConstraintId>,
