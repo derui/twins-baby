@@ -1,895 +1,904 @@
-use pretty_assertions::assert_eq;
 use rstest::rstest;
 
 use super::*;
 
-// Test for new()
+mod snapshot_history {
+    use pretty_assertions::assert_eq;
 
-#[test]
-fn test_new_creates_history_with_initial_state() {
-    // Arrange
-    let initial = 42;
-    let max_history = 10;
+    use super::*;
 
-    // Act
-    let history = SnapshotHistory::new(initial, max_history);
+    // Test for new()
 
-    // Assert
-    assert_eq!(*history.state(), 42);
-}
+    #[test]
+    fn test_new_creates_history_with_initial_state() {
+        // Arrange
+        let initial = 42;
+        let max_history = 10;
 
-#[test]
-fn test_new_with_min_max_history() {
-    // Arrange
-    let initial = "state";
-    let max_history = 1;
+        // Act
+        let history = SnapshotHistory::new(initial, max_history);
 
-    // Act
-    let history = SnapshotHistory::new(initial, max_history);
+        // Assert
+        assert_eq!(*history.state(), 42);
+    }
 
-    // Assert
-    assert_eq!(*history.state(), "state");
-}
+    #[test]
+    fn test_new_with_min_max_history() {
+        // Arrange
+        let initial = "state";
+        let max_history = 1;
 
-#[test]
-#[should_panic(expected = "History size must be greater than 0")]
-fn test_new_with_zero_max_history_panics() {
-    // Arrange
-    let initial = 42;
-    let max_history = 0;
+        // Act
+        let history = SnapshotHistory::new(initial, max_history);
 
-    // Act
-    SnapshotHistory::new(initial, max_history);
-}
+        // Assert
+        assert_eq!(*history.state(), "state");
+    }
 
-// Tests for save()
+    #[test]
+    #[should_panic(expected = "History size must be greater than 0")]
+    fn test_new_with_zero_max_history_panics() {
+        // Arrange
+        let initial = 42;
+        let max_history = 0;
 
-#[test]
-fn test_save_updates_current_state() {
-    // Arrange
-    let mut history = SnapshotHistory::new(1, 10);
+        // Act
+        SnapshotHistory::new(initial, max_history);
+    }
 
-    // Act
-    history.save_snapshot();
-    *history.state_mut() = 2;
+    // Tests for save()
 
-    // Assert
-    assert_eq!(*history.state(), 2);
-}
+    #[test]
+    fn test_save_updates_current_state() {
+        // Arrange
+        let mut history = SnapshotHistory::new(1, 10);
 
-#[test]
-fn test_save_allows_undo() {
-    // Arrange
-    let mut history = SnapshotHistory::new(1, 10);
-
-    // Act
-    history.save_snapshot();
-    *history.state_mut() = 2;
-    let can_undo = history.undo();
-
-    // Assert
-    assert!(can_undo);
-    assert_eq!(*history.state(), 1);
-}
-
-#[test]
-fn test_save_clears_redo_stack() {
-    // Arrange
-    let mut history = SnapshotHistory::new(1, 10);
-    history.save_snapshot();
-    *history.state_mut() = 2;
-    history.save_snapshot();
-    *history.state_mut() = 3;
-    history.undo(); // Now redo is available
-
-    // Act
-    history.save_snapshot();
-    *history.state_mut() = 4;
-    let can_redo = history.redo();
-
-    // Assert - redo should not be available
-    assert!(!can_redo);
-    assert_eq!(*history.state(), 4);
-}
-
-#[test]
-fn test_save_multiple_times_maintains_order() {
-    // Arrange
-    let mut history = SnapshotHistory::new(0, 10);
-
-    // Act
-    for i in 1..=5 {
+        // Act
         history.save_snapshot();
-        *history.state_mut() = i;
+        *history.state_mut() = 2;
+
+        // Assert
+        assert_eq!(*history.state(), 2);
     }
 
-    // Assert - verify by undoing in reverse order
-    assert_eq!(*history.state(), 5);
-    history.undo();
-    assert_eq!(*history.state(), 4);
-    history.undo();
-    assert_eq!(*history.state(), 3);
-    history.undo();
-    assert_eq!(*history.state(), 2);
-    history.undo();
-    assert_eq!(*history.state(), 1);
-    history.undo();
-    assert_eq!(*history.state(), 0);
-}
+    #[test]
+    fn test_save_allows_undo() {
+        // Arrange
+        let mut history = SnapshotHistory::new(1, 10);
 
-#[rstest]
-#[case(1, vec![1, 2, 3], vec![2])]
-#[case(2, vec![1, 2, 3], vec![2, 1])]
-#[case(3, vec![1, 2, 3, 4, 5], vec![4, 3, 2])]
-#[case(5, vec![1, 2, 3], vec![2, 1, 0])]
-fn test_save_respects_max_history(
-    #[case] max_history: usize,
-    #[case] pushes: Vec<i32>,
-    #[case] expected_undo_sequence: Vec<i32>,
-) {
-    // Arrange
-    let mut history = SnapshotHistory::new(0, max_history);
-
-    // Act
-    for &value in &pushes {
+        // Act
         history.save_snapshot();
-        *history.state_mut() = value;
+        *history.state_mut() = 2;
+        let can_undo = history.undo();
+
+        // Assert
+        assert!(can_undo);
+        assert_eq!(*history.state(), 1);
     }
 
-    // Assert - verify by undoing and checking sequence
-    for &expected in &expected_undo_sequence {
-        assert!(history.undo());
-        assert_eq!(*history.state(), expected);
-    }
-    // No more undos should be possible
-    assert!(!history.undo());
-}
+    #[test]
+    fn test_save_clears_redo_stack() {
+        // Arrange
+        let mut history = SnapshotHistory::new(1, 10);
+        history.save_snapshot();
+        *history.state_mut() = 2;
+        history.save_snapshot();
+        *history.state_mut() = 3;
+        history.undo(); // Now redo is available
 
-#[test]
-fn test_max_history_boundary() {
-    // Arrange
-    let mut history = SnapshotHistory::new(0, 2);
+        // Act
+        history.save_snapshot();
+        *history.state_mut() = 4;
+        let can_redo = history.redo();
 
-    // Act - push exactly max_history items
-    history.save_snapshot();
-    *history.state_mut() = 1;
-    history.save_snapshot();
-    *history.state_mut() = 2;
-
-    // Assert - should be able to undo max_history times
-    assert!(history.undo()); // 2 -> 1
-    assert!(history.undo()); // 1 -> 0
-    assert!(!history.undo()); // Cannot undo past initial
-    assert_eq!(*history.state(), 0);
-}
-
-// Tests for undo()
-
-#[test]
-fn test_undo_restores_previous_state() {
-    // Arrange
-    let mut history = SnapshotHistory::new(1, 10);
-    history.save_snapshot();
-    *history.state_mut() = 2;
-
-    // Act
-    let result = history.undo();
-
-    // Assert
-    assert!(result);
-    assert_eq!(*history.state(), 1);
-}
-
-#[test]
-fn test_undo_returns_false_when_no_history() {
-    // Arrange
-    let mut history = SnapshotHistory::new(1, 10);
-
-    // Act
-    let result = history.undo();
-
-    // Assert
-    assert!(!result);
-    assert_eq!(*history.state(), 1);
-}
-
-#[test]
-fn test_undo_enables_redo() {
-    // Arrange
-    let mut history = SnapshotHistory::new(1, 10);
-    history.save_snapshot();
-    *history.state_mut() = 2;
-
-    // Act
-    history.undo();
-    let can_redo = history.redo();
-
-    // Assert
-    assert!(can_redo);
-    assert_eq!(*history.state(), 2);
-}
-
-#[test]
-fn test_undo_multiple_times() {
-    // Arrange
-    let mut history = SnapshotHistory::new(0, 10);
-    history.save_snapshot();
-    *history.state_mut() = 1;
-    history.save_snapshot();
-    *history.state_mut() = 2;
-    history.save_snapshot();
-    *history.state_mut() = 3;
-
-    // Act
-    let result1 = history.undo();
-    let result2 = history.undo();
-
-    // Assert
-    assert!(result1);
-    assert!(result2);
-    assert_eq!(*history.state(), 1);
-}
-
-#[test]
-fn test_undo_until_initial_state() {
-    // Arrange
-    let mut history = SnapshotHistory::new(0, 10);
-    history.save_snapshot();
-    *history.state_mut() = 1;
-    history.save_snapshot();
-    *history.state_mut() = 2;
-
-    // Act & Assert
-    history.undo();
-    assert_eq!(*history.state(), 1);
-    history.undo();
-    assert_eq!(*history.state(), 0);
-    let result = history.undo();
-    assert!(!result);
-    assert_eq!(*history.state(), 0);
-}
-
-// Tests for redo()
-
-#[test]
-fn test_redo_restores_undone_state() {
-    // Arrange
-    let mut history = SnapshotHistory::new(1, 10);
-    history.save_snapshot();
-    *history.state_mut() = 2;
-    history.undo();
-
-    // Act
-    let result = history.redo();
-
-    // Assert
-    assert!(result);
-    assert_eq!(*history.state(), 2);
-}
-
-#[test]
-fn test_redo_returns_false_when_no_redo_available() {
-    // Arrange
-    let mut history = SnapshotHistory::new(1, 10);
-
-    // Act
-    let result = history.redo();
-
-    // Assert
-    assert!(!result);
-    assert_eq!(*history.state(), 1);
-}
-
-#[test]
-fn test_redo_enables_undo() {
-    // Arrange
-    let mut history = SnapshotHistory::new(1, 10);
-    history.save_snapshot();
-    *history.state_mut() = 2;
-    history.undo();
-
-    // Act
-    history.redo();
-    let can_undo = history.undo();
-
-    // Assert
-    assert!(can_undo);
-    assert_eq!(*history.state(), 1);
-}
-
-#[test]
-fn test_redo_multiple_times() {
-    // Arrange
-    let mut history = SnapshotHistory::new(0, 10);
-    history.save_snapshot();
-    *history.state_mut() = 1;
-    history.save_snapshot();
-    *history.state_mut() = 2;
-    history.save_snapshot();
-    *history.state_mut() = 3;
-    history.undo();
-    history.undo();
-
-    // Act
-    let result1 = history.redo();
-    let result2 = history.redo();
-
-    // Assert
-    assert!(result1);
-    assert!(result2);
-    assert_eq!(*history.state(), 3);
-}
-
-#[test]
-fn test_redo_exhausts_all_redos() {
-    // Arrange
-    let mut history = SnapshotHistory::new(0, 10);
-    history.save_snapshot();
-    *history.state_mut() = 1;
-    history.save_snapshot();
-    *history.state_mut() = 2;
-    history.undo();
-    history.undo();
-
-    // Act & Assert
-    assert!(history.redo()); // 0 -> 1
-    assert_eq!(*history.state(), 1);
-    assert!(history.redo()); // 1 -> 2
-    assert_eq!(*history.state(), 2);
-    assert!(!history.redo()); // No more redos
-    assert_eq!(*history.state(), 2);
-}
-
-// Integration tests
-
-#[test]
-fn test_undo_then_redo_cycle() {
-    // Arrange
-    let mut history = SnapshotHistory::new(1, 10);
-    history.save_snapshot();
-    *history.state_mut() = 2;
-    history.save_snapshot();
-    *history.state_mut() = 3;
-
-    // Act
-    history.undo();
-    assert_eq!(*history.state(), 2);
-    history.undo();
-    assert_eq!(*history.state(), 1);
-    history.redo();
-
-    // Assert
-    assert_eq!(*history.state(), 2);
-}
-
-#[test]
-fn test_push_after_undo_clears_redo() {
-    // Arrange
-    let mut history = SnapshotHistory::new(1, 10);
-    history.save_snapshot();
-    *history.state_mut() = 2;
-    history.save_snapshot();
-    *history.state_mut() = 3;
-    history.undo();
-
-    // Act
-    history.save_snapshot();
-    *history.state_mut() = 4;
-
-    // Assert
-    assert_eq!(*history.state(), 4);
-    assert!(!history.redo()); // Redo should not be available
-}
-
-#[test]
-fn test_complex_history_manipulation() {
-    // Arrange
-    let mut history = SnapshotHistory::new(0, 5);
-
-    // Act & Assert - Build history
-    history.save_snapshot();
-    *history.state_mut() = 1;
-    history.save_snapshot();
-    *history.state_mut() = 2;
-    history.save_snapshot();
-    *history.state_mut() = 3;
-    assert_eq!(*history.state(), 3);
-
-    // Undo twice
-    history.undo();
-    history.undo();
-    assert_eq!(*history.state(), 1);
-
-    // Redo once
-    history.redo();
-    assert_eq!(*history.state(), 2);
-
-    // Push new state (should clear remaining redo)
-    history.save_snapshot();
-    *history.state_mut() = 10;
-    assert_eq!(*history.state(), 10);
-    assert!(!history.redo()); // No redo available
-
-    // Verify undo sequence
-    history.undo();
-    assert_eq!(*history.state(), 2);
-    history.undo();
-    assert_eq!(*history.state(), 1);
-    history.undo();
-    assert_eq!(*history.state(), 0);
-}
-
-#[test]
-fn test_snapshot_works_with_custom_types() {
-    // Arrange
-    #[derive(Clone, Debug, PartialEq)]
-    struct State {
-        value: i32,
+        // Assert - redo should not be available
+        assert!(!can_redo);
+        assert_eq!(*history.state(), 4);
     }
 
-    let initial = State { value: 1 };
-    let mut history = SnapshotHistory::new(initial, 10);
+    #[test]
+    fn test_save_multiple_times_maintains_order() {
+        // Arrange
+        let mut history = SnapshotHistory::new(0, 10);
 
-    // Act
-    history.save_snapshot();
-    history.state_mut().value = 2;
-    history.undo();
+        // Act
+        for i in 1..=5 {
+            history.save_snapshot();
+            *history.state_mut() = i;
+        }
 
-    // Assert
-    assert_eq!(history.state().value, 1);
-}
-
-#[test]
-fn test_alternating_undo_redo() {
-    // Arrange
-    let mut history = SnapshotHistory::new(1, 10);
-    history.save_snapshot();
-    *history.state_mut() = 2;
-    history.save_snapshot();
-    *history.state_mut() = 3;
-
-    // Act & Assert - alternate between undo and redo
-    history.undo();
-    assert_eq!(*history.state(), 2);
-    history.redo();
-    assert_eq!(*history.state(), 3);
-    history.undo();
-    assert_eq!(*history.state(), 2);
-    history.undo();
-    assert_eq!(*history.state(), 1);
-    history.redo();
-    assert_eq!(*history.state(), 2);
-}
-
-#[test]
-fn test_single_undo_redo_cycle() {
-    // Arrange
-    let mut history = SnapshotHistory::new(1, 10);
-    history.save_snapshot();
-    *history.state_mut() = 2;
-
-    // Act & Assert
-    let can_undo = history.undo();
-    assert!(can_undo);
-    assert_eq!(*history.state(), 1);
-
-    let can_redo = history.redo();
-    assert!(can_redo);
-    assert_eq!(*history.state(), 2);
-}
-
-// Tests for PerspectiveRegistry
-
-// Tests for new()
-
-#[test]
-fn test_new_creates_empty_registry() {
-    // Arrange & Act
-    let registry = PerspectiveRegistry::new();
-
-    // Assert
-    assert!(registry.perspectives.is_empty());
-    assert!(registry.transaction_log.is_empty());
-    assert!(registry.redo_log.is_empty());
-}
-
-// Tests for register()
-
-#[test]
-fn test_register_adds_new_type() {
-    // Arrange
-    let mut registry = PerspectiveRegistry::new();
-
-    // Act
-    registry.register(42);
-
-    // Assert
-    assert_eq!(registry.get::<i32>(), Some(&42));
-}
-
-#[test]
-fn test_register_replaces_existing_type() {
-    // Arrange
-    let mut registry = PerspectiveRegistry::new();
-    registry.register(42);
-
-    // Act
-    registry.register(100);
-
-    // Assert
-    assert_eq!(registry.get::<i32>(), Some(&100));
-}
-
-#[test]
-fn test_register_clears_transaction_log() {
-    // Arrange
-    let mut registry = PerspectiveRegistry::new();
-    registry.register(1);
-    {
-        let mut tx = registry.begin();
-        *tx.modify::<i32>().unwrap() = 2;
-        tx.commit();
+        // Assert - verify by undoing in reverse order
+        assert_eq!(*history.state(), 5);
+        history.undo();
+        assert_eq!(*history.state(), 4);
+        history.undo();
+        assert_eq!(*history.state(), 3);
+        history.undo();
+        assert_eq!(*history.state(), 2);
+        history.undo();
+        assert_eq!(*history.state(), 1);
+        history.undo();
+        assert_eq!(*history.state(), 0);
     }
 
-    // Act
-    registry.register(42);
+    #[rstest]
+    #[case(1, vec![1, 2, 3], vec![2])]
+    #[case(2, vec![1, 2, 3], vec![2, 1])]
+    #[case(3, vec![1, 2, 3, 4, 5], vec![4, 3, 2])]
+    #[case(5, vec![1, 2, 3], vec![2, 1, 0])]
+    fn test_save_respects_max_history(
+        #[case] max_history: usize,
+        #[case] pushes: Vec<i32>,
+        #[case] expected_undo_sequence: Vec<i32>,
+    ) {
+        // Arrange
+        let mut history = SnapshotHistory::new(0, max_history);
 
-    // Assert
-    assert!(registry.transaction_log.is_empty());
-}
+        // Act
+        for &value in &pushes {
+            history.save_snapshot();
+            *history.state_mut() = value;
+        }
 
-#[test]
-fn test_register_clears_redo_log() {
-    // Arrange
-    let mut registry = PerspectiveRegistry::new();
-    registry.register(1);
-    {
-        let mut tx = registry.begin();
-        *tx.modify::<i32>().unwrap() = 2;
-        tx.commit();
-    }
-    registry.undo();
-
-    // Act
-    registry.register(42);
-
-    // Assert
-    assert!(registry.redo_log.is_empty());
-}
-
-#[test]
-fn test_register_multiple_types() {
-    // Arrange
-    let mut registry = PerspectiveRegistry::new();
-
-    // Act
-    registry.register(42);
-    registry.register("hello");
-
-    // Assert
-    assert_eq!(registry.get::<i32>(), Some(&42));
-    assert_eq!(registry.get::<&str>(), Some(&"hello"));
-}
-
-// Tests for get()
-
-#[test]
-fn test_get_returns_registered_type() {
-    // Arrange
-    let mut registry = PerspectiveRegistry::new();
-    registry.register(42);
-
-    // Act
-    let value = registry.get::<i32>();
-
-    // Assert
-    assert_eq!(value, Some(&42));
-}
-
-#[test]
-fn test_get_returns_none_for_unregistered_type() {
-    // Arrange
-    let registry = PerspectiveRegistry::new();
-
-    // Act
-    let value = registry.get::<i32>();
-
-    // Assert
-    assert_eq!(value, None);
-}
-
-// Tests for get_mut()
-
-#[test]
-fn test_get_mut_returns_registered_type() {
-    // Arrange
-    let mut registry = PerspectiveRegistry::new();
-    registry.register(42);
-
-    // Act
-    let value = registry.get_mut::<i32>();
-
-    // Assert
-    assert_eq!(value, Some(&mut 42));
-}
-
-#[test]
-fn test_get_mut_returns_none_for_unregistered_type() {
-    // Arrange
-    let mut registry = PerspectiveRegistry::new();
-
-    // Act
-    let value = registry.get_mut::<i32>();
-
-    // Assert
-    assert_eq!(value, None);
-}
-
-#[test]
-fn test_get_mut_allows_modification() {
-    // Arrange
-    let mut registry = PerspectiveRegistry::new();
-    registry.register(42);
-
-    // Act
-    *registry.get_mut::<i32>().unwrap() = 100;
-
-    // Assert
-    assert_eq!(registry.get::<i32>(), Some(&100));
-}
-
-// Tests for undo()
-
-#[test]
-fn test_undo_returns_false_when_no_transaction_log() {
-    // Arrange
-    let mut registry = PerspectiveRegistry::new();
-
-    // Act
-    let result = registry.undo();
-
-    // Assert
-    assert!(!result);
-}
-
-#[test]
-fn test_registry_undo_restores_previous_state() {
-    // Arrange
-    let mut registry = PerspectiveRegistry::new();
-    registry.register(1);
-    {
-        let mut tx = registry.begin();
-        *tx.modify::<i32>().unwrap() = 2;
-        tx.commit();
+        // Assert - verify by undoing and checking sequence
+        for &expected in &expected_undo_sequence {
+            assert!(history.undo());
+            assert_eq!(*history.state(), expected);
+        }
+        // No more undos should be possible
+        assert!(!history.undo());
     }
 
-    // Act
-    let result = registry.undo();
+    #[test]
+    fn test_max_history_boundary() {
+        // Arrange
+        let mut history = SnapshotHistory::new(0, 2);
 
-    // Assert
-    assert!(result);
-    assert_eq!(registry.get::<i32>(), Some(&1));
+        // Act - push exactly max_history items
+        history.save_snapshot();
+        *history.state_mut() = 1;
+        history.save_snapshot();
+        *history.state_mut() = 2;
+
+        // Assert - should be able to undo max_history times
+        assert!(history.undo()); // 2 -> 1
+        assert!(history.undo()); // 1 -> 0
+        assert!(!history.undo()); // Cannot undo past initial
+        assert_eq!(*history.state(), 0);
+    }
+
+    // Tests for undo()
+
+    #[test]
+    fn test_undo_restores_previous_state() {
+        // Arrange
+        let mut history = SnapshotHistory::new(1, 10);
+        history.save_snapshot();
+        *history.state_mut() = 2;
+
+        // Act
+        let result = history.undo();
+
+        // Assert
+        assert!(result);
+        assert_eq!(*history.state(), 1);
+    }
+
+    #[test]
+    fn test_undo_returns_false_when_no_history() {
+        // Arrange
+        let mut history = SnapshotHistory::new(1, 10);
+
+        // Act
+        let result = history.undo();
+
+        // Assert
+        assert!(!result);
+        assert_eq!(*history.state(), 1);
+    }
+
+    #[test]
+    fn test_undo_enables_redo() {
+        // Arrange
+        let mut history = SnapshotHistory::new(1, 10);
+        history.save_snapshot();
+        *history.state_mut() = 2;
+
+        // Act
+        history.undo();
+        let can_redo = history.redo();
+
+        // Assert
+        assert!(can_redo);
+        assert_eq!(*history.state(), 2);
+    }
+
+    #[test]
+    fn test_undo_multiple_times() {
+        // Arrange
+        let mut history = SnapshotHistory::new(0, 10);
+        history.save_snapshot();
+        *history.state_mut() = 1;
+        history.save_snapshot();
+        *history.state_mut() = 2;
+        history.save_snapshot();
+        *history.state_mut() = 3;
+
+        // Act
+        let result1 = history.undo();
+        let result2 = history.undo();
+
+        // Assert
+        assert!(result1);
+        assert!(result2);
+        assert_eq!(*history.state(), 1);
+    }
+
+    #[test]
+    fn test_undo_until_initial_state() {
+        // Arrange
+        let mut history = SnapshotHistory::new(0, 10);
+        history.save_snapshot();
+        *history.state_mut() = 1;
+        history.save_snapshot();
+        *history.state_mut() = 2;
+
+        // Act & Assert
+        history.undo();
+        assert_eq!(*history.state(), 1);
+        history.undo();
+        assert_eq!(*history.state(), 0);
+        let result = history.undo();
+        assert!(!result);
+        assert_eq!(*history.state(), 0);
+    }
+
+    // Tests for redo()
+
+    #[test]
+    fn test_redo_restores_undone_state() {
+        // Arrange
+        let mut history = SnapshotHistory::new(1, 10);
+        history.save_snapshot();
+        *history.state_mut() = 2;
+        history.undo();
+
+        // Act
+        let result = history.redo();
+
+        // Assert
+        assert!(result);
+        assert_eq!(*history.state(), 2);
+    }
+
+    #[test]
+    fn test_redo_returns_false_when_no_redo_available() {
+        // Arrange
+        let mut history = SnapshotHistory::new(1, 10);
+
+        // Act
+        let result = history.redo();
+
+        // Assert
+        assert!(!result);
+        assert_eq!(*history.state(), 1);
+    }
+
+    #[test]
+    fn test_redo_enables_undo() {
+        // Arrange
+        let mut history = SnapshotHistory::new(1, 10);
+        history.save_snapshot();
+        *history.state_mut() = 2;
+        history.undo();
+
+        // Act
+        history.redo();
+        let can_undo = history.undo();
+
+        // Assert
+        assert!(can_undo);
+        assert_eq!(*history.state(), 1);
+    }
+
+    #[test]
+    fn test_redo_multiple_times() {
+        // Arrange
+        let mut history = SnapshotHistory::new(0, 10);
+        history.save_snapshot();
+        *history.state_mut() = 1;
+        history.save_snapshot();
+        *history.state_mut() = 2;
+        history.save_snapshot();
+        *history.state_mut() = 3;
+        history.undo();
+        history.undo();
+
+        // Act
+        let result1 = history.redo();
+        let result2 = history.redo();
+
+        // Assert
+        assert!(result1);
+        assert!(result2);
+        assert_eq!(*history.state(), 3);
+    }
+
+    #[test]
+    fn test_redo_exhausts_all_redos() {
+        // Arrange
+        let mut history = SnapshotHistory::new(0, 10);
+        history.save_snapshot();
+        *history.state_mut() = 1;
+        history.save_snapshot();
+        *history.state_mut() = 2;
+        history.undo();
+        history.undo();
+
+        // Act & Assert
+        assert!(history.redo()); // 0 -> 1
+        assert_eq!(*history.state(), 1);
+        assert!(history.redo()); // 1 -> 2
+        assert_eq!(*history.state(), 2);
+        assert!(!history.redo()); // No more redos
+        assert_eq!(*history.state(), 2);
+    }
+
+    // Integration tests
+
+    #[test]
+    fn test_undo_then_redo_cycle() {
+        // Arrange
+        let mut history = SnapshotHistory::new(1, 10);
+        history.save_snapshot();
+        *history.state_mut() = 2;
+        history.save_snapshot();
+        *history.state_mut() = 3;
+
+        // Act
+        history.undo();
+        assert_eq!(*history.state(), 2);
+        history.undo();
+        assert_eq!(*history.state(), 1);
+        history.redo();
+
+        // Assert
+        assert_eq!(*history.state(), 2);
+    }
+
+    #[test]
+    fn test_push_after_undo_clears_redo() {
+        // Arrange
+        let mut history = SnapshotHistory::new(1, 10);
+        history.save_snapshot();
+        *history.state_mut() = 2;
+        history.save_snapshot();
+        *history.state_mut() = 3;
+        history.undo();
+
+        // Act
+        history.save_snapshot();
+        *history.state_mut() = 4;
+
+        // Assert
+        assert_eq!(*history.state(), 4);
+        assert!(!history.redo()); // Redo should not be available
+    }
+
+    #[test]
+    fn test_complex_history_manipulation() {
+        // Arrange
+        let mut history = SnapshotHistory::new(0, 5);
+
+        // Act & Assert - Build history
+        history.save_snapshot();
+        *history.state_mut() = 1;
+        history.save_snapshot();
+        *history.state_mut() = 2;
+        history.save_snapshot();
+        *history.state_mut() = 3;
+        assert_eq!(*history.state(), 3);
+
+        // Undo twice
+        history.undo();
+        history.undo();
+        assert_eq!(*history.state(), 1);
+
+        // Redo once
+        history.redo();
+        assert_eq!(*history.state(), 2);
+
+        // Push new state (should clear remaining redo)
+        history.save_snapshot();
+        *history.state_mut() = 10;
+        assert_eq!(*history.state(), 10);
+        assert!(!history.redo()); // No redo available
+
+        // Verify undo sequence
+        history.undo();
+        assert_eq!(*history.state(), 2);
+        history.undo();
+        assert_eq!(*history.state(), 1);
+        history.undo();
+        assert_eq!(*history.state(), 0);
+    }
+
+    #[test]
+    fn test_snapshot_works_with_custom_types() {
+        // Arrange
+        #[derive(Clone, Debug, PartialEq)]
+        struct State {
+            value: i32,
+        }
+
+        let initial = State { value: 1 };
+        let mut history = SnapshotHistory::new(initial, 10);
+
+        // Act
+        history.save_snapshot();
+        history.state_mut().value = 2;
+        history.undo();
+
+        // Assert
+        assert_eq!(history.state().value, 1);
+    }
+
+    #[test]
+    fn test_alternating_undo_redo() {
+        // Arrange
+        let mut history = SnapshotHistory::new(1, 10);
+        history.save_snapshot();
+        *history.state_mut() = 2;
+        history.save_snapshot();
+        *history.state_mut() = 3;
+
+        // Act & Assert - alternate between undo and redo
+        history.undo();
+        assert_eq!(*history.state(), 2);
+        history.redo();
+        assert_eq!(*history.state(), 3);
+        history.undo();
+        assert_eq!(*history.state(), 2);
+        history.undo();
+        assert_eq!(*history.state(), 1);
+        history.redo();
+        assert_eq!(*history.state(), 2);
+    }
+
+    #[test]
+    fn test_single_undo_redo_cycle() {
+        // Arrange
+        let mut history = SnapshotHistory::new(1, 10);
+        history.save_snapshot();
+        *history.state_mut() = 2;
+
+        // Act & Assert
+        let can_undo = history.undo();
+        assert!(can_undo);
+        assert_eq!(*history.state(), 1);
+
+        let can_redo = history.redo();
+        assert!(can_redo);
+        assert_eq!(*history.state(), 2);
+    }
 }
 
-#[test]
-fn test_undo_moves_transaction_to_redo_log() {
-    // Arrange
-    let mut registry = PerspectiveRegistry::new();
-    registry.register(1);
-    {
-        let mut tx = registry.begin();
-        *tx.modify::<i32>().unwrap() = 2;
-        tx.commit();
+mod perspective_registry {
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+
+    // Tests for new()
+
+    #[test]
+    fn test_new_creates_empty_registry() {
+        // Arrange & Act
+        let registry = PerspectiveRegistry::new();
+
+        // Assert
+        assert!(registry.perspectives.is_empty());
+        assert!(registry.transaction_log.is_empty());
+        assert!(registry.redo_log.is_empty());
     }
 
-    // Act
-    registry.undo();
+    // Tests for register()
 
-    // Assert
-    assert_eq!(registry.redo_log.len(), 1);
-}
+    #[test]
+    fn test_register_adds_new_type() {
+        // Arrange
+        let mut registry = PerspectiveRegistry::new();
 
-#[test]
-fn test_undo_multiple_transactions() {
-    // Arrange
-    let mut registry = PerspectiveRegistry::new();
-    registry.register(1);
-    {
-        let mut tx1 = registry.begin();
-        *tx1.modify::<i32>().unwrap() = 2;
-        tx1.commit();
-    }
-    {
-        let mut tx2 = registry.begin();
-        *tx2.modify::<i32>().unwrap() = 3;
-        tx2.commit();
+        // Act
+        registry.register(42);
+
+        // Assert
+        assert_eq!(registry.get::<i32>(), Some(&42));
     }
 
-    // Act
-    registry.undo();
-    registry.undo();
+    #[test]
+    fn test_register_replaces_existing_type() {
+        // Arrange
+        let mut registry = PerspectiveRegistry::new();
+        registry.register(42);
 
-    // Assert
-    assert_eq!(registry.get::<i32>(), Some(&1));
-}
+        // Act
+        registry.register(100);
 
-#[test]
-fn test_undo_affects_multiple_types() {
-    // Arrange
-    let mut registry = PerspectiveRegistry::new();
-    registry.register(1);
-    registry.register("hello");
-    {
-        let mut tx = registry.begin();
-        *tx.modify::<i32>().unwrap() = 2;
-        *tx.modify::<&str>().unwrap() = "world";
-        tx.commit();
+        // Assert
+        assert_eq!(registry.get::<i32>(), Some(&100));
     }
 
-    // Act
-    registry.undo();
+    #[test]
+    fn test_register_clears_transaction_log() {
+        // Arrange
+        let mut registry = PerspectiveRegistry::new();
+        registry.register(1);
+        {
+            let mut tx = registry.begin();
+            *tx.modify::<i32>().unwrap() = 2;
+            tx.commit();
+        }
 
-    // Assert
-    assert_eq!(registry.get::<i32>(), Some(&1));
-    assert_eq!(registry.get::<&str>(), Some(&"hello"));
-}
+        // Act
+        registry.register(42);
 
-// Tests for redo()
-
-#[test]
-fn test_redo_returns_false_when_no_redo_log() {
-    // Arrange
-    let mut registry = PerspectiveRegistry::new();
-
-    // Act
-    let result = registry.redo();
-
-    // Assert
-    assert!(!result);
-}
-
-#[test]
-fn test_registry_redo_restores_undone_state() {
-    // Arrange
-    let mut registry = PerspectiveRegistry::new();
-    registry.register(1);
-    {
-        let mut tx = registry.begin();
-        *tx.modify::<i32>().unwrap() = 2;
-        tx.commit();
-    }
-    registry.undo();
-
-    // Act
-    let result = registry.redo();
-
-    // Assert
-    assert!(result);
-    assert_eq!(registry.get::<i32>(), Some(&2));
-}
-
-#[test]
-fn test_redo_moves_to_transaction_log() {
-    // Arrange
-    let mut registry = PerspectiveRegistry::new();
-    registry.register(1);
-    {
-        let mut tx = registry.begin();
-        *tx.modify::<i32>().unwrap() = 2;
-        tx.commit();
-    }
-    registry.undo();
-
-    // Act
-    registry.redo();
-
-    // Assert
-    assert_eq!(registry.transaction_log.len(), 1);
-}
-
-#[test]
-fn test_redo_multiple_transactions() {
-    // Arrange
-    let mut registry = PerspectiveRegistry::new();
-    registry.register(1);
-    {
-        let mut tx1 = registry.begin();
-        *tx1.modify::<i32>().unwrap() = 2;
-        tx1.commit();
-    }
-    {
-        let mut tx2 = registry.begin();
-        *tx2.modify::<i32>().unwrap() = 3;
-        tx2.commit();
-    }
-    registry.undo();
-    registry.undo();
-
-    // Act
-    registry.redo();
-    registry.redo();
-
-    // Assert
-    assert_eq!(registry.get::<i32>(), Some(&3));
-}
-
-#[test]
-fn test_redo_affects_multiple_types() {
-    // Arrange
-    let mut registry = PerspectiveRegistry::new();
-    registry.register(1);
-    registry.register("hello");
-    {
-        let mut tx = registry.begin();
-        *tx.modify::<i32>().unwrap() = 2;
-        *tx.modify::<&str>().unwrap() = "world";
-        tx.commit();
-    }
-    registry.undo();
-
-    // Act
-    registry.redo();
-
-    // Assert
-    assert_eq!(registry.get::<i32>(), Some(&2));
-    assert_eq!(registry.get::<&str>(), Some(&"world"));
-}
-
-// Tests for begin()
-
-#[test]
-fn test_begin_creates_transaction() {
-    // Arrange
-    let mut registry = PerspectiveRegistry::new();
-
-    // Act
-    let tx = registry.begin();
-
-    // Assert
-    assert_eq!(tx.affected.len(), 0);
-    assert!(!tx.committed);
-}
-
-// Integration tests
-
-#[test]
-fn test_registry_undo_redo_cycle() {
-    // Arrange
-    let mut registry = PerspectiveRegistry::new();
-    registry.register(1);
-    {
-        let mut tx = registry.begin();
-        *tx.modify::<i32>().unwrap() = 2;
-        tx.commit();
+        // Assert
+        assert!(registry.transaction_log.is_empty());
     }
 
-    // Act
-    registry.undo();
-    registry.redo();
+    #[test]
+    fn test_register_clears_redo_log() {
+        // Arrange
+        let mut registry = PerspectiveRegistry::new();
+        registry.register(1);
+        {
+            let mut tx = registry.begin();
+            *tx.modify::<i32>().unwrap() = 2;
+            tx.commit();
+        }
+        registry.undo();
 
-    // Assert
-    assert_eq!(registry.get::<i32>(), Some(&2));
-}
+        // Act
+        registry.register(42);
 
-#[test]
-fn test_transaction_clears_redo_log_on_commit() {
-    // Arrange
-    let mut registry = PerspectiveRegistry::new();
-    registry.register(1);
-    {
-        let mut tx1 = registry.begin();
-        *tx1.modify::<i32>().unwrap() = 2;
-        tx1.commit();
-    }
-    registry.undo();
-
-    // Act
-    {
-        let mut tx2 = registry.begin();
-        *tx2.modify::<i32>().unwrap() = 3;
-        tx2.commit();
+        // Assert
+        assert!(registry.redo_log.is_empty());
     }
 
-    // Assert
-    assert!(registry.redo_log.is_empty());
+    #[test]
+    fn test_register_multiple_types() {
+        // Arrange
+        let mut registry = PerspectiveRegistry::new();
+
+        // Act
+        registry.register(42);
+        registry.register("hello");
+
+        // Assert
+        assert_eq!(registry.get::<i32>(), Some(&42));
+        assert_eq!(registry.get::<&str>(), Some(&"hello"));
+    }
+
+    // Tests for get()
+
+    #[test]
+    fn test_get_returns_registered_type() {
+        // Arrange
+        let mut registry = PerspectiveRegistry::new();
+        registry.register(42);
+
+        // Act
+        let value = registry.get::<i32>();
+
+        // Assert
+        assert_eq!(value, Some(&42));
+    }
+
+    #[test]
+    fn test_get_returns_none_for_unregistered_type() {
+        // Arrange
+        let registry = PerspectiveRegistry::new();
+
+        // Act
+        let value = registry.get::<i32>();
+
+        // Assert
+        assert_eq!(value, None);
+    }
+
+    // Tests for get_mut()
+
+    #[test]
+    fn test_get_mut_returns_registered_type() {
+        // Arrange
+        let mut registry = PerspectiveRegistry::new();
+        registry.register(42);
+
+        // Act
+        let value = registry.get_mut::<i32>();
+
+        // Assert
+        assert_eq!(value, Some(&mut 42));
+    }
+
+    #[test]
+    fn test_get_mut_returns_none_for_unregistered_type() {
+        // Arrange
+        let mut registry = PerspectiveRegistry::new();
+
+        // Act
+        let value = registry.get_mut::<i32>();
+
+        // Assert
+        assert_eq!(value, None);
+    }
+
+    #[test]
+    fn test_get_mut_allows_modification() {
+        // Arrange
+        let mut registry = PerspectiveRegistry::new();
+        registry.register(42);
+
+        // Act
+        *registry.get_mut::<i32>().unwrap() = 100;
+
+        // Assert
+        assert_eq!(registry.get::<i32>(), Some(&100));
+    }
+
+    // Tests for undo()
+
+    #[test]
+    fn test_undo_returns_false_when_no_transaction_log() {
+        // Arrange
+        let mut registry = PerspectiveRegistry::new();
+
+        // Act
+        let result = registry.undo();
+
+        // Assert
+        assert!(!result);
+    }
+
+    #[test]
+    fn test_registry_undo_restores_previous_state() {
+        // Arrange
+        let mut registry = PerspectiveRegistry::new();
+        registry.register(1);
+        {
+            let mut tx = registry.begin();
+            *tx.modify::<i32>().unwrap() = 2;
+            tx.commit();
+        }
+
+        // Act
+        let result = registry.undo();
+
+        // Assert
+        assert!(result);
+        assert_eq!(registry.get::<i32>(), Some(&1));
+    }
+
+    #[test]
+    fn test_undo_moves_transaction_to_redo_log() {
+        // Arrange
+        let mut registry = PerspectiveRegistry::new();
+        registry.register(1);
+        {
+            let mut tx = registry.begin();
+            *tx.modify::<i32>().unwrap() = 2;
+            tx.commit();
+        }
+
+        // Act
+        registry.undo();
+
+        // Assert
+        assert_eq!(registry.redo_log.len(), 1);
+    }
+
+    #[test]
+    fn test_undo_multiple_transactions() {
+        // Arrange
+        let mut registry = PerspectiveRegistry::new();
+        registry.register(1);
+        {
+            let mut tx1 = registry.begin();
+            *tx1.modify::<i32>().unwrap() = 2;
+            tx1.commit();
+        }
+        {
+            let mut tx2 = registry.begin();
+            *tx2.modify::<i32>().unwrap() = 3;
+            tx2.commit();
+        }
+
+        // Act
+        registry.undo();
+        registry.undo();
+
+        // Assert
+        assert_eq!(registry.get::<i32>(), Some(&1));
+    }
+
+    #[test]
+    fn test_undo_affects_multiple_types() {
+        // Arrange
+        let mut registry = PerspectiveRegistry::new();
+        registry.register(1);
+        registry.register("hello");
+        {
+            let mut tx = registry.begin();
+            *tx.modify::<i32>().unwrap() = 2;
+            *tx.modify::<&str>().unwrap() = "world";
+            tx.commit();
+        }
+
+        // Act
+        registry.undo();
+
+        // Assert
+        assert_eq!(registry.get::<i32>(), Some(&1));
+        assert_eq!(registry.get::<&str>(), Some(&"hello"));
+    }
+
+    // Tests for redo()
+
+    #[test]
+    fn test_redo_returns_false_when_no_redo_log() {
+        // Arrange
+        let mut registry = PerspectiveRegistry::new();
+
+        // Act
+        let result = registry.redo();
+
+        // Assert
+        assert!(!result);
+    }
+
+    #[test]
+    fn test_registry_redo_restores_undone_state() {
+        // Arrange
+        let mut registry = PerspectiveRegistry::new();
+        registry.register(1);
+        {
+            let mut tx = registry.begin();
+            *tx.modify::<i32>().unwrap() = 2;
+            tx.commit();
+        }
+        registry.undo();
+
+        // Act
+        let result = registry.redo();
+
+        // Assert
+        assert!(result);
+        assert_eq!(registry.get::<i32>(), Some(&2));
+    }
+
+    #[test]
+    fn test_redo_moves_to_transaction_log() {
+        // Arrange
+        let mut registry = PerspectiveRegistry::new();
+        registry.register(1);
+        {
+            let mut tx = registry.begin();
+            *tx.modify::<i32>().unwrap() = 2;
+            tx.commit();
+        }
+        registry.undo();
+
+        // Act
+        registry.redo();
+
+        // Assert
+        assert_eq!(registry.transaction_log.len(), 1);
+    }
+
+    #[test]
+    fn test_redo_multiple_transactions() {
+        // Arrange
+        let mut registry = PerspectiveRegistry::new();
+        registry.register(1);
+        {
+            let mut tx1 = registry.begin();
+            *tx1.modify::<i32>().unwrap() = 2;
+            tx1.commit();
+        }
+        {
+            let mut tx2 = registry.begin();
+            *tx2.modify::<i32>().unwrap() = 3;
+            tx2.commit();
+        }
+        registry.undo();
+        registry.undo();
+
+        // Act
+        registry.redo();
+        registry.redo();
+
+        // Assert
+        assert_eq!(registry.get::<i32>(), Some(&3));
+    }
+
+    #[test]
+    fn test_redo_affects_multiple_types() {
+        // Arrange
+        let mut registry = PerspectiveRegistry::new();
+        registry.register(1);
+        registry.register("hello");
+        {
+            let mut tx = registry.begin();
+            *tx.modify::<i32>().unwrap() = 2;
+            *tx.modify::<&str>().unwrap() = "world";
+            tx.commit();
+        }
+        registry.undo();
+
+        // Act
+        registry.redo();
+
+        // Assert
+        assert_eq!(registry.get::<i32>(), Some(&2));
+        assert_eq!(registry.get::<&str>(), Some(&"world"));
+    }
+
+    // Tests for begin()
+
+    #[test]
+    fn test_begin_creates_transaction() {
+        // Arrange
+        let mut registry = PerspectiveRegistry::new();
+
+        // Act
+        let tx = registry.begin();
+
+        // Assert
+        assert_eq!(tx.affected.len(), 0);
+        assert!(!tx.committed);
+    }
+
+    // Integration tests
+
+    #[test]
+    fn test_registry_undo_redo_cycle() {
+        // Arrange
+        let mut registry = PerspectiveRegistry::new();
+        registry.register(1);
+        {
+            let mut tx = registry.begin();
+            *tx.modify::<i32>().unwrap() = 2;
+            tx.commit();
+        }
+
+        // Act
+        registry.undo();
+        registry.redo();
+
+        // Assert
+        assert_eq!(registry.get::<i32>(), Some(&2));
+    }
+
+    #[test]
+    fn test_transaction_clears_redo_log_on_commit() {
+        // Arrange
+        let mut registry = PerspectiveRegistry::new();
+        registry.register(1);
+        {
+            let mut tx1 = registry.begin();
+            *tx1.modify::<i32>().unwrap() = 2;
+            tx1.commit();
+        }
+        registry.undo();
+
+        // Act
+        {
+            let mut tx2 = registry.begin();
+            *tx2.modify::<i32>().unwrap() = 3;
+            tx2.commit();
+        }
+
+        // Assert
+        assert!(registry.redo_log.is_empty());
+    }
 }
