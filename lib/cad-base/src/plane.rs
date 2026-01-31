@@ -3,13 +3,13 @@ use std::marker::PhantomData;
 use anyhow::{self, Result};
 use epsilon::{DefaultEpsilon, Epsilon, approx_zero};
 
-use crate::{edge::Edge, point::Point, vector3d::Vector3d};
+use crate::{edge::Edge, point::Point, vector3d::Vector3};
 
 /// Simple plane definition.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Plane<E: Epsilon = DefaultEpsilon> {
     /// normal vector of the vector
-    normal: Vector3d,
+    normal: Vector3,
 
     /// point on the plane
     r0: Point,
@@ -20,8 +20,8 @@ pub struct Plane<E: Epsilon = DefaultEpsilon> {
 impl<E: Epsilon> Plane<E> {
     /// Create a new plane that makes 2 edges and crossed the 2 edges.
     pub fn new(edge1: &Edge, edge2: &Edge) -> Result<Self> {
-        let v1 = Vector3d::from_edge(edge1);
-        let v2 = Vector3d::from_edge(edge2);
+        let v1 = Vector3::from_edge(edge1);
+        let v2 = Vector3::from_edge(edge2);
 
         let crossed = v1.cross(&v2);
 
@@ -40,7 +40,7 @@ impl<E: Epsilon> Plane<E> {
     /// A new XY-plane. It contains origin and Z-unit vector.
     pub fn new_xy() -> Self {
         Plane {
-            normal: Vector3d::new_z_unit(),
+            normal: Vector3::new_z_unit(),
             r0: Point::zero(),
             _data: PhantomData,
         }
@@ -49,7 +49,7 @@ impl<E: Epsilon> Plane<E> {
     /// A new XZ-plane. It contains origin and Y-unit vector.
     pub fn new_xz() -> Self {
         Plane {
-            normal: Vector3d::new_y_unit(),
+            normal: Vector3::new_y_unit(),
             r0: Point::zero(),
             _data: PhantomData,
         }
@@ -58,21 +58,21 @@ impl<E: Epsilon> Plane<E> {
     /// A new YZ-plane. It contains origin and X-unit vector.
     pub fn new_yz() -> Self {
         Plane {
-            normal: Vector3d::new_x_unit(),
+            normal: Vector3::new_x_unit(),
             r0: Point::zero(),
             _data: PhantomData,
         }
     }
 
     /// Get normal
-    pub fn normal(&self) -> &Vector3d {
+    pub fn normal(&self) -> &Vector3 {
         &self.normal
     }
 
     /// Check the [point] on the plane or not
     pub fn is_on_plane(&self, point: &Point) -> bool {
-        let r0: Vector3d = self.r0.into();
-        let r: Vector3d = point.into();
+        let r0: Vector3 = self.r0.into();
+        let r: Vector3 = point.into();
 
         let ret = self.normal.dot(&(r0 - r));
 
@@ -243,8 +243,8 @@ mod tests {
             // Act
             let plane = Plane::new(&edge1, &edge2).expect("should create plane");
             let normal = plane.normal();
-            let v1 = Vector3d::from_edge(&edge1);
-            let v2 = Vector3d::from_edge(&edge2);
+            let v1 = Vector3::from_edge(&edge1);
+            let v2 = Vector3::from_edge(&edge2);
 
             // Assert
             assert_relative_eq!(normal.dot(&v1), 0.0, epsilon = 1e-5);
