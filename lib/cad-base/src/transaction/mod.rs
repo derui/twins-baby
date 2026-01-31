@@ -16,7 +16,7 @@ impl<T: Clone + Send + Sync + 'static> Snapshot for T {}
 
 /// A simple snapshot history
 #[derive(Debug, Clone)]
-pub struct SnapshotHistory<S: Snapshot> {
+struct SnapshotHistory<S: Snapshot> {
     /// Current one
     current: S,
     /// Stack of **previous** history
@@ -32,7 +32,7 @@ pub struct SnapshotHistory<S: Snapshot> {
 
 impl<S: Snapshot> SnapshotHistory<S> {
     /// Create a new history with initial state
-    pub fn new(initial: S, max_history: usize) -> Self {
+    fn new(initial: S, max_history: usize) -> Self {
         assert!(max_history > 0, "History size must be greater than 0");
 
         SnapshotHistory {
@@ -44,17 +44,17 @@ impl<S: Snapshot> SnapshotHistory<S> {
     }
 
     /// Read the current snapshot. Snapshot in history can not edit.
-    pub fn state(&self) -> &S {
+    fn state(&self) -> &S {
         &self.current
     }
 
     /// Read the current snapshot. Snapshot in history can not edit.
-    pub fn state_mut(&mut self) -> &mut S {
+    fn state_mut(&mut self) -> &mut S {
         &mut self.current
     }
 
     /// Push the cloned history to stack. This truncates redo stack.
-    pub fn save_snapshot(&mut self) {
+    fn save_snapshot(&mut self) {
         // remove overflowed histories
         if self.undo_stack.len() >= self.max_history
             && let Some((_, rest)) = self
@@ -69,7 +69,7 @@ impl<S: Snapshot> SnapshotHistory<S> {
     }
 
     /// Undo from the history. Return if the history done undo
-    pub fn undo(&mut self) -> bool {
+    fn undo(&mut self) -> bool {
         let Some(undo) = self.undo_stack.pop() else {
             return false;
         };
@@ -80,7 +80,7 @@ impl<S: Snapshot> SnapshotHistory<S> {
     }
 
     /// Redo the history. Return if the history done redo
-    pub fn redo(&mut self) -> bool {
+    fn redo(&mut self) -> bool {
         let Some(redo) = self.redo_stack.pop() else {
             return false;
         };
