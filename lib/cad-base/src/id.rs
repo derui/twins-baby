@@ -149,6 +149,28 @@ impl From<GeometryId> for u64 {
     }
 }
 
+/// Internal id for constraint management in sketch
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+pub struct ConstraintId(u64);
+
+impl Display for ConstraintId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "shape{}", self.0)
+    }
+}
+
+impl From<u64> for ConstraintId {
+    fn from(value: u64) -> Self {
+        ConstraintId(value)
+    }
+}
+
+impl From<ConstraintId> for u64 {
+    fn from(value: ConstraintId) -> Self {
+        value.0
+    }
+}
+
 pub trait Id: Clone + Copy + From<u64> + Debug {}
 impl<T: Clone + Copy + From<u64> + Debug> Id for T {}
 

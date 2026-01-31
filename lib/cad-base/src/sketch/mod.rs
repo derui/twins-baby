@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod tests;
 
+mod constraint;
 mod geometry;
 pub mod point2;
 pub mod scope;
