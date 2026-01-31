@@ -4,47 +4,59 @@ use std::fmt::{Display, Formatter};
 ///
 /// This type is totally immutable
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct Point(f32, f32, f32);
+pub struct Point {
+    x: f32,
+    y: f32,
+    z: f32,
+}
 
 impl Point {
     /// Get a new [Point]
     pub fn new(x: f32, y: f32, z: f32) -> Self {
-        Point(x, y, z)
+        Point { x, y, z }
     }
 
     /// Get a new zero point
     pub fn zero() -> Self {
-        Point(0.0, 0.0, 0.0)
+        Point {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        }
     }
 
     /// Get X of the [Point]
     #[inline]
     pub fn x(&self) -> &f32 {
-        &self.0
+        &self.x
     }
 
     /// Get Y of the [Point]
     #[inline]
     pub fn y(&self) -> &f32 {
-        &self.1
+        &self.y
     }
 
     /// Get Z of the [Point]
     #[inline]
     pub fn z(&self) -> &f32 {
-        &self.2
+        &self.z
     }
 }
 
 impl From<(f32, f32, f32)> for Point {
     fn from(value: (f32, f32, f32)) -> Self {
-        Point::new(value.0, value.1, value.2)
+        Point {
+            x: value.0,
+            y: value.1,
+            z: value.2,
+        }
     }
 }
 
 impl From<Point> for (f32, f32, f32) {
     fn from(value: Point) -> Self {
-        (value.0, value.1, value.2)
+        (value.x, value.y, value.z)
     }
 }
 
