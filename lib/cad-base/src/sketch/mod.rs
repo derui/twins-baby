@@ -1,4 +1,4 @@
-mod point2d;
+mod point2;
 mod propagation;
 mod registrar;
 mod shape;
@@ -16,7 +16,7 @@ use crate::{
     point::Point,
 };
 
-pub use point2d::*;
+pub use point2::*;
 
 /// A internal information of edge.
 ///

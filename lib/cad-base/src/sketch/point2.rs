@@ -1,13 +1,13 @@
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Point2D {
+pub struct Point2 {
     pub x: f32,
     pub y: f32,
     _immutable: (),
 }
 
-impl Point2D {
+impl Point2 {
     pub fn from_points(x: f32, y: f32) -> Self {
-        Point2D {
+        Point2 {
             x,
             y,
             _immutable: (),
@@ -15,7 +15,7 @@ impl Point2D {
     }
 
     /// Get a distance between two points
-    pub fn distance(&self, other: &Point2D) -> f32 {
+    pub fn distance(&self, other: &Point2) -> f32 {
         let x = other.x - self.x;
         let y = other.y - self.y;
 
@@ -23,9 +23,9 @@ impl Point2D {
     }
 }
 
-impl From<(f32, f32)> for Point2D {
+impl From<(f32, f32)> for Point2 {
     fn from(value: (f32, f32)) -> Self {
-        Point2D {
+        Point2 {
             x: value.0,
             y: value.1,
             _immutable: (),
@@ -33,8 +33,8 @@ impl From<(f32, f32)> for Point2D {
     }
 }
 
-impl From<Point2D> for (f32, f32) {
-    fn from(value: Point2D) -> Self {
+impl From<Point2> for (f32, f32) {
+    fn from(value: Point2) -> Self {
         (value.x, value.y)
     }
 }
@@ -52,7 +52,7 @@ mod tests {
         let y = 4.0;
 
         // Act
-        let point = Point2D::from_points(x, y);
+        let point = Point2::from_points(x, y);
 
         // Assert
         assert_relative_eq!(point.x, x);
@@ -66,7 +66,7 @@ mod tests {
         let y = -10.0;
 
         // Act
-        let point = Point2D::from_points(x, y);
+        let point = Point2::from_points(x, y);
 
         // Assert
         assert_relative_eq!(point.x, x);
@@ -80,7 +80,7 @@ mod tests {
         let y = 0.0;
 
         // Act
-        let point = Point2D::from_points(x, y);
+        let point = Point2::from_points(x, y);
 
         // Assert
         assert_relative_eq!(point.x, x);
@@ -90,7 +90,7 @@ mod tests {
     #[test]
     fn test_distance_between_same_point() {
         // Arrange
-        let point = Point2D::from_points(5.0, 10.0);
+        let point = Point2::from_points(5.0, 10.0);
 
         // Act
         let distance = point.distance(&point);
@@ -102,8 +102,8 @@ mod tests {
     #[test]
     fn test_distance_horizontal() {
         // Arrange
-        let point1 = Point2D::from_points(0.0, 5.0);
-        let point2 = Point2D::from_points(10.0, 5.0);
+        let point1 = Point2::from_points(0.0, 5.0);
+        let point2 = Point2::from_points(10.0, 5.0);
 
         // Act
         let distance = point1.distance(&point2);
@@ -115,8 +115,8 @@ mod tests {
     #[test]
     fn test_distance_vertical() {
         // Arrange
-        let point1 = Point2D::from_points(5.0, 0.0);
-        let point2 = Point2D::from_points(5.0, 8.0);
+        let point1 = Point2::from_points(5.0, 0.0);
+        let point2 = Point2::from_points(5.0, 8.0);
 
         // Act
         let distance = point1.distance(&point2);
@@ -128,8 +128,8 @@ mod tests {
     #[test]
     fn test_distance_diagonal_pythagorean() {
         // Arrange - 3-4-5 Pythagorean triangle
-        let point1 = Point2D::from_points(0.0, 0.0);
-        let point2 = Point2D::from_points(3.0, 4.0);
+        let point1 = Point2::from_points(0.0, 0.0);
+        let point2 = Point2::from_points(3.0, 4.0);
 
         // Act
         let distance = point1.distance(&point2);
@@ -141,8 +141,8 @@ mod tests {
     #[test]
     fn test_distance_with_negative_coordinates() {
         // Arrange
-        let point1 = Point2D::from_points(-3.0, -4.0);
-        let point2 = Point2D::from_points(0.0, 0.0);
+        let point1 = Point2::from_points(-3.0, -4.0);
+        let point2 = Point2::from_points(0.0, 0.0);
 
         // Act
         let distance = point1.distance(&point2);
@@ -157,7 +157,7 @@ mod tests {
         let tuple = (7.5, 9.2);
 
         // Act
-        let point: Point2D = tuple.into();
+        let point: Point2 = tuple.into();
 
         // Assert
         assert_relative_eq!(point.x, 7.5);
@@ -167,7 +167,7 @@ mod tests {
     #[test]
     fn test_from_point2d_to_tuple() {
         // Arrange
-        let point = Point2D::from_points(3.3, 6.6);
+        let point = Point2::from_points(3.3, 6.6);
 
         // Act
         let tuple: (f32, f32) = point.into();
@@ -183,7 +183,7 @@ mod tests {
         let original_tuple = (12.5, 25.0);
 
         // Act
-        let point: Point2D = original_tuple.into();
+        let point: Point2 = original_tuple.into();
         let result_tuple: (f32, f32) = point.into();
 
         // Assert
