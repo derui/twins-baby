@@ -8,7 +8,7 @@ use std::{
     mem::replace,
 };
 
-use crate::transaction::registry::PerspectiveRegistry;
+pub use registry::*;
 
 /// Marker trait for snapshot
 pub trait Snapshot: Clone + Send + Sync + 'static {}

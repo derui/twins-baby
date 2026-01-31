@@ -38,7 +38,7 @@ impl PerspectiveRegistry {
         let history = TypedPerspective {
             history: SnapshotHistory::new(initial, 100),
         };
-        let type_id = TypeId::of::<TypedPerspective<S>>();
+        let type_id = TypeId::of::<S>();
 
         self.transaction_log.clear();
         self.redo_log.clear();
