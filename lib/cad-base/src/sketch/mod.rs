@@ -3,8 +3,8 @@ mod tests;
 
 mod constraint;
 mod geometry;
-pub mod point2;
-pub mod scope;
+mod point2;
+mod scope;
 
 use std::collections::HashMap;
 
@@ -17,6 +17,8 @@ use crate::{
 };
 
 use anyhow::{Result, anyhow};
+pub use constraint::*;
+pub use geometry::*;
 use immutable::Im;
 pub use point2::*;
 
