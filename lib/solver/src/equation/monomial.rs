@@ -20,14 +20,14 @@ pub struct MonomialEquation {
 impl Evaluate for MonomialEquation {
     fn evaluate(&self, env: &Environment) -> Result<f32, EquationError> {
         let variable = env
-            .get_variable(&self.variable)
+            .get(&self.variable)
             .ok_or_else(|| EquationError::NoVariableInEnvironment(vec![self.variable.clone()]))?;
 
-        Ok(self.factor * variable.value().powf(self.exponent as f32))
+        Ok(self.factor * variable.value.powf(self.exponent as f32))
     }
 
     fn is_variable_related(&self, variable: &Variable) -> bool {
-        self.variable == variable.name()
+        self.variable == *variable.name
     }
 }
 

@@ -5307,6 +5307,7 @@ dependencies = [
  "approx",
  "enum_dispatch",
  "epsilon",
+ "immutable",
  "nom 8.0.0",
  "pretty_assertions",
  "rstest",

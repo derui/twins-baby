@@ -1,16 +1,30 @@
+use immutable::Im;
+
 /// A simple variable representation
 #[derive(Debug, Clone)]
 pub struct Variable {
     /// Name of the variable
-    name: String,
+    pub name: Im<String>,
     /// Current value of the variable
-    value: f32,
+    pub value: f32,
 }
 
 impl PartialEq for Variable {
     fn eq(&self, other: &Self) -> bool {
         // same name as same variable.
-        self.name == other.name
+        *self.name == *other.name
+    }
+}
+
+impl From<Variable> for f32 {
+    fn from(value: Variable) -> Self {
+        value.value
+    }
+}
+
+impl From<&Variable> for f32 {
+    fn from(value: &Variable) -> Self {
+        value.value
     }
 }
 
@@ -20,7 +34,7 @@ impl Variable {
         assert!(!name.trim().is_empty(), "Variable name cannot be empty");
 
         Variable {
-            name: name.trim().to_string(),
+            name: name.trim().to_string().into(),
             value,
         }
     }
@@ -28,24 +42,9 @@ impl Variable {
     /// Make a new variable with new name
     pub fn with_name(&self, name: &str) -> Self {
         Variable {
-            name: name.to_string(),
+            name: name.to_string().into(),
             value: self.value,
         }
-    }
-
-    /// Get the name of variable
-    pub fn name(&self) -> &str {
-        &self.name
-    }
-
-    /// Get the value of the variable
-    pub fn value(&self) -> f32 {
-        self.value
-    }
-
-    /// Update the value of the variable
-    pub fn update(&mut self, value: f32) {
-        self.value = value;
     }
 }
 
@@ -84,8 +83,7 @@ mod tests {
         let v = Variable::new("  x \t\n", 5.);
 
         // assert
-        assert_eq!(v.name, "x");
-        assert_eq!(v.name(), "x");
+        assert_eq!(*v.name, "x");
     }
 
     #[test]

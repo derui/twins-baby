@@ -7,6 +7,7 @@ edition = "2024"
 anyhow.workspace = true
 enum_dispatch.workspace = true
 epsilon = { version = "0.1.0", path = "../epsilon" }
+immutable = { version = "0.1.0", path = "../immutable" }
 nom.workspace = true
 
 [dev-dependencies]

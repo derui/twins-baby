@@ -39,7 +39,7 @@ impl Jacobian {
             return Err(anyhow!("Can not create valid jacobian"));
         }
         let mut variables = Vec::from(variables);
-        variables.sort_by_key(|v| v.name().to_string());
+        variables.sort_by_key(|v| (*v.name).clone());
 
         let mut matrix = SimpleMatrix::new(equations.len(), equations.len())?;
 
@@ -50,7 +50,7 @@ impl Jacobian {
                     continue;
                 }
 
-                matrix.set(i, j, (equation.clone(), variable.name().to_string()))?;
+                matrix.set(i, j, (equation.clone(), (*variable.name).clone()))?;
             }
         }
 
@@ -61,9 +61,9 @@ impl Jacobian {
     fn forward(&self, env: Environment) -> impl Matrix<f32> {
         self.0.extract(move |(e, name)| {
             let mut new_env = env.clone();
-            if let Some(v) = new_env.get_variable(name) {
+            if let Some(v) = new_env.get(name) {
                 new_env
-                    .update_variable(name, v.value() + self.1)
+                    .update_variable(name, v.value + self.1)
                     .expect("must be valid");
             }
 
@@ -223,7 +223,7 @@ impl Solver {
     /// * `Correct` - Variable count equals equation count (system is solvable)
     /// * `Incorrect` - Variable count differs from equation count (under/over-determined)
     fn recaluculate_status(&mut self) {
-        let variable_count = self.variables.list_variables().len();
+        let variable_count = self.variables.variables().len();
         let equation_count = self.equations.values().len();
 
         if variable_count == equation_count && variable_count > 0 {
@@ -239,12 +239,9 @@ impl Solver {
                 equations.sort_by_key(|(k, _)| *k);
                 let equations: Vec<_> = equations.iter().map(|(_, v)| *v).cloned().collect();
 
-                self.jacobian = Jacobian::from_equations(
-                    &equations,
-                    &self.variables.list_variables(),
-                    self.epsilon,
-                )
-                .expect("Must be valid")
+                self.jacobian =
+                    Jacobian::from_equations(&equations, &self.variables.variables(), self.epsilon)
+                        .expect("Must be valid")
             }
         }
     }
@@ -296,14 +293,14 @@ impl Solver {
 
         // make direct solve
         // x_1 = x_0 - J_0^-1 * f_0 -> J_0 * x_delta = - f_0
-        let mut ordered = self.variables.list_variables();
-        ordered.sort_by_key(|f| f.name().to_string());
+        let mut ordered = self.variables.variables();
+        ordered.sort_by_key(|f| (*f.name).clone());
         let mut equation_order = self.equations.keys().collect::<Vec<_>>();
         equation_order.sort();
         let equations: Vec<_> = equation_order.iter().map(|k| &self.equations[k]).collect();
 
         // initial value
-        let mut x0 = Vector::from(&ordered.iter().map(|f| f.value()).collect::<Vec<_>>())?;
+        let mut x0 = Vector::from(&ordered.iter().map(|f| f.value).collect::<Vec<_>>())?;
 
         // Do newton-rhapson method
         loop {
@@ -334,7 +331,7 @@ impl Solver {
 
             // update variable for next loop
             for i in 0..(ordered.len()) {
-                self.variables.update_variable(ordered[i].name(), x1[i])?;
+                self.variables.update_variable(&ordered[i].name, x1[i])?;
             }
             x0 = x1.clone();
         }
@@ -502,10 +499,10 @@ mod tests {
 
             // Assert
             assert_eq!(solver.status(), DimensionSpecificationStatus::Correct);
-            assert_relative_eq!(ret.get_variable("x1").unwrap().value(), 3.0, epsilon = 1e-5);
-            assert_relative_eq!(ret.get_variable("y1").unwrap().value(), 0.0, epsilon = 1e-5);
-            assert_relative_eq!(ret.get_variable("x2").unwrap().value(), 7.5, epsilon = 1e-5);
-            assert_relative_eq!(ret.get_variable("y2").unwrap().value(), 0.0, epsilon = 1e-5);
+            assert_relative_eq!(ret.get("x1").unwrap().value, 3.0, epsilon = 1e-5);
+            assert_relative_eq!(ret.get("y1").unwrap().value, 0.0, epsilon = 1e-5);
+            assert_relative_eq!(ret.get("x2").unwrap().value, 7.5, epsilon = 1e-5);
+            assert_relative_eq!(ret.get("y2").unwrap().value, 0.0, epsilon = 1e-5);
             Ok(())
         }
 
