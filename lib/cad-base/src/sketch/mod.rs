@@ -132,4 +132,21 @@ impl Sketch {
 
         Ok(())
     }
+
+    /// Add a geometry to this sketch with a geometry maker function
+    pub fn add_geometry<F>(&mut self, maker: F) -> GeometryId
+    where
+        F: FnOnce(&mut VariableScope) -> Geometry,
+    {
+        let geometry = maker(&mut self.variables);
+
+        let id = self.geometory_id_gen.generate();
+        self.geometries.insert(id, Box::new(geometry));
+        id
+    }
+
+    /// Remove a geometry from this sketch
+    pub fn remove_geometry(&mut self, id: &GeometryId) -> Option<Box<Geometry>> {
+        self.geometries.remove(id)
+    }
 }
