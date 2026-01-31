@@ -2,6 +2,7 @@ use std::marker::PhantomData;
 
 use anyhow::{self, Result};
 use epsilon::{DefaultEpsilon, Epsilon, approx_zero};
+use immutable::Im;
 
 use crate::{edge::Edge, point::Point, vector3::Vector3};
 
@@ -9,10 +10,10 @@ use crate::{edge::Edge, point::Point, vector3::Vector3};
 #[derive(Debug, Clone, PartialEq)]
 pub struct Plane<E: Epsilon = DefaultEpsilon> {
     /// normal vector of the vector
-    normal: Vector3,
+    pub normal: Im<Vector3>,
 
     /// point on the plane
-    r0: Point,
+    pub r0: Im<Point>,
 
     _data: PhantomData<E>,
 }
@@ -30,8 +31,8 @@ impl<E: Epsilon> Plane<E> {
             Err(anyhow::anyhow!("Can not define plane from same edges"))
         } else {
             Ok(Plane {
-                normal: crossed.unit(),
-                r0: *edge1.start(),
+                normal: crossed.unit().into(),
+                r0: (*edge1.start()).into(),
                 _data: PhantomData,
             })
         }
@@ -40,8 +41,8 @@ impl<E: Epsilon> Plane<E> {
     /// A new XY-plane. It contains origin and Z-unit vector.
     pub fn new_xy() -> Self {
         Plane {
-            normal: Vector3::new_z_unit(),
-            r0: Point::zero(),
+            normal: Vector3::new_z_unit().into(),
+            r0: Point::zero().into(),
             _data: PhantomData,
         }
     }
@@ -49,8 +50,8 @@ impl<E: Epsilon> Plane<E> {
     /// A new XZ-plane. It contains origin and Y-unit vector.
     pub fn new_xz() -> Self {
         Plane {
-            normal: Vector3::new_y_unit(),
-            r0: Point::zero(),
+            normal: Vector3::new_y_unit().into(),
+            r0: Point::zero().into(),
             _data: PhantomData,
         }
     }
@@ -58,20 +59,15 @@ impl<E: Epsilon> Plane<E> {
     /// A new YZ-plane. It contains origin and X-unit vector.
     pub fn new_yz() -> Self {
         Plane {
-            normal: Vector3::new_x_unit(),
-            r0: Point::zero(),
+            normal: Vector3::new_x_unit().into(),
+            r0: Point::zero().into(),
             _data: PhantomData,
         }
     }
 
-    /// Get normal
-    pub fn normal(&self) -> &Vector3 {
-        &self.normal
-    }
-
     /// Check the [point] on the plane or not
     pub fn is_on_plane(&self, point: &Point) -> bool {
-        let r0: Vector3 = self.r0.into();
+        let r0: Vector3 = (*self.r0).into();
         let r: Vector3 = point.into();
 
         let ret = self.normal.dot(&(r0 - r));
@@ -109,7 +105,7 @@ mod tests {
 
             // Assert
             let plane = plane.expect("should create plane");
-            let normal = plane.normal();
+            let normal = plane.normal;
             assert_relative_eq!(normal.x, 0.0, epsilon = 1e-5);
             assert_relative_eq!(normal.y, 0.0, epsilon = 1e-5);
             assert_relative_eq!(normal.z, 1.0, epsilon = 1e-5);
@@ -121,7 +117,7 @@ mod tests {
             let plane = Plane::new_xy();
 
             // Assert
-            let normal = plane.normal();
+            let normal = plane.normal;
             assert_relative_eq!(normal.x, 0.0, epsilon = 1e-5);
             assert_relative_eq!(normal.y, 0.0, epsilon = 1e-5);
             assert_relative_eq!(normal.z, 1.0, epsilon = 1e-5);
@@ -133,7 +129,7 @@ mod tests {
             let plane = Plane::new_xz();
 
             // Assert
-            let normal = plane.normal();
+            let normal = plane.normal;
             assert_relative_eq!(normal.x, 0.0, epsilon = 1e-5);
             assert_relative_eq!(normal.y, 1.0, epsilon = 1e-5);
             assert_relative_eq!(normal.z, 0.0, epsilon = 1e-5);
@@ -145,7 +141,7 @@ mod tests {
             let plane = Plane::new_yz();
 
             // Assert
-            let normal = plane.normal();
+            let normal = plane.normal;
             assert_relative_eq!(normal.x, 1.0, epsilon = 1e-5);
             assert_relative_eq!(normal.y, 0.0, epsilon = 1e-5);
             assert_relative_eq!(normal.z, 0.0, epsilon = 1e-5);
@@ -162,7 +158,7 @@ mod tests {
 
             // Assert
             let plane = plane.expect("should create plane");
-            let normal = plane.normal();
+            let normal = plane.normal;
 
             assert_relative_eq!(normal.x, 0.0, epsilon = 1e-5);
             assert_relative_eq!(normal.y, 0.0, epsilon = 1e-5);
@@ -180,7 +176,7 @@ mod tests {
 
             // Assert
             let plane = plane.expect("should create plane");
-            let normal = plane.normal();
+            let normal = plane.normal;
             let norm = normal.norm2().sqrt();
             assert_relative_eq!(norm, 1.0, epsilon = 1e-5);
         }
@@ -242,7 +238,7 @@ mod tests {
 
             // Act
             let plane = Plane::new(&edge1, &edge2).expect("should create plane");
-            let normal = plane.normal();
+            let normal = plane.normal;
             let v1 = Vector3::from_edge(&edge1);
             let v2 = Vector3::from_edge(&edge2);
 
@@ -260,8 +256,8 @@ mod tests {
             // Act
             let plane1 = Plane::new(&edge1, &edge2).expect("should create plane");
             let plane2 = Plane::new(&edge2, &edge1).expect("should create plane");
-            let normal1 = plane1.normal();
-            let normal2 = plane2.normal();
+            let normal1 = plane1.normal;
+            let normal2 = plane2.normal;
 
             // Assert
             assert_relative_eq!(normal1.x, -normal2.x, epsilon = 1e-5);
@@ -280,8 +276,8 @@ mod tests {
             // Act
             let plane1 = Plane::new(&edge1, &edge2).expect("should create plane");
             let plane2 = Plane::new(&scaled_edge1, &scaled_edge2).expect("should create plane");
-            let normal1 = plane1.normal();
-            let normal2 = plane2.normal();
+            let normal1 = plane1.normal;
+            let normal2 = plane2.normal;
 
             // Assert
             assert_relative_eq!(normal1.x, normal2.x, epsilon = 1e-5);

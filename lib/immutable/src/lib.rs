@@ -1,6 +1,7 @@
 use std::{clone::Clone, ops::Deref};
 
-#[derive(Debug, Clone)]
+#[repr(transparent)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Im<T: Clone>(T);
 
 impl<T: Clone> Im<T> {
