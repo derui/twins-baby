@@ -61,10 +61,8 @@ impl Jacobian {
     fn forward(&self, env: Environment) -> impl Matrix<f32> {
         self.0.extract(move |(e, name)| {
             let mut new_env = env.clone();
-            if let Some(v) = new_env.get(name) {
-                new_env
-                    .update_variable(name, v.value + self.1)
-                    .expect("must be valid");
+            if let Some(v) = new_env.get_mut(name) {
+                v.value += self.1;
             }
 
             let origin = e.evaluate(&env).unwrap_or(0.0);
@@ -331,7 +329,9 @@ impl Solver {
 
             // update variable for next loop
             for i in 0..(ordered.len()) {
-                self.variables.update_variable(&ordered[i].name, x1[i])?;
+                if let Some(v) = self.variables.get_mut(&ordered[i].name) {
+                    v.value = x1[i];
+                }
             }
             x0 = x1.clone();
         }

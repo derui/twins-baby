@@ -11,10 +11,7 @@ use crate::matrix::{Matrix, simple::SimpleMatrix};
 
 /// A simple vector type
 #[derive(Debug, Clone, PartialEq)]
-pub struct Vector {
-    // A simple element holder
-    vec: Vec<f32>,
-}
+pub struct Vector(Vec<f32>);
 
 /// Method to convert a vector to a [FloatingMatrix], column or row direction
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -36,7 +33,7 @@ impl Vector {
             return Err(anyhow::anyhow!("Can not define 0-dimension vector"));
         }
 
-        Ok(Vector { vec: vec.to_vec() })
+        Ok(Vector(vec.to_vec()))
     }
 
     /// Make new zero vector
@@ -51,18 +48,16 @@ impl Vector {
             return Err(anyhow::anyhow!("Can not define 0-dimension vector"));
         }
 
-        Ok(Vector {
-            vec: vec![0.0; size],
-        })
+        Ok(Vector(vec![0.0; size]))
     }
 
     /// Length of this vector
     pub const fn len(&self) -> usize {
-        self.vec.len()
+        self.0.len()
     }
 
     pub const fn is_empty(&self) -> bool {
-        self.vec.is_empty()
+        self.0.is_empty()
     }
 
     /// Change to the matrix.
@@ -102,7 +97,7 @@ impl Vector {
 
     /// Compute norm of the vector
     pub fn norm(&self) -> f32 {
-        let f = self.vec.iter().map(|f| f * f).sum::<f32>();
+        let f = self.0.iter().map(|f| f * f).sum::<f32>();
 
         f32::sqrt(f)
     }
@@ -112,13 +107,13 @@ impl Index<usize> for Vector {
     type Output = f32;
 
     fn index(&self, index: usize) -> &Self::Output {
-        self.vec.index(index)
+        self.0.index(index)
     }
 }
 
 impl IndexMut<usize> for Vector {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-        self.vec.index_mut(index)
+        self.0.index_mut(index)
     }
 }
 
@@ -126,9 +121,7 @@ impl Mul<f32> for Vector {
     type Output = Self;
 
     fn mul(self, rhs: f32) -> Self::Output {
-        Vector {
-            vec: self.vec.iter().map(|f| f * rhs).collect(),
-        }
+        Vector(self.0.iter().map(|f| f * rhs).collect())
     }
 }
 
@@ -136,9 +129,7 @@ impl Div<f32> for Vector {
     type Output = Self;
 
     fn div(self, rhs: f32) -> Self::Output {
-        Vector {
-            vec: self.vec.iter().map(|f| f / rhs).collect(),
-        }
+        Vector(self.0.iter().map(|f| f / rhs).collect())
     }
 }
 
@@ -146,20 +137,20 @@ impl Add<Vector> for Vector {
     type Output = Result<Vector, anyhow::Error>;
 
     fn add(self, rhs: Vector) -> Self::Output {
-        if self.vec.len() != rhs.vec.len() {
+        if self.0.len() != rhs.0.len() {
             return Err(anyhow::anyhow!(
                 "Can not add different dimension, {} <> {}",
-                self.vec.len(),
-                rhs.vec.len()
+                self.0.len(),
+                rhs.0.len()
             ));
         }
-        let mut result = self.vec.clone();
+        let mut result = self.0.clone();
 
-        for (i, v) in rhs.vec.iter().enumerate() {
+        for (i, v) in rhs.0.iter().enumerate() {
             result[i] += v;
         }
 
-        Ok(Vector { vec: result })
+        Ok(Vector(result))
     }
 }
 
@@ -167,20 +158,20 @@ impl Sub<Vector> for Vector {
     type Output = Result<Vector, anyhow::Error>;
 
     fn sub(self, rhs: Vector) -> Self::Output {
-        if self.vec.len() != rhs.vec.len() {
+        if self.0.len() != rhs.0.len() {
             return Err(anyhow::anyhow!(
                 "Can not subtract different dimension, {} <> {}",
-                self.vec.len(),
-                rhs.vec.len()
+                self.0.len(),
+                rhs.0.len()
             ));
         }
-        let mut result = self.vec.clone();
+        let mut result = self.0.clone();
 
-        for (i, v) in rhs.vec.iter().enumerate() {
+        for (i, v) in rhs.0.iter().enumerate() {
             result[i] -= v;
         }
 
-        Ok(Vector { vec: result })
+        Ok(Vector(result))
     }
 }
 
