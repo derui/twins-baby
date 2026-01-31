@@ -20,9 +20,20 @@ impl VariableScope {
         }
     }
 
-    /// Get new variable. All variables of [Environment] does not be referenced from self.
+    /// Get a new environment. All variables of [Environment] does not be referenced from self.
     pub fn to_environment(&self) -> Environment {
         Environment::from_variables(self.variables.values().cloned().collect())
+    }
+
+    /// Get mapping name and variable id. This is useful of between environment.
+    pub(crate) fn to_id_name_map(&self) -> HashMap<String, VariableId> {
+        let mut map: HashMap<String, VariableId> = HashMap::new();
+
+        for (k, v) in &self.variables {
+            map.insert((*v.name).clone(), *k);
+        }
+
+        map
     }
 
     /// Register a variable.
@@ -250,5 +261,50 @@ mod tests {
         assert_relative_eq!(scope.get(&id_negative).unwrap().value, -42.5);
         assert_relative_eq!(scope.get(&id_large).unwrap().value, 1e10);
         assert_relative_eq!(scope.get(&id_small).unwrap().value, 1e-10);
+    }
+
+    #[test]
+    fn to_id_name_map_returns_empty_for_empty_scope() {
+        // Arrange
+        let scope = VariableScope::new();
+
+        // Act
+        let map = scope.to_id_name_map();
+
+        // Assert
+        assert_eq!(map.len(), 0);
+    }
+
+    #[test]
+    fn to_id_name_map_maps_variable_names_to_ids() {
+        // Arrange
+        let mut scope = VariableScope::new();
+        let id1 = scope.register(1.0);
+        let id2 = scope.register(2.0);
+
+        // Act
+        let map = scope.to_id_name_map();
+
+        // Assert
+        assert_eq!(map.len(), 2);
+        assert_eq!(map.get(&id1.to_string()), Some(&id1));
+        assert_eq!(map.get(&id2.to_string()), Some(&id2));
+    }
+
+    #[test]
+    fn to_id_name_map_reflects_current_state_after_deregistration() {
+        // Arrange
+        let mut scope = VariableScope::new();
+        let id1 = scope.register(1.0);
+        let id2 = scope.register(2.0);
+        scope.deregister(&id1);
+
+        // Act
+        let map = scope.to_id_name_map();
+
+        // Assert
+        assert_eq!(map.len(), 1);
+        assert_eq!(map.get(&id2.to_string()), Some(&id2));
+        assert_eq!(map.get(&id1.to_string()), None);
     }
 }
