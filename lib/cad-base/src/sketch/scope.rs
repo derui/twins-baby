@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use solver::{EquationId, environment::Environment, equation::Equation, variable::Variable};
+use solver::{environment::Environment, variable::Variable};
 
 use crate::id::{IdStore, VariableId};
 

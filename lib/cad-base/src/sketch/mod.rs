@@ -1,22 +1,15 @@
-pub mod point2;
-pub mod scope;
-mod shape;
 #[cfg(test)]
 mod tests;
 
+mod geometry;
+pub mod point2;
+pub mod scope;
+
 use std::collections::HashMap;
 
-use anyhow::Result;
-use solver::{environment::Environment, variable::Variable};
-
 use crate::{
-    edge::Edge,
-    id::{EdgeId, GeometryId, IdStore, PlaneId, PointId, SketchId},
-    point::Point,
-    sketch::{
-        scope::VariableScope,
-        shape::{Basic, Shape},
-    },
+    id::{GeometryId, IdStore, PlaneId, SketchId},
+    sketch::{geometry::Basic, scope::VariableScope},
 };
 
 pub use point2::*;
@@ -47,7 +40,7 @@ impl SketchPerspective {
     }
 
     /// Add a new sketch to the perpective
-    pub fn add_sketch<F>(&mut self, plane: &PlaneId) -> SketchId {
+    pub fn add_sketch(&mut self, plane: &PlaneId) -> SketchId {
         let id = self.sketch_id_gen.generate();
         let sketch = Sketch::new(id, plane);
 
