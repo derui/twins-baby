@@ -129,22 +129,22 @@ impl From<VariableId> for u64 {
 
 /// Internal id for manage shape in sketch
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
-pub struct ShapeId(u64);
+pub struct GeometryId(u64);
 
-impl Display for ShapeId {
+impl Display for GeometryId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "shape{}", self.0)
     }
 }
 
-impl From<u64> for ShapeId {
+impl From<u64> for GeometryId {
     fn from(value: u64) -> Self {
-        ShapeId(value)
+        GeometryId(value)
     }
 }
 
-impl From<ShapeId> for u64 {
-    fn from(value: ShapeId) -> Self {
+impl From<GeometryId> for u64 {
+    fn from(value: GeometryId) -> Self {
         value.0
     }
 }

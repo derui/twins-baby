@@ -5,11 +5,7 @@ use crate::id::VariableId;
 /// Single responsibility trait to register a variable
 pub trait VariableRegistrar {
     /// Register a variable.
-    ///
-    /// Notice, requirement for behavior of this function is **able to add same variable as diffirent variable**.
-    /// Responsibility of duplication enforces the user to checking.
-    /// Because, the name of variable can duplicate easily, so registrar can not determine the variable given is duplicated or not.
-    fn register(&mut self, var: &Variable) -> VariableId;
+    fn register(&mut self, value: f32) -> VariableId;
 
     /// De-register a variable if it registered
     fn deregister(&mut self, id: &VariableId) -> Option<Variable>;
