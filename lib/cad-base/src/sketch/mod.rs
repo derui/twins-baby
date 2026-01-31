@@ -16,6 +16,8 @@ use crate::{
     },
 };
 
+use anyhow::{Result, anyhow};
+use immutable::Im;
 pub use point2::*;
 
 /// The root data model of Sketch parsepective
@@ -57,6 +59,23 @@ impl SketchPerspective {
     pub fn remove_sketch(&mut self, id: &SketchId) -> Option<Sketch> {
         self.sketches.remove(id)
     }
+
+    /// Rename a sketch
+    pub fn remane_sketch(&mut self, id: &SketchId, new_name: &str) -> Result<()> {
+        if new_name.trim().is_empty() {
+            return Err(anyhow!("Do not allow empty string"));
+        }
+
+        if self.sketches.values().any(|s| s.name.as_str() == new_name) {
+            return Err(anyhow!("Sketch with name '{new_name}' already exists"));
+        }
+
+        let sketch = self
+            .get_mut(id)
+            .ok_or_else(|| anyhow!("Sketch with id {id} not found"))?;
+
+        sketch.set_name(new_name)
+    }
 }
 
 /// The sketch of base of modeling.
@@ -70,7 +89,7 @@ impl SketchPerspective {
 #[derive(Debug, Clone)]
 pub struct Sketch {
     /// Name of this sketch
-    name: String,
+    pub name: Im<String>,
 
     geometory_id_gen: IdStore<GeometryId>,
 
@@ -91,12 +110,26 @@ impl Sketch {
     /// Create a new sketch with builder
     fn new(name: &str, attached_plane: &PlaneId) -> Self {
         Sketch {
-            name: name.to_string(),
+            name: name.to_string().into(),
             geometory_id_gen: IdStore::of(),
             geometries: HashMap::new(),
             variables: VariableScope::new(),
             constraints: ConstraintScope::new(),
             attached_plane: *attached_plane,
         }
+    }
+
+    /// Set name for the sketch.
+    ///
+    /// # Errors
+    /// Returns error when the new name is empty string.
+    fn set_name(&mut self, new_name: &str) -> Result<()> {
+        if new_name.trim().is_empty() {
+            return Err(anyhow!("Do not allow empty string"));
+        }
+
+        self.name = new_name.trim().to_string().into();
+
+        Ok(())
     }
 }
