@@ -50,7 +50,7 @@ The project uses `leptos-bevy-canvas` to embed Bevy applications within Leptos c
 - **TailwindCSS 3.4.17** - Utility-first CSS framework
 
 ### 3D Engine
-- **Bevy 0.16.1** - Game engine with these key features enabled:
+- **Bevy 0.17.3** - Game engine with these key features enabled:
   - `bevy_pbr` - Physically-based rendering
   - `bevy_picking` - 3D object interaction
   - `webgpu` - Web graphics backend
@@ -60,6 +60,7 @@ The project uses `leptos-bevy-canvas` to embed Bevy applications within Leptos c
 - **Trunk** - WASM web application bundler for Rust
 - **Cargo** - Rust package manager
 - **Nix** - Development environment management (flake.nix)
+- **Taskfile** - Organize tasks
 
 ## Development Environment
 
@@ -127,3 +128,11 @@ All test case must follow these styles:
 - Import pretty_assertions at the top of test modules with `use pretty_assertions::assert_eq;`
 - Use `approx::assert_relative_eq!` for floating point comparisons in tests
 - Import approx at the top of test modules with `use approx::assert_relative_eq;`
+
+# Commit convention
+
+All commit must follow these styles:
+
+- Follow conventional commit
+  - We use `feat` , `refactor`, `fix`, `test` , `style`, `perf`, `chore` 
+- Should add scope with Rust crate name when possible
