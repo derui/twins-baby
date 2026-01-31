@@ -2,7 +2,10 @@ use std::collections::HashMap;
 
 use solver::{environment::Environment, variable::Variable};
 
-use crate::id::{IdStore, VariableId};
+use crate::{
+    id::{ConstraintId, IdStore, VariableId},
+    sketch::constraint::Constraint,
+};
 
 #[derive(Debug, Clone)]
 pub struct VariableScope {
@@ -58,6 +61,45 @@ impl VariableScope {
     /// Get a mutable variable by id
     pub fn get_mut(&mut self, id: &VariableId) -> Option<&mut Variable> {
         self.variables.get_mut(id)
+    }
+}
+
+pub struct ConstraintScope {
+    /// Gene
+    id_gen: IdStore<ConstraintId>,
+
+    constraints: HashMap<ConstraintId, Constraint>,
+}
+
+impl ConstraintScope {
+    /// Create a new constraint scope
+    pub fn new() -> Self {
+        Self {
+            id_gen: IdStore::of(),
+            constraints: HashMap::new(),
+        }
+    }
+
+    /// Register a constraint
+    pub fn register(&mut self, constraint: Constraint) -> ConstraintId {
+        let id = self.id_gen.generate();
+        self.constraints.insert(id, constraint);
+        id
+    }
+
+    /// Deregister a constraint
+    pub fn deregister(&mut self, id: &ConstraintId) -> Option<Constraint> {
+        self.constraints.remove(id)
+    }
+
+    /// Get a constraint by id
+    pub fn get(&self, id: &ConstraintId) -> Option<&Constraint> {
+        self.constraints.get(id)
+    }
+
+    /// Get a mutable constraint by id
+    pub fn get_mut(&mut self, id: &ConstraintId) -> Option<&mut Constraint> {
+        self.constraints.get_mut(id)
     }
 }
 
