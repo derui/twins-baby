@@ -1,7 +1,7 @@
 mod construction {
     use approx::assert_relative_eq;
 
-    use crate::vector3d::Vector3;
+    use crate::vector3::Vector3;
 
     #[test]
     fn new_creates_vector_with_given_components() {
@@ -50,7 +50,7 @@ mod dot_product {
 
     use approx::assert_relative_eq;
 
-    use crate::vector3d::Vector3;
+    use crate::vector3::Vector3;
 
     #[test]
     fn dot_product_of_orthogonal_vectors_is_zero() {
@@ -95,7 +95,7 @@ mod dot_product {
 mod norm2 {
     use approx::assert_relative_eq;
 
-    use crate::vector3d::Vector3;
+    use crate::vector3::Vector3;
 
     #[test]
     fn norm2_of_unit_vector_is_one() {
@@ -137,7 +137,7 @@ mod norm2 {
 mod cross_product {
     use approx::assert_relative_eq;
 
-    use crate::vector3d::Vector3;
+    use crate::vector3::Vector3;
 
     #[test]
     fn cross_product_of_unit_x_and_unit_y_is_unit_z() {
@@ -187,7 +187,7 @@ mod cross_product {
 }
 
 mod addition {
-    use crate::vector3d::Vector3;
+    use crate::vector3::Vector3;
 
     use super::*;
     use approx::assert_relative_eq;
@@ -269,7 +269,7 @@ mod addition {
 }
 
 mod subtraction {
-    use crate::vector3d::Vector3;
+    use crate::vector3::Vector3;
 
     use super::*;
     use approx::assert_relative_eq;
@@ -350,7 +350,7 @@ mod subtraction {
 }
 
 mod scalar_multiplication {
-    use crate::vector3d::Vector3;
+    use crate::vector3::Vector3;
 
     use super::*;
     use approx::assert_relative_eq;
@@ -427,7 +427,7 @@ mod scalar_multiplication {
 }
 
 mod scalar_division {
-    use crate::vector3d::Vector3;
+    use crate::vector3::Vector3;
 
     use super::*;
     use approx::assert_relative_eq;
@@ -504,7 +504,7 @@ mod scalar_division {
 }
 
 mod equality {
-    use crate::vector3d::Vector3;
+    use crate::vector3::Vector3;
 
     use super::*;
     use pretty_assertions::assert_eq;
@@ -531,7 +531,7 @@ mod equality {
 }
 
 mod copy_clone {
-    use crate::vector3d::Vector3;
+    use crate::vector3::Vector3;
 
     use super::*;
     use pretty_assertions::assert_eq;
@@ -563,7 +563,7 @@ mod copy_clone {
 }
 
 mod unit {
-    use crate::vector3d::Vector3;
+    use crate::vector3::Vector3;
 
     use super::*;
     use approx::assert_relative_eq;
@@ -628,7 +628,7 @@ mod unit {
 
 mod from_edge {
     use super::*;
-    use crate::{edge::Edge, point::Point, vector3d::Vector3};
+    use crate::{edge::Edge, point::Point, vector3::Vector3};
     use approx::assert_relative_eq;
 
     fn p(x: f32, y: f32, z: f32) -> Point {

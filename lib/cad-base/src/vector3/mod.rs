@@ -3,8 +3,6 @@ mod tests;
 
 use std::ops::{Add, Div, Mul, Sub};
 
-use immutable::Im;
-
 use crate::{edge::Edge, point::Point};
 
 /// f32-specialized 3D vector

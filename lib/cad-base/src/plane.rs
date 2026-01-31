@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use anyhow::{self, Result};
 use epsilon::{DefaultEpsilon, Epsilon, approx_zero};
 
-use crate::{edge::Edge, point::Point, vector3d::Vector3};
+use crate::{edge::Edge, point::Point, vector3::Vector3};
 
 /// Simple plane definition.
 #[derive(Debug, Clone, PartialEq)]
