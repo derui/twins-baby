@@ -12,7 +12,8 @@ use crate::{
 /// Constraint between variables
 #[derive(Debug, Clone)]
 pub struct Constraint {
-    pub id: Im<ConstraintId>,
+    /// Name of equation
+    pub name: Im<String>,
 
     /// A equation
     pub equation: Im<Equation>,
@@ -34,7 +35,7 @@ impl Constraint {
     ///
     /// # Returns
     /// * `Result<Constraint>` - Returns a Result containing the newly created Constraint or an error if any variable in the equation is not found in the scope.
-    pub fn new(id: ConstraintId, equation: Equation, scope: &VariableScope) -> Result<Self> {
+    pub fn new(name: &str, equation: Equation, scope: &VariableScope) -> Result<Self> {
         let mut vars: HashSet<String> = HashSet::from_iter(equation.related_variables());
 
         let env = scope.to_id_name_map();
@@ -56,7 +57,7 @@ impl Constraint {
         }
 
         Ok(Constraint {
-            id: id.into(),
+            name: name.to_string().into(),
             equation: equation.into(),
             related_variables: related.into(),
         })
@@ -76,11 +77,11 @@ mod tests {
         let scope = VariableScope::new();
 
         // Act
-        let result = Constraint::new(ConstraintId::from(1), equation.clone(), &scope);
+        let result = Constraint::new("constant_constraint", equation.clone(), &scope);
 
         // Assert
         let constraint = result.unwrap();
-        assert_eq!(*constraint.id, ConstraintId::from(1));
+        assert_eq!(*constraint.name, "constant_constraint");
         assert_eq!(*constraint.equation, equation);
         assert_eq!(constraint.related_variables.len(), 0);
     }
@@ -93,7 +94,7 @@ mod tests {
         let equation = parse(&var_id.to_string()).unwrap();
 
         // Act
-        let result = Constraint::new(ConstraintId::from(1), equation, &scope);
+        let result = Constraint::new("single_var_constraint", equation, &scope);
 
         // Assert
         let constraint = result.unwrap();
@@ -111,7 +112,7 @@ mod tests {
         let equation = parse(&format!("{} + {} + {}", var1, var2, var3)).unwrap();
 
         // Act
-        let result = Constraint::new(ConstraintId::from(1), equation, &scope);
+        let result = Constraint::new("multi_var_constraint", equation, &scope);
 
         // Assert
         let constraint = result.unwrap();
@@ -129,7 +130,7 @@ mod tests {
         let equation = parse(&format!("{} + {} * 2.0", var_id, var_id)).unwrap();
 
         // Act
-        let result = Constraint::new(ConstraintId::from(1), equation, &scope);
+        let result = Constraint::new("duplicate_var_constraint", equation, &scope);
 
         // Assert
         let constraint = result.unwrap();
@@ -144,7 +145,7 @@ mod tests {
         let scope = VariableScope::new();
 
         // Act
-        let result = Constraint::new(ConstraintId::from(1), equation, &scope);
+        let result = Constraint::new("missing_var_constraint", equation, &scope);
 
         // Assert
         assert!(result.is_err());
@@ -164,7 +165,7 @@ mod tests {
         let equation = parse(&format!("{} + unknown", var1)).unwrap();
 
         // Act
-        let result = Constraint::new(ConstraintId::from(1), equation, &scope);
+        let result = Constraint::new("partial_missing_constraint", equation, &scope);
 
         // Assert
         assert!(result.is_err());
@@ -180,7 +181,7 @@ mod tests {
         let equation = parse(&var1.to_string()).unwrap();
 
         // Act
-        let result = Constraint::new(ConstraintId::from(1), equation, &scope);
+        let result = Constraint::new("relevant_var_constraint", equation, &scope);
 
         // Assert
         let constraint = result.unwrap();
