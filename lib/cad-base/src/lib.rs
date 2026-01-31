@@ -1,7 +1,7 @@
-mod edge;
+pub mod edge;
 pub mod id;
-mod plane;
-mod point;
-mod sketch;
-mod transaction;
-mod vector3;
+pub mod plane;
+pub mod point;
+pub mod sketch;
+pub mod transaction;
+pub mod vector3;
