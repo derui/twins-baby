@@ -24,7 +24,7 @@ pub fn App() -> impl IntoView {
 
 #[component]
 pub fn CenterResizableRow() -> impl IntoView {
-        let (_log_receiver, log_sender) = message_b2l::<LoggingEvent>();
+    let (_log_receiver, log_sender) = message_b2l::<LoggingEvent>();
     
     view! {
         <FeatureIsland />

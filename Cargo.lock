@@ -5894,6 +5894,7 @@ dependencies = [
  "leptos",
  "leptos-bevy-canvas",
  "leptos-use 0.18.0",
+ "pretty_assertions",
 ]
 
 [[package]]
