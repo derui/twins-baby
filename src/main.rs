@@ -3,6 +3,7 @@ mod events;
 mod leptos_app;
 mod resize_nob;
 mod use_resize;
+mod test_leptos;
 
 use leptos::mount::mount_to_body;
 

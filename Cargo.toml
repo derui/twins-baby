@@ -19,6 +19,15 @@ rand = "0.9.2"
 nom = "8.0.0"
 enum_dispatch = "0.3.13"
 
+# test only dependencies
+futures-lite = { version = "2.6.0", default-features = false }
+tokio = { version = "1.41", default-features = false, features = [
+  "rt",
+  "macros",
+  "time",
+] }
+any_spawner = {version = "0.3.0", features = ["tokio"] }
+
 [dependencies]
 coarsetime = "0.1.36"
 console_error_panic_hook = "0.1.7"
@@ -26,9 +35,11 @@ leptos = { version = "0.8.8", features = ["csr"] }
 leptos-bevy-canvas = "0.4.0"
 leptos-use = "0.18.0"
 
-
 [dev-dependencies]
 pretty_assertions.workspace = true
+tokio.workspace = true
+futures-lite.workspace = true
+any_spawner.workspace = true
 
 [dependencies.bevy]
 version = "0.17.3"
