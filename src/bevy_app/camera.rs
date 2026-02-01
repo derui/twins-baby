@@ -15,6 +15,14 @@ pub struct UiCamera;
 #[derive(Component)]
 pub struct MainCamera;
 
+/// Tracks the previous window size to detect resolution changes
+/// for repositioning UI camera viewports.
+#[derive(Resource, Default)]
+pub(crate) struct LastWindowSize {
+    width: u32,
+    height: u32,
+}
+
 /// Internal state for the pan-orbit operation
 #[derive(Component, Clone, PartialEq, Debug)]
 pub struct PanOrbitOperation {
@@ -224,6 +232,39 @@ pub fn setup_camera(mut commands: Commands, window: Query<&Window>) -> Result<()
         RenderLayers::from_layers(&[CAMERA_GIZMO_LAYER]),
         UiCamera,
     ));
+
+    Ok(())
+}
+
+/// Repositions navigation cube and gizmo camera viewports
+/// to their fixed screen corners when the window resolution changes.
+pub fn reposition_ui_cameras(
+    window: Query<&Window>,
+    mut cameras: Query<(&mut Camera, &RenderLayers), With<UiCamera>>,
+    mut last_size: ResMut<LastWindowSize>,
+) -> Result<(), BevyError> {
+    let window = window.single()?;
+    let width = window.resolution.physical_width();
+    let height = window.resolution.physical_height();
+
+    if width == last_size.width && height == last_size.height {
+        return Ok(());
+    }
+    last_size.width = width;
+    last_size.height = height;
+
+    let right = width - 96;
+    let bottom = height - 96;
+
+    for (mut camera, render_layers) in &mut cameras {
+        if let Some(ref mut viewport) = camera.viewport {
+            if render_layers.intersects(&RenderLayers::layer(CAMERA_CUBE_LAYER)) {
+                viewport.physical_position = UVec2::new(right, 0);
+            } else if render_layers.intersects(&RenderLayers::layer(CAMERA_GIZMO_LAYER)) {
+                viewport.physical_position = UVec2::new(right, bottom);
+            }
+        }
+    }
 
     Ok(())
 }

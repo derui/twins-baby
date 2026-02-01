@@ -10,7 +10,10 @@ use leptos_bevy_canvas::prelude::{BevyMessageSender, LeptosBevyApp};
 
 use crate::{
     bevy_app::{
-        camera::{PanOrbitOperation, move_camera_with_request, setup_camera},
+        camera::{
+            LastWindowSize, PanOrbitOperation, move_camera_with_request, reposition_ui_cameras,
+            setup_camera,
+        },
         pan_orbit::{pan_orbit_camera, setup_pan_orbit},
         resize::WindowResizePlugin,
         setup::setup_scene,
@@ -43,6 +46,7 @@ pub fn init_bevy_app(logger: BevyMessageSender<LoggingEvent>) -> App {
         WindowResizePlugin,
     ))
     .init_gizmo_group::<AxesGizmoGroup>()
+    .init_resource::<LastWindowSize>()
     .export_message_to_leptos(logger)
     .add_systems(
         Startup,
@@ -59,6 +63,7 @@ pub fn init_bevy_app(logger: BevyMessageSender<LoggingEvent>) -> App {
         Update,
         (
             insert_render_layer,
+            reposition_ui_cameras,
             (
                 pan_orbit_camera.run_if(any_with_component::<PanOrbitOperation>),
                 move_camera_with_request,
