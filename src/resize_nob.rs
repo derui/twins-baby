@@ -14,6 +14,8 @@ pub fn ResizeXNob(
     initial: u32,
     range: Signal<(u32, u32)>,
     movement: WriteSignal<i32>,
+    #[prop(optional)]
+    class: String
 ) -> impl IntoView {
     let (current, set_current) = signal(initial + NOB_WIDTH / 2);
     let real_range = Signal::derive(move || {
@@ -26,8 +28,9 @@ pub fn ResizeXNob(
         let cur = current.get();
 
         format!(
-            "flex-0 w-[16px] flex-col items-center justify-center x-[{}px]",
-            cur
+            "flex-0 w-[16px] flex-col items-center justify-center x-[{}px] {}",
+            cur,
+            class
         )
     };
 
@@ -65,6 +68,8 @@ pub fn ResizeYNob(
     initial: u32,
     range: Signal<(u32, u32)>,
     movement: WriteSignal<i32>,
+    #[prop(optional)]
+    class: String
 ) -> impl IntoView {
     let (current, set_current) = signal(initial + NOB_WIDTH / 2);
     let real_range = Signal::derive(move || {
@@ -77,8 +82,9 @@ pub fn ResizeYNob(
         let cur = current.get();
 
         format!(
-            "flex-0 h-[16px] flex-row items-center justify-center y-[{}px]",
-            cur
+            "flex-0 h-[16px] flex-row items-center justify-center y-[{}px] {}",
+            cur,
+            class
         )
     };
 
