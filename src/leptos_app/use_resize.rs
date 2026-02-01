@@ -1,6 +1,6 @@
 use leptos::prelude::*;
 
-use crate::resize_nob::NOB_AREA;
+use crate::leptos_app::resize_nob::NOB_AREA;
 
 #[derive(Debug, Clone)]
 pub struct UseResize {
@@ -70,6 +70,8 @@ pub fn use_resize(initial: (u32, u32), window_size: Signal<u32>) -> UseResize {
 #[cfg(test)]
 mod tests {
     use pretty_assertions::assert_eq;
+
+    use crate::leptos_app::test_leptos::with_leptos_owner;
 
     use super::*;
 
@@ -158,7 +160,7 @@ mod tests {
 
     #[tokio::test]
     async fn hook_initial_sizes_match_expected() {
-        crate::test_leptos::with_leptos_owner(async {
+        with_leptos_owner(async {
             // Arrange
             let (window_size, _set_window) = signal(1000u32);
 
@@ -181,7 +183,7 @@ mod tests {
 
     #[tokio::test]
     async fn hook_positive_first_movement_updates_first_and_second() {
-        crate::test_leptos::with_leptos_owner(async {
+        with_leptos_owner(async {
             // Arrange
             let (window_size, _set_window) = signal(1000u32);
             let hook = use_resize((200, 300), window_size.into());
@@ -202,7 +204,7 @@ mod tests {
 
     #[tokio::test]
     async fn hook_negative_first_movement_updates_first_and_second() {
-        crate::test_leptos::with_leptos_owner(async {
+        with_leptos_owner(async {
             // Arrange
             let (window_size, _set_window) = signal(1000u32);
             let hook = use_resize((200, 300), window_size.into());
@@ -223,7 +225,7 @@ mod tests {
 
     #[tokio::test]
     async fn hook_positive_third_movement_updates_third_and_second() {
-        crate::test_leptos::with_leptos_owner(async {
+        with_leptos_owner(async {
             // Arrange
             let (window_size, _set_window) = signal(1000u32);
             let hook = use_resize((200, 300), window_size.into());
@@ -244,7 +246,7 @@ mod tests {
 
     #[tokio::test]
     async fn hook_negative_third_movement_updates_third_and_second() {
-        crate::test_leptos::with_leptos_owner(async {
+        with_leptos_owner(async {
             // Arrange
             let (window_size, _set_window) = signal(1000u32);
             let hook = use_resize((200, 300), window_size.into());
@@ -265,7 +267,7 @@ mod tests {
 
     #[tokio::test]
     async fn hook_first_movement_clamped_at_minimum() {
-        crate::test_leptos::with_leptos_owner(async {
+        with_leptos_owner(async {
             // Arrange
             let (window_size, _set_window) = signal(1000u32);
             let hook = use_resize((200, 300), window_size.into());
@@ -286,7 +288,7 @@ mod tests {
 
     #[tokio::test]
     async fn hook_first_movement_clamped_at_maximum() {
-        crate::test_leptos::with_leptos_owner(async {
+        with_leptos_owner(async {
             // Arrange
             let (window_size, _set_window) = signal(1000u32);
             let hook = use_resize((200, 300), window_size.into());
@@ -307,7 +309,7 @@ mod tests {
 
     #[tokio::test]
     async fn hook_third_movement_clamped_at_minimum() {
-        crate::test_leptos::with_leptos_owner(async {
+        with_leptos_owner(async {
             // Arrange
             let (window_size, _set_window) = signal(1000u32);
             let hook = use_resize((200, 300), window_size.into());
@@ -328,7 +330,7 @@ mod tests {
 
     #[tokio::test]
     async fn hook_window_resize_updates_second_size() {
-        crate::test_leptos::with_leptos_owner(async {
+        with_leptos_owner(async {
             // Arrange
             let (window_size, set_window) = signal(1000u32);
             let hook = use_resize((200, 300), window_size.into());

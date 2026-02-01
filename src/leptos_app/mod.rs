@@ -1,3 +1,8 @@
+mod resize_nob;
+#[cfg(test)]
+mod test_leptos;
+mod use_resize;
+
 use leptos::prelude::*;
 use leptos_bevy_canvas::prelude::*;
 
