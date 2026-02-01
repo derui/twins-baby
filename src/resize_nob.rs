@@ -3,21 +3,32 @@ use leptos::{IntoView, component, ev::MouseEvent, prelude::*, view};
 // nob size. all size must be [px].
 const NOB_WIDTH: u32 = 8;
 
+/// Base position of XNob. It is mapped 
+pub enum XNobBase {
+    Left,
+    Right
+}
+
+pub enum YNobBase {
+    Top,
+    Bottom
+}
+
 /// [ResizeXNob] is the nob for resizing X-axis between nobs
 ///
 /// # Arguments
-/// * `initial` - initial position for center of nob
-/// * `range` - allow range of nob movement. This range should be left to right between movement this nob.
-/// * `movement` - get relative movement of nob..
+/// * `position` - Current position of the nob
+/// * `range` - Allowed range for the nob to move
+/// * `movement` - Signal to write the movement delta
+/// * `class` - Optional additional CSS classes
 #[component]
 pub fn ResizeXNob(
-    initial: u32,
+    position: Signal<u32>,
     range: Signal<(u32, u32)>,
     movement: WriteSignal<i32>,
     #[prop(optional)]
     class: String
 ) -> impl IntoView {
-    let (current, set_current) = signal(initial + NOB_WIDTH / 2);
     let real_range = Signal::derive(move || {
         let (left, right) = range.get();
 
@@ -25,11 +36,8 @@ pub fn ResizeXNob(
     });
 
     let class = move || {
-        let cur = current.get();
-
         format!(
-            "flex-0 w-[16px] flex-col items-center justify-center x-[{}px] {}",
-            cur,
+            "flex-0 w-[16px] flex-col items-center justify-center {}",
             class
         )
     };
@@ -38,7 +46,7 @@ pub fn ResizeXNob(
     let mouse_move = move |ev: MouseEvent| {
         let moved = ev.movement_x();
         let (left, right) = real_range.get();
-        let current = current.get() + NOB_WIDTH / 2;
+        let current = position.get() + NOB_WIDTH / 2;
 
         let mut moved_current = current as i32 + moved;
         moved_current = moved_current.clamp(left as i32, right as i32);
@@ -46,7 +54,6 @@ pub fn ResizeXNob(
         // after moved, set it as right
         if moved_current as u32 != current {
             movement.set(moved);
-            set_current.set(moved_current as u32);
         }
     };
 
@@ -60,18 +67,18 @@ pub fn ResizeXNob(
 /// [ResizeYNob] is the nob for resizing Y-axis between nobs
 ///
 /// # Arguments
-/// * `initial` - initial position for center of nob
+/// * `position` - initial position for center of nob
 /// * `range` - allow range of nob movement. This range should be top to bottom between movement this nob.
-/// * `movement` - get a position to update position of the nob.
+/// * `movement` - get relative movement of nob..
+/// * `class` - optional class for styling
 #[component]
 pub fn ResizeYNob(
-    initial: u32,
+    position: Signal<u32>,
     range: Signal<(u32, u32)>,
     movement: WriteSignal<i32>,
     #[prop(optional)]
     class: String
 ) -> impl IntoView {
-    let (current, set_current) = signal(initial + NOB_WIDTH / 2);
     let real_range = Signal::derive(move || {
         let (top, bottom) = range.get();
 
@@ -79,11 +86,8 @@ pub fn ResizeYNob(
     });
 
     let class = move || {
-        let cur = current.get();
-
         format!(
-            "flex-0 h-[16px] flex-row items-center justify-center y-[{}px] {}",
-            cur,
+            "flex-0 h-[16px] flex-row items-center justify-center {}",
             class
         )
     };
@@ -92,7 +96,7 @@ pub fn ResizeYNob(
     let mouse_move = move |ev: MouseEvent| {
         let moved = ev.movement_y();
         let (top, bottom) = real_range.get();
-        let current = current.get() + NOB_WIDTH / 2;
+        let current = position.get() + NOB_WIDTH / 2;
 
         let mut moved_current = current as i32 + moved;
         moved_current = moved_current.clamp(top as i32, bottom as i32);
@@ -100,7 +104,6 @@ pub fn ResizeYNob(
         // after moved, set it as right
         if moved_current as u32 != current {
             movement.set(moved);
-            set_current.set(moved_current as u32);
         }
     };
 
