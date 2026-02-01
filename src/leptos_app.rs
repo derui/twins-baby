@@ -5,7 +5,6 @@ use crate::{bevy_app::init_bevy_app, events::LoggingEvent};
 
 #[component]
 pub fn App() -> impl IntoView {
-
     let grid_cols_template = "grid-cols-[240px_16px_minmax(600px,1fr)_16px_240px]".to_string();
     let grid_rows_template = "grid-rows-[120px_minmax(480px,1fr)_120px]".to_string();
     let whole_class = format!(
@@ -16,7 +15,7 @@ pub fn App() -> impl IntoView {
     view! {
         <div class=whole_class>
             <PerspectiveIsland />
-        <CenterResizableRow />
+            <CenterResizableRow />
             <InfoIsland />
         </div>
     }
@@ -25,7 +24,7 @@ pub fn App() -> impl IntoView {
 #[component]
 pub fn CenterResizableRow() -> impl IntoView {
     let (_log_receiver, log_sender) = message_b2l::<LoggingEvent>();
-    
+
     view! {
         <FeatureIsland />
         <BevyCanvas init=move || { init_bevy_app(log_sender) } {..} />

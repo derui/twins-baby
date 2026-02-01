@@ -1,5 +1,5 @@
-use leptos::prelude::Owner;
 use any_spawner::Executor;
+use leptos::prelude::Owner;
 use tokio::task::LocalSet;
 
 /// Testing helper for leptos's hook or reactives.
@@ -17,7 +17,7 @@ use tokio::task::LocalSet;
 /// }
 /// ```
 pub async fn with_leptos_owner<F: Future<Output = ()>>(f: F) {
-    _ = Executor::init_futures_executor();
+    _ = Executor::init_tokio();
     let owner = Owner::new();
     owner.set();
     LocalSet::new().run_until(f).await;

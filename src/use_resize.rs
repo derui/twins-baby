@@ -5,9 +5,9 @@ use crate::resize_nob::NOB_AREA;
 #[derive(Debug, Clone)]
 pub struct UseResize {
     /// Sizes of areas
-    sizes: (Signal<u32>, Signal<u32>, Signal<u32>),
-    first_movement: WriteSignal<i32>,
-    third_movement: WriteSignal<i32>
+    pub sizes: (Signal<u32>, Signal<u32>, Signal<u32>),
+    pub first_movement: WriteSignal<Option<i32>>,
+    pub third_movement: WriteSignal<Option<i32>>,
 }
 
 fn apply_movement(current: u32, movement: i32, range: (u32, u32)) -> u32 {
@@ -17,12 +17,9 @@ fn apply_movement(current: u32, movement: i32, range: (u32, u32)) -> u32 {
 
 /// Resizing 3-column/row view. This hook is specialized for
 /// central place size is not strict.
-pub fn use_resize(
-    initial: (u32, u32),
-    window_size: Signal<u32>,
-) -> UseResize {
-    let (first_movement, set_first_movement) = signal(0_i32);
-    let (third_movement, set_third_movement) = signal(0_i32);
+pub fn use_resize(initial: (u32, u32), window_size: Signal<u32>) -> UseResize {
+    let (first_movement, set_first_movement) = signal(None);
+    let (third_movement, set_third_movement) = signal(None);
     let (first_size, set_first_size) = signal(initial.0);
     let (third_size, set_third_size) = signal(initial.1);
     let second_size = Signal::derive(move || {
@@ -44,24 +41,30 @@ pub fn use_resize(
     });
 
     Effect::new(move || {
-        let movement = first_movement.get();
+        if let Some(movement) = first_movement.get() {
+            let first_range = first_range.get();
 
-        set_first_size.update(|v| {
-            *v = apply_movement(*v, movement, first_range.get());
-        })
+            set_first_size.update(|v| {
+                *v = apply_movement(*v, movement, first_range);
+            });
+        }
     });
 
     Effect::new(move || {
-        let movement = third_movement.get();
+        if let Some(movement) = third_movement.get() {
+            let third_range = third_range.get();
 
-        set_third_size.update(|v| {
-            *v = apply_movement(*v, movement, third_range.get());
-        })
+            set_third_size.update(|v| {
+                *v = apply_movement(*v, movement, third_range);
+            })
+        }
     });
-    
+
     UseResize {
-        sizes: (first_size.into(), second_size, third_size.into())
-        , first_movement: set_first_movement, third_movement: set_third_movement }
+        sizes: (first_size.into(), second_size, third_size.into()),
+        first_movement: set_first_movement,
+        third_movement: set_third_movement,
+    }
 }
 
 #[cfg(test)]
@@ -151,5 +154,196 @@ mod tests {
 
         // Assert
         assert_eq!(result, 692);
+    }
+
+    #[tokio::test]
+    async fn hook_initial_sizes_match_expected() {
+        crate::test_leptos::with_leptos_owner(async {
+            // Arrange
+            let (window_size, _set_window) = signal(1000u32);
+
+            // Act
+            let hook = use_resize((200, 300), window_size.into());
+            any_spawner::Executor::tick().await;
+
+            // Assert: second = window - first - third = 1000 - 200 - 300 = 500
+            let (first, second, third) = hook.sizes;
+            assert_eq!(first.get_untracked(), 200);
+            assert_eq!(second.get_untracked(), 500);
+            assert_eq!(third.get_untracked(), 300);
+        })
+        .await;
+    }
+
+    // Hook tests use layout: window=1000, first=200, third=300, NOB_AREA=16
+    //   first_range  = (8, 692)
+    //   third_range  = (208, 992)
+
+    #[tokio::test]
+    async fn hook_positive_first_movement_updates_first_and_second() {
+        crate::test_leptos::with_leptos_owner(async {
+            // Arrange
+            let (window_size, _set_window) = signal(1000u32);
+            let hook = use_resize((200, 300), window_size.into());
+            any_spawner::Executor::tick().await;
+
+            // Act: first = clamp(200 + 50, 8, 692) = 250
+            hook.first_movement.set(Some(50));
+            any_spawner::Executor::tick().await;
+
+            // Assert: second = 1000 - 250 - 300 = 450
+            let (first, second, third) = hook.sizes;
+            assert_eq!(first.get_untracked(), 250);
+            assert_eq!(second.get_untracked(), 450);
+            assert_eq!(third.get_untracked(), 300);
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn hook_negative_first_movement_updates_first_and_second() {
+        crate::test_leptos::with_leptos_owner(async {
+            // Arrange
+            let (window_size, _set_window) = signal(1000u32);
+            let hook = use_resize((200, 300), window_size.into());
+            any_spawner::Executor::tick().await;
+
+            // Act: first = clamp(200 - 100, 8, 692) = 100
+            hook.first_movement.set(Some(-100));
+            any_spawner::Executor::tick().await;
+
+            // Assert: second = 1000 - 100 - 300 = 600
+            let (first, second, third) = hook.sizes;
+            assert_eq!(first.get_untracked(), 100);
+            assert_eq!(second.get_untracked(), 600);
+            assert_eq!(third.get_untracked(), 300);
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn hook_positive_third_movement_updates_third_and_second() {
+        crate::test_leptos::with_leptos_owner(async {
+            // Arrange
+            let (window_size, _set_window) = signal(1000u32);
+            let hook = use_resize((200, 300), window_size.into());
+            any_spawner::Executor::tick().await;
+
+            // Act: third = clamp(300 + 50, 208, 992) = 350
+            hook.third_movement.set(Some(50));
+            any_spawner::Executor::tick().await;
+
+            // Assert: second = 1000 - 200 - 350 = 450
+            let (first, second, third) = hook.sizes;
+            assert_eq!(first.get_untracked(), 200);
+            assert_eq!(second.get_untracked(), 450);
+            assert_eq!(third.get_untracked(), 350);
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn hook_negative_third_movement_updates_third_and_second() {
+        crate::test_leptos::with_leptos_owner(async {
+            // Arrange
+            let (window_size, _set_window) = signal(1000u32);
+            let hook = use_resize((200, 300), window_size.into());
+            any_spawner::Executor::tick().await;
+
+            // Act: third = clamp(300 - 50, 208, 992) = 250
+            hook.third_movement.set(Some(-50));
+            any_spawner::Executor::tick().await;
+
+            // Assert: second = 1000 - 200 - 250 = 550
+            let (first, second, third) = hook.sizes;
+            assert_eq!(first.get_untracked(), 200);
+            assert_eq!(second.get_untracked(), 550);
+            assert_eq!(third.get_untracked(), 250);
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn hook_first_movement_clamped_at_minimum() {
+        crate::test_leptos::with_leptos_owner(async {
+            // Arrange
+            let (window_size, _set_window) = signal(1000u32);
+            let hook = use_resize((200, 300), window_size.into());
+            any_spawner::Executor::tick().await;
+
+            // Act: first = clamp(200 - 200, 8, 692) = 8 (clamped to min)
+            hook.first_movement.set(Some(-200));
+            any_spawner::Executor::tick().await;
+
+            // Assert: second = 1000 - 8 - 300 = 692
+            let (first, second, third) = hook.sizes;
+            assert_eq!(first.get_untracked(), 8);
+            assert_eq!(second.get_untracked(), 692);
+            assert_eq!(third.get_untracked(), 300);
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn hook_first_movement_clamped_at_maximum() {
+        crate::test_leptos::with_leptos_owner(async {
+            // Arrange
+            let (window_size, _set_window) = signal(1000u32);
+            let hook = use_resize((200, 300), window_size.into());
+            any_spawner::Executor::tick().await;
+
+            // Act: first = clamp(200 + 600, 8, 692) = 692 (clamped to max)
+            hook.first_movement.set(Some(600));
+            any_spawner::Executor::tick().await;
+
+            // Assert: second = 1000 - 692 - 300 = 8
+            let (first, second, third) = hook.sizes;
+            assert_eq!(first.get_untracked(), 692);
+            assert_eq!(second.get_untracked(), 8);
+            assert_eq!(third.get_untracked(), 300);
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn hook_third_movement_clamped_at_minimum() {
+        crate::test_leptos::with_leptos_owner(async {
+            // Arrange
+            let (window_size, _set_window) = signal(1000u32);
+            let hook = use_resize((200, 300), window_size.into());
+            any_spawner::Executor::tick().await;
+
+            // Act: third = clamp(300 - 100, 208, 992) = 208 (clamped to min)
+            hook.third_movement.set(Some(-100));
+            any_spawner::Executor::tick().await;
+
+            // Assert: second = 1000 - 200 - 208 = 592
+            let (first, second, third) = hook.sizes;
+            assert_eq!(first.get_untracked(), 200);
+            assert_eq!(second.get_untracked(), 592);
+            assert_eq!(third.get_untracked(), 208);
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn hook_window_resize_updates_second_size() {
+        crate::test_leptos::with_leptos_owner(async {
+            // Arrange
+            let (window_size, set_window) = signal(1000u32);
+            let hook = use_resize((200, 300), window_size.into());
+            any_spawner::Executor::tick().await;
+
+            // Act: expand window from 1000 to 1200
+            set_window.set(1200);
+            any_spawner::Executor::tick().await;
+
+            // Assert: first and third unchanged, second = 1200 - 200 - 300 = 700
+            let (first, second, third) = hook.sizes;
+            assert_eq!(first.get_untracked(), 200);
+            assert_eq!(second.get_untracked(), 700);
+            assert_eq!(third.get_untracked(), 300);
+        })
+        .await;
     }
 }
