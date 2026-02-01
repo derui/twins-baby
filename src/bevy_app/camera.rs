@@ -494,4 +494,77 @@ mod tests {
             expected_translation.z
         );
     }
+
+    #[test]
+    fn reposition_ui_cameras_on_resize() {
+        // arrange
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins);
+
+        app.world_mut().spawn(Window {
+            resolution: WindowResolution::new(1000, 800),
+            ..default()
+        });
+
+        let nav_cube_entity = app
+            .world_mut()
+            .spawn((
+                Camera {
+                    viewport: Some(Viewport {
+                        physical_position: UVec2::new(0, 0),
+                        physical_size: UVec2::new(96, 96),
+                        ..default()
+                    }),
+                    ..default()
+                },
+                RenderLayers::layer(CAMERA_CUBE_LAYER),
+                UiCamera,
+            ))
+            .id();
+
+        let gizmo_entity = app
+            .world_mut()
+            .spawn((
+                Camera {
+                    viewport: Some(Viewport {
+                        physical_position: UVec2::new(0, 0),
+                        physical_size: UVec2::new(96, 96),
+                        ..default()
+                    }),
+                    ..default()
+                },
+                RenderLayers::layer(CAMERA_GIZMO_LAYER),
+                UiCamera,
+            ))
+            .id();
+
+        app.insert_resource(LastWindowSize::default());
+        app.add_systems(Update, reposition_ui_cameras);
+
+        // act
+        app.update();
+
+        // assert
+        // Nav cube: top-right corner (1000 - 96 = 904, 0)
+        let nav_cube_camera = app.world().get::<Camera>(nav_cube_entity).unwrap();
+        assert!(matches!(
+            nav_cube_camera.viewport,
+            Some(Viewport {
+                physical_position: UVec2 { x: 904, y: 0 },
+                physical_size: UVec2 { x: 96, y: 96 },
+                ..
+            })
+        ));
+
+        // Gizmo: bottom-right corner (1000 - 96 = 904, 800 - 96 = 704)
+        let gizmo_camera = app.world().get::<Camera>(gizmo_entity).unwrap();
+        assert!(matches!(
+            gizmo_camera.viewport,
+            Some(Viewport {
+                physical_position: UVec2 { x: 904, y: 704 },
+                physical_size: UVec2 { x: 96, y: 96 },
+                ..
+            })
+        ));
+    }
 }
