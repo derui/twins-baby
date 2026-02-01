@@ -5,7 +5,7 @@ mod setup;
 mod ui;
 
 // This initializes a normal Bevy app
-use bevy::{asset::AssetMetaCheck, prelude::*, render::render_resource::AsBindGroupShaderType};
+use bevy::{asset::AssetMetaCheck, prelude::*};
 use leptos_bevy_canvas::prelude::{BevyMessageSender, LeptosBevyApp};
 
 use crate::{
