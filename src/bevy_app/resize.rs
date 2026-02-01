@@ -10,6 +10,7 @@ impl Plugin for WindowResizePlugin {
     }
 }
 
+/// handle resizing window each frames.
 fn handle_browser_resize(
     mut primary_query: bevy::ecs::system::Query<
         &mut bevy::window::Window,
