@@ -99,6 +99,9 @@
               
               # for tailwindcss
               pkgs.nodejs_22
+
+              # for trunk
+              pkgs.bzip2
             ];
           in
             pkgs.mkShell {
@@ -111,6 +114,7 @@
 
             shellHook = ''
               pre-commit install
+              cargo install trunk
               cargo install cargo-nextest@0.9.122 --locked
               cargo install cargo-watch cargo-llvm-cov leptosfmt
             '';
