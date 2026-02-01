@@ -3,17 +3,6 @@ use leptos::{IntoView, component, ev::MouseEvent, prelude::*, view};
 // nob size. all size must be [px].
 const NOB_WIDTH: u32 = 8;
 
-/// Base position of XNob. It is mapped 
-pub enum XNobBase {
-    Left,
-    Right
-}
-
-pub enum YNobBase {
-    Top,
-    Bottom
-}
-
 /// [ResizeXNob] is the nob for resizing X-axis between nobs
 ///
 /// # Arguments
