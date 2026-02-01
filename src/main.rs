@@ -2,6 +2,7 @@ mod bevy_app;
 mod events;
 mod leptos_app;
 mod resize_nob;
+mod use_resize;
 
 use leptos::mount::mount_to_body;
 

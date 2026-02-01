@@ -1,7 +1,7 @@
 use leptos::{IntoView, component, ev::MouseEvent, prelude::*, view};
 
-// nob size. all size must be [px].
-const NOB_WIDTH: u32 = 8;
+// nob area size. all size must be [px].
+pub const NOB_AREA: u32 = 16;
 
 /// [ResizeXNob] is the nob for resizing X-axis between nobs
 ///
@@ -21,7 +21,7 @@ pub fn ResizeXNob(
     let real_range = Signal::derive(move || {
         let (left, right) = range.get();
 
-        (left + NOB_WIDTH / 2, right - NOB_WIDTH / 2)
+        (left + NOB_AREA / 2, right - NOB_AREA / 2)
     });
 
     let class = move || {
@@ -35,7 +35,7 @@ pub fn ResizeXNob(
     let mouse_move = move |ev: MouseEvent| {
         let moved = ev.movement_x();
         let (left, right) = real_range.get();
-        let current = position.get() + NOB_WIDTH / 2;
+        let current = position.get() + NOB_AREA / 2;
 
         let mut moved_current = current as i32 + moved;
         moved_current = moved_current.clamp(left as i32, right as i32);
@@ -71,7 +71,7 @@ pub fn ResizeYNob(
     let real_range = Signal::derive(move || {
         let (top, bottom) = range.get();
 
-        (top + NOB_WIDTH / 2, bottom - NOB_WIDTH / 2)
+        (top + NOB_AREA / 2, bottom - NOB_AREA / 2)
     });
 
     let class = move || {
@@ -85,7 +85,7 @@ pub fn ResizeYNob(
     let mouse_move = move |ev: MouseEvent| {
         let moved = ev.movement_y();
         let (top, bottom) = real_range.get();
-        let current = position.get() + NOB_WIDTH / 2;
+        let current = position.get() + NOB_AREA / 2;
 
         let mut moved_current = current as i32 + moved;
         moved_current = moved_current.clamp(top as i32, bottom as i32);
