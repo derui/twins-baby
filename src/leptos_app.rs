@@ -1,5 +1,15 @@
+use std::time::Duration;
+
+use bevy::{app::DynEq, window::WindowResized};
 use leptos::prelude::*;
+use leptos::{
+    ev::{self, UiEvent},
+    html::ElementType,
+    prelude::*,
+    tachys::renderer::dom::Element,
+};
 use leptos_bevy_canvas::prelude::*;
+use leptos_use::{use_debounce_fn, use_debounce_fn_with_arg, use_window};
 
 use crate::{
     bevy_app::init_bevy_app,
@@ -11,26 +21,8 @@ pub fn App() -> impl IntoView {
     let (log_receiver, log_sender) = message_b2l::<LoggingEvent>();
 
     view! {
-        <div class="flex flex-col gap-5 items-center p-5 mx-auto h-full w-full max-w-[1400px]">
-            <Frame class="border-red-500 flex-4 bg-red-500/5" {..}>
-                <div class="float-right">Click on a cube to select</div>
-
-                <h2 class="relative text-xl font-bold text-red-500 top-[-10px]">Bevy</h2>
-                <div
-                    class="overflow-hidden rounded-lg aspect-[8/5]"
-                    style:max-width="100%"
-                    style:max-height="100%"
-                >
-
-                    <BevyCanvas
-                        init=move || { init_bevy_app(log_sender) }
-                        {..}
-                        width="300"
-                        height="500"
-                    />
-                </div>
-            </Frame>
-            <LogConsole log_receiver></LogConsole>
+        <div class="flex flex-col gap-5 items-center p-5 mx-auto h-full w-full ">
+            <BevyCanvas init=move || { init_bevy_app(log_sender) } {..} />
         </div>
     }
 }

@@ -1,16 +1,18 @@
 mod camera;
 mod pan_orbit;
+mod resize;
 mod setup;
 mod ui;
 
 // This initializes a normal Bevy app
-use bevy::{asset::AssetMetaCheck, prelude::*};
+use bevy::{asset::AssetMetaCheck, prelude::*, render::render_resource::AsBindGroupShaderType};
 use leptos_bevy_canvas::prelude::{BevyMessageSender, LeptosBevyApp};
 
 use crate::{
     bevy_app::{
         camera::{PanOrbitOperation, move_camera_with_request, setup_camera},
         pan_orbit::{pan_orbit_camera, setup_pan_orbit},
+        resize::WindowResizePlugin,
         setup::setup_scene,
         ui::{
             AxesGizmoGroup, draw_gizmos, insert_render_layer, setup_gizmos,
@@ -38,6 +40,7 @@ pub fn init_bevy_app(logger: BevyMessageSender<LoggingEvent>) -> App {
                 ..default()
             }),
         MeshPickingPlugin,
+        WindowResizePlugin,
     ))
     .init_gizmo_group::<AxesGizmoGroup>()
     .export_message_to_leptos(logger)
