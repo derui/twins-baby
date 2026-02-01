@@ -10,6 +10,7 @@ tasks:
     cmds:
       - cargo fmt
       - cargo clippy --fix --allow-dirty --allow-staged --workspace
+      - leptosfmt '**/*.rs$'
 
   test:
     desc: Run test all workspace
