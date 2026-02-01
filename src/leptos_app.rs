@@ -1,11 +1,7 @@
-
 use leptos::prelude::*;
 use leptos_bevy_canvas::prelude::*;
 
-use crate::{
-    bevy_app::init_bevy_app,
-    events::LoggingEvent,
-};
+use crate::{bevy_app::init_bevy_app, events::LoggingEvent};
 
 #[component]
 pub fn App() -> impl IntoView {
