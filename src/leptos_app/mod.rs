@@ -6,13 +6,17 @@ mod use_resize;
 use leptos::prelude::*;
 use leptos_bevy_canvas::prelude::*;
 
-use crate::{bevy_app::init_bevy_app, events::LoggingEvent};
+use crate::{
+    bevy_app::init_bevy_app,
+    events::{CanvasResizeEvent, LoggingEvent},
+};
 use resize_nob::{ResizeXNob, ResizeYNob};
 use use_resize::use_resize;
 
 #[component]
 pub fn App() -> impl IntoView {
     // Get initial window dimensions
+    let (resize_sender, receiver) = message_l2b::<CanvasResizeEvent>();
     let initial_width = window()
         .inner_width()
         .ok()
@@ -36,6 +40,16 @@ pub fn App() -> impl IntoView {
     let (col_third_move, set_col_third_move) = signal(0i32);
     let (row_first_move, set_row_first_move) = signal(0i32);
     let (row_third_move, set_row_third_move) = signal(0i32);
+
+    Effect::new(move || {
+        let width = col_resize.sizes.1;
+        let height = row_resize.sizes.1;
+
+        let _ = resize_sender.send(CanvasResizeEvent {
+            width: width.get(),
+            height: height.get(),
+        });
+    });
 
     // Connect nob movements to resize hooks (convert i32 to Option<i32>)
     Effect::new(move || {
@@ -113,6 +127,7 @@ pub fn App() -> impl IntoView {
             <CenterResizableRow
                 set_col_first_move=set_col_first_move
                 set_col_third_move=set_col_third_move
+                resize_sender=receiver
             />
 
             // Row 4: Y nob between middle and bottom
@@ -133,6 +148,7 @@ pub fn App() -> impl IntoView {
 pub fn CenterResizableRow(
     set_col_first_move: WriteSignal<i32>,
     set_col_third_move: WriteSignal<i32>,
+    resize_sender: BevyMessageReceiver<CanvasResizeEvent>,
 ) -> impl IntoView {
     let (_log_receiver, log_sender) = message_b2l::<LoggingEvent>();
 
@@ -143,7 +159,7 @@ pub fn CenterResizableRow(
             <ResizeXNob movement=set_col_first_move />
         </div>
 
-        <BevyCanvas init=move || { init_bevy_app(log_sender) } {..} />
+        <BevyCanvas init=move || { init_bevy_app(log_sender, resize_sender) } {..} />
 
         <div class="relative">
             <ResizeXNob movement=set_col_third_move />

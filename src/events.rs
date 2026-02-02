@@ -1,6 +1,13 @@
 use bevy::ecs::message::Message;
 use coarsetime::Instant;
 
+/// An event to notice canvas resize
+#[derive(Message, Debug, Clone)]
+pub struct CanvasResizeEvent {
+    pub width: u32,
+    pub height: u32,
+}
+
 /// Log levels for logging events
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LogLevel {

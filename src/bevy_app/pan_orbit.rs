@@ -6,7 +6,7 @@ use bevy::{
         change_detection::DetectChanges,
         component::Component,
         error::BevyError,
-        event::{EventReader, EventWriter},
+        message::{MessageReader, MessageWriter},
         query::With,
         system::{Commands, Query, Res},
     },
@@ -117,11 +117,11 @@ pub fn pan_orbit_camera(
     mut commands: Commands,
     kbd: Res<ButtonInput<KeyCode>>,
     mouse: Res<ButtonInput<MouseButton>>,
-    mut evr_motion: EventReader<MouseMotion>,
-    mut evr_scroll: EventReader<MouseWheel>,
+    mut evr_motion: MessageReader<MouseMotion>,
+    mut evr_scroll: MessageReader<MouseWheel>,
     mut q_camere: Query<(&PanOrbitSettings, &mut PanOrbitOperation)>,
     q_transform: Query<&Transform, With<MainCamera>>,
-    mut logger: EventWriter<LoggingEvent>,
+    mut logger: MessageWriter<LoggingEvent>,
 ) -> Result<(), BevyError> {
     let mut total_motion: Vec2 = evr_motion.read().map(|ev| ev.delta).sum();
 

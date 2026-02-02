@@ -1,5 +1,6 @@
 use bevy::prelude::*;
-use leptos::prelude::window;
+
+use crate::events::CanvasResizeEvent;
 
 /// From https://github.com/Leinnan/bevy_wasm_window_resize/blob/master/src/lib.rs
 pub struct WindowResizePlugin;
@@ -10,35 +11,23 @@ impl Plugin for WindowResizePlugin {
     }
 }
 
-/// handle resizing window each frames.
+/// handle resizing window each frames with message.
 fn handle_browser_resize(
+    mut message_reader: MessageReader<CanvasResizeEvent>,
     mut primary_query: bevy::ecs::system::Query<
         &mut bevy::window::Window,
         bevy::ecs::query::With<bevy::window::PrimaryWindow>,
     >,
 ) {
-    // Our app depends on leptus...
-    let wasm_window = window();
-
-    let Ok(inner_width) = wasm_window.inner_width() else {
-        return;
-    };
-    let Ok(inner_height) = wasm_window.inner_height() else {
-        return;
-    };
-    let Some(target_width) = inner_width.as_f64() else {
-        return;
-    };
-    let Some(target_height) = inner_height.as_f64() else {
-        return;
-    };
     for mut window in &mut primary_query {
-        if window.resolution.width() != (target_width as f32)
-            || window.resolution.height() != (target_height as f32)
-        {
-            window
-                .resolution
-                .set(target_width as f32, target_height as f32);
+        for message in message_reader.read() {
+            if window.resolution.width() != (message.width as f32)
+                || window.resolution.height() != (message.height as f32)
+            {
+                window
+                    .resolution
+                    .set(message.width as f32, message.height as f32);
+            }
         }
     }
 }

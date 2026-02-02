@@ -6,7 +6,7 @@ mod ui;
 
 // This initializes a normal Bevy app
 use bevy::{asset::AssetMetaCheck, prelude::*};
-use leptos_bevy_canvas::prelude::{BevyMessageSender, LeptosBevyApp};
+use leptos_bevy_canvas::prelude::{BevyMessageReceiver, BevyMessageSender, LeptosBevyApp};
 
 use crate::{
     bevy_app::{
@@ -22,10 +22,13 @@ use crate::{
             setup_navigation_texture, setup_ui,
         },
     },
-    events::LoggingEvent,
+    events::{CanvasResizeEvent, LoggingEvent},
 };
 
-pub fn init_bevy_app(logger: BevyMessageSender<LoggingEvent>) -> App {
+pub fn init_bevy_app(
+    logger: BevyMessageSender<LoggingEvent>,
+    resizer: BevyMessageReceiver<CanvasResizeEvent>,
+) -> App {
     let mut app = App::new();
     app.add_plugins((
         DefaultPlugins
@@ -48,6 +51,7 @@ pub fn init_bevy_app(logger: BevyMessageSender<LoggingEvent>) -> App {
     .init_gizmo_group::<AxesGizmoGroup>()
     .init_resource::<LastWindowSize>()
     .export_message_to_leptos(logger)
+    .import_message_from_leptos(resizer)
     .add_systems(
         Startup,
         (
