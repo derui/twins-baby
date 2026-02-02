@@ -6,48 +6,43 @@ pub const NOB_AREA: u32 = 16;
 /// [ResizeXNob] is the nob for resizing X-axis between nobs
 ///
 /// # Arguments
-/// * `position` - Current position of the nob
-/// * `range` - Allowed range for the nob to move
 /// * `movement` - Signal to write the movement delta
 /// * `class` - Optional additional CSS classes
 #[component]
 pub fn ResizeXNob(
-    position: Signal<u32>,
-    range: Signal<(u32, u32)>,
     movement: WriteSignal<i32>,
     #[prop(optional)] class: String,
 ) -> impl IntoView {
-    let real_range = Signal::derive(move || {
-        let (left, right) = range.get();
-
-        (left + NOB_AREA / 2, right - NOB_AREA / 2)
-    });
+    let (enable_move, set_enable_move) = signal(false);
 
     let class = move || {
         format!(
-            "flex-0 w-[16px] flex-col items-center justify-center {}",
+            "absolute transparent w-[{}px] -translate-x-1/2 h-full {}",
+            NOB_AREA,
             class
         )
     };
 
+    let mouse_down = move |_: MouseEvent| {
+        set_enable_move.set(true);
+    };
+
+    let mouse_up = move |_: MouseEvent| {
+        set_enable_move.set(false);
+    };
+
     // handling mouse move. current and range is based on `nob` 's position,
     let mouse_move = move |ev: MouseEvent| {
-        let moved = ev.movement_x();
-        let (left, right) = real_range.get();
-        let current = position.get() + NOB_AREA / 2;
-
-        let mut moved_current = current as i32 + moved;
-        moved_current = moved_current.clamp(left as i32, right as i32);
-
-        // after moved, set it as right
-        if moved_current as u32 != current {
-            movement.set(moved);
+        if !enable_move.get() {
+            return;
         }
+        
+        let moved = ev.movement_x();
+        movement.set(moved);
     };
 
     view! {
-        <div class=class>
-            <span class="border-1 rounded bg-gray h-[40px] w-[8px]" on:mousemove=mouse_move></span>
+        <div class=class on:mousemove=mouse_move on:mousedown=mouse_down on:mouseup=mouse_up>
         </div>
     }
 }
@@ -55,48 +50,43 @@ pub fn ResizeXNob(
 /// [ResizeYNob] is the nob for resizing Y-axis between nobs
 ///
 /// # Arguments
-/// * `position` - initial position for center of nob
-/// * `range` - allow range of nob movement. This range should be top to bottom between movement this nob.
-/// * `movement` - get relative movement of nob..
-/// * `class` - optional class for styling
+/// * `movement` - Signal to write the movement delta
+/// * `class` - Optional additional CSS classes
 #[component]
 pub fn ResizeYNob(
-    position: Signal<u32>,
-    range: Signal<(u32, u32)>,
     movement: WriteSignal<i32>,
     #[prop(optional)] class: String,
 ) -> impl IntoView {
-    let real_range = Signal::derive(move || {
-        let (top, bottom) = range.get();
-
-        (top + NOB_AREA / 2, bottom - NOB_AREA / 2)
-    });
+    let (enable_move, set_enable_move) = signal(false);
 
     let class = move || {
         format!(
-            "flex-0 h-[16px] flex-row items-center justify-center {}",
+            "absolute transparent h-[{}px] -translate-y-1/2 w-full {}",
+            NOB_AREA,
             class
         )
     };
 
+    let mouse_down = move |_: MouseEvent| {
+        set_enable_move.set(true);
+    };
+
+    let mouse_up = move |_: MouseEvent| {
+        set_enable_move.set(false);
+    };
+
     // handling mouse move. current and range is based on `nob` 's position,
     let mouse_move = move |ev: MouseEvent| {
-        let moved = ev.movement_y();
-        let (top, bottom) = real_range.get();
-        let current = position.get() + NOB_AREA / 2;
-
-        let mut moved_current = current as i32 + moved;
-        moved_current = moved_current.clamp(top as i32, bottom as i32);
-
-        // after moved, set it as right
-        if moved_current as u32 != current {
-            movement.set(moved);
+        if !enable_move.get() {
+            return;
         }
+
+        let moved = ev.movement_y();
+        movement.set(moved);
     };
 
     view! {
-        <div class=class>
-            <span class="border-1 rounded bg-gray w-[40px] h-[8px]" on:mousemove=mouse_move></span>
+        <div class=class on:mousemove=mouse_move on:mousedown=mouse_down on:mouseup=mouse_up>
         </div>
     }
 }
