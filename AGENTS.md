@@ -136,3 +136,6 @@ All commit must follow these styles:
 - Follow conventional commit
   - We use `feat` , `refactor`, `fix`, `test` , `style`, `perf`, `chore` 
 - Should add scope with Rust crate name when possible
+  
+## Working with `jj`
+When the repository uses `jj`, use it instead. Keep adding Co-Author-by for record Agent work.
