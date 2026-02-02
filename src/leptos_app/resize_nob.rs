@@ -9,17 +9,13 @@ pub const NOB_AREA: u32 = 16;
 /// * `movement` - Signal to write the movement delta
 /// * `class` - Optional additional CSS classes
 #[component]
-pub fn ResizeXNob(
-    movement: WriteSignal<i32>,
-    #[prop(optional)] class: String,
-) -> impl IntoView {
+pub fn ResizeXNob(movement: WriteSignal<i32>, #[prop(optional)] class: String) -> impl IntoView {
     let (enable_move, set_enable_move) = signal(false);
 
     let class = move || {
         format!(
             "absolute transparent w-[{}px] -translate-x-1/2 h-full {}",
-            NOB_AREA,
-            class
+            NOB_AREA, class
         )
     };
 
@@ -36,7 +32,7 @@ pub fn ResizeXNob(
         if !enable_move.get() {
             return;
         }
-        
+
         let moved = ev.movement_x();
         movement.set(moved);
     };
@@ -53,17 +49,13 @@ pub fn ResizeXNob(
 /// * `movement` - Signal to write the movement delta
 /// * `class` - Optional additional CSS classes
 #[component]
-pub fn ResizeYNob(
-    movement: WriteSignal<i32>,
-    #[prop(optional)] class: String,
-) -> impl IntoView {
+pub fn ResizeYNob(movement: WriteSignal<i32>, #[prop(optional)] class: String) -> impl IntoView {
     let (enable_move, set_enable_move) = signal(false);
 
     let class = move || {
         format!(
             "absolute transparent h-[{}px] -translate-y-1/2 w-full {}",
-            NOB_AREA,
-            class
+            NOB_AREA, class
         )
     };
 
