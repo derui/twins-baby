@@ -13,6 +13,28 @@ use crate::{
 use resize_nob::{ResizeXNob, ResizeYNob};
 use use_resize::use_resize;
 
+/// Builds a CSS grid-template-columns property with dynamic sizes.
+fn build_grid_cols_css(first: Signal<u32>, third: Signal<u32>) -> Signal<String> {
+    Signal::derive(move || {
+        format!(
+            "{}px 16px minmax(600px, 1fr) 16px {}px",
+            first.get(),
+            third.get()
+        )
+    })
+}
+
+/// Builds a CSS grid-template-rows property with dynamic sizes.
+fn build_grid_rows_css(first: Signal<u32>, third: Signal<u32>) -> Signal<String> {
+    Signal::derive(move || {
+        format!(
+            "{}px 16px minmax(480px, 1fr) 16px {}px",
+            first.get(),
+            third.get()
+        )
+    })
+}
+
 #[component]
 pub fn App() -> impl IntoView {
     // Get initial window dimensions
@@ -85,34 +107,19 @@ pub fn App() -> impl IntoView {
     });
 
     // Build grid templates with dynamic sizes
-    let grid_cols_template = Signal::derive(move || {
-        let (first, _, third) = col_resize.sizes;
-        format!(
-            "grid-cols-[{}px_16px_minmax(600px,1fr)_16px_{}px]",
-            first.get(),
-            third.get()
-        )
-    });
+    let grid_cols_css = build_grid_cols_css(col_resize.sizes.0, col_resize.sizes.2);
+    let grid_rows_css = build_grid_rows_css(row_resize.sizes.0, row_resize.sizes.2);
 
-    let grid_rows_template = Signal::derive(move || {
-        let (first, _, third) = row_resize.sizes;
+    let grid_style = move || {
         format!(
-            "grid-rows-[{}px_16px_minmax(480px,1fr)_16px_{}px]",
-            first.get(),
-            third.get()
-        )
-    });
-
-    let whole_class = move || {
-        format!(
-            "grid items-center p-5 mx-auto h-full w-full {} {}",
-            grid_rows_template.get(),
-            grid_cols_template.get()
+            "grid-template-columns: {}; grid-template-rows: {};",
+            grid_cols_css.get(),
+            grid_rows_css.get()
         )
     };
 
     view! {
-        <div class=whole_class>
+        <div class="grid items-center p-5 mx-auto h-full w-full" style=grid_style>
             // Row 1: PerspectiveIsland (spans all 5 columns)
             <div class="col-span-5">
                 <PerspectiveIsland />
