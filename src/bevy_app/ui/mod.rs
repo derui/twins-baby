@@ -35,7 +35,7 @@ pub fn setup_ui(mut commands: Commands, asset: Res<AssetServer>) -> Result<(), B
         NeedsRenderLayers(RenderLayers::layer(CAMERA_CUBE_LAYER)),
     ));
 
-    commands.insert_resource(AmbientLight {
+    commands.insert_resource(GlobalAmbientLight {
         color: Color::WHITE,
         brightness: 600.,
         ..default()
