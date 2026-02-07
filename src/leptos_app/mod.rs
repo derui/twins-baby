@@ -3,13 +3,14 @@ mod resize_nob;
 mod test_leptos;
 mod use_resize;
 mod use_perspective;
+mod component;
 
 use leptos::prelude::*;
 use leptos_bevy_canvas::prelude::*;
 
 use crate::{
     bevy_app::init_bevy_app,
-    events::{CanvasResizeEvent, LoggingEvent}, leptos_app::resize_nob::NOB_AREA,
+    events::{CanvasResizeEvent, LoggingEvent}, leptos_app::{component::PerspectiveIsland, resize_nob::NOB_AREA},
 };
 use resize_nob::{ResizeXNob, ResizeYNob};
 use use_resize::use_resize;
@@ -177,12 +178,6 @@ pub fn CenterResizableRow(
 
         <SupportIsland />
     }
-}
-
-/// A component for perspective island.
-#[component]
-pub fn PerspectiveIsland() -> impl IntoView {
-    view! { <div class="flex flex-row h-full w-full col-span-5"></div> }
 }
 
 /// A component for feature island.
