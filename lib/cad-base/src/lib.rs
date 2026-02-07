@@ -6,3 +6,4 @@ pub mod point;
 pub mod sketch;
 pub mod transaction;
 pub mod vector3;
+pub mod solid;
