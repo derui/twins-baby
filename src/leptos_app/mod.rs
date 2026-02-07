@@ -2,6 +2,7 @@ mod resize_nob;
 #[cfg(test)]
 mod test_leptos;
 mod use_resize;
+mod use_perspective;
 
 use leptos::prelude::*;
 use leptos_bevy_canvas::prelude::*;

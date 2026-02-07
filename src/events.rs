@@ -8,6 +8,26 @@ pub struct CanvasResizeEvent {
     pub height: u32,
 }
 
+/// Kind of perspective
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PerspectiveKind {
+    Feature,
+    Sketch,
+}
+
+impl Default for PerspectiveKind {
+    fn default() -> Self {
+        PerspectiveKind::Feature
+    }
+}
+
+/// An event to notice feature change
+#[derive(Message, Debug, Clone)]
+pub struct PerspectiveChangeEvent {
+    /// The perspective changed
+    pub next: PerspectiveKind
+}
+
 /// Log levels for logging events
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LogLevel {
