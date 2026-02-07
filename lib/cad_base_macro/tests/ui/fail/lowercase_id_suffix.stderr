@@ -1,0 +1,7 @@
+error: proc-macro derive panicked
+ --> tests/ui/fail/lowercase_id_suffix.rs:4:10
+  |
+4 | #[derive(MakeId)]
+  |          ^^^^^^
+  |
+  = help: message: [Id] macro needs the type name ends with `Id`

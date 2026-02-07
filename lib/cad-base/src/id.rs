@@ -1,7 +1,4 @@
-use std::{
-    fmt::{Debug, Display},
-    marker::PhantomData,
-};
+use std::{fmt::Debug, marker::PhantomData};
 
 use cad_base_macro::MakeId;
 

@@ -19,7 +19,7 @@ fn apply_movement(current: u32, movement: i32, range: (u32, u32)) -> u32 {
 /// central place size is not strict.
 pub fn use_resize(initial: (u32, u32), window_size: Signal<u32>) -> UseResize {
     let (first_movement, set_first_movement) = signal(None);
-    let (third_movement, set_third_movement) = signal(None);
+    let (third_movement, set_third_movement) = signal::<Option<i32>>(None);
     let (first_size, set_first_size) = signal(initial.0);
     let (third_size, set_third_size) = signal(initial.1);
     let second_size = Signal::derive(move || {
@@ -56,7 +56,7 @@ pub fn use_resize(initial: (u32, u32), window_size: Signal<u32>) -> UseResize {
 
             set_third_size.update(|v| {
                 // moving third place on right = positive, size should be decrease
-                *v = apply_movement(*v, -1 * movement, third_range);
+                *v = apply_movement(*v, -movement, third_range);
             })
         }
     });

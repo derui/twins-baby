@@ -9,8 +9,8 @@ use crate::leptos_app::use_perspective::{UsePerspective, use_perspective};
 #[component]
 pub fn PerspectiveIsland(sender: LeptosMessageSender<PerspectiveChangeEvent>) -> impl IntoView {
     let UsePerspective {
-        perspective,
-        set_perspective,
+        perspective: _,
+        set_perspective: _,
     } = use_perspective(sender);
 
     view! { <div class="flex flex-col h-full w-full col-span-5 rounded-lg bg-white"></div> }

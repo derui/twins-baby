@@ -9,16 +9,11 @@ pub struct CanvasResizeEvent {
 }
 
 /// Kind of perspective
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum PerspectiveKind {
+    #[default]
     Feature,
     Sketch,
-}
-
-impl Default for PerspectiveKind {
-    fn default() -> Self {
-        PerspectiveKind::Feature
-    }
 }
 
 /// An event to notice feature change
