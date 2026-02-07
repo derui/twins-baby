@@ -12,7 +12,7 @@ use crate::{
     bevy_app::init_bevy_app,
     events::{CanvasResizeEvent, LoggingEvent, PerspectiveChangeEvent, PerspectiveKind},
     leptos_app::{
-        component::{FeatureIsland, PerspectiveIsland},
+        component::{FeatureIsland, PerspectiveIsland, InfoIsland, SupportIsland},
         resize_nob::NOB_AREA,
     },
 };
@@ -181,16 +181,4 @@ pub fn CenterResizableRow(
 
         <SupportIsland />
     }
-}
-
-/// A component for support island.
-#[component]
-pub fn SupportIsland() -> impl IntoView {
-    view! { <div class="flex flex-col h-full w-full"></div> }
-}
-
-/// A component for info island.
-#[component]
-pub fn InfoIsland() -> impl IntoView {
-    view! { <div class="flex flex-row h-full w-full col-span-5"></div> }
 }
