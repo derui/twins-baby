@@ -11,7 +11,10 @@ use leptos_bevy_canvas::prelude::*;
 use crate::{
     bevy_app::init_bevy_app,
     events::{CanvasResizeEvent, LoggingEvent, PerspectiveChangeEvent, PerspectiveKind},
-    leptos_app::{component::PerspectiveIsland, resize_nob::NOB_AREA},
+    leptos_app::{
+        component::{FeatureIsland, PerspectiveIsland},
+        resize_nob::NOB_AREA,
+    },
 };
 use resize_nob::{ResizeXNob, ResizeYNob};
 use use_resize::use_resize;
@@ -126,7 +129,7 @@ pub fn App() -> impl IntoView {
 
     view! {
         <Provider value=PerspectiveKind::default()>
-            <div class="grid items-center p-5 mx-auto h-full w-full" style=grid_style>
+            <div class="grid items-center p-5 mx-auto h-full w-full bg-[#B2B2B2]" style=grid_style>
                 // Row 1: PerspectiveIsland (spans all 5 columns)
                 <PerspectiveIsland sender=perspective_sender />
 
@@ -178,12 +181,6 @@ pub fn CenterResizableRow(
 
         <SupportIsland />
     }
-}
-
-/// A component for feature island.
-#[component]
-pub fn FeatureIsland() -> impl IntoView {
-    view! { <div class="flex flex-col h-full w-full"></div> }
 }
 
 /// A component for support island.

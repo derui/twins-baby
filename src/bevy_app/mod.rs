@@ -50,6 +50,7 @@ pub fn init_bevy_app(
     ))
     .init_gizmo_group::<AxesGizmoGroup>()
     .init_resource::<LastWindowSize>()
+    .insert_resource(ClearColor(Color::srgb(0.7, 0.7, 0.7)))
     .export_message_to_leptos(logger)
     .import_message_from_leptos(resizer)
     .add_systems(

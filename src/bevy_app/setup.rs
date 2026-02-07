@@ -34,14 +34,11 @@ pub fn setup_scene(
 
     // Light
     commands.spawn((
-        PointLight {
-            shadows_enabled: true,
-            intensity: 10_000_000.,
-            range: 100.0,
-            shadow_depth_bias: 0.2,
-            ..Default::default()
+        AmbientLight {
+            color: Color::WHITE,
+            brightness: 300.,
+            ..default()
         },
-        Transform::from_xyz(8.0, 16.0, 8.0),
         RenderLayers::from_layers(&[CAMERA_3D_LAYER]),
     ));
 
