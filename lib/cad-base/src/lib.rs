@@ -1,3 +1,4 @@
+pub mod body;
 pub mod edge;
 pub mod id;
 pub mod plane;

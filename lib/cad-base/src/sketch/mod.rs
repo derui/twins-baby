@@ -10,10 +10,7 @@ use std::collections::HashMap;
 
 use crate::{
     id::{GeometryId, IdStore, PlaneId, SketchId},
-    sketch::{
-        geometry::Geometry,
-        scope::{ConstraintScope, VariableScope},
-    },
+    sketch::scope::{ConstraintScope, VariableScope},
 };
 
 use anyhow::{Result, anyhow};
@@ -22,7 +19,7 @@ pub use geometry::*;
 use immutable::Im;
 pub use point2::*;
 
-/// The root data model of Sketch parsepective
+/// The root data model of Sketch perspective
 #[derive(Debug, Clone)]
 pub struct SketchPerspective {
     sketches: HashMap<SketchId, Sketch>,
