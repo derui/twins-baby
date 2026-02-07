@@ -47,6 +47,7 @@ pub fn use_perspective(sender: LeptosMessageSender<PerspectiveChangeEvent>) -> U
 
 #[cfg(test)]
 mod tests {
+    use leptos::prelude::provide_context;
     use leptos_bevy_canvas::prelude::message_l2b;
     use pretty_assertions::assert_eq;
 
@@ -118,6 +119,23 @@ mod tests {
 
             // Assert
             assert_eq!(hook.get(), PerspectiveKind::Feature);
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn hook_syncs_from_pre_existing_context() {
+        with_leptos_owner(async {
+            // Arrange
+            let (sender, _receiver) = message_l2b::<PerspectiveChangeEvent>();
+            provide_context(PerspectiveKind::Sketch);
+
+            // Act
+            let hook = use_perspective(sender);
+            any_spawner::Executor::tick().await;
+
+            // Assert
+            assert_eq!(hook.get(), PerspectiveKind::Sketch);
         })
         .await;
     }
