@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use immutable::Im;
 
-use crate::{id::{BodyId, IdStore}, plane::Plane, vector3::Vector3};
+use crate::{id::{BodyId, IdStore, SketchId}, plane::Plane, vector3::Vector3};
 
 #[cfg(test)]
 mod tests;
@@ -61,6 +61,9 @@ pub struct Body {
 
     /// Position of Body.
     pub position: Im<Vector3>,
+
+    /// Stkethes attached to a body
+    sketches: Vec<SketchId>
 }
 
 impl Body {
@@ -72,6 +75,7 @@ impl Body {
             y_plane: Im::new(Plane::new_xz()),
             z_plane: Im::new(Plane::new_xy()),
             position: Im::new(Vector3::new(0.0, 0.0, 0.0)),
+            sketches: Vec::new()
         }
     }
 }
