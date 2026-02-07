@@ -5,4 +5,3 @@ use leptos::prelude::*;
 pub fn SupportIsland() -> impl IntoView {
     view! { <div class="flex flex-col h-full w-full rounded-lg bg-white"></div> }
 }
-

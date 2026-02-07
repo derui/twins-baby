@@ -12,7 +12,7 @@ use crate::{
     bevy_app::init_bevy_app,
     events::{CanvasResizeEvent, LoggingEvent, PerspectiveChangeEvent, PerspectiveKind},
     leptos_app::{
-        component::{FeatureIsland, PerspectiveIsland, InfoIsland, SupportIsland},
+        component::{FeatureIsland, InfoIsland, PerspectiveIsland, SupportIsland},
         resize_nob::NOB_AREA,
     },
 };

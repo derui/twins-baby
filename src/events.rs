@@ -25,7 +25,7 @@ impl Default for PerspectiveKind {
 #[derive(Message, Debug, Clone)]
 pub struct PerspectiveChangeEvent {
     /// The perspective changed
-    pub next: PerspectiveKind
+    pub next: PerspectiveKind,
 }
 
 /// Log levels for logging events
