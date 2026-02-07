@@ -62,9 +62,7 @@ impl PerspectiveRegistry {
     ///
     /// Notice: this might occur panic when your history implementation and type are mismatch. be careful.
     pub fn get_mut<S: Snapshot>(&mut self) -> Option<&mut S> {
-        let Some(s) = self.perspectives.get_mut(&TypeId::of::<S>()) else {
-            return None;
-        };
+        let s = self.perspectives.get_mut(&TypeId::of::<S>())?;
 
         s.as_any_mut()
             .downcast_mut::<TypedPerspective<S>>()

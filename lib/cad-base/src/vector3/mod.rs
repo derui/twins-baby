@@ -6,6 +6,7 @@ use std::ops::{Add, Div, Mul, Sub};
 use crate::{edge::Edge, point::Point};
 
 /// f32-specialized 3D vector
+#[non_exhaustive]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Vector3 {
     pub x: f32,
