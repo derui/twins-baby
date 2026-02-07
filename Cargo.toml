@@ -53,3 +53,22 @@ features = [
     "webgpu",
 ]
 
+# Optimize build performance
+[profile.dev]
+# Faster builds with less optimization in dev mode
+opt-level = 1
+# Reduce incremental compilation overhead
+incremental = true
+
+[profile.dev.package."*"]
+# Optimize dependencies even in dev mode for better runtime performance
+opt-level = 2
+
+[profile.release]
+# Maximum optimization for production
+opt-level = "z"  # Optimize for size (important for WASM)
+lto = "thin"      # Link-time optimization (balance between build time and output size)
+codegen-units = 1 # Better optimization, slower build
+strip = true      # Strip debug symbols
+panic = "abort"   # Smaller binary size
+
