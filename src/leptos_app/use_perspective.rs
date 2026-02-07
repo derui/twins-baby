@@ -1,21 +1,14 @@
-use leptos::prelude::{Effect, Get, Set, Signal, WriteSignal, provide_context, signal, use_context};
+use leptos::prelude::{
+    Effect, Get, Set, Signal, WriteSignal, provide_context, signal, use_context,
+};
 use leptos_bevy_canvas::prelude::{LeptosChannelMessageSender, LeptosMessageSender};
 
 use crate::events::{PerspectiveChangeEvent, PerspectiveKind};
 
 /// This module provides a hook to manage global **perspective** of the app.
-pub struct UsePerspective(Signal<PerspectiveKind>, WriteSignal<PerspectiveKind>);
-
-impl UsePerspective {
-    /// Get the current perspective value
-    fn get(&self) -> PerspectiveKind {
-        self.0.get()
-    }
-
-    /// Set a new perspective value
-    fn set(&self, value: PerspectiveKind) {
-        self.1.set(value);
-    }
+pub struct UsePerspective {
+    pub perspective: Signal<PerspectiveKind>,
+    pub set_perspective: WriteSignal<PerspectiveKind>,
 }
 
 /// Get a hook of perspective. The hook can:
@@ -23,26 +16,28 @@ impl UsePerspective {
 /// - get current perspective as reactive
 /// - set a perspective in global, including beby
 ///
-/// This hook requires wrapping with `Provider` with [PerspectiveKind] value. 
+/// This hook requires wrapping with `Provider` with [PerspectiveKind] value.
 pub fn use_perspective(sender: LeptosMessageSender<PerspectiveChangeEvent>) -> UsePerspective {
     let (value, set_value) = signal::<PerspectiveKind>(PerspectiveKind::default());
 
     Effect::new(move || {
         let value = value.get();
-         provide_context(value);
-        let _ = sender.send(PerspectiveChangeEvent {next: value
-        });
+        provide_context(value);
+        let _ = sender.send(PerspectiveChangeEvent { next: value });
     });
 
     Effect::new(move || {
-        let Some(v) = use_context() else {return};
+        let Some(v) = use_context() else { return };
 
         if v != value.get() {
             set_value.set(v);
         }
     });
 
-    UsePerspective(value.into(), set_value)
+    UsePerspective {
+        perspective: value.into(),
+        set_perspective: set_value,
+    }
 }
 
 #[cfg(test)]
@@ -66,7 +61,7 @@ mod tests {
             any_spawner::Executor::tick().await;
 
             // Assert
-            assert_eq!(hook.get(), PerspectiveKind::default());
+            assert_eq!(hook.perspective.get(), PerspectiveKind::default());
         })
         .await;
     }
@@ -82,7 +77,7 @@ mod tests {
             any_spawner::Executor::tick().await;
 
             // Assert
-            assert_eq!(hook.get(), PerspectiveKind::Feature);
+            assert_eq!(hook.perspective.get(), PerspectiveKind::Feature);
         })
         .await;
     }
@@ -96,11 +91,11 @@ mod tests {
             any_spawner::Executor::tick().await;
 
             // Act
-            hook.set(PerspectiveKind::Sketch);
+            hook.set_perspective.set(PerspectiveKind::Sketch);
             any_spawner::Executor::tick().await;
 
             // Assert
-            assert_eq!(hook.get(), PerspectiveKind::Sketch);
+            assert_eq!(hook.perspective.get(), PerspectiveKind::Sketch);
         })
         .await;
     }
@@ -114,11 +109,11 @@ mod tests {
             any_spawner::Executor::tick().await;
 
             // Act
-            hook.set(PerspectiveKind::Feature);
+            hook.set_perspective.set(PerspectiveKind::Feature);
             any_spawner::Executor::tick().await;
 
             // Assert
-            assert_eq!(hook.get(), PerspectiveKind::Feature);
+            assert_eq!(hook.perspective.get(), PerspectiveKind::Feature);
         })
         .await;
     }
@@ -135,7 +130,7 @@ mod tests {
             any_spawner::Executor::tick().await;
 
             // Assert
-            assert_eq!(hook.get(), PerspectiveKind::Sketch);
+            assert_eq!(hook.perspective.get(), PerspectiveKind::Sketch);
         })
         .await;
     }
@@ -149,15 +144,15 @@ mod tests {
             any_spawner::Executor::tick().await;
 
             // Act - multiple updates
-            hook.set(PerspectiveKind::Sketch);
+            hook.set_perspective.set(PerspectiveKind::Sketch);
             any_spawner::Executor::tick().await;
-            hook.set(PerspectiveKind::Feature);
+            hook.set_perspective.set(PerspectiveKind::Feature);
             any_spawner::Executor::tick().await;
-            hook.set(PerspectiveKind::Sketch);
+            hook.set_perspective.set(PerspectiveKind::Sketch);
             any_spawner::Executor::tick().await;
 
             // Assert
-            assert_eq!(hook.get(), PerspectiveKind::Sketch);
+            assert_eq!(hook.perspective.get(), PerspectiveKind::Sketch);
         })
         .await;
     }

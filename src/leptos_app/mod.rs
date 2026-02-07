@@ -1,16 +1,17 @@
+mod component;
 mod resize_nob;
 #[cfg(test)]
 mod test_leptos;
-mod use_resize;
 mod use_perspective;
-mod component;
+mod use_resize;
 
-use leptos::prelude::*;
+use leptos::{context::Provider, prelude::*};
 use leptos_bevy_canvas::prelude::*;
 
 use crate::{
     bevy_app::init_bevy_app,
-    events::{CanvasResizeEvent, LoggingEvent}, leptos_app::{component::PerspectiveIsland, resize_nob::NOB_AREA},
+    events::{CanvasResizeEvent, LoggingEvent, PerspectiveChangeEvent, PerspectiveKind},
+    leptos_app::{component::PerspectiveIsland, resize_nob::NOB_AREA},
 };
 use resize_nob::{ResizeXNob, ResizeYNob};
 use use_resize::use_resize;
@@ -43,6 +44,7 @@ fn build_grid_rows_css(first: Signal<u32>, third: Signal<u32>) -> Signal<String>
 pub fn App() -> impl IntoView {
     // Get initial window dimensions
     let (resize_sender, receiver) = message_l2b::<CanvasResizeEvent>();
+    let (perspective_sender, _) = message_l2b::<PerspectiveChangeEvent>();
     let initial_width = window()
         .inner_width()
         .ok()
@@ -123,34 +125,32 @@ pub fn App() -> impl IntoView {
     };
 
     view! {
-        <div class="grid items-center p-5 mx-auto h-full w-full" style=grid_style>
-            // Row 1: PerspectiveIsland (spans all 5 columns)
-            <div class="col-span-5">
-                <PerspectiveIsland />
-            </div>
+        <Provider value=PerspectiveKind::default()>
+            <div class="grid items-center p-5 mx-auto h-full w-full" style=grid_style>
+                // Row 1: PerspectiveIsland (spans all 5 columns)
+                <PerspectiveIsland sender=perspective_sender />
 
-            // Row 2: Y nob between top and middle
-            <div class="col-span-5 relative">
-                <ResizeYNob movement=set_row_first_move />
-            </div>
+                // Row 2: Y nob between top and middle
+                <div class="col-span-5 relative">
+                    <ResizeYNob movement=set_row_first_move />
+                </div>
 
-            // Row 3: Main content row with X nobs
-            <CenterResizableRow
-                set_col_first_move=set_col_first_move
-                set_col_third_move=set_col_third_move
-                resize_sender=receiver
-            />
+                // Row 3: Main content row with X nobs
+                <CenterResizableRow
+                    set_col_first_move=set_col_first_move
+                    set_col_third_move=set_col_third_move
+                    resize_sender=receiver
+                />
 
-            // Row 4: Y nob between middle and bottom
-            <div class="col-span-5 relative">
-                <ResizeYNob movement=set_row_third_move />
-            </div>
+                // Row 4: Y nob between middle and bottom
+                <div class="col-span-5 relative">
+                    <ResizeYNob movement=set_row_third_move />
+                </div>
 
-            // Row 5: InfoIsland (spans all 5 columns)
-            <div class="col-span-5">
+                // Row 5: InfoIsland (spans all 5 columns)
                 <InfoIsland />
             </div>
-        </div>
+        </Provider>
     }
 }
 

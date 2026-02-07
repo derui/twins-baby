@@ -1,4 +1,4 @@
-use leptos::{IntoView, component, ev::MouseEvent, prelude::*, view };
+use leptos::{IntoView, component, ev::MouseEvent, prelude::*, view};
 
 // nob area size. all size must be [px].
 pub const NOB_AREA: u32 = 16;
@@ -60,11 +60,7 @@ pub fn ResizeXNob(movement: WriteSignal<i32>, #[prop(optional)] class: String) -
     };
 
     view! {
-        <div
-            class=class
-            style=style
-            on:mousedown=mouse_down
-        ></div>
+        <div class=class style=style on:mousedown=mouse_down></div>
         {move || {
             is_dragging
                 .get()
@@ -134,11 +130,7 @@ pub fn ResizeYNob(movement: WriteSignal<i32>, #[prop(optional)] class: String) -
     };
 
     view! {
-        <div
-            class=class
-            style=style
-            on:mousedown=mouse_down
-        ></div>
+        <div class=class style=style on:mousedown=mouse_down></div>
         {move || {
             is_dragging
                 .get()
