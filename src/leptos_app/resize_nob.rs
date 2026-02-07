@@ -2,6 +2,8 @@ use leptos::{IntoView, component, ev::MouseEvent, prelude::*, view};
 
 // nob area size. all size must be [px].
 pub const NOB_AREA: u32 = 16;
+// primary button of mouse
+const PRIMARY_BUTTON: u16 = 1;
 
 /// [ResizeXNob] is the nob for resizing X-axis between nobs
 ///
@@ -10,27 +12,15 @@ pub const NOB_AREA: u32 = 16;
 /// * `class` - Optional additional CSS classes
 #[component]
 pub fn ResizeXNob(movement: WriteSignal<i32>, #[prop(optional)] class: String) -> impl IntoView {
-    let (enable_move, set_enable_move) = signal(false);
-
-    let class = move || format!("absolute transparent -translate-x-1/2 h-full {}", class);
+    let class = move || format!("absolute transparent h-full {}", class);
 
     let style = move || format!("width: {}px", NOB_AREA);
 
-    let mouse_down = move |_: MouseEvent| {
-        set_enable_move.set(true);
-    };
-
-    let mouse_up = move |_: MouseEvent| {
-        set_enable_move.set(false);
-    };
-
     // handling mouse move. current and range is based on `nob` 's position,
     let mouse_move = move |ev: MouseEvent| {
-        if !enable_move.get() {
-            return;
-        }
-
-        if (ev.offset_y().abs() as u32) < NOB_AREA / 2 {
+        let buttons = ev.buttons();
+        // 1 == primary button
+        if buttons & PRIMARY_BUTTON == 0 {
             return;
         }
 
@@ -43,8 +33,6 @@ pub fn ResizeXNob(movement: WriteSignal<i32>, #[prop(optional)] class: String) -
             class=class
             style=style
             on:mousemove=mouse_move
-            on:mousedown=mouse_down
-            on:mouseup=mouse_up
         ></div>
     }
 }
@@ -56,27 +44,15 @@ pub fn ResizeXNob(movement: WriteSignal<i32>, #[prop(optional)] class: String) -
 /// * `class` - Optional additional CSS classes
 #[component]
 pub fn ResizeYNob(movement: WriteSignal<i32>, #[prop(optional)] class: String) -> impl IntoView {
-    let (enable_move, set_enable_move) = signal(false);
-
     let class = move || format!("absolute transparent -translate-y-1/2 w-full {}", class);
 
     let style = move || format!("height: {}px", NOB_AREA);
 
-    let mouse_down = move |_: MouseEvent| {
-        set_enable_move.set(true);
-    };
-
-    let mouse_up = move |_: MouseEvent| {
-        set_enable_move.set(false);
-    };
-
     // handling mouse move. current and range is based on `nob` 's position,
     let mouse_move = move |ev: MouseEvent| {
-        if !enable_move.get() {
-            return;
-        }
-
-        if (ev.offset_x().abs() as u32) < NOB_AREA / 2 {
+        let buttons = ev.buttons();
+        // 1 == primary button
+        if buttons & PRIMARY_BUTTON == 0 {
             return;
         }
 
@@ -89,8 +65,6 @@ pub fn ResizeYNob(movement: WriteSignal<i32>, #[prop(optional)] class: String) -
             class=class
             style=style
             on:mousemove=mouse_move
-            on:mousedown=mouse_down
-            on:mouseup=mouse_up
         ></div>
     }
 }

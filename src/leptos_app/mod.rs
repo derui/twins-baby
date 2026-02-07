@@ -162,13 +162,13 @@ pub fn CenterResizableRow(
     view! {
         <FeatureIsland />
 
-        <div class="relative">
+        <div class="relative h-full">
             <ResizeXNob movement=set_col_first_move />
         </div>
 
         <BevyCanvas init=move || { init_bevy_app(log_sender, resize_sender) } {..} />
 
-        <div class="relative">
+        <div class="relative h-full">
             <ResizeXNob movement=set_col_third_move />
         </div>
 
