@@ -1,10 +1,6 @@
 [tools]
 tailwindcss = "3.4.17"
 
-[build]
-# Enable reference types for smaller WASM output and better performance
-target = "web"
-
 [wasm-bindgen]
 # Enable reference types (reduces WASM size and improves performance)
 reference-types = true
