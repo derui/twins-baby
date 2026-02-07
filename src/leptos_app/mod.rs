@@ -129,7 +129,7 @@ pub fn App() -> impl IntoView {
 
     view! {
         <Provider value=PerspectiveKind::default()>
-            <div class="grid items-center p-5 mx-auto h-full w-full bg-[#B2B2B2]" style=grid_style>
+            <div class="grid items-center p-5 mx-auto h-full w-full bg-gray-500" style=grid_style>
                 // Row 1: PerspectiveIsland (spans all 5 columns)
                 <PerspectiveIsland sender=perspective_sender />
 

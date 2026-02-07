@@ -4,6 +4,19 @@
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <link data-trunk rel="tailwind-css" href="input.css">
     <link data-trunk rel="copy-dir" href="assets">
+    <style>
+     #bevy_canvas {
+         outline: none;
+         border-radius: 12px;
+         transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+         transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+         transition-duration: 150ms;
+
+         &:hover, &:focus {
+             filter: drop-shadow(0 10px 8px rgb(0 0 0 / 0.04)) drop-shadow(0 4px 3px rgb(0 0 0 / 0.1));
+         }
+     }
+    </style>
 
   </head>
   <body>
