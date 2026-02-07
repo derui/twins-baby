@@ -8,10 +8,12 @@ use leptos_bevy_canvas::prelude::*;
 
 use crate::{
     bevy_app::init_bevy_app,
-    events::{CanvasResizeEvent, LoggingEvent},
+    events::{CanvasResizeEvent, LoggingEvent}, leptos_app::resize_nob::NOB_AREA,
 };
 use resize_nob::{ResizeXNob, ResizeYNob};
 use use_resize::use_resize;
+
+const DEAD_ZONES: u32 = NOB_AREA * 2 + 20 * 2;
 
 /// Builds a CSS grid-template-columns property with dynamic sizes.
 fn build_grid_cols_css(first: Signal<u32>, third: Signal<u32>) -> Signal<String> {
@@ -68,8 +70,8 @@ pub fn App() -> impl IntoView {
         let height = row_resize.sizes.1;
 
         let _ = resize_sender.send(CanvasResizeEvent {
-            width: width.get(),
-            height: height.get(),
+            width: width.get() - DEAD_ZONES,
+            height: height.get() - DEAD_ZONES,
         });
     });
 
