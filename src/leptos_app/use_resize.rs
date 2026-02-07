@@ -55,7 +55,8 @@ pub fn use_resize(initial: (u32, u32), window_size: Signal<u32>) -> UseResize {
             let third_range = third_range.get();
 
             set_third_size.update(|v| {
-                *v = apply_movement(*v, movement, third_range);
+                // moving third place on right = positive, size should be decrease
+                *v = apply_movement(*v, -1 * movement, third_range);
             })
         }
     });
@@ -231,15 +232,16 @@ mod tests {
             let hook = use_resize((200, 300), window_size.into());
             any_spawner::Executor::tick().await;
 
-            // Act: third = clamp(300 + 50, 216, 984) = 350
+            // Act: positive movement decreases third size (movement is inverted)
+            // third = clamp(300 - 50, 216, 984) = 250
             hook.third_movement.set(Some(50));
             any_spawner::Executor::tick().await;
 
-            // Assert: second = 1000 - 200 - 350 = 450
+            // Assert: second = 1000 - 200 - 250 = 550
             let (first, second, third) = hook.sizes;
             assert_eq!(first.get_untracked(), 200);
-            assert_eq!(second.get_untracked(), 450);
-            assert_eq!(third.get_untracked(), 350);
+            assert_eq!(second.get_untracked(), 550);
+            assert_eq!(third.get_untracked(), 250);
         })
         .await;
     }
@@ -252,15 +254,16 @@ mod tests {
             let hook = use_resize((200, 300), window_size.into());
             any_spawner::Executor::tick().await;
 
-            // Act: third = clamp(300 - 50, 216, 984) = 250
+            // Act: negative movement increases third size (movement is inverted)
+            // third = clamp(300 + 50, 216, 984) = 350
             hook.third_movement.set(Some(-50));
             any_spawner::Executor::tick().await;
 
-            // Assert: second = 1000 - 200 - 250 = 550
+            // Assert: second = 1000 - 200 - 350 = 450
             let (first, second, third) = hook.sizes;
             assert_eq!(first.get_untracked(), 200);
-            assert_eq!(second.get_untracked(), 550);
-            assert_eq!(third.get_untracked(), 250);
+            assert_eq!(second.get_untracked(), 450);
+            assert_eq!(third.get_untracked(), 350);
         })
         .await;
     }
@@ -315,8 +318,9 @@ mod tests {
             let hook = use_resize((200, 300), window_size.into());
             any_spawner::Executor::tick().await;
 
-            // Act: third = clamp(300 - 100, 216, 984) = 216 (clamped to min)
-            hook.third_movement.set(Some(-100));
+            // Act: positive movement decreases third (inverted)
+            // third = clamp(300 - 100, 216, 984) = 216 (clamped to min)
+            hook.third_movement.set(Some(100));
             any_spawner::Executor::tick().await;
 
             // Assert: second = 1000 - 200 - 216 = 584
@@ -344,6 +348,183 @@ mod tests {
             let (first, second, third) = hook.sizes;
             assert_eq!(first.get_untracked(), 200);
             assert_eq!(second.get_untracked(), 700);
+            assert_eq!(third.get_untracked(), 300);
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn hook_setting_movement_to_none_does_not_trigger_change() {
+        with_leptos_owner(async {
+            // Arrange
+            let (window_size, _set_window) = signal(1000u32);
+            let hook = use_resize((200, 300), window_size.into());
+            any_spawner::Executor::tick().await;
+
+            // Act: set movement to None (no-op)
+            hook.first_movement.set(None);
+            any_spawner::Executor::tick().await;
+
+            // Assert: sizes remain unchanged
+            let (first, second, third) = hook.sizes;
+            assert_eq!(first.get_untracked(), 200);
+            assert_eq!(second.get_untracked(), 500);
+            assert_eq!(third.get_untracked(), 300);
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn hook_sequential_movements_apply_from_current_position() {
+        with_leptos_owner(async {
+            // Arrange
+            let (window_size, _set_window) = signal(1000u32);
+            let hook = use_resize((200, 300), window_size.into());
+            any_spawner::Executor::tick().await;
+
+            // Act: first movement of +50
+            hook.first_movement.set(Some(50));
+            any_spawner::Executor::tick().await;
+
+            // Assert: first = 200 + 50 = 250
+            let (first, second, third) = hook.sizes;
+            assert_eq!(first.get_untracked(), 250);
+            assert_eq!(second.get_untracked(), 450);
+            assert_eq!(third.get_untracked(), 300);
+
+            // Act: reset to None, then second movement of +30
+            hook.first_movement.set(None);
+            any_spawner::Executor::tick().await;
+            hook.first_movement.set(Some(30));
+            any_spawner::Executor::tick().await;
+
+            // Assert: first = 250 + 30 = 280 (applied from current position)
+            assert_eq!(first.get_untracked(), 280);
+            assert_eq!(second.get_untracked(), 420);
+            assert_eq!(third.get_untracked(), 300);
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn hook_third_sequential_movements_apply_from_current_position() {
+        with_leptos_owner(async {
+            // Arrange
+            let (window_size, _set_window) = signal(1000u32);
+            let hook = use_resize((200, 300), window_size.into());
+            any_spawner::Executor::tick().await;
+
+            // Act: first movement of -50 (negative increases third size when inverted)
+            hook.third_movement.set(Some(-50));
+            any_spawner::Executor::tick().await;
+
+            // Assert: third = 300 + 50 = 350 (movement inverted: -1 * -50 = 50)
+            let (first, second, third) = hook.sizes;
+            assert_eq!(first.get_untracked(), 200);
+            assert_eq!(second.get_untracked(), 450);
+            assert_eq!(third.get_untracked(), 350);
+
+            // Act: reset to None, then second movement of -30
+            hook.third_movement.set(None);
+            any_spawner::Executor::tick().await;
+            hook.third_movement.set(Some(-30));
+            any_spawner::Executor::tick().await;
+
+            // Assert: third = 350 + 30 = 380 (movement inverted: -1 * -30 = 30, applied from current position)
+            assert_eq!(first.get_untracked(), 200);
+            assert_eq!(second.get_untracked(), 420);
+            assert_eq!(third.get_untracked(), 380);
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn hook_setting_same_movement_value_retriggers_effect() {
+        with_leptos_owner(async {
+            // Arrange
+            let (window_size, _set_window) = signal(1000u32);
+            let hook = use_resize((200, 300), window_size.into());
+            any_spawner::Executor::tick().await;
+
+            // Act: set movement to Some(50)
+            hook.first_movement.set(Some(50));
+            any_spawner::Executor::tick().await;
+
+            // Assert: first = 250
+            let (first, second, third) = hook.sizes;
+            assert_eq!(first.get_untracked(), 250);
+
+            // Act: set same value again (Leptos effects trigger on every .set() call)
+            hook.first_movement.set(Some(50));
+            any_spawner::Executor::tick().await;
+
+            // Assert: first = 300 (movement applied again from current position)
+            assert_eq!(first.get_untracked(), 300);
+            assert_eq!(second.get_untracked(), 400);
+            assert_eq!(third.get_untracked(), 300);
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn hook_first_then_third_movements_independent() {
+        with_leptos_owner(async {
+            // Arrange
+            let (window_size, _set_window) = signal(1000u32);
+            let hook = use_resize((200, 300), window_size.into());
+            any_spawner::Executor::tick().await;
+
+            // Act: move first by +50 (increases first size directly)
+            hook.first_movement.set(Some(50));
+            any_spawner::Executor::tick().await;
+
+            // Assert: first = 250, second = 450, third = 300
+            let (first, second, third) = hook.sizes;
+            assert_eq!(first.get_untracked(), 250);
+            assert_eq!(second.get_untracked(), 450);
+            assert_eq!(third.get_untracked(), 300);
+
+            // Act: reset first movement and move third
+            hook.first_movement.set(None);
+            any_spawner::Executor::tick().await;
+
+            hook.third_movement.set(Some(-20));
+            any_spawner::Executor::tick().await;
+
+            // Assert: first = 250, second = 430, third = 320
+            assert_eq!(first.get_untracked(), 250);
+            assert_eq!(second.get_untracked(), 430);
+            assert_eq!(third.get_untracked(), 320);
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn hook_movement_respects_updated_ranges_after_window_resize() {
+        with_leptos_owner(async {
+            // Arrange
+            let (window_size, set_window) = signal(1000u32);
+            let hook = use_resize((200, 300), window_size.into());
+            any_spawner::Executor::tick().await;
+
+            // Act: expand window to 1500
+            set_window.set(1500);
+            any_spawner::Executor::tick().await;
+
+            // Assert: first = 200, second = 1000, third = 300
+            let (first, second, third) = hook.sizes;
+            assert_eq!(first.get_untracked(), 200);
+            assert_eq!(second.get_untracked(), 1000);
+            assert_eq!(third.get_untracked(), 300);
+
+            // Act: move first by +600
+            // New first_range = (16, 1500 - 300 - 16) = (16, 1184)
+            hook.first_movement.set(Some(600));
+            any_spawner::Executor::tick().await;
+
+            // Assert: first = clamp(200 + 600, 16, 1184) = 800
+            assert_eq!(first.get_untracked(), 800);
+            assert_eq!(second.get_untracked(), 400);
             assert_eq!(third.get_untracked(), 300);
         })
         .await;
