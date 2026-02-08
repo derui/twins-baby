@@ -18,7 +18,7 @@ impl Edge {
         if start == end {
             Err(anyhow::anyhow!("Can not define edge between same point"))
         } else {
-            Ok(Edge {start, end})
+            Ok(Edge { start, end })
         }
     }
 
@@ -55,9 +55,11 @@ impl From<Edge> for (Vertex, Vertex) {
 
 impl Display for Edge {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "(({}, {}, {}) -> ({}, {}, {}))",
-            *self.start.x, *self.start.y, *self.start.z,
-            *self.end.x, *self.end.y, *self.end.z)
+        write!(
+            f,
+            "(({}, {}, {}) -> ({}, {}, {}))",
+            *self.start.x, *self.start.y, *self.start.z, *self.end.x, *self.end.y, *self.end.z
+        )
     }
 }
 
