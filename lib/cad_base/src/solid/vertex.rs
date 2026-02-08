@@ -6,7 +6,7 @@ pub struct Vertex {
     pub x: Im<f32>,
     pub y: Im<f32>,
     pub z: Im<f32>,
-    _private: (),
+    _immutable: (),
 }
 
 impl Vertex {
@@ -16,7 +16,7 @@ impl Vertex {
             x: x.into(),
             y: y.into(),
             z: z.into(),
-            _private: (),
+            _immutable: (),
         }
     }
 
@@ -35,7 +35,7 @@ impl Vertex {
             x: x.into(),
             y: self.y.clone(),
             z: self.z.clone(),
-            _private: (),
+            _immutable: (),
         }
     }
 
@@ -54,7 +54,7 @@ impl Vertex {
             y: y.into(),
             x: self.x.clone(),
             z: self.z.clone(),
-            _private: (),
+            _immutable: (),
         }
     }
 
@@ -73,7 +73,7 @@ impl Vertex {
             z: z.into(),
             x: self.x.clone(),
             y: self.y.clone(),
-            _private: (),
+            _immutable: (),
         }
     }
 }

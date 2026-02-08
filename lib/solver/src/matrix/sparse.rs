@@ -4,7 +4,7 @@ use anyhow::{Result, anyhow};
 
 use crate::matrix::{Matrix, MatrixExtract, simple::SimpleMatrix, size::Size};
 
-/// implement sparse matrix
+// implement sparse matrix
 
 /// Sparse matrix model. This implementation is based on simple CSR model.
 #[derive(Debug, Clone)]

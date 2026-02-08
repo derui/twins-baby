@@ -11,7 +11,7 @@ use super::vertex::Vertex;
 pub struct Edge {
     pub start: Vertex,
     pub end: Vertex,
-    _private: (),
+    _immutable: (),
 }
 
 impl Edge {
@@ -22,7 +22,7 @@ impl Edge {
             Ok(Edge {
                 start,
                 end,
-                _private: (),
+                _immutable: (),
             })
         }
     }

@@ -26,13 +26,19 @@ pub struct SketchPerspective {
     sketch_id_gen: IdStore<SketchId>,
 }
 
+impl Default for SketchPerspective {
+    fn default() -> Self {
+        Self {
+            sketches: Default::default(),
+            sketch_id_gen: IdStore::of(),
+        }
+    }
+}
+
 impl SketchPerspective {
     /// Create a new perspective
     pub fn new() -> Self {
-        SketchPerspective {
-            sketches: HashMap::new(),
-            sketch_id_gen: IdStore::of(),
-        }
+        Self::default()
     }
 
     /// Get a sketch reference of the id
