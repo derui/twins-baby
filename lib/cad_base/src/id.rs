@@ -6,13 +6,13 @@ use cad_base_macro::MakeId;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, MakeId)]
 pub struct PlaneId(u64);
 
-/// A unique identifier for an edge.
+/// A unique identifier for an edge in solid.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, MakeId)]
 pub struct EdgeId(u64);
 
-/// A unique identifier for a point.
+/// A unique identifier for a vertex in solid.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, MakeId)]
-pub struct PointId(u64);
+pub struct VertexId(u64);
 
 /// A unique identifier for a sketch.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, MakeId)]
@@ -33,6 +33,10 @@ pub struct ConstraintId(u64);
 /// id for Body
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, MakeId)]
 pub struct BodyId(u64);
+
+/// id for solid
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, MakeId)]
+pub struct SolidId(u64);
 
 pub trait Id: Clone + Copy + From<u64> + Debug {}
 impl<T: Clone + Copy + From<u64> + Debug> Id for T {}

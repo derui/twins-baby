@@ -3,7 +3,7 @@ mod tests;
 
 use std::ops::{Add, Div, Mul, Sub};
 
-use crate::{point::Point};
+use crate::point::Point;
 
 /// f32-specialized 3D vector
 #[non_exhaustive]

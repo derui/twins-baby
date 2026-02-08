@@ -625,4 +625,3 @@ mod unit {
         assert_relative_eq!(result.z, 0.0);
     }
 }
-
