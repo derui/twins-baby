@@ -4,13 +4,13 @@ use immutable::Im;
 use crate::{id::EdgeId, plane::Plane};
 
 /// Surface of the solid. Each face is some of a surface
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Face {
     Planar(PlanarSurface),
 }
 
 /// A planar surface type
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct PlanarSurface {
     /// The boundaries of the Surface
     pub boundaries: Im<Vec<EdgeId>>,

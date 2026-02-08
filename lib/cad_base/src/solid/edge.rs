@@ -1,9 +1,7 @@
-
 use anyhow::Result;
 use immutable::Im;
 
 use crate::id::VertexId;
-
 
 /// Edge implementation.
 ///
