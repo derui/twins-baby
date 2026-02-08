@@ -138,4 +138,8 @@ All commit must follow these styles:
 - Should add scope with Rust crate name when possible
   
 ## Working with `jj`
-When the repository uses `jj`, use it instead. Keep adding Co-Author-by for record Agent work.
+This repository's operation relies on `jj` now. Use it when the user forces to use Git in prompt.
+
+Working with `jj`, followng these guidelines:
+
+- **Keep same format of git** : We need same commit format between `git` and `jj`.
