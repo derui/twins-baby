@@ -42,6 +42,10 @@ pub struct SolidId(u64);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, MakeId)]
 pub struct FaceId(u64);
 
+/// id of surface in the feature
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, MakeId)]
+pub struct FeatureId(u64);
+
 pub trait Id: Clone + Copy + From<u64> + Debug {}
 impl<T: Clone + Copy + From<u64> + Debug> Id for T {}
 

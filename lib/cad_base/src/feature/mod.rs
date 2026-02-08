@@ -1,9 +1,11 @@
 pub mod operation;
+mod perspective;
 
 use anyhow::Result;
 use immutable::Im;
 
 use crate::{feature::operation::Operation, id::SketchId};
+pub use perspective::*;
 
 /// Status of feature evaluation.
 #[derive(Debug, Clone, PartialEq, Eq)]
