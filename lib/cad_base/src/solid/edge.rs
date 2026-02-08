@@ -1,6 +1,9 @@
 use std::fmt::Display;
 
 use anyhow::Result;
+use immutable::Im;
+
+use crate::id::VertexId;
 
 use super::vertex::Vertex;
 
@@ -9,62 +12,44 @@ use super::vertex::Vertex;
 /// This structure is totally immutable.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Edge {
-    pub start: Vertex,
-    pub end: Vertex,
+    pub start: Im<VertexId>,
+    pub end: Im<VertexId>,
     _immutable: (),
 }
 
 impl Edge {
-    pub fn new(start: Vertex, end: Vertex) -> Result<Self> {
+    pub fn new(start: VertexId, end: VertexId) -> Result<Self> {
         if start == end {
             Err(anyhow::anyhow!("Can not define edge between same point"))
         } else {
             Ok(Edge {
-                start,
-                end,
+                start: start.into(),
+                end: end.into(),
                 _immutable: (),
             })
         }
     }
 
     /// Create a new [Edge] with the given start point.
-    pub fn with_start(&self, point: Vertex) -> Result<Self> {
-        Self::new(point, self.end.clone())
+    pub fn with_start(&self, point: VertexId) -> Result<Self> {
+        Self::new(point, *self.end)
     }
 
     /// Create a new [Edge] with the given end point.
-    pub fn with_end(&self, point: Vertex) -> Result<Self> {
-        Self::new(self.start.clone(), point)
-    }
-
-    /// Get length of the edge
-    pub fn len(&self) -> f32 {
-        let l = (*self.end.x - *self.start.x).powi(2)
-            + (*self.end.y - *self.start.y).powi(2)
-            + (*self.end.z - *self.start.z).powi(2);
-        l.sqrt()
+    pub fn with_end(&self, point: VertexId) -> Result<Self> {
+        Self::new(*self.start, point)
     }
 }
 
-impl From<(Vertex, Vertex)> for Edge {
-    fn from(value: (Vertex, Vertex)) -> Self {
+impl From<(VertexId, VertexId)> for Edge {
+    fn from(value: (VertexId, VertexId)) -> Self {
         Edge::new(value.0, value.1).unwrap()
     }
 }
 
-impl From<Edge> for (Vertex, Vertex) {
+impl From<Edge> for (VertexId, VertexId) {
     fn from(value: Edge) -> Self {
-        (value.start.clone(), value.end.clone())
-    }
-}
-
-impl Display for Edge {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "(({}, {}, {}) -> ({}, {}, {}))",
-            *self.start.x, *self.start.y, *self.start.z, *self.end.x, *self.end.y, *self.end.z
-        )
+        (*value.start, *value.end)
     }
 }
 
