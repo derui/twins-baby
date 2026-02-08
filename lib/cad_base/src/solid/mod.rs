@@ -103,3 +103,115 @@ impl SolidBuilder {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use pretty_assertions::assert_eq;
+
+    use crate::{
+        id::IdStore,
+        plane::Plane,
+        solid::{
+            SolidBuilder,
+            edge::Edge,
+            face::{Face, PlanarSurface},
+            vertex::Vertex,
+        },
+    };
+
+    fn v(x: f32, y: f32, z: f32) -> Vertex {
+        Vertex::new(x, y, z)
+    }
+
+    fn make_face() -> Face {
+        let mut store: IdStore<crate::id::EdgeId> = IdStore::of();
+        let edge_ids: Vec<_> = (0..4).map(|_| store.generate()).collect();
+        Face::Planar(PlanarSurface::new(&edge_ids, &Plane::new_xy()).unwrap())
+    }
+
+    #[test]
+    fn add_vertices_returns_same_id_for_duplicate_vertex() {
+        // Arrange
+        let mut builder = SolidBuilder::default();
+
+        // Act
+        let ids1 = builder.add_vertices(&[v(1.0, 2.0, 3.0)]);
+        let ids2 = builder.add_vertices(&[v(1.0, 2.0, 3.0)]);
+
+        // Assert
+        assert_eq!(ids1[0], ids2[0]);
+    }
+
+    #[test]
+    fn add_vertices_returns_different_ids_for_different_vertices() {
+        // Arrange
+        let mut builder = SolidBuilder::default();
+
+        // Act
+        let ids = builder.add_vertices(&[v(1.0, 0.0, 0.0), v(2.0, 0.0, 0.0)]);
+
+        // Assert
+        assert_ne!(ids[0], ids[1]);
+    }
+
+    #[test]
+    fn add_edges_returns_same_id_for_duplicate_edge() {
+        // Arrange
+        let mut builder = SolidBuilder::default();
+        let vids = builder.add_vertices(&[v(0.0, 0.0, 0.0), v(1.0, 0.0, 0.0)]);
+        let edge = Edge::new(vids[0], vids[1]).expect("valid edge");
+
+        // Act
+        let ids1 = builder.add_edges(&[edge.clone()]);
+        let ids2 = builder.add_edges(&[edge]);
+
+        // Assert
+        assert_eq!(ids1[0], ids2[0]);
+    }
+
+    #[test]
+    fn add_edges_returns_different_ids_for_different_edges() {
+        // Arrange
+        let mut builder = SolidBuilder::default();
+        let vids = builder.add_vertices(&[v(0.0, 0.0, 0.0), v(1.0, 0.0, 0.0), v(2.0, 0.0, 0.0)]);
+        let e1 = Edge::new(vids[0], vids[1]).unwrap();
+        let e2 = Edge::new(vids[1], vids[2]).unwrap();
+
+        // Act
+        let ids = builder.add_edges(&[e1, e2]);
+
+        // Assert
+        assert_ne!(ids[0], ids[1]);
+    }
+
+    #[test]
+    fn add_faces_always_creates_new_id() {
+        // Arrange
+        let mut builder = SolidBuilder::default();
+        let face = make_face();
+
+        // Act
+        let ids1 = builder.add_faces(&[face.clone()]);
+        let ids2 = builder.add_faces(&[face]);
+
+        // Assert
+        assert_ne!(ids1[0], ids2[0]);
+    }
+
+    #[test]
+    fn build_creates_solid_with_correct_counts() {
+        // Arrange
+        let mut builder = SolidBuilder::default();
+        let vids = builder.add_vertices(&[v(0.0, 0.0, 0.0), v(1.0, 0.0, 0.0), v(2.0, 0.0, 0.0)]);
+        builder.add_edges(&[Edge::new(vids[0], vids[1]).unwrap()]);
+        builder.add_faces(&[make_face()]);
+
+        // Act
+        let solid = builder.build();
+
+        // Assert
+        assert_eq!(solid.vertices.len(), 3);
+        assert_eq!(solid.edges.len(), 1);
+        assert_eq!(solid.faces.len(), 1);
+    }
+}
