@@ -2,78 +2,75 @@ use std::fmt::Display;
 
 use anyhow::Result;
 
-use crate::point::Point;
+use super::vertex::Vertex;
 
 /// Edge implementation.
 ///
 /// This structure is totally immutable.
 #[derive(Debug, Clone, PartialEq)]
-pub struct Edge(Point, Point);
+pub struct Edge {
+    pub start: Vertex,
+    pub end: Vertex,
+}
 
 impl Edge {
-    pub fn new(start: Point, end: Point) -> Result<Self> {
+    pub fn new(start: Vertex, end: Vertex) -> Result<Self> {
         if start == end {
             Err(anyhow::anyhow!("Can not define edge between same point"))
         } else {
-            Ok(Edge(start, end))
+            Ok(Edge {start, end})
         }
     }
 
-    #[inline]
-    pub fn start(&self) -> &Point {
-        &self.0
-    }
-
-    #[inline]
-    pub fn end(&self) -> &Point {
-        &self.1
-    }
-
     /// Create a new [Edge] with the given start point.
-    pub fn with_start(&self, point: Point) -> Result<Self> {
-        Self::new(point, self.1)
+    pub fn with_start(&self, point: Vertex) -> Result<Self> {
+        Self::new(point, self.end.clone())
     }
 
     /// Create a new [Edge] with the given end point.
-    pub fn with_end(&self, point: Point) -> Result<Self> {
-        Self::new(self.0, point)
+    pub fn with_end(&self, point: Vertex) -> Result<Self> {
+        Self::new(self.start.clone(), point)
     }
 
     /// Get length of the edge
     pub fn len(&self) -> f32 {
-        let l = (self.1.x() - self.0.x()).powi(2)
-            + (self.1.y() - self.0.y()).powi(2)
-            + (self.1.z() - self.0.z()).powi(2);
+        let l = (*self.end.x - *self.start.x).powi(2)
+            + (*self.end.y - *self.start.y).powi(2)
+            + (*self.end.z - *self.start.z).powi(2);
         l.sqrt()
     }
 }
 
-impl From<(Point, Point)> for Edge {
-    fn from(value: (Point, Point)) -> Self {
+impl From<(Vertex, Vertex)> for Edge {
+    fn from(value: (Vertex, Vertex)) -> Self {
         Edge::new(value.0, value.1).unwrap()
     }
 }
 
-impl From<Edge> for (Point, Point) {
+impl From<Edge> for (Vertex, Vertex) {
     fn from(value: Edge) -> Self {
-        (value.0, value.1)
+        (value.start.clone(), value.end.clone())
     }
 }
 
 impl Display for Edge {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "({} -> {})", self.start(), self.end())
+        write!(f, "(({}, {}, {}) -> ({}, {}, {}))",
+            *self.start.x, *self.start.y, *self.start.z,
+            *self.end.x, *self.end.y, *self.end.z)
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::solid::vertex::Vertex;
+
     use super::*;
     use approx::assert_relative_eq;
     use pretty_assertions::assert_eq;
 
-    fn p(x: f32, y: f32, z: f32) -> Point {
-        Point::new(x, y, z)
+    fn p(x: f32, y: f32, z: f32) -> Vertex {
+        Vertex::new(x, y, z)
     }
 
     #[test]
@@ -83,12 +80,12 @@ mod tests {
         let end = p(1.0, 1.0, 1.0);
 
         // Act
-        let edge = Edge::new(start, end);
+        let edge = Edge::new(start.clone(), end.clone());
 
         // Assert
         let edge = edge.expect("should create edge");
-        assert_eq!(*edge.start(), start);
-        assert_eq!(*edge.end(), end);
+        assert_eq!(edge.start, start);
+        assert_eq!(edge.end, end);
     }
 
     #[test]
@@ -97,7 +94,7 @@ mod tests {
         let point = p(1.0, 1.0, 1.0);
 
         // Act
-        let result = Edge::new(point, point);
+        let result = Edge::new(point.clone(), point);
 
         // Assert
         let err = result.expect_err("should fail");
@@ -111,12 +108,12 @@ mod tests {
         let new_start = p(2.0, 2.0, 2.0);
 
         // Act
-        let new_edge = edge.with_start(new_start);
+        let new_edge = edge.with_start(new_start.clone());
 
         // Assert
         let new_edge = new_edge.expect("should create edge");
-        assert_eq!(*new_edge.start(), new_start);
-        assert_eq!(*new_edge.end(), *edge.end());
+        assert_eq!(new_edge.start, new_start);
+        assert_eq!(new_edge.end, edge.end);
     }
 
     #[test]
@@ -125,7 +122,7 @@ mod tests {
         let edge = Edge::new(p(0.0, 0.0, 0.0), p(1.0, 1.0, 1.0)).unwrap();
 
         // Act
-        let result = edge.with_start(*edge.end());
+        let result = edge.with_start(edge.end.clone());
 
         // Assert
         assert!(result.is_err());
@@ -138,12 +135,12 @@ mod tests {
         let new_end = p(2.0, 2.0, 2.0);
 
         // Act
-        let new_edge = edge.with_end(new_end);
+        let new_edge = edge.with_end(new_end.clone());
 
         // Assert
         let new_edge = new_edge.expect("should create edge");
-        assert_eq!(*new_edge.start(), *edge.start());
-        assert_eq!(*new_edge.end(), new_end);
+        assert_eq!(new_edge.start, edge.start);
+        assert_eq!(new_edge.end, new_end);
     }
 
     #[test]
@@ -152,7 +149,7 @@ mod tests {
         let edge = Edge::new(p(0.0, 0.0, 0.0), p(1.0, 1.0, 1.0)).unwrap();
 
         // Act
-        let result = edge.with_end(*edge.start());
+        let result = edge.with_end(edge.start.clone());
 
         // Assert
         assert!(result.is_err());
@@ -165,11 +162,11 @@ mod tests {
         let end = p(1.0, 1.0, 1.0);
 
         // Act
-        let edge: Edge = (start, end).into();
+        let edge: Edge = (start.clone(), end.clone()).into();
 
         // Assert
-        assert_eq!(*edge.start(), start);
-        assert_eq!(*edge.end(), end);
+        assert_eq!(edge.start, start);
+        assert_eq!(edge.end, end);
     }
 
     #[test]
@@ -178,10 +175,10 @@ mod tests {
         let edge = Edge::new(p(0.0, 0.0, 0.0), p(1.0, 1.0, 1.0)).unwrap();
 
         // Act
-        let tuple: (Point, Point) = edge.clone().into();
+        let tuple: (Vertex, Vertex) = edge.clone().into();
 
         // Assert
-        assert_eq!(tuple, (*edge.start(), *edge.end()));
+        assert_eq!(tuple, (edge.start.clone(), edge.end.clone()));
     }
 
     #[test]
