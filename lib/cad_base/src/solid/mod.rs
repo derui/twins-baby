@@ -1,4 +1,5 @@
 pub mod edge;
+pub mod surface;
 pub mod vertex;
 
 /// The struct for a solid
