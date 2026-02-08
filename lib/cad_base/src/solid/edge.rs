@@ -11,6 +11,7 @@ use super::vertex::Vertex;
 pub struct Edge {
     pub start: Vertex,
     pub end: Vertex,
+    _private: (),
 }
 
 impl Edge {
@@ -18,7 +19,11 @@ impl Edge {
         if start == end {
             Err(anyhow::anyhow!("Can not define edge between same point"))
         } else {
-            Ok(Edge { start, end })
+            Ok(Edge {
+                start,
+                end,
+                _private: (),
+            })
         }
     }
 

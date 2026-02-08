@@ -17,6 +17,8 @@ pub struct PlanarSurface {
 
     /// The plane of the Surface
     pub plane: Im<Plane>,
+
+    _data: (),
 }
 
 impl PlanarSurface {
@@ -28,7 +30,8 @@ impl PlanarSurface {
 
         Ok(PlanarSurface {
             boundaries: Vec::from(boundaries).into(),
-            plane: plane.clone().into()
+            plane: plane.clone().into(),
+            _data: (),
         })
     }
 }

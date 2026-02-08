@@ -2,7 +2,10 @@ use std::collections::HashMap;
 
 use immutable::Im;
 
-use crate::{id::{EdgeId, SurfaceId, VertexId}, solid::{edge::Edge, face::Face, vertex::Vertex}};
+use crate::{
+    id::{EdgeId, SurfaceId, VertexId},
+    solid::{edge::Edge, face::Face, vertex::Vertex},
+};
 
 pub mod edge;
 pub mod face;
