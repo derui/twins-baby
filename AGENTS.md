@@ -138,8 +138,9 @@ All commit must follow these styles:
 - Should add scope with Rust crate name when possible
   
 ## Working with `jj`
-This repository's operation relies on `jj` now. Use it when the user forces to use Git in prompt.
+This repository's operation relies on `jj` now. Use it unless the user forces to use Git in prompt.
 
 Working with `jj`, followng these guidelines:
 
 - **Keep same format of git** : We need same commit format between `git` and `jj`.
+- **Add Co-Authered-By to all message generated** : It needs to detect Claude Code-generated commit.
