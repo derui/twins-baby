@@ -3,7 +3,7 @@ mod tests;
 
 use std::ops::{Add, Div, Mul, Sub};
 
-use crate::{edge::Edge, point::Point};
+use crate::{point::Point};
 
 /// f32-specialized 3D vector
 #[non_exhaustive]
@@ -75,9 +75,9 @@ impl Vector3 {
     }
 
     /// From edge to a new [Vector3d]
-    pub fn from_edge(edge: &Edge) -> Self {
-        let start: Vector3 = edge.start().into();
-        let end: Vector3 = edge.end().into();
+    pub fn from_points(start: &Point, end: &Point) -> Self {
+        let start: Vector3 = start.into();
+        let end: Vector3 = end.into();
 
         end - start
     }

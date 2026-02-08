@@ -4,7 +4,7 @@ use anyhow::{self, Result};
 use epsilon::{DefaultEpsilon, Epsilon, approx_zero};
 use immutable::Im;
 
-use crate::{edge::Edge, point::Point, vector3::Vector3};
+use crate::{point::Point, vector3::Vector3};
 
 /// Simple plane definition.
 #[derive(Debug, Clone, PartialEq)]
@@ -20,9 +20,9 @@ pub struct Plane<E: Epsilon = DefaultEpsilon> {
 
 impl<E: Epsilon> Plane<E> {
     /// Create a new plane that makes 2 edges and crossed the 2 edges.
-    pub fn new(edge1: &Edge, edge2: &Edge) -> Result<Self> {
-        let v1 = Vector3::from_edge(edge1);
-        let v2 = Vector3::from_edge(edge2);
+    pub fn new(edge1: (&Point, &Point), edge2: (&Point, &Point)) -> Result<Self> {
+        let v1 = Vector3::from_points(edge1.0, edge1.1);
+        let v2 = Vector3::from_points(edge2.0, edge2.1);
 
         let crossed = v1.cross(&v2);
 
@@ -32,7 +32,7 @@ impl<E: Epsilon> Plane<E> {
         } else {
             Ok(Plane {
                 normal: crossed.unit().into(),
-                r0: (*edge1.start()).into(),
+                r0: (*edge1.0).into(),
                 _data: PhantomData,
             })
         }
@@ -85,8 +85,8 @@ mod tests {
         Point::new(x, y, z)
     }
 
-    fn edge(x1: f32, y1: f32, z1: f32, x2: f32, y2: f32, z2: f32) -> Edge {
-        Edge::new(p(x1, y1, z1), p(x2, y2, z2)).unwrap()
+    fn edge(x1: f32, y1: f32, z1: f32, x2: f32, y2: f32, z2: f32) -> (Point, Point) {
+        (p(x1, y1, z1), p(x2, y2, z2))
     }
 
     type Plane = super::Plane<DefaultEpsilon>;
@@ -101,7 +101,10 @@ mod tests {
             let edge2 = edge(0.0, 0.0, 0.0, 0.0, 1.0, 0.0); // Y-axis
 
             // Act
-            let plane = Plane::new(&edge1, &edge2);
+            let plane = Plane::new(
+                (&edge1.0, &edge1.1),
+                (&edge2.0, &edge2.1),
+            );
 
             // Assert
             let plane = plane.expect("should create plane");
@@ -154,7 +157,10 @@ mod tests {
             let edge2 = edge(0.0, 0.0, 0.0, 1.0, 1.0, 0.0); // 45 degrees in XY plane
 
             // Act
-            let plane = Plane::new(&edge1, &edge2);
+            let plane = Plane::new(
+                (&edge1.0, &edge1.1),
+                (&edge2.0, &edge2.1),
+            );
 
             // Assert
             let plane = plane.expect("should create plane");
@@ -172,7 +178,10 @@ mod tests {
             let edge2 = edge(0.0, 0.0, 0.0, 0.0, 5.0, 0.0); // Scaled Y-axis
 
             // Act
-            let plane = Plane::new(&edge1, &edge2);
+            let plane = Plane::new(
+                (&edge1.0, &edge1.1),
+                (&edge2.0, &edge2.1),
+            );
 
             // Assert
             let plane = plane.expect("should create plane");
@@ -192,7 +201,10 @@ mod tests {
             let edge2 = edge(0.0, 0.0, 0.0, 2.0, 0.0, 0.0); // Same direction, different magnitude
 
             // Act
-            let result = Plane::new(&edge1, &edge2);
+            let result = Plane::new(
+                (&edge1.0, &edge1.1),
+                (&edge2.0, &edge2.1),
+            );
 
             // Assert
             let err = result.expect_err("should fail for parallel edges");
@@ -206,7 +218,10 @@ mod tests {
             let edge2 = edge(0.0, 0.0, 0.0, -1.0, 0.0, 0.0); // Opposite direction
 
             // Act
-            let result = Plane::new(&edge1, &edge2);
+            let result = Plane::new(
+                (&edge1.0, &edge1.1),
+                (&edge2.0, &edge2.1),
+            );
 
             // Assert
             let err = result.expect_err("should fail for antiparallel edges");
@@ -219,7 +234,10 @@ mod tests {
             let e = edge(0.0, 0.0, 0.0, 1.0, 0.0, 0.0);
 
             // Act
-            let result = Plane::new(&e, &e);
+            let result = Plane::new(
+                (&e.0, &e.1),
+                (&e.0, &e.1),
+            );
 
             // Assert
             let err = result.expect_err("should fail for same edge");
@@ -237,10 +255,14 @@ mod tests {
             let edge2 = edge(0.0, 0.0, 0.0, 0.0, 1.0, 1.0);
 
             // Act
-            let plane = Plane::new(&edge1, &edge2).expect("should create plane");
+            let plane = Plane::new(
+                (&edge1.0, &edge1.1),
+                (&edge2.0, &edge2.1),
+            )
+            .expect("should create plane");
             let normal = plane.normal;
-            let v1 = Vector3::from_edge(&edge1);
-            let v2 = Vector3::from_edge(&edge2);
+            let v1 = Vector3::from_points(&edge1.0, &edge1.1);
+            let v2 = Vector3::from_points(&edge2.0, &edge2.1);
 
             // Assert
             assert_relative_eq!(normal.dot(&v1), 0.0, epsilon = 1e-5);
@@ -254,8 +276,16 @@ mod tests {
             let edge2 = edge(0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
 
             // Act
-            let plane1 = Plane::new(&edge1, &edge2).expect("should create plane");
-            let plane2 = Plane::new(&edge2, &edge1).expect("should create plane");
+            let plane1 = Plane::new(
+                (&edge1.0, &edge1.1),
+                (&edge2.0, &edge2.1),
+            )
+            .expect("should create plane");
+            let plane2 = Plane::new(
+                (&edge2.0, &edge2.1),
+                (&edge1.0, &edge1.1),
+            )
+            .expect("should create plane");
             let normal1 = plane1.normal;
             let normal2 = plane2.normal;
 
@@ -274,8 +304,16 @@ mod tests {
             let scaled_edge2 = edge(0.0, 0.0, 0.0, 0.0, 3.0, 0.0); // 3x scale
 
             // Act
-            let plane1 = Plane::new(&edge1, &edge2).expect("should create plane");
-            let plane2 = Plane::new(&scaled_edge1, &scaled_edge2).expect("should create plane");
+            let plane1 = Plane::new(
+                (&edge1.0, &edge1.1),
+                (&edge2.0, &edge2.1),
+            )
+            .expect("should create plane");
+            let plane2 = Plane::new(
+                (&scaled_edge1.0, &scaled_edge1.1),
+                (&scaled_edge2.0, &scaled_edge2.1),
+            )
+            .expect("should create plane");
             let normal1 = plane1.normal;
             let normal2 = plane2.normal;
 
@@ -372,10 +410,14 @@ mod tests {
             // Arrange
             let edge1 = edge(1.0, 2.0, 3.0, 4.0, 2.0, 3.0);
             let edge2 = edge(1.0, 2.0, 3.0, 1.0, 5.0, 3.0);
-            let plane = Plane::new(&edge1, &edge2).expect("should create plane");
+            let plane = Plane::new(
+                (&edge1.0, &edge1.1),
+                (&edge2.0, &edge2.1),
+            )
+            .expect("should create plane");
 
             // Act
-            let result = plane.is_on_plane(edge1.start());
+            let result = plane.is_on_plane(&edge1.0);
 
             // Assert
             assert!(result);
@@ -386,10 +428,14 @@ mod tests {
             // Arrange
             let edge1 = edge(0.0, 0.0, 0.0, 1.0, 0.0, 0.0);
             let edge2 = edge(0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
-            let plane = Plane::new(&edge1, &edge2).expect("should create plane");
+            let plane = Plane::new(
+                (&edge1.0, &edge1.1),
+                (&edge2.0, &edge2.1),
+            )
+            .expect("should create plane");
 
             // Act
-            let result = plane.is_on_plane(edge1.end());
+            let result = plane.is_on_plane(&edge1.1);
 
             // Assert
             assert!(result);
@@ -400,7 +446,11 @@ mod tests {
             // Arrange
             let edge1 = edge(1.0, 1.0, 1.0, 2.0, 1.0, 1.0);
             let edge2 = edge(1.0, 1.0, 1.0, 1.0, 2.0, 1.0);
-            let plane = Plane::new(&edge1, &edge2).expect("should create plane");
+            let plane = Plane::new(
+                (&edge1.0, &edge1.1),
+                (&edge2.0, &edge2.1),
+            )
+            .expect("should create plane");
             let point = p(5.0, 5.0, 1.0); // Any point with z=1
 
             // Act
@@ -415,7 +465,11 @@ mod tests {
             // Arrange
             let edge1 = edge(1.0, 1.0, 1.0, 2.0, 1.0, 1.0);
             let edge2 = edge(1.0, 1.0, 1.0, 1.0, 2.0, 1.0);
-            let plane = Plane::new(&edge1, &edge2).expect("should create plane");
+            let plane = Plane::new(
+                (&edge1.0, &edge1.1),
+                (&edge2.0, &edge2.1),
+            )
+            .expect("should create plane");
             let point = p(5.0, 5.0, 2.0); // z != 1
 
             // Act
