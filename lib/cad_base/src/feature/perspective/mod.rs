@@ -73,3 +73,6 @@ impl FeaturePerspective {
         feature.set_name(new_name)
     }
 }
+
+#[cfg(test)]
+mod tests;

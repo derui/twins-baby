@@ -48,7 +48,7 @@ impl Feature {
     }
 
     /// Update name with [name]
-    pub fn set_name(&mut self, name: &str) -> Result<()> {
+    fn set_name(&mut self, name: &str) -> Result<()> {
         if name.trim().is_empty() {
             return Err(anyhow::anyhow!("Name must not be empty"));
         }
