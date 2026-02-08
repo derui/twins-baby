@@ -1,4 +1,5 @@
 pub mod body;
+pub mod feature;
 pub mod id;
 pub mod plane;
 pub mod point;
