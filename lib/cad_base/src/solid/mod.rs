@@ -23,22 +23,16 @@ pub struct Solid {
     _immutable: (),
 }
 
+#[derive(Default)]
 pub struct SolidBuilder {
     faces: HashMap<FaceId, Face>,
     edges: HashMap<EdgeId, Edge>,
     vertices: HashMap<VertexId, Vertex>,
 }
 
-impl Default for SolidBuilder {
-    fn default() -> Self {
-        Self { faces: Default::default(), edges: Default::default(), vertices: Default::default() }
-    }
-}
 
 impl SolidBuilder {
-    pub fn add_edges(&mut self, edges: &[Edge]) -> &mut Self {
-        
-
+    pub fn add_edges(&mut self, _edges: &[Edge]) -> &mut Self {
         self
     }
 }

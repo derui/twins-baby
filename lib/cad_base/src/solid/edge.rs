@@ -1,11 +1,9 @@
-use std::fmt::Display;
 
 use anyhow::Result;
 use immutable::Im;
 
 use crate::id::VertexId;
 
-use super::vertex::Vertex;
 
 /// Edge implementation.
 ///
@@ -55,38 +53,37 @@ impl From<Edge> for (VertexId, VertexId) {
 
 #[cfg(test)]
 mod tests {
-    use crate::solid::vertex::Vertex;
+    use crate::id::VertexId;
 
     use super::*;
-    use approx::assert_relative_eq;
     use pretty_assertions::assert_eq;
 
-    fn p(x: f32, y: f32, z: f32) -> Vertex {
-        Vertex::new(x, y, z)
+    fn vid(n: u64) -> VertexId {
+        VertexId::from(n)
     }
 
     #[test]
-    fn new_creates_edge_with_different_points() {
+    fn new_creates_edge_with_different_ids() {
         // Arrange
-        let start = p(0.0, 0.0, 0.0);
-        let end = p(1.0, 1.0, 1.0);
+        let start = vid(1);
+        let end = vid(2);
 
         // Act
-        let edge = Edge::new(start.clone(), end.clone());
+        let edge = Edge::new(start, end);
 
         // Assert
         let edge = edge.expect("should create edge");
-        assert_eq!(edge.start, start);
-        assert_eq!(edge.end, end);
+        assert_eq!(*edge.start, start);
+        assert_eq!(*edge.end, end);
     }
 
     #[test]
-    fn new_fails_with_same_points() {
+    fn new_fails_with_same_ids() {
         // Arrange
-        let point = p(1.0, 1.0, 1.0);
+        let point = vid(1);
 
         // Act
-        let result = Edge::new(point.clone(), point);
+        let result = Edge::new(point, point);
 
         // Assert
         let err = result.expect_err("should fail");
@@ -96,162 +93,90 @@ mod tests {
     #[test]
     fn with_start_creates_new_edge() {
         // Arrange
-        let edge = Edge::new(p(0.0, 0.0, 0.0), p(1.0, 1.0, 1.0)).unwrap();
-        let new_start = p(2.0, 2.0, 2.0);
+        let edge = Edge::new(vid(1), vid(2)).unwrap();
+        let new_start = vid(3);
 
         // Act
-        let new_edge = edge.with_start(new_start.clone());
+        let new_edge = edge.with_start(new_start);
 
         // Assert
         let new_edge = new_edge.expect("should create edge");
-        assert_eq!(new_edge.start, new_start);
+        assert_eq!(*new_edge.start, new_start);
         assert_eq!(new_edge.end, edge.end);
     }
 
     #[test]
     fn with_start_fails_when_same_as_end() {
         // Arrange
-        let edge = Edge::new(p(0.0, 0.0, 0.0), p(1.0, 1.0, 1.0)).unwrap();
+        let edge = Edge::new(vid(1), vid(2)).unwrap();
 
         // Act
-        let result = edge.with_start(edge.end.clone());
+        let result = edge.with_start(*edge.end);
 
         // Assert
-        assert!(result.is_err());
+        result.expect_err("should fail when same as end");
     }
 
     #[test]
     fn with_end_creates_new_edge() {
         // Arrange
-        let edge = Edge::new(p(0.0, 0.0, 0.0), p(1.0, 1.0, 1.0)).unwrap();
-        let new_end = p(2.0, 2.0, 2.0);
+        let edge = Edge::new(vid(1), vid(2)).unwrap();
+        let new_end = vid(3);
 
         // Act
-        let new_edge = edge.with_end(new_end.clone());
+        let new_edge = edge.with_end(new_end);
 
         // Assert
         let new_edge = new_edge.expect("should create edge");
         assert_eq!(new_edge.start, edge.start);
-        assert_eq!(new_edge.end, new_end);
+        assert_eq!(*new_edge.end, new_end);
     }
 
     #[test]
     fn with_end_fails_when_same_as_start() {
         // Arrange
-        let edge = Edge::new(p(0.0, 0.0, 0.0), p(1.0, 1.0, 1.0)).unwrap();
+        let edge = Edge::new(vid(1), vid(2)).unwrap();
 
         // Act
-        let result = edge.with_end(edge.start.clone());
+        let result = edge.with_end(*edge.start);
 
         // Assert
-        assert!(result.is_err());
+        result.expect_err("should fail when same as start");
     }
 
     #[test]
     fn from_tuple_creates_edge() {
         // Arrange
-        let start = p(0.0, 0.0, 0.0);
-        let end = p(1.0, 1.0, 1.0);
+        let start = vid(1);
+        let end = vid(2);
 
         // Act
-        let edge: Edge = (start.clone(), end.clone()).into();
+        let edge: Edge = (start, end).into();
 
         // Assert
-        assert_eq!(edge.start, start);
-        assert_eq!(edge.end, end);
+        assert_eq!(*edge.start, start);
+        assert_eq!(*edge.end, end);
     }
 
     #[test]
     fn into_tuple_converts_edge() {
         // Arrange
-        let edge = Edge::new(p(0.0, 0.0, 0.0), p(1.0, 1.0, 1.0)).unwrap();
+        let edge = Edge::new(vid(1), vid(2)).unwrap();
 
         // Act
-        let tuple: (Vertex, Vertex) = edge.clone().into();
+        let tuple: (VertexId, VertexId) = edge.clone().into();
 
         // Assert
-        assert_eq!(tuple, (edge.start.clone(), edge.end.clone()));
+        assert_eq!(tuple, (*edge.start, *edge.end));
     }
 
     #[test]
-    fn display_formats_edge() {
+    fn edges_with_same_ids_are_equal() {
         // Arrange
-        let edge = Edge::new(p(0.0, 1.0, 2.0), p(3.0, 4.0, 5.0)).unwrap();
-
-        // Act
-        let result = format!("{}", edge);
-
-        // Assert
-        assert_eq!(result, "((0, 1, 2) -> (3, 4, 5))");
-    }
-
-    #[test]
-    fn edges_with_same_points_are_equal() {
-        // Arrange
-        let e1 = Edge::new(p(0.0, 0.0, 0.0), p(1.0, 1.0, 1.0)).unwrap();
-        let e2 = Edge::new(p(0.0, 0.0, 0.0), p(1.0, 1.0, 1.0)).unwrap();
+        let e1 = Edge::new(vid(1), vid(2)).unwrap();
+        let e2 = Edge::new(vid(1), vid(2)).unwrap();
 
         // Act & Assert
         assert_eq!(e1, e2);
-    }
-
-    #[test]
-    fn len_calculates_length_along_single_axis() {
-        // Arrange
-        let edge = Edge::new(p(0.0, 0.0, 0.0), p(3.0, 0.0, 0.0)).unwrap();
-
-        // Act
-        let length = edge.len();
-
-        // Assert
-        assert_relative_eq!(length, 3.0, epsilon = 1e-6);
-    }
-
-    #[test]
-    fn len_calculates_length_in_2d_plane() {
-        // Arrange
-        let edge = Edge::new(p(0.0, 0.0, 0.0), p(3.0, 4.0, 0.0)).unwrap();
-
-        // Act
-        let length = edge.len();
-
-        // Assert
-        assert_relative_eq!(length, 5.0, epsilon = 1e-6);
-    }
-
-    #[test]
-    fn len_calculates_length_in_3d_space() {
-        // Arrange
-        let edge = Edge::new(p(0.0, 0.0, 0.0), p(1.0, 1.0, 1.0)).unwrap();
-
-        // Act
-        let length = edge.len();
-
-        // Assert
-        assert_relative_eq!(length, 3.0_f32.sqrt(), epsilon = 1e-6);
-    }
-
-    #[test]
-    fn len_handles_negative_coordinates() {
-        // Arrange
-        let edge = Edge::new(p(-1.0, -1.0, -1.0), p(1.0, 1.0, 1.0)).unwrap();
-
-        // Act
-        let length = edge.len();
-
-        // Assert
-        assert_relative_eq!(length, 12.0_f32.sqrt(), epsilon = 1e-6);
-    }
-
-    #[test]
-    fn len_calculates_unit_length() {
-        // Arrange
-        let edge = Edge::new(p(0.0, 0.0, 0.0), p(1.0, 0.0, 0.0)).unwrap();
-
-        // Act
-        let length = edge.len();
-
-        // Assert
-        assert_relative_eq!(length, 1.0, epsilon = 1e-6);
     }
 }
