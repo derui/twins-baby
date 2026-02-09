@@ -4,7 +4,13 @@ mod perspective;
 use anyhow::Result;
 use immutable::Im;
 
-use crate::{feature::operation::Operation, id::SketchId};
+use crate::{
+    feature::operation::Operation,
+    id::SketchId,
+    plane::Plane,
+    sketch::Sketch,
+    solid::{Solid, face::Face},
+};
 pub use perspective::*;
 
 /// Status of feature evaluation.
@@ -66,6 +72,39 @@ impl Feature {
     fn set_status(&mut self, status: &FeatureStatus) {
         self.status = status.clone().into()
     }
+}
+
+/// Attached Target of the sketch.
+#[derive(Debug, Clone)]
+pub enum AttachedTarget<'a> {
+    Plane(&'a Plane),
+    Face(&'a Face),
+}
+
+///
+#[derive(Debug, Clone)]
+pub struct FeatureContext<'a> {
+    /// Sketches based on feature operation. For example, pad operation must only have 1 sketch for.
+    pub sketches: Im<Vec<&'a Sketch>>,
+    /// Targets of sketches. This must be same size of sketches and keep index
+    pub target: Im<Vec<AttachedTarget<'a>>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum EvaluateError {
+    /// Sketch does not have
+    InsufficientSketch,
+}
+
+pub trait Evaluate {
+    /// Evaluate a feature with context, and make solid from feature.
+    ///
+    /// This is a main objective of feature, each implementation is not depended on
+    /// types in base.
+    fn evaluate<'a>(
+        feature: &Feature,
+        context: &FeatureContext<'a>,
+    ) -> Result<Solid, EvaluateError>;
 }
 
 #[cfg(test)]
