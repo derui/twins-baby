@@ -7,6 +7,11 @@ mod perspective;
 mod point2;
 mod scope;
 
+pub use constraint::*;
+pub use geometry::*;
+pub use perspective::*;
+pub use point2::*;
+
 use std::collections::HashMap;
 
 use crate::{
@@ -15,11 +20,7 @@ use crate::{
 };
 
 use anyhow::{Result, anyhow};
-pub use constraint::*;
-pub use geometry::*;
 use immutable::Im;
-pub use perspective::*;
-pub use point2::*;
 
 /// Target of sketch attachiment.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -60,7 +61,7 @@ pub struct Sketch {
 
 impl Sketch {
     /// Create a new sketch with builder
-    fn new(name: &str, attach_target: &AttachableTarget) -> Self {
+    pub fn new(name: &str, attach_target: &AttachableTarget) -> Self {
         Sketch {
             name: name.to_string().into(),
             geometory_id_gen: IdStore::of(),
