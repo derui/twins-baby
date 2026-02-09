@@ -56,6 +56,16 @@ impl Feature {
         self.name = name.trim().to_string().into();
         Ok(())
     }
+
+    /// Set new operation.
+    pub fn set_operation(&mut self, operation: &Operation) {
+        self.operation = operation.clone().into()
+    }
+
+    /// Update status
+    fn set_status(&mut self, status: &FeatureStatus) {
+        self.status = status.clone().into()
+    }
 }
 
 #[cfg(test)]
