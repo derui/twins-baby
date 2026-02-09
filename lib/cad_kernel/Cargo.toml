@@ -1,0 +1,10 @@
+[package]
+name = "cad_kernel"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+cad_base = { version = "0.1.0", path = "../cad_base" }
+color-eyre.workspace = true
+thiserror.workspace = true
+tracing.workspace = true

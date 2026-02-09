@@ -1842,6 +1842,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "cad_kernel"
+version = "0.1.0"
+dependencies = [
+ "cad_base",
+ "color-eyre",
+ "thiserror 2.0.18",
+ "tracing",
+]
+
+[[package]]
 name = "calloop"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
