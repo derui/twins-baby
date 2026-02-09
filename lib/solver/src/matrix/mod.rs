@@ -1,4 +1,4 @@
-use anyhow::Result;
+use eyre::Result;
 
 use size::Size;
 
@@ -26,7 +26,7 @@ where
     ///
     /// # Returns
     /// * `Option<&Element>` - Some(element) if the element exists at the specified position, None otherwise.
-    fn get(&self, row: usize, col: usize) -> Result<Option<&Element>, anyhow::Error>;
+    fn get(&self, row: usize, col: usize) -> Result<Option<&Element>, eyre::Error>;
 
     /// Get the row from matrix. result is copy of element, so does not reflect change for it.
     fn get_row(&self, row: usize) -> Result<Vec<Option<Element>>>;
@@ -45,7 +45,7 @@ where
         row: usize,
         col: usize,
         element: Element,
-    ) -> Result<Option<Element>, anyhow::Error>;
+    ) -> Result<Option<Element>, eyre::Error>;
 
     /// Set the elements to the row.
     fn set_row(&mut self, row: usize, elements: &[Option<Element>]) -> Result<()>;

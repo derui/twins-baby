@@ -19,7 +19,7 @@ use crate::{
     sketch::scope::{ConstraintScope, VariableScope},
 };
 
-use anyhow::{Result, anyhow};
+use eyre::{Result, eyre};
 use immutable::Im;
 
 /// Target of sketch attachiment.
@@ -78,7 +78,7 @@ impl Sketch {
     /// Returns error when the new name is empty string.
     fn set_name(&mut self, new_name: &str) -> Result<()> {
         if new_name.trim().is_empty() {
-            return Err(anyhow!("Do not allow empty string"));
+            return Err(eyre!("Do not allow empty string"));
         }
 
         self.name = new_name.trim().to_string().into();

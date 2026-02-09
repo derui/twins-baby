@@ -92,7 +92,9 @@ When adding dependencies to workspace member crates (`lib/cad_base`, `lib/solver
 Example usage in member crates:
 ```toml
 [dependencies]
-anyhow.workspace = true
+eyre.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
 
 [dev-dependencies]
 approx.workspace = true

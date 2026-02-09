@@ -1,4 +1,4 @@
-use anyhow::Result;
+use eyre::Result;
 use immutable::Im;
 
 use crate::id::VertexId;
@@ -16,7 +16,7 @@ pub struct Edge {
 impl Edge {
     pub fn new(start: VertexId, end: VertexId) -> Result<Self> {
         if start == end {
-            Err(anyhow::anyhow!("Can not define edge between same point"))
+            Err(eyre::eyre!("Can not define edge between same point"))
         } else {
             Ok(Edge {
                 start: start.into(),

@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use anyhow::{Result, anyhow};
+use eyre::{Result, eyre};
 
 use crate::{
     feature::{Feature, operation::Operation},
@@ -60,7 +60,7 @@ impl FeaturePerspective {
     /// Rename a feature by id
     pub fn rename_feature(&mut self, id: &FeatureId, new_name: &str) -> Result<()> {
         if self.features.values().any(|f| *f.name == *new_name.trim()) {
-            return Err(anyhow!(
+            return Err(eyre!(
                 "Feature with name '{}' already exists",
                 new_name.trim()
             ));
@@ -68,7 +68,7 @@ impl FeaturePerspective {
         let feature = self
             .features
             .get_mut(id)
-            .ok_or_else(|| anyhow!("Feature with id '{}' not found", id))?;
+            .ok_or_else(|| eyre!("Feature with id '{}' not found", id))?;
 
         feature.set_name(new_name)
     }

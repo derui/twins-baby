@@ -1,6 +1,6 @@
 use std::cmp::min;
 
-use anyhow::{Result, anyhow};
+use eyre::{Result, eyre};
 
 use crate::matrix::{Matrix, MatrixExtract, size::Size};
 
@@ -25,9 +25,9 @@ impl<M: Clone + std::fmt::Debug> SimpleMatrix<M> {
     ///
     /// # Returns
     /// * A new simple matrix with specified size
-    pub fn new(row: usize, column: usize) -> Result<Self, anyhow::Error> {
+    pub fn new(row: usize, column: usize) -> Result<Self, eyre::Error> {
         if row == 0 || column == 0 {
-            return Err(anyhow::anyhow!("Row and column must be greater than zero"));
+            return Err(eyre::eyre!("Row and column must be greater than zero"));
         }
 
         let values: Vec<Vec<Option<M>>> = vec![vec![None; column]; row];
@@ -67,16 +67,16 @@ impl<M: Clone + std::fmt::Debug> Matrix<M> for SimpleMatrix<M> {
         self.size
     }
 
-    fn get(&self, row: usize, col: usize) -> Result<Option<&M>, anyhow::Error> {
+    fn get(&self, row: usize, col: usize) -> Result<Option<&M>, eyre::Error> {
         if row >= self.size.rows() || col >= self.size.columns() {
-            return Err(anyhow::anyhow!("Index out of bounds"));
+            return Err(eyre::eyre!("Index out of bounds"));
         }
         Ok(self.values[row][col].as_ref())
     }
 
-    fn set(&mut self, row: usize, col: usize, element: M) -> Result<Option<M>, anyhow::Error> {
+    fn set(&mut self, row: usize, col: usize, element: M) -> Result<Option<M>, eyre::Error> {
         if row >= self.size.rows() || col >= self.size.columns() {
-            return Err(anyhow::anyhow!("Index out of bounds"));
+            return Err(eyre::eyre!("Index out of bounds"));
         }
         let old_value = self.values[row][col].clone();
         self.values[row][col] = Some(element);
@@ -100,7 +100,7 @@ impl<M: Clone + std::fmt::Debug> Matrix<M> for SimpleMatrix<M> {
 
     fn get_row(&self, row: usize) -> Result<Vec<Option<M>>> {
         if row >= self.size.rows() {
-            return Err(anyhow!("Can not get row : {}", &row));
+            return Err(eyre!("Can not get row : {}", &row));
         }
 
         Ok(self.values[row].clone())
@@ -108,7 +108,7 @@ impl<M: Clone + std::fmt::Debug> Matrix<M> for SimpleMatrix<M> {
 
     fn set_row(&mut self, row: usize, elements: &[Option<M>]) -> Result<()> {
         if row >= self.size.rows() {
-            return Err(anyhow!("Can not get row : {}", &row));
+            return Err(eyre!("Can not get row : {}", &row));
         }
 
         for (i, e) in elements.iter().enumerate() {
@@ -146,7 +146,7 @@ mod tests {
     use rstest::rstest;
 
     #[test]
-    fn test_new_creates_matrix_with_correct_size() -> Result<(), anyhow::Error> {
+    fn test_new_creates_matrix_with_correct_size() -> Result<(), eyre::Error> {
         // Arrange
         let rows = 3;
         let cols = 4;
@@ -182,7 +182,7 @@ mod tests {
     }
 
     #[test]
-    fn test_get_returns_none_for_empty_matrix() -> Result<(), anyhow::Error> {
+    fn test_get_returns_none_for_empty_matrix() -> Result<(), eyre::Error> {
         // Arrange
         let matrix = SimpleMatrix::<i32>::new(3, 3)?;
 
@@ -195,7 +195,7 @@ mod tests {
     }
 
     #[test]
-    fn test_set_stores_value_and_returns_none_for_empty_cell() -> Result<(), anyhow::Error> {
+    fn test_set_stores_value_and_returns_none_for_empty_cell() -> Result<(), eyre::Error> {
         // Arrange
         let mut matrix = SimpleMatrix::<i32>::new(3, 3)?;
 
@@ -209,7 +209,7 @@ mod tests {
     }
 
     #[test]
-    fn test_set_overwrites_existing_value_and_returns_old_value() -> Result<(), anyhow::Error> {
+    fn test_set_overwrites_existing_value_and_returns_old_value() -> Result<(), eyre::Error> {
         // Arrange
         let mut matrix = SimpleMatrix::<i32>::new(3, 3)?;
         matrix.set(1, 1, 10)?;
@@ -224,7 +224,7 @@ mod tests {
     }
 
     #[test]
-    fn test_extract_creates_f32_matrix_from_complex_type() -> Result<(), anyhow::Error> {
+    fn test_extract_creates_f32_matrix_from_complex_type() -> Result<(), eyre::Error> {
         // Arrange
         let mut matrix = SimpleMatrix::<i32>::new(2, 2)?;
         matrix.set(0, 0, 10)?;
@@ -245,7 +245,7 @@ mod tests {
 
     #[test]
     fn test_diagonal_components_returns_diagonal_elements_for_square_matrix()
-    -> Result<(), anyhow::Error> {
+    -> Result<(), eyre::Error> {
         // Arrange
         let mut matrix = SimpleMatrix::<i32>::new(3, 3)?;
         matrix.set(0, 0, 1)?;
@@ -266,7 +266,7 @@ mod tests {
     }
 
     #[test]
-    fn test_diagonal_components_returns_none_for_rectangular_matrix() -> Result<(), anyhow::Error> {
+    fn test_diagonal_components_returns_none_for_rectangular_matrix() -> Result<(), eyre::Error> {
         // Arrange
         let matrix = SimpleMatrix::<i32>::new(4, 2)?;
 
@@ -282,7 +282,7 @@ mod tests {
     }
 
     #[test]
-    fn test_diagonal_components_with_some_none_values() -> Result<(), anyhow::Error> {
+    fn test_diagonal_components_with_some_none_values() -> Result<(), eyre::Error> {
         // Arrange
         let mut matrix = SimpleMatrix::<i32>::new(3, 3)?;
         matrix.set(0, 0, 1)?;
@@ -302,7 +302,7 @@ mod tests {
     }
 
     #[test]
-    fn test_extract_preserves_none_values() -> Result<(), anyhow::Error> {
+    fn test_extract_preserves_none_values() -> Result<(), eyre::Error> {
         // Arrange
         let mut matrix = SimpleMatrix::<i32>::new(2, 3)?;
         matrix.set(0, 0, 5)?;
@@ -333,7 +333,7 @@ mod tests {
         #[case] row: usize,
         #[case] col: usize,
         #[case] description: &str,
-    ) -> Result<(), anyhow::Error> {
+    ) -> Result<(), eyre::Error> {
         // Arrange
         let matrix = SimpleMatrix::<i32>::new(3, 3)?;
 
@@ -360,7 +360,7 @@ mod tests {
         #[case] row: usize,
         #[case] col: usize,
         #[case] description: &str,
-    ) -> Result<(), anyhow::Error> {
+    ) -> Result<(), eyre::Error> {
         // Arrange
         let mut matrix = SimpleMatrix::<i32>::new(3, 3)?;
 
@@ -377,7 +377,7 @@ mod tests {
     }
 
     #[test]
-    fn test_from_mat_creates_copy_with_all_values() -> Result<(), anyhow::Error> {
+    fn test_from_mat_creates_copy_with_all_values() -> Result<(), eyre::Error> {
         // Arrange
         let mut source = SimpleMatrix::<i32>::new(3, 2)?;
         source.set(0, 0, 10)?;
@@ -402,7 +402,7 @@ mod tests {
     }
 
     #[test]
-    fn test_from_mat_preserves_none_values() -> Result<(), anyhow::Error> {
+    fn test_from_mat_preserves_none_values() -> Result<(), eyre::Error> {
         // Arrange
         let mut source = SimpleMatrix::<i32>::new(2, 3)?;
         source.set(0, 0, 5)?;
@@ -424,7 +424,7 @@ mod tests {
     }
 
     #[test]
-    fn test_from_mat_creates_independent_copy() -> Result<(), anyhow::Error> {
+    fn test_from_mat_creates_independent_copy() -> Result<(), eyre::Error> {
         // Arrange
         let mut source = SimpleMatrix::<i32>::new(2, 2)?;
         source.set(0, 0, 100)?;
@@ -449,7 +449,7 @@ mod tests {
     }
 
     #[test]
-    fn test_get_row_returns_correct_row_with_mixed_values() -> Result<(), anyhow::Error> {
+    fn test_get_row_returns_correct_row_with_mixed_values() -> Result<(), eyre::Error> {
         // Arrange
         let mut matrix = SimpleMatrix::<i32>::new(3, 4)?;
         matrix.set(1, 0, 10)?;
@@ -470,7 +470,7 @@ mod tests {
     }
 
     #[test]
-    fn test_get_row_returns_error_for_out_of_bounds() -> Result<(), anyhow::Error> {
+    fn test_get_row_returns_error_for_out_of_bounds() -> Result<(), eyre::Error> {
         // Arrange
         let matrix = SimpleMatrix::<i32>::new(3, 4)?;
 
@@ -483,7 +483,7 @@ mod tests {
     }
 
     #[test]
-    fn test_set_row_updates_row_with_new_values() -> Result<(), anyhow::Error> {
+    fn test_set_row_updates_row_with_new_values() -> Result<(), eyre::Error> {
         // Arrange
         let mut matrix = SimpleMatrix::<i32>::new(3, 4)?;
         matrix.set(1, 0, 10)?;
@@ -502,7 +502,7 @@ mod tests {
     }
 
     #[test]
-    fn test_set_row_preserves_other_rows() -> Result<(), anyhow::Error> {
+    fn test_set_row_preserves_other_rows() -> Result<(), eyre::Error> {
         // Arrange
         let mut matrix = SimpleMatrix::<i32>::new(3, 3)?;
         matrix.set(0, 0, 1)?;
@@ -526,7 +526,7 @@ mod tests {
     }
 
     #[test]
-    fn test_set_row_returns_error_for_out_of_bounds() -> Result<(), anyhow::Error> {
+    fn test_set_row_returns_error_for_out_of_bounds() -> Result<(), eyre::Error> {
         // Arrange
         let mut matrix = SimpleMatrix::<i32>::new(3, 4)?;
         let new_row = vec![Some(1), Some(2), Some(3), Some(4)];

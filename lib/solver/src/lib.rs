@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use anyhow::{Result, anyhow};
+use eyre::{Result, eyre};
 use epsilon::Epsilon;
 
 use crate::{
@@ -34,9 +34,9 @@ impl Jacobian {
         equations: &[Equation],
         variables: &[Variable],
         accuracy: f32,
-    ) -> Result<Self, anyhow::Error> {
+    ) -> Result<Self, eyre::Error> {
         if equations.len() != variables.len() {
-            return Err(anyhow!("Can not create valid jacobian"));
+            return Err(eyre!("Can not create valid jacobian"));
         }
         let mut variables = Vec::from(variables);
         variables.sort_by_key(|v| (*v.name).clone());
@@ -286,7 +286,7 @@ impl Solver {
     /// Solve current equations and get variables.
     pub fn solve(&mut self) -> Result<Environment> {
         if self.status != DimensionSpecificationStatus::Correct {
-            return Err(anyhow!("Can not solve incorrect solver"));
+            return Err(eyre!("Can not solve incorrect solver"));
         }
 
         // make direct solve
@@ -473,7 +473,7 @@ mod tests {
         use pretty_assertions::assert_eq;
 
         #[test]
-        fn test_solve_line_diminsion() -> anyhow::Result<()> {
+        fn test_solve_line_diminsion() -> eyre::Result<()> {
             // Arrange
             let generator = Box::new(DefaultEquationIdGenerator::default());
             let mut solver = Solver::new::<DefaultEpsilon>(generator);

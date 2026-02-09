@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use anyhow::Result;
+use eyre::Result;
 use immutable::Im;
 use solver::equation::{Equation, Evaluate};
 
@@ -47,7 +47,7 @@ impl Constraint {
 
         if !vars.is_empty() {
             let vars = vars.iter().cloned().collect::<Vec<_>>();
-            return Err(anyhow::anyhow!(
+            return Err(eyre::eyre!(
                 "Do not found variables {}",
                 vars.join(", ")
             ));

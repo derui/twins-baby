@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use anyhow::Result;
+use eyre::Result;
 use nom::{
     AsChar, Finish, IResult, Parser,
     branch::alt,
@@ -136,7 +136,7 @@ fn equation_with_op(input: &str) -> IResult<&str, Vec<Syntax>> {
 /// Construct an equation with parsed syntaxs.
 fn construct_equation(syntax: &[Syntax]) -> Result<Equation> {
     let Some((first, rest)) = syntax.split_first() else {
-        return Err(anyhow::anyhow!("Must not empty"));
+        return Err(eyre::eyre!("Must not empty"));
     };
 
     fn to_eq(v: &Syntax) -> Equation {

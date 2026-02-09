@@ -104,7 +104,7 @@ mod tests {
     }
 
     #[test]
-    fn test_arithmetic_equations_equal_with_same_structure() -> anyhow::Result<()> {
+    fn test_arithmetic_equations_equal_with_same_structure() -> eyre::Result<()> {
         // arrange
         let const1: Equation = 5.0.into();
         let const2: Equation = 3.0.into();
@@ -121,7 +121,7 @@ mod tests {
     }
 
     #[test]
-    fn test_arithmetic_equations_not_equal_with_different_operators() -> anyhow::Result<()> {
+    fn test_arithmetic_equations_not_equal_with_different_operators() -> eyre::Result<()> {
         // arrange
         let const1: Equation = 5.0.into();
         let const2: Equation = 3.0.into();
@@ -138,7 +138,7 @@ mod tests {
     }
 
     #[test]
-    fn test_arithmetic_equations_not_equal_with_different_operands() -> anyhow::Result<()> {
+    fn test_arithmetic_equations_not_equal_with_different_operands() -> eyre::Result<()> {
         // arrange
         let const1: Equation = 5.0.into();
         let const2: Equation = 3.0.into();
@@ -156,7 +156,7 @@ mod tests {
     }
 
     #[test]
-    fn test_arithmetic_equations_not_equal_with_swapped_operands() -> anyhow::Result<()> {
+    fn test_arithmetic_equations_not_equal_with_swapped_operands() -> eyre::Result<()> {
         // arrange
         let const1: Equation = 5.0.into();
         let const2: Equation = 3.0.into();
@@ -212,7 +212,7 @@ mod tests {
     }
 
     #[test]
-    fn test_different_equation_types_not_equal() -> anyhow::Result<()> {
+    fn test_different_equation_types_not_equal() -> eyre::Result<()> {
         // arrange
         let const_eq: Equation = 6.0.into();
         let const1: Equation = 2.0.into();
@@ -229,7 +229,7 @@ mod tests {
     }
 
     #[test]
-    fn test_nested_arithmetic_equations_equal_with_same_structure() -> anyhow::Result<()> {
+    fn test_nested_arithmetic_equations_equal_with_same_structure() -> eyre::Result<()> {
         // arrange
         let const1: Equation = 2.0.into();
         let const2: Equation = 3.0.into();
@@ -252,7 +252,7 @@ mod tests {
 
     #[test]
     fn test_nested_arithmetic_equations_not_equal_with_different_inner_structure()
-    -> anyhow::Result<()> {
+    -> eyre::Result<()> {
         // arrange
         let const1: Equation = 2.0.into();
         let const2: Equation = 3.0.into();
@@ -274,7 +274,7 @@ mod tests {
     }
 
     #[test]
-    fn test_cloned_equations_are_equal() -> anyhow::Result<()> {
+    fn test_cloned_equations_are_equal() -> eyre::Result<()> {
         // arrange
         let const1: Equation = 5.0.into();
         let const2: Equation = 3.0.into();

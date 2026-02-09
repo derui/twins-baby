@@ -8,7 +8,7 @@ use crate::{
     sketch::{AttachableTarget, Sketch},
 };
 
-use anyhow::{Result, anyhow};
+use eyre::{Result, eyre};
 
 /// The root data model of Sketch perspective
 #[derive(Debug, Clone)]
@@ -59,16 +59,16 @@ impl SketchPerspective {
     /// Rename a sketch
     pub fn remane_sketch(&mut self, id: &SketchId, new_name: &str) -> Result<()> {
         if new_name.trim().is_empty() {
-            return Err(anyhow!("Do not allow empty string"));
+            return Err(eyre!("Do not allow empty string"));
         }
 
         if self.sketches.values().any(|s| s.name.as_str() == new_name) {
-            return Err(anyhow!("Sketch with name '{new_name}' already exists"));
+            return Err(eyre!("Sketch with name '{new_name}' already exists"));
         }
 
         let sketch = self
             .get_mut(id)
-            .ok_or_else(|| anyhow!("Sketch with id {id} not found"))?;
+            .ok_or_else(|| eyre!("Sketch with id {id} not found"))?;
 
         sketch.set_name(new_name)
     }

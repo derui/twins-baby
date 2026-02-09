@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-anyhow.workspace = true
+eyre.workspace = true
 enum_dispatch.workspace = true
 epsilon = { version = "0.1.0", path = "../epsilon" }
 immutable = { version = "0.1.0", path = "../immutable" }

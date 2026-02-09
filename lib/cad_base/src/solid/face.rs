@@ -1,4 +1,4 @@
-use anyhow::{Result, anyhow};
+use eyre::{Result, eyre};
 use immutable::Im;
 
 use crate::{id::EdgeId, plane::Plane};
@@ -25,7 +25,7 @@ impl PlanarSurface {
     /// Get new planar surface
     pub fn new(boundaries: &[EdgeId], plane: &Plane) -> Result<Self> {
         if boundaries.len() != 4 {
-            return Err(anyhow!("Boundaries of planar must be 4"));
+            return Err(eyre!("Boundaries of planar must be 4"));
         }
 
         Ok(PlanarSurface {

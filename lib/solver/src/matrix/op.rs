@@ -1,7 +1,7 @@
 /// Operation definition for matrix module.
 use std::ops::{Add, Mul};
 
-use anyhow::Result;
+use eyre::Result;
 
 use crate::{
     matrix::{Matrix, simple::SimpleMatrix},
@@ -12,12 +12,12 @@ use crate::{
 pub fn mul<M: std::fmt::Debug, T: Matrix<M>, U: Matrix<M>>(
     lhs: &T,
     rhs: &U,
-) -> Result<impl Matrix<M> + use<M, T, U>, anyhow::Error>
+) -> Result<impl Matrix<M> + use<M, T, U>, eyre::Error>
 where
     M: Add<Output = M> + Mul<Output = M> + Default + Copy,
 {
     if lhs.size().columns() != rhs.size().rows() {
-        return Err(anyhow::anyhow!(
+        return Err(eyre::eyre!(
             "Can not multiply different number of columns and rows : {} / {}",
             lhs.size().columns(),
             rhs.size().rows()
@@ -157,7 +157,7 @@ impl LUSplit {
 /// Implemetation for LU split algorithm
 pub fn lu_split(mat: &impl Matrix<f32>) -> Result<LUSplit> {
     if mat.size().rows() != mat.size().columns() {
-        return Err(anyhow::anyhow!(
+        return Err(eyre::eyre!(
             "can not make the LU split without exponent matrix"
         ));
     }
@@ -227,7 +227,7 @@ pub fn determinant(mat: &impl Matrix<f32>) -> Option<f32> {
 mod tests {
     use super::*;
     use crate::matrix::{size::Size, sparse::SparseMatrix};
-    use anyhow::{Result, anyhow};
+    use eyre::{Result, eyre};
     use approx::assert_relative_eq;
     use pretty_assertions::assert_eq;
     use rstest::rstest;
@@ -530,7 +530,7 @@ mod tests {
 
         // Act
         let Solve::Solved(result) = solve(&matrix, &factors)? else {
-            return Err(anyhow!("should be solved"));
+            return Err(eyre!("should be solved"));
         };
 
         // Assert
@@ -563,7 +563,7 @@ mod tests {
 
         // Act
         let Solve::Solved(result) = solve(&matrix, &factors)? else {
-            return Err(anyhow!("should be solved"));
+            return Err(eyre!("should be solved"));
         };
 
         // Assert
@@ -620,7 +620,7 @@ mod tests {
 
         // Act
         let Solve::Solved(result) = solve(&matrix, &factors)? else {
-            return Err(anyhow!("should be solved"));
+            return Err(eyre!("should be solved"));
         };
 
         // Assert

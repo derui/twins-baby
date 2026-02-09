@@ -1,7 +1,7 @@
 use std::cmp::Ordering;
 use std::collections::HashSet;
 
-use anyhow::{Result, anyhow};
+use eyre::{Result, eyre};
 
 use crate::{
     environment::Environment,
@@ -118,7 +118,7 @@ impl ArithmeticEquation {
     /// A new instance of `ArithmeticEquation`
     pub(crate) fn new(operator: Operator, operands: &[Equation]) -> Result<Self> {
         if operands.len() < 2 {
-            return Err(anyhow!("Operands must be greater or equal 2"));
+            return Err(eyre!("Operands must be greater or equal 2"));
         }
 
         Ok(Self {

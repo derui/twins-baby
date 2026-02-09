@@ -3,7 +3,7 @@ use std::{
     ops::{Add, Div, Index, IndexMut, Mul, Sub},
 };
 
-use anyhow::Result;
+use eyre::Result;
 
 use crate::matrix::{Matrix, simple::SimpleMatrix};
 
@@ -28,9 +28,9 @@ impl Vector {
     ///
     /// # Returns
     /// * new vector. Return `Err` when `vec` is 0-sized slice
-    pub fn from(vec: &[f32]) -> Result<Self, anyhow::Error> {
+    pub fn from(vec: &[f32]) -> Result<Self, eyre::Error> {
         if vec.is_empty() {
-            return Err(anyhow::anyhow!("Can not define 0-dimension vector"));
+            return Err(eyre::eyre!("Can not define 0-dimension vector"));
         }
 
         Ok(Vector(vec.to_vec()))
@@ -43,9 +43,9 @@ impl Vector {
     ///
     /// # Returns
     /// * new vector unless `size` is lesser than 1
-    pub fn zero(size: usize) -> Result<Self, anyhow::Error> {
+    pub fn zero(size: usize) -> Result<Self, eyre::Error> {
         if size == 0 {
-            return Err(anyhow::anyhow!("Can not define 0-dimension vector"));
+            return Err(eyre::eyre!("Can not define 0-dimension vector"));
         }
 
         Ok(Vector(vec![0.0; size]))
@@ -134,11 +134,11 @@ impl Div<f32> for Vector {
 }
 
 impl Add<Vector> for Vector {
-    type Output = Result<Vector, anyhow::Error>;
+    type Output = Result<Vector, eyre::Error>;
 
     fn add(self, rhs: Vector) -> Self::Output {
         if self.0.len() != rhs.0.len() {
-            return Err(anyhow::anyhow!(
+            return Err(eyre::eyre!(
                 "Can not add different dimension, {} <> {}",
                 self.0.len(),
                 rhs.0.len()
@@ -155,11 +155,11 @@ impl Add<Vector> for Vector {
 }
 
 impl Sub<Vector> for Vector {
-    type Output = Result<Vector, anyhow::Error>;
+    type Output = Result<Vector, eyre::Error>;
 
     fn sub(self, rhs: Vector) -> Self::Output {
         if self.0.len() != rhs.0.len() {
-            return Err(anyhow::anyhow!(
+            return Err(eyre::eyre!(
                 "Can not subtract different dimension, {} <> {}",
                 self.0.len(),
                 rhs.0.len()
@@ -188,7 +188,7 @@ mod tests {
     fn test_new_creates_vector_with_correct_values(
         #[case] values: &[f32],
         #[case] expected_len: usize,
-    ) -> Result<(), anyhow::Error> {
+    ) -> Result<(), eyre::Error> {
         // Arrange & Act
         let vector = Vector::from(values)?;
 
@@ -213,7 +213,7 @@ mod tests {
     #[case(3)]
     #[case(1)]
     #[case(5)]
-    fn test_zero_creates_zero_vector(#[case] size: usize) -> Result<(), anyhow::Error> {
+    fn test_zero_creates_zero_vector(#[case] size: usize) -> Result<(), eyre::Error> {
         // Arrange & Act
         let vector = Vector::zero(size)?;
 
@@ -247,7 +247,7 @@ mod tests {
         #[case] expected_rows: usize,
         #[case] expected_columns: usize,
         #[case] expected_values: Vec<(usize, usize, f32)>,
-    ) -> Result<(), anyhow::Error> {
+    ) -> Result<(), eyre::Error> {
         // Arrange
         let vector = Vector::from(values)?;
 
@@ -272,7 +272,7 @@ mod tests {
         #[case] values: &[f32],
         #[case] scalar: f32,
         #[case] expected: &[f32],
-    ) -> Result<(), anyhow::Error> {
+    ) -> Result<(), eyre::Error> {
         // Arrange
         let vector = Vector::from(values)?;
 
@@ -295,7 +295,7 @@ mod tests {
         #[case] values: &[f32],
         #[case] scalar: f32,
         #[case] expected: &[f32],
-    ) -> Result<(), anyhow::Error> {
+    ) -> Result<(), eyre::Error> {
         // Arrange
         let vector = Vector::from(values)?;
 
@@ -318,7 +318,7 @@ mod tests {
         #[case] values1: &[f32],
         #[case] values2: &[f32],
         #[case] expected: &[f32],
-    ) -> Result<(), anyhow::Error> {
+    ) -> Result<(), eyre::Error> {
         // Arrange
         let vector1 = Vector::from(values1)?;
         let vector2 = Vector::from(values2)?;
@@ -335,7 +335,7 @@ mod tests {
     }
 
     #[test]
-    fn test_add_returns_error_for_different_dimensions() -> Result<(), anyhow::Error> {
+    fn test_add_returns_error_for_different_dimensions() -> Result<(), eyre::Error> {
         // Arrange
         let vector1 = Vector::from(&[1.0, 2.0, 3.0])?;
         let vector2 = Vector::from(&[4.0, 5.0])?;
@@ -356,7 +356,7 @@ mod tests {
         #[case] values1: &[f32],
         #[case] values2: &[f32],
         #[case] expected: &[f32],
-    ) -> Result<(), anyhow::Error> {
+    ) -> Result<(), eyre::Error> {
         // Arrange
         let vector1 = Vector::from(values1)?;
         let vector2 = Vector::from(values2)?;
@@ -373,7 +373,7 @@ mod tests {
     }
 
     #[test]
-    fn test_sub_returns_error_for_different_dimensions() -> Result<(), anyhow::Error> {
+    fn test_sub_returns_error_for_different_dimensions() -> Result<(), eyre::Error> {
         // Arrange
         let vector1 = Vector::from(&[1.0, 2.0, 3.0])?;
         let vector2 = Vector::from(&[4.0, 5.0])?;
@@ -395,7 +395,7 @@ mod tests {
         #[case] values: &[f32],
         #[case] index: usize,
         #[case] expected: f32,
-    ) -> Result<(), anyhow::Error> {
+    ) -> Result<(), eyre::Error> {
         // Arrange
         let vector = Vector::from(values)?;
 
@@ -416,7 +416,7 @@ mod tests {
         #[case] values: &[f32],
         #[case] index: usize,
         #[case] new_value: f32,
-    ) -> Result<(), anyhow::Error> {
+    ) -> Result<(), eyre::Error> {
         // Arrange
         let mut vector = Vector::from(values)?;
 
@@ -432,7 +432,7 @@ mod tests {
     #[case(&[1.0, 2.0, 3.0], f32::sqrt(14.0))]
     #[case(&[42.0], 42.0)]
     #[case(&[-42.0], 42.0)]
-    fn test_compute_norm(#[case] values: &[f32], #[case] norm: f32) -> Result<(), anyhow::Error> {
+    fn test_compute_norm(#[case] values: &[f32], #[case] norm: f32) -> Result<(), eyre::Error> {
         // Arrange
         let vector = Vector::from(values)?;
 
