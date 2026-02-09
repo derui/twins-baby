@@ -3,6 +3,7 @@ mod perspective;
 
 use color_eyre::eyre::Result;
 use immutable::Im;
+use thiserror::Error;
 
 use crate::{
     feature::operation::Operation,
@@ -39,6 +40,7 @@ pub struct Feature {
 
 impl Feature {
     /// Get new feature
+    #[tracing::instrument(err)]
     pub fn new(name: &str, sketch: SketchId, operation: &Operation) -> Result<Self> {
         if name.trim().is_empty() {
             return Err(color_eyre::eyre::eyre!("Name must not be empty"));
@@ -54,6 +56,7 @@ impl Feature {
     }
 
     /// Update name with [name]
+    #[tracing::instrument(err)]
     fn set_name(&mut self, name: &str) -> Result<()> {
         if name.trim().is_empty() {
             return Err(color_eyre::eyre::eyre!("Name must not be empty"));
@@ -90,9 +93,10 @@ pub struct FeatureContext<'a> {
     pub target: Im<Vec<AttachedTarget<'a>>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Error)]
 pub enum EvaluateError {
     /// Sketch does not have
+    #[error("Given sketch can not make closed surface")]
     InsufficientSketch,
 }
 

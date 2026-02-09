@@ -1827,6 +1827,8 @@ dependencies = [
  "rand",
  "rstest",
  "solver",
+ "thiserror 2.0.18",
+ "tracing",
 ]
 
 [[package]]

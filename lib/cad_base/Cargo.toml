@@ -11,6 +11,8 @@ solver = { version = "0.1.0", path = "../solver" }
 immutable = { version = "0.1.0", path = "../immutable" }
 enum_dispatch.workspace = true
 cad_base_macro = { version = "0.1.0", path = "../cad_base_macro" }
+thiserror.workspace = true
+tracing.workspace = true
 
 [dev-dependencies]
 approx.workspace = true
