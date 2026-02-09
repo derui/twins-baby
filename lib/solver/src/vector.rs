@@ -432,7 +432,10 @@ mod tests {
     #[case(&[1.0, 2.0, 3.0], f32::sqrt(14.0))]
     #[case(&[42.0], 42.0)]
     #[case(&[-42.0], 42.0)]
-    fn test_compute_norm(#[case] values: &[f32], #[case] norm: f32) -> Result<(), color_eyre::eyre::Error> {
+    fn test_compute_norm(
+        #[case] values: &[f32],
+        #[case] norm: f32,
+    ) -> Result<(), color_eyre::eyre::Error> {
         // Arrange
         let vector = Vector::from(values)?;
 

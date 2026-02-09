@@ -227,8 +227,8 @@ pub fn determinant(mat: &impl Matrix<f32>) -> Option<f32> {
 mod tests {
     use super::*;
     use crate::matrix::{size::Size, sparse::SparseMatrix};
-    use color_eyre::eyre::{Result, eyre};
     use approx::assert_relative_eq;
+    use color_eyre::eyre::{Result, eyre};
     use pretty_assertions::assert_eq;
     use rstest::rstest;
 

@@ -94,7 +94,12 @@ impl<M: Clone + std::fmt::Debug> Matrix<M> for SparseMatrix<M> {
     }
 
     // Sparse matrix does not support set for now.
-    fn set(&mut self, _row: usize, _col: usize, _element: M) -> Result<Option<M>, color_eyre::eyre::Error> {
+    fn set(
+        &mut self,
+        _row: usize,
+        _col: usize,
+        _element: M,
+    ) -> Result<Option<M>, color_eyre::eyre::Error> {
         todo!()
     }
 
@@ -347,7 +352,8 @@ mod tests {
 
     /// Test that diagonal_components handles missing diagonal values
     #[test]
-    fn test_diagonal_components_handles_missing_diagonal_values() -> Result<(), color_eyre::eyre::Error> {
+    fn test_diagonal_components_handles_missing_diagonal_values()
+    -> Result<(), color_eyre::eyre::Error> {
         // Arrange
         let mut source = SimpleMatrix::<i32>::new(3, 3)?;
         source.set(0, 0, 1)?;
@@ -369,7 +375,8 @@ mod tests {
 
     /// Test that diagonal_components returns None for non-square matrix (more rows)
     #[test]
-    fn test_diagonal_components_returns_none_for_tall_matrix() -> Result<(), color_eyre::eyre::Error> {
+    fn test_diagonal_components_returns_none_for_tall_matrix() -> Result<(), color_eyre::eyre::Error>
+    {
         // Arrange
         let source = SimpleMatrix::<i32>::new(4, 2)?;
         let sparse = SparseMatrix::from_matrix(&source);
@@ -387,7 +394,8 @@ mod tests {
 
     /// Test that diagonal_components returns None for non-square matrix (more columns)
     #[test]
-    fn test_diagonal_components_returns_none_for_wide_matrix() -> Result<(), color_eyre::eyre::Error> {
+    fn test_diagonal_components_returns_none_for_wide_matrix() -> Result<(), color_eyre::eyre::Error>
+    {
         // Arrange
         let source = SimpleMatrix::<i32>::new(2, 4)?;
         let sparse = SparseMatrix::from_matrix(&source);
@@ -498,8 +506,8 @@ mod tests {
 
     /// Test that empty creates a sparse matrix with correct size and all None values
     #[test]
-    fn test_empty_creates_matrix_with_correct_size_and_all_none_values() -> Result<(), color_eyre::eyre::Error>
-    {
+    fn test_empty_creates_matrix_with_correct_size_and_all_none_values()
+    -> Result<(), color_eyre::eyre::Error> {
         // Arrange
         let size = Size::new(3, 4);
 

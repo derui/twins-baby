@@ -1,5 +1,5 @@
-use color_eyre::eyre::{Result, eyre};
 use approx::assert_relative_eq;
+use color_eyre::eyre::{Result, eyre};
 
 use super::parse;
 use crate::{environment::Environment, equation::Evaluate};

@@ -121,7 +121,8 @@ mod tests {
     }
 
     #[test]
-    fn test_arithmetic_equations_not_equal_with_different_operators() -> color_eyre::eyre::Result<()> {
+    fn test_arithmetic_equations_not_equal_with_different_operators() -> color_eyre::eyre::Result<()>
+    {
         // arrange
         let const1: Equation = 5.0.into();
         let const2: Equation = 3.0.into();
@@ -138,7 +139,8 @@ mod tests {
     }
 
     #[test]
-    fn test_arithmetic_equations_not_equal_with_different_operands() -> color_eyre::eyre::Result<()> {
+    fn test_arithmetic_equations_not_equal_with_different_operands() -> color_eyre::eyre::Result<()>
+    {
         // arrange
         let const1: Equation = 5.0.into();
         let const2: Equation = 3.0.into();
@@ -229,7 +231,8 @@ mod tests {
     }
 
     #[test]
-    fn test_nested_arithmetic_equations_equal_with_same_structure() -> color_eyre::eyre::Result<()> {
+    fn test_nested_arithmetic_equations_equal_with_same_structure() -> color_eyre::eyre::Result<()>
+    {
         // arrange
         let const1: Equation = 2.0.into();
         let const2: Equation = 3.0.into();

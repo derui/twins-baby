@@ -1,6 +1,10 @@
+#[cfg(test)]
+mod tests;
+
 use std::collections::HashMap;
 
 use color_eyre::eyre::{Result, eyre};
+use tracing::instrument;
 
 use crate::{
     feature::{Feature, operation::Operation},
@@ -58,6 +62,7 @@ impl FeaturePerspective {
     }
 
     /// Rename a feature by id
+    #[instrument(err)]
     pub fn rename_feature(&mut self, id: &FeatureId, new_name: &str) -> Result<()> {
         if self.features.values().any(|f| *f.name == *new_name.trim()) {
             return Err(eyre!(
@@ -73,6 +78,3 @@ impl FeaturePerspective {
         feature.set_name(new_name)
     }
 }
-
-#[cfg(test)]
-mod tests;

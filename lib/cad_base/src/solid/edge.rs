@@ -16,7 +16,9 @@ pub struct Edge {
 impl Edge {
     pub fn new(start: VertexId, end: VertexId) -> Result<Self> {
         if start == end {
-            Err(color_eyre::eyre::eyre!("Can not define edge between same point"))
+            Err(color_eyre::eyre::eyre!(
+                "Can not define edge between same point"
+            ))
         } else {
             Ok(Edge {
                 start: start.into(),

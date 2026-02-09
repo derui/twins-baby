@@ -27,7 +27,9 @@ impl<M: Clone + std::fmt::Debug> SimpleMatrix<M> {
     /// * A new simple matrix with specified size
     pub fn new(row: usize, column: usize) -> Result<Self, color_eyre::eyre::Error> {
         if row == 0 || column == 0 {
-            return Err(color_eyre::eyre::eyre!("Row and column must be greater than zero"));
+            return Err(color_eyre::eyre::eyre!(
+                "Row and column must be greater than zero"
+            ));
         }
 
         let values: Vec<Vec<Option<M>>> = vec![vec![None; column]; row];
@@ -74,7 +76,12 @@ impl<M: Clone + std::fmt::Debug> Matrix<M> for SimpleMatrix<M> {
         Ok(self.values[row][col].as_ref())
     }
 
-    fn set(&mut self, row: usize, col: usize, element: M) -> Result<Option<M>, color_eyre::eyre::Error> {
+    fn set(
+        &mut self,
+        row: usize,
+        col: usize,
+        element: M,
+    ) -> Result<Option<M>, color_eyre::eyre::Error> {
         if row >= self.size.rows() || col >= self.size.columns() {
             return Err(color_eyre::eyre::eyre!("Index out of bounds"));
         }
@@ -195,7 +202,8 @@ mod tests {
     }
 
     #[test]
-    fn test_set_stores_value_and_returns_none_for_empty_cell() -> Result<(), color_eyre::eyre::Error> {
+    fn test_set_stores_value_and_returns_none_for_empty_cell() -> Result<(), color_eyre::eyre::Error>
+    {
         // Arrange
         let mut matrix = SimpleMatrix::<i32>::new(3, 3)?;
 
@@ -209,7 +217,8 @@ mod tests {
     }
 
     #[test]
-    fn test_set_overwrites_existing_value_and_returns_old_value() -> Result<(), color_eyre::eyre::Error> {
+    fn test_set_overwrites_existing_value_and_returns_old_value()
+    -> Result<(), color_eyre::eyre::Error> {
         // Arrange
         let mut matrix = SimpleMatrix::<i32>::new(3, 3)?;
         matrix.set(1, 1, 10)?;
@@ -266,7 +275,8 @@ mod tests {
     }
 
     #[test]
-    fn test_diagonal_components_returns_none_for_rectangular_matrix() -> Result<(), color_eyre::eyre::Error> {
+    fn test_diagonal_components_returns_none_for_rectangular_matrix()
+    -> Result<(), color_eyre::eyre::Error> {
         // Arrange
         let matrix = SimpleMatrix::<i32>::new(4, 2)?;
 

@@ -11,6 +11,7 @@ pub use constraint::*;
 pub use geometry::*;
 pub use perspective::*;
 pub use point2::*;
+use tracing::instrument;
 
 use std::collections::HashMap;
 
@@ -76,6 +77,7 @@ impl Sketch {
     ///
     /// # Errors
     /// Returns error when the new name is empty string.
+    #[instrument(err)]
     fn set_name(&mut self, new_name: &str) -> Result<()> {
         if new_name.trim().is_empty() {
             return Err(eyre!("Do not allow empty string"));

@@ -7,6 +7,7 @@ use crate::{
     sketch::constraint::Constraint,
 };
 
+/// Scoping defined variable.
 #[derive(Debug, Clone)]
 pub struct VariableScope {
     id_gen: IdStore<VariableId>,
@@ -14,7 +15,7 @@ pub struct VariableScope {
     variables: HashMap<VariableId, Variable>,
 }
 
-/// Single responsibility trait to register a variable
+/// Single responsibility module to register a variable
 impl VariableScope {
     pub fn new() -> Self {
         Self {

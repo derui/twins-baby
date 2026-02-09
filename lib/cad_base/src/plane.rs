@@ -3,6 +3,7 @@ use std::marker::PhantomData;
 use color_eyre::eyre::Result;
 use epsilon::{DefaultEpsilon, Epsilon, approx_zero};
 use immutable::Im;
+use tracing::instrument;
 
 use crate::{point::Point, vector3::Vector3};
 
@@ -20,6 +21,7 @@ pub struct Plane<E: Epsilon = DefaultEpsilon> {
 
 impl<E: Epsilon> Plane<E> {
     /// Create a new plane that makes 2 edges and crossed the 2 edges.
+    #[instrument(err)]
     pub fn new(edge1: (&Point, &Point), edge2: (&Point, &Point)) -> Result<Self> {
         let v1 = Vector3::from_points(edge1.0, edge1.1);
         let v2 = Vector3::from_points(edge2.0, edge2.1);
@@ -28,7 +30,9 @@ impl<E: Epsilon> Plane<E> {
 
         // If crossed vector near 0, edges are same
         if crossed.norm2().abs() < 1e-5 {
-            Err(color_eyre::eyre::eyre!("Can not define plane from same edges"))
+            Err(color_eyre::eyre::eyre!(
+                "Can not define plane from same edges"
+            ))
         } else {
             Ok(Plane {
                 normal: crossed.unit().into(),

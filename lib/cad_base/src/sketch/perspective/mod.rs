@@ -9,6 +9,7 @@ use crate::{
 };
 
 use color_eyre::eyre::{Result, eyre};
+use tracing::instrument;
 
 /// The root data model of Sketch perspective
 #[derive(Debug, Clone)]
@@ -57,6 +58,7 @@ impl SketchPerspective {
     }
 
     /// Rename a sketch
+    #[instrument(err)]
     pub fn remane_sketch(&mut self, id: &SketchId, new_name: &str) -> Result<()> {
         if new_name.trim().is_empty() {
             return Err(eyre!("Do not allow empty string"));

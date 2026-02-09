@@ -3,6 +3,7 @@ use std::collections::HashSet;
 use color_eyre::eyre::Result;
 use immutable::Im;
 use solver::equation::{Equation, Evaluate};
+use tracing::instrument;
 
 use crate::{id::VariableId, sketch::scope::VariableScope};
 
@@ -32,6 +33,7 @@ impl Constraint {
     ///
     /// # Returns
     /// * `Result<Constraint>` - Returns a Result containing the newly created Constraint or an error if any variable in the equation is not found in the scope.
+    #[instrument(err)]
     pub fn new(name: &str, equation: Equation, scope: &VariableScope) -> Result<Self> {
         let mut vars: HashSet<String> = HashSet::from_iter(equation.related_variables());
 
