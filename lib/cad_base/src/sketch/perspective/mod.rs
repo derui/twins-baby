@@ -8,7 +8,7 @@ use crate::{
     sketch::{AttachableTarget, Sketch},
 };
 
-use eyre::{Result, eyre};
+use color_eyre::eyre::{Result, eyre};
 
 /// The root data model of Sketch perspective
 #[derive(Debug, Clone)]

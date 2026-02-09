@@ -1,4 +1,4 @@
-use eyre::{Result, eyre};
+use color_eyre::eyre::{Result, eyre};
 use approx::assert_relative_eq;
 
 use super::parse;

@@ -1,4 +1,4 @@
-use eyre::{Result, eyre};
+use color_eyre::eyre::{Result, eyre};
 use immutable::Im;
 
 use crate::{id::EdgeId, plane::Plane};

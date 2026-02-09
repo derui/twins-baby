@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use eyre::{Result, eyre};
+use color_eyre::eyre::{Result, eyre};
 
 use crate::{
     feature::{Feature, operation::Operation},

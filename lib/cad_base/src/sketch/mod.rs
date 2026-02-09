@@ -19,7 +19,7 @@ use crate::{
     sketch::scope::{ConstraintScope, VariableScope},
 };
 
-use eyre::{Result, eyre};
+use color_eyre::eyre::{Result, eyre};
 use immutable::Im;
 
 /// Target of sketch attachiment.

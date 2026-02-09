@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use eyre::{Result, eyre};
+use color_eyre::eyre::{Result, eyre};
 use epsilon::Epsilon;
 
 use crate::{
@@ -34,7 +34,7 @@ impl Jacobian {
         equations: &[Equation],
         variables: &[Variable],
         accuracy: f32,
-    ) -> Result<Self, eyre::Error> {
+    ) -> Result<Self, color_eyre::eyre::Error> {
         if equations.len() != variables.len() {
             return Err(eyre!("Can not create valid jacobian"));
         }
@@ -473,7 +473,7 @@ mod tests {
         use pretty_assertions::assert_eq;
 
         #[test]
-        fn test_solve_line_diminsion() -> eyre::Result<()> {
+        fn test_solve_line_diminsion() -> color_eyre::eyre::Result<()> {
             // Arrange
             let generator = Box::new(DefaultEquationIdGenerator::default());
             let mut solver = Solver::new::<DefaultEpsilon>(generator);

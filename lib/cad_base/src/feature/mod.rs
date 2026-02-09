@@ -1,7 +1,7 @@
 pub mod operation;
 mod perspective;
 
-use eyre::Result;
+use color_eyre::eyre::Result;
 use immutable::Im;
 
 use crate::{
@@ -41,7 +41,7 @@ impl Feature {
     /// Get new feature
     pub fn new(name: &str, sketch: SketchId, operation: &Operation) -> Result<Self> {
         if name.trim().is_empty() {
-            return Err(eyre::eyre!("Name must not be empty"));
+            return Err(color_eyre::eyre::eyre!("Name must not be empty"));
         }
 
         Ok(Feature {
@@ -56,7 +56,7 @@ impl Feature {
     /// Update name with [name]
     fn set_name(&mut self, name: &str) -> Result<()> {
         if name.trim().is_empty() {
-            return Err(eyre::eyre!("Name must not be empty"));
+            return Err(color_eyre::eyre::eyre!("Name must not be empty"));
         }
 
         self.name = name.trim().to_string().into();

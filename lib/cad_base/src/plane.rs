@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use eyre::Result;
+use color_eyre::eyre::Result;
 use epsilon::{DefaultEpsilon, Epsilon, approx_zero};
 use immutable::Im;
 
@@ -28,7 +28,7 @@ impl<E: Epsilon> Plane<E> {
 
         // If crossed vector near 0, edges are same
         if crossed.norm2().abs() < 1e-5 {
-            Err(eyre::eyre!("Can not define plane from same edges"))
+            Err(color_eyre::eyre::eyre!("Can not define plane from same edges"))
         } else {
             Ok(Plane {
                 normal: crossed.unit().into(),

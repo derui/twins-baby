@@ -1,6 +1,6 @@
 use std::cmp::min;
 
-use eyre::{Result, eyre};
+use color_eyre::eyre::{Result, eyre};
 
 use crate::matrix::{Matrix, MatrixExtract, simple::SimpleMatrix, size::Size};
 
@@ -20,9 +20,9 @@ pub struct SparseMatrix<M: std::fmt::Debug> {
 
 impl<M: Clone + std::fmt::Debug> SparseMatrix<M> {
     /// Create a empty Sparse matrix
-    pub fn empty(size: Size) -> Result<Self, eyre::Error> {
+    pub fn empty(size: Size) -> Result<Self, color_eyre::eyre::Error> {
         if size.columns() <= 0 || size.rows() <= 0 {
-            return Err(eyre::eyre!("can not create 0-sized matrix"));
+            return Err(color_eyre::eyre::eyre!("can not create 0-sized matrix"));
         }
 
         let mat = SimpleMatrix::new(size.rows(), size.columns())?;
@@ -72,9 +72,9 @@ impl<M: Clone + std::fmt::Debug> Matrix<M> for SparseMatrix<M> {
         self.size
     }
 
-    fn get(&self, row: usize, col: usize) -> Result<Option<&M>, eyre::Error> {
+    fn get(&self, row: usize, col: usize) -> Result<Option<&M>, color_eyre::eyre::Error> {
         if row >= self.size.rows() || col >= self.size.columns() {
-            return Err(eyre::eyre!("Index out of bound"));
+            return Err(color_eyre::eyre::eyre!("Index out of bound"));
         }
 
         let start_values_index_of_row = self.row_ptr[row];
@@ -94,7 +94,7 @@ impl<M: Clone + std::fmt::Debug> Matrix<M> for SparseMatrix<M> {
     }
 
     // Sparse matrix does not support set for now.
-    fn set(&mut self, _row: usize, _col: usize, _element: M) -> Result<Option<M>, eyre::Error> {
+    fn set(&mut self, _row: usize, _col: usize, _element: M) -> Result<Option<M>, color_eyre::eyre::Error> {
         todo!()
     }
 
@@ -156,7 +156,7 @@ mod tests {
 
     /// Test that from_matrix creates a sparse matrix with correct size
     #[test]
-    fn test_from_matrix_preserves_size() -> Result<(), eyre::Error> {
+    fn test_from_matrix_preserves_size() -> Result<(), color_eyre::eyre::Error> {
         // Arrange
         let mut source = SimpleMatrix::<i32>::new(3, 4)?;
         source.set(0, 0, 1)?;
@@ -172,7 +172,7 @@ mod tests {
 
     /// Test that from_matrix correctly converts a matrix with sparse values
     #[test]
-    fn test_from_matrix_converts_sparse_values_correctly() -> Result<(), eyre::Error> {
+    fn test_from_matrix_converts_sparse_values_correctly() -> Result<(), color_eyre::eyre::Error> {
         // Arrange
         let mut source = SimpleMatrix::<i32>::new(3, 3)?;
         source.set(0, 0, 1)?;
@@ -196,7 +196,7 @@ mod tests {
 
     /// Test that from_matrix handles empty matrix (all None values)
     #[test]
-    fn test_from_matrix_handles_empty_matrix() -> Result<(), eyre::Error> {
+    fn test_from_matrix_handles_empty_matrix() -> Result<(), color_eyre::eyre::Error> {
         // Arrange
         let source = SimpleMatrix::<i32>::new(2, 3)?;
 
@@ -212,7 +212,7 @@ mod tests {
 
     /// Test that from_matrix handles dense matrix (all values present)
     #[test]
-    fn test_from_matrix_handles_dense_matrix() -> Result<(), eyre::Error> {
+    fn test_from_matrix_handles_dense_matrix() -> Result<(), color_eyre::eyre::Error> {
         // Arrange
         let mut source = SimpleMatrix::<i32>::new(2, 2)?;
         source.set(0, 0, 1)?;
@@ -233,7 +233,7 @@ mod tests {
 
     /// Test that get returns error for out of bounds row
     #[test]
-    fn test_get_returns_error_for_out_of_bounds_row() -> Result<(), eyre::Error> {
+    fn test_get_returns_error_for_out_of_bounds_row() -> Result<(), color_eyre::eyre::Error> {
         // Arrange
         let mut source = SimpleMatrix::<i32>::new(2, 3)?;
         source.set(0, 0, 1)?;
@@ -250,7 +250,7 @@ mod tests {
 
     /// Test that get returns error for out of bounds column
     #[test]
-    fn test_get_returns_error_for_out_of_bounds_column() -> Result<(), eyre::Error> {
+    fn test_get_returns_error_for_out_of_bounds_column() -> Result<(), color_eyre::eyre::Error> {
         // Arrange
         let mut source = SimpleMatrix::<i32>::new(2, 3)?;
         source.set(0, 0, 1)?;
@@ -267,7 +267,7 @@ mod tests {
 
     /// Test that get retrieves None for unset values within bounds
     #[test]
-    fn test_get_returns_none_for_unset_values() -> Result<(), eyre::Error> {
+    fn test_get_returns_none_for_unset_values() -> Result<(), color_eyre::eyre::Error> {
         // Arrange
         let mut source = SimpleMatrix::<i32>::new(3, 3)?;
         source.set(0, 0, 1)?;
@@ -284,7 +284,7 @@ mod tests {
 
     /// Test that extract correctly transforms values using the provided function
     #[test]
-    fn test_extract_transforms_values_correctly() -> Result<(), eyre::Error> {
+    fn test_extract_transforms_values_correctly() -> Result<(), color_eyre::eyre::Error> {
         // Arrange
         let mut source = SimpleMatrix::<i32>::new(2, 2)?;
         source.set(0, 0, 10)?;
@@ -303,7 +303,7 @@ mod tests {
 
     /// Test that extract preserves the matrix structure
     #[test]
-    fn test_extract_preserves_matrix_structure() -> Result<(), eyre::Error> {
+    fn test_extract_preserves_matrix_structure() -> Result<(), color_eyre::eyre::Error> {
         // Arrange
         let mut source = SimpleMatrix::<i32>::new(3, 4)?;
         source.set(0, 1, 5)?;
@@ -324,7 +324,7 @@ mod tests {
     /// Test that diagonal_components returns correct values for square matrix
     #[test]
     fn test_diagonal_components_returns_correct_values_for_square_matrix()
-    -> Result<(), eyre::Error> {
+    -> Result<(), color_eyre::eyre::Error> {
         // Arrange
         let mut source = SimpleMatrix::<i32>::new(3, 3)?;
         source.set(0, 0, 1)?;
@@ -347,7 +347,7 @@ mod tests {
 
     /// Test that diagonal_components handles missing diagonal values
     #[test]
-    fn test_diagonal_components_handles_missing_diagonal_values() -> Result<(), eyre::Error> {
+    fn test_diagonal_components_handles_missing_diagonal_values() -> Result<(), color_eyre::eyre::Error> {
         // Arrange
         let mut source = SimpleMatrix::<i32>::new(3, 3)?;
         source.set(0, 0, 1)?;
@@ -369,7 +369,7 @@ mod tests {
 
     /// Test that diagonal_components returns None for non-square matrix (more rows)
     #[test]
-    fn test_diagonal_components_returns_none_for_tall_matrix() -> Result<(), eyre::Error> {
+    fn test_diagonal_components_returns_none_for_tall_matrix() -> Result<(), color_eyre::eyre::Error> {
         // Arrange
         let source = SimpleMatrix::<i32>::new(4, 2)?;
         let sparse = SparseMatrix::from_matrix(&source);
@@ -387,7 +387,7 @@ mod tests {
 
     /// Test that diagonal_components returns None for non-square matrix (more columns)
     #[test]
-    fn test_diagonal_components_returns_none_for_wide_matrix() -> Result<(), eyre::Error> {
+    fn test_diagonal_components_returns_none_for_wide_matrix() -> Result<(), color_eyre::eyre::Error> {
         // Arrange
         let source = SimpleMatrix::<i32>::new(2, 4)?;
         let sparse = SparseMatrix::from_matrix(&source);
@@ -405,7 +405,7 @@ mod tests {
 
     /// Test that size returns correct dimensions
     #[test]
-    fn test_size_returns_correct_dimensions() -> Result<(), eyre::Error> {
+    fn test_size_returns_correct_dimensions() -> Result<(), color_eyre::eyre::Error> {
         // Arrange
         let source = SimpleMatrix::<i32>::new(5, 7)?;
         let sparse = SparseMatrix::from_matrix(&source);
@@ -421,7 +421,7 @@ mod tests {
 
     /// Test that sparse matrix works with f32 values
     #[test]
-    fn test_sparse_matrix_with_f32_values() -> Result<(), eyre::Error> {
+    fn test_sparse_matrix_with_f32_values() -> Result<(), color_eyre::eyre::Error> {
         // Arrange
         let mut source = SimpleMatrix::<f32>::new(2, 2)?;
         source.set(0, 0, 1.5)?;
@@ -439,7 +439,7 @@ mod tests {
 
     /// Test that from_matrix handles single element matrix
     #[test]
-    fn test_from_matrix_handles_single_element() -> Result<(), eyre::Error> {
+    fn test_from_matrix_handles_single_element() -> Result<(), color_eyre::eyre::Error> {
         // Arrange
         let mut source = SimpleMatrix::<i32>::new(1, 1)?;
         source.set(0, 0, 42)?;
@@ -455,7 +455,7 @@ mod tests {
 
     /// Test that from_matrix handles single row matrix
     #[test]
-    fn test_from_matrix_handles_single_row() -> Result<(), eyre::Error> {
+    fn test_from_matrix_handles_single_row() -> Result<(), color_eyre::eyre::Error> {
         // Arrange
         let mut source = SimpleMatrix::<i32>::new(1, 5)?;
         source.set(0, 0, 1)?;
@@ -477,7 +477,7 @@ mod tests {
 
     /// Test that from_matrix handles single column matrix
     #[test]
-    fn test_from_matrix_handles_single_column() -> Result<(), eyre::Error> {
+    fn test_from_matrix_handles_single_column() -> Result<(), color_eyre::eyre::Error> {
         // Arrange
         let mut source = SimpleMatrix::<i32>::new(5, 1)?;
         source.set(0, 0, 1)?;
@@ -498,7 +498,7 @@ mod tests {
 
     /// Test that empty creates a sparse matrix with correct size and all None values
     #[test]
-    fn test_empty_creates_matrix_with_correct_size_and_all_none_values() -> Result<(), eyre::Error>
+    fn test_empty_creates_matrix_with_correct_size_and_all_none_values() -> Result<(), color_eyre::eyre::Error>
     {
         // Arrange
         let size = Size::new(3, 4);
@@ -542,7 +542,7 @@ mod tests {
 
     /// Test that get_row returns correct row with mixed values
     #[test]
-    fn test_get_row_returns_correct_row_with_mixed_values() -> Result<(), eyre::Error> {
+    fn test_get_row_returns_correct_row_with_mixed_values() -> Result<(), color_eyre::eyre::Error> {
         // Arrange
         let mut source = SimpleMatrix::<i32>::new(3, 4)?;
         source.set(1, 0, 10)?;
@@ -565,7 +565,7 @@ mod tests {
 
     /// Test that get_row returns all None values for empty row
     #[test]
-    fn test_get_row_returns_all_none_for_empty_row() -> Result<(), eyre::Error> {
+    fn test_get_row_returns_all_none_for_empty_row() -> Result<(), color_eyre::eyre::Error> {
         // Arrange
         let mut source = SimpleMatrix::<i32>::new(3, 4)?;
         source.set(0, 0, 1)?;
@@ -587,7 +587,7 @@ mod tests {
 
     /// Test that get_row returns error for out of bounds row index
     #[test]
-    fn test_get_row_returns_error_for_out_of_bounds() -> Result<(), eyre::Error> {
+    fn test_get_row_returns_error_for_out_of_bounds() -> Result<(), color_eyre::eyre::Error> {
         // Arrange
         let source = SimpleMatrix::<i32>::new(3, 4)?;
         let sparse = SparseMatrix::from_matrix(&source);

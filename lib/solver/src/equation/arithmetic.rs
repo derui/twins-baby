@@ -1,7 +1,7 @@
 use std::cmp::Ordering;
 use std::collections::HashSet;
 
-use eyre::{Result, eyre};
+use color_eyre::eyre::{Result, eyre};
 
 use crate::{
     environment::Environment,
