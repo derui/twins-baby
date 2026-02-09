@@ -1,5 +1,6 @@
 use super::*;
 use crate::id::PlaneId;
+use crate::sketch::AttachableTarget;
 use crate::sketch::geometry::{Geometry, LineSegment};
 
 mod sketch {
@@ -11,7 +12,7 @@ mod sketch {
         #[test]
         fn add_geometry_returns_geometry_id() {
             // Arrange
-            let mut sketch = Sketch::new("TestSketch", &PlaneId::new(1));
+            let mut sketch = Sketch::new("TestSketch", &AttachableTarget::Plane(PlaneId::new(1)));
             let start = Point2::from_points(0.0, 0.0);
             let end = Point2::from_points(1.0, 1.0);
 
@@ -27,7 +28,7 @@ mod sketch {
         #[test]
         fn add_geometry_generates_unique_ids() {
             // Arrange
-            let mut sketch = Sketch::new("TestSketch", &PlaneId::new(1));
+            let mut sketch = Sketch::new("TestSketch", &AttachableTarget::Plane(PlaneId::new(1)));
             let start = Point2::from_points(0.0, 0.0);
             let end = Point2::from_points(1.0, 1.0);
 
@@ -50,7 +51,7 @@ mod sketch {
         #[test]
         fn remove_geometry_returns_removed_geometry() {
             // Arrange
-            let mut sketch = Sketch::new("TestSketch", &PlaneId::new(1));
+            let mut sketch = Sketch::new("TestSketch", &AttachableTarget::Plane(PlaneId::new(1)));
             let start = Point2::from_points(0.0, 0.0);
             let end = Point2::from_points(1.0, 1.0);
             let geometry_id = sketch.add_geometry(|scope| {
@@ -68,7 +69,7 @@ mod sketch {
         #[test]
         fn remove_geometry_returns_none_for_nonexistent() {
             // Arrange
-            let mut sketch = Sketch::new("TestSketch", &PlaneId::new(1));
+            let mut sketch = Sketch::new("TestSketch", &AttachableTarget::Plane(PlaneId::new(1)));
             let nonexistent_id = GeometryId::from(999);
 
             // Act
@@ -81,7 +82,7 @@ mod sketch {
         #[test]
         fn remove_geometry_does_not_affect_other_geometries() {
             // Arrange
-            let mut sketch = Sketch::new("TestSketch", &PlaneId::new(1));
+            let mut sketch = Sketch::new("TestSketch", &AttachableTarget::Plane(PlaneId::new(1)));
             let start = Point2::from_points(0.0, 0.0);
             let end = Point2::from_points(1.0, 1.0);
             let geometry_id1 = sketch.add_geometry(|scope| {

@@ -5,11 +5,10 @@ use std::collections::HashMap;
 
 use crate::{
     id::{IdStore, PlaneId, SketchId},
-    sketch::Sketch,
+    sketch::{AttachableTarget, Sketch},
 };
 
 use anyhow::{Result, anyhow};
-
 
 /// The root data model of Sketch perspective
 #[derive(Debug, Clone)]
@@ -46,7 +45,7 @@ impl SketchPerspective {
     /// Add a new sketch to the perpective
     pub fn add_sketch(&mut self, plane: &PlaneId) -> SketchId {
         let id = self.sketch_id_gen.generate();
-        let sketch = Sketch::new(&id.to_string(), plane);
+        let sketch = Sketch::new(&id.to_string(), &AttachableTarget::Plane(plane.clone()));
 
         self.sketches.insert(id, sketch);
         id

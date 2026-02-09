@@ -1,6 +1,6 @@
 use super::*;
 use crate::id::PlaneId;
-use crate::sketch::geometry::{Geometry, LineSegment};
+use crate::sketch::AttachableTarget;
 
 mod sketch_perspective {
     use super::*;
@@ -118,7 +118,7 @@ mod sketch_perspective {
 
             // Assert
             let sketch = perspective.get(&sketch_id).unwrap();
-            assert_eq!(sketch.attached_plane, plane_id);
+            assert_eq!(sketch.attach_target, AttachableTarget::Plane(plane_id));
         }
     }
 
