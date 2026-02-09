@@ -10,7 +10,7 @@ mod scope;
 use std::collections::HashMap;
 
 use crate::{
-    id::{GeometryId, IdStore, PlaneId},
+    id::{FaceId, GeometryId, IdStore, PlaneId},
     sketch::scope::{ConstraintScope, VariableScope},
 };
 
@@ -20,6 +20,15 @@ pub use geometry::*;
 use immutable::Im;
 pub use perspective::*;
 pub use point2::*;
+
+/// Target of sketch attachiment.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum AttachableTarget {
+    /// attaching to a plane. such as base plane of the body
+    Plane(PlaneId),
+    /// atthching to a face, in some solid.
+    Face(FaceId),
+}
 
 /// The sketch of base of modeling.
 ///
@@ -46,19 +55,19 @@ pub struct Sketch {
     constraints: ConstraintScope,
 
     /// A plane atteched to sketch
-    attached_plane: PlaneId,
+    attach_target: AttachableTarget,
 }
 
 impl Sketch {
     /// Create a new sketch with builder
-    fn new(name: &str, attached_plane: &PlaneId) -> Self {
+    fn new(name: &str, attach_target: &AttachableTarget) -> Self {
         Sketch {
             name: name.to_string().into(),
             geometory_id_gen: IdStore::of(),
             geometries: HashMap::new(),
             variables: VariableScope::new(),
             constraints: ConstraintScope::new(),
-            attached_plane: *attached_plane,
+            attach_target: attach_target.clone(),
         }
     }
 
