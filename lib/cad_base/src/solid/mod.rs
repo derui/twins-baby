@@ -117,10 +117,11 @@ mod tests {
             face::{Face, PlanarSurface},
             vertex::Vertex,
         },
+        vector3::Vector3,
     };
 
     fn v(x: f32, y: f32, z: f32) -> Vertex {
-        Vertex::new(x, y, z)
+        Vector3::new(x, y, z).into()
     }
 
     fn make_face() -> Face {
