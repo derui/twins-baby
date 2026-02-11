@@ -6,7 +6,7 @@ pub struct Variable {
     /// Name of the variable
     pub name: Im<String>,
     /// Current value of the variable
-    pub value: f32,
+    pub value: Im<f32>,
 }
 
 impl PartialEq for Variable {
@@ -18,13 +18,13 @@ impl PartialEq for Variable {
 
 impl From<Variable> for f32 {
     fn from(value: Variable) -> Self {
-        value.value
+        *value.value
     }
 }
 
 impl From<&Variable> for f32 {
     fn from(value: &Variable) -> Self {
-        value.value
+        *value.value
     }
 }
 
@@ -35,7 +35,7 @@ impl Variable {
 
         Variable {
             name: name.trim().to_string().into(),
-            value,
+            value: value.into(),
         }
     }
 
@@ -43,8 +43,13 @@ impl Variable {
     pub fn with_name(&self, name: &str) -> Self {
         Variable {
             name: name.to_string().into(),
-            value: self.value,
+            value: self.value.clone(),
         }
+    }
+
+    /// Update the value.
+    pub fn set_value(&mut self, value: f32) {
+        self.value = value.into()
     }
 }
 

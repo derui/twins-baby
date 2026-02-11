@@ -62,7 +62,7 @@ impl Jacobian {
         self.0.extract(move |(e, name)| {
             let mut new_env = env.clone();
             if let Some(v) = new_env.get_mut(name) {
-                v.value += self.1;
+                v.set_value(*v.value + self.1);
             }
 
             let origin = e.evaluate(&env).unwrap_or(0.0);
@@ -298,7 +298,7 @@ impl Solver {
         let equations: Vec<_> = equation_order.iter().map(|k| &self.equations[k]).collect();
 
         // initial value
-        let mut x0 = Vector::from(&ordered.iter().map(|f| f.value).collect::<Vec<_>>())?;
+        let mut x0 = Vector::from(&ordered.iter().map(|f| f.into()).collect::<Vec<_>>())?;
 
         // Do newton-rhapson method
         loop {
@@ -330,7 +330,7 @@ impl Solver {
             // update variable for next loop
             for i in 0..(ordered.len()) {
                 if let Some(v) = self.variables.get_mut(&ordered[i].name) {
-                    v.value = x1[i];
+                    v.set_value(x1[i]);
                 }
             }
             x0 = x1.clone();
@@ -499,10 +499,10 @@ mod tests {
 
             // Assert
             assert_eq!(solver.status(), DimensionSpecificationStatus::Correct);
-            assert_relative_eq!(ret.get("x1").unwrap().value, 3.0, epsilon = 1e-5);
-            assert_relative_eq!(ret.get("y1").unwrap().value, 0.0, epsilon = 1e-5);
-            assert_relative_eq!(ret.get("x2").unwrap().value, 7.5, epsilon = 1e-5);
-            assert_relative_eq!(ret.get("y2").unwrap().value, 0.0, epsilon = 1e-5);
+            assert_relative_eq!(*ret.get("x1").unwrap().value, 3.0, epsilon = 1e-5);
+            assert_relative_eq!(*ret.get("y1").unwrap().value, 0.0, epsilon = 1e-5);
+            assert_relative_eq!(*ret.get("x2").unwrap().value, 7.5, epsilon = 1e-5);
+            assert_relative_eq!(*ret.get("y2").unwrap().value, 0.0, epsilon = 1e-5);
             Ok(())
         }
 
