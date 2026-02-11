@@ -1847,6 +1847,7 @@ version = "0.1.0"
 dependencies = [
  "cad_base",
  "color-eyre",
+ "epsilon",
  "thiserror 2.0.18",
  "tracing",
 ]
