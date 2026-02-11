@@ -46,7 +46,7 @@ impl Point2 {
         let (bx, by) = (*o1.x, *o1.y);
         let (cx, cy) = (*o2.x, *o2.y);
 
-        (bx - ax) * (cy - ay) > (cx - ax) * (by - ay) 
+        (bx - ax) * (cy - ay) > (cx - ax) * (by - ay)
     }
 }
 
@@ -71,6 +71,7 @@ mod tests {
     use super::*;
     use approx::assert_relative_eq;
     use pretty_assertions::assert_eq;
+    use rstest::rstest;
 
     #[test]
     fn test_from_points_with_positive_coordinates() {
@@ -280,6 +281,63 @@ mod tests {
 
         // Assert
         assert!(result);
+    }
+
+    // CCW: right turn along x then up  → counter-clockwise
+    // CW:  right turn along x then down → clockwise
+    // Collinear (horizontal/vertical/diagonal) → not CCW
+    // Negative-coordinate equivalents of CCW/CW
+    // Degenerate: all three points identical → not CCW
+    #[rstest]
+    #[case(
+        Point2::new(0.0, 0.0),
+        Point2::new(1.0, 0.0),
+        Point2::new(0.0, 1.0),
+        true
+    )]
+    #[case(
+        Point2::new(0.0, 0.0),
+        Point2::new(0.0, 1.0),
+        Point2::new(1.0, 0.0),
+        false
+    )]
+    #[case(
+        Point2::new(0.0, 0.0),
+        Point2::new(1.0, 0.0),
+        Point2::new(2.0, 0.0),
+        false
+    )]
+    #[case(
+        Point2::new(0.0, 0.0),
+        Point2::new(0.0, 1.0),
+        Point2::new(0.0, 2.0),
+        false
+    )]
+    #[case(
+        Point2::new(0.0, 0.0),
+        Point2::new(1.0, 1.0),
+        Point2::new(2.0, 2.0),
+        false
+    )]
+    #[case(Point2::new(-2.0, -1.0), Point2::new(-1.0, -1.0), Point2::new(-2.0, 0.0), true)]
+    #[case(Point2::new(-2.0, -1.0), Point2::new(-2.0, 0.0), Point2::new(-1.0, -1.0), false)]
+    #[case(
+        Point2::new(1.0, 1.0),
+        Point2::new(1.0, 1.0),
+        Point2::new(1.0, 1.0),
+        false
+    )]
+    fn test_detect_ccw(
+        #[case] p: Point2,
+        #[case] o1: Point2,
+        #[case] o2: Point2,
+        #[case] expected: bool,
+    ) {
+        // Act
+        let result = p.detect_ccw(&o1, &o2);
+
+        // Assert
+        assert_eq!(result, expected);
     }
 
     #[test]

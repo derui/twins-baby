@@ -1,5 +1,7 @@
 use cad_base::{
-    feature::AttachedTarget, point::Point, sketch::{AttachableTarget, Sketch}
+    feature::AttachedTarget,
+    point::Point,
+    sketch::{AttachableTarget, Sketch},
 };
 use color_eyre::eyre::{Result, eyre};
 use epsilon::Epsilon;
@@ -28,7 +30,7 @@ pub(crate) struct Sketcher<'a> {
 pub(crate) enum SketcherError {
     #[error("The sketch does not have any edges")]
     SketchNotHaveEdge,
-    
+
     #[error("The sketch has orphan point")]
     SketchHasOrphanPoint,
 
@@ -57,14 +59,17 @@ impl Sketcher<'_> {
 
     pub fn calculate_jordan_corve<E: Epsilon>(&self) -> Result<Vec<JordanCurve>, SketcherError> {
         let Ok(edges) = self.sketch.resolve_edges() else {
-            return Err(SketcherError::SketchNotHaveEdge)
+            return Err(SketcherError::SketchNotHaveEdge);
         };
         // flatten and distinct nearly same points as same index
-        let mut all_points = edges.iter().map(|f| [f.start.clone(), f.end.clone()]).flatten().collect::<Vec<_>>();
+        let mut all_points = edges
+            .iter()
+            .flat_map(|f| [f.start.clone(), f.end.clone()])
+            .collect::<Vec<_>>();
         all_points.dedup_by(|o1, o2| o1.approx_eq::<E>(o2));
 
         // make adjacent list
-        let adj: Vec<(usize, usize)> = Vec::new();
+        let _adj: Vec<(usize, usize)> = Vec::new();
         todo!()
     }
 }
