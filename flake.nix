@@ -84,18 +84,18 @@
               pkgs.webkitgtk_4_1.dev
               pkgs.alsa-lib.dev
               pkgs.udev.dev 
-              pkgs.xorg.libX11
-              pkgs.xorg.libXrandr
-              pkgs.xorg.libXcursor
-              pkgs.xorg.libxcb
-              pkgs.xorg.libXi
+              pkgs.libX11
+              pkgs.libXrandr
+              pkgs.libXcursor
+              pkgs.libxcb
+              pkgs.libXi
               pkgs.wayland
               pkgs.libxkbcommon
               pkgs.libxkbcommon.dev
               pkgs.vulkan-loader
               pkgs.vulkan-tools
               pkgs.glfw
-              pkgs.xorg.xf86videoamdgpu  # notice this line might not match your needs or desires
+              pkgs.xf86-video-amdgpu  # notice this line might not match your needs or desires
               
               # for tailwindcss
               pkgs.nodejs_22
