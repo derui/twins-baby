@@ -2,6 +2,7 @@
 mod tests;
 
 mod constraint;
+mod edge;
 mod geometry;
 mod perspective;
 mod point2;
@@ -16,8 +17,11 @@ use tracing::instrument;
 use std::collections::HashMap;
 
 use crate::{
-    id::{FaceId, GeometryId, IdStore, PlaneId},
-    sketch::scope::{ConstraintScope, VariableScope},
+    id::{FaceId, GeometryId, IdStore, PlaneId, VariableId},
+    sketch::{
+        edge::SketchEdge,
+        scope::{ConstraintScope, VariableScope},
+    },
 };
 
 use color_eyre::eyre::{Result, eyre};
@@ -48,7 +52,7 @@ pub struct Sketch {
     geometory_id_gen: IdStore<GeometryId>,
 
     /// Geometries in this sketch
-    geometries: HashMap<GeometryId, Box<Geometry>>,
+    geometries: HashMap<GeometryId, Geometry>,
 
     /// variable scope.
     variables: VariableScope,
@@ -57,7 +61,7 @@ pub struct Sketch {
     constraints: ConstraintScope,
 
     /// A plane atteched to sketch
-    attach_target: AttachableTarget,
+    pub attach_target: Im<AttachableTarget>,
 }
 
 impl Sketch {
@@ -69,7 +73,7 @@ impl Sketch {
             geometries: HashMap::new(),
             variables: VariableScope::new(),
             constraints: ConstraintScope::new(),
-            attach_target: attach_target.clone(),
+            attach_target: attach_target.clone().into(),
         }
     }
 
@@ -96,12 +100,45 @@ impl Sketch {
         let geometry = maker(&mut self.variables);
 
         let id = self.geometory_id_gen.generate();
-        self.geometries.insert(id, Box::new(geometry));
+        self.geometries.insert(id, geometry);
         id
     }
 
     /// Remove a geometry from this sketch
-    pub fn remove_geometry(&mut self, id: &GeometryId) -> Option<Box<Geometry>> {
+    pub fn remove_geometry(&mut self, id: &GeometryId) -> Option<Geometry> {
         self.geometries.remove(id)
+    }
+
+    /// Get a point2 from raw point.
+    #[tracing::instrument(err)]
+    fn resolve_point(&self, raw_point: &Im<(VariableId, VariableId)>) -> Result<Point2> {
+        let Some(start) = self.variables.get(&raw_point.0) else {
+            return Err(eyre!("Do not found variable for {}", &raw_point.0));
+        };
+
+        let Some(end) = self.variables.get(&raw_point.1) else {
+            return Err(eyre!("Do not found variable for {}", &raw_point.1));
+        };
+
+        Ok(Point2::new(start.into(), end.into()))
+    }
+
+    /// Get all [SketchEdge] as concreted value.
+    #[tracing::instrument(err)]
+    pub fn resolve_edges(&self) -> Result<Vec<SketchEdge>> {
+        let mut ret = Vec::new();
+
+        for geometry in self.geometries.values() {
+            match geometry {
+                Geometry::LineSegment(line_segment) => {
+                    let start = self.resolve_point(&line_segment.start_points)?;
+                    let end = self.resolve_point(&line_segment.end_points)?;
+
+                    ret.push(SketchEdge::new(&start, &end));
+                }
+            }
+        }
+
+        Ok(ret)
     }
 }

@@ -13,8 +13,8 @@ mod sketch {
         fn add_geometry_returns_geometry_id() {
             // Arrange
             let mut sketch = Sketch::new("TestSketch", &AttachableTarget::Plane(PlaneId::new(1)));
-            let start = Point2::from_points(0.0, 0.0);
-            let end = Point2::from_points(1.0, 1.0);
+            let start = Point2::new(0.0, 0.0);
+            let end = Point2::new(1.0, 1.0);
 
             // Act
             let geometry_id = sketch.add_geometry(|scope| {
@@ -29,8 +29,8 @@ mod sketch {
         fn add_geometry_generates_unique_ids() {
             // Arrange
             let mut sketch = Sketch::new("TestSketch", &AttachableTarget::Plane(PlaneId::new(1)));
-            let start = Point2::from_points(0.0, 0.0);
-            let end = Point2::from_points(1.0, 1.0);
+            let start = Point2::new(0.0, 0.0);
+            let end = Point2::new(1.0, 1.0);
 
             // Act
             let geometry_id1 = sketch.add_geometry(|scope| {
@@ -52,8 +52,8 @@ mod sketch {
         fn remove_geometry_returns_removed_geometry() {
             // Arrange
             let mut sketch = Sketch::new("TestSketch", &AttachableTarget::Plane(PlaneId::new(1)));
-            let start = Point2::from_points(0.0, 0.0);
-            let end = Point2::from_points(1.0, 1.0);
+            let start = Point2::new(0.0, 0.0);
+            let end = Point2::new(1.0, 1.0);
             let geometry_id = sketch.add_geometry(|scope| {
                 Geometry::LineSegment(LineSegment::from_points(&start, &end, scope))
             });
@@ -83,8 +83,8 @@ mod sketch {
         fn remove_geometry_does_not_affect_other_geometries() {
             // Arrange
             let mut sketch = Sketch::new("TestSketch", &AttachableTarget::Plane(PlaneId::new(1)));
-            let start = Point2::from_points(0.0, 0.0);
-            let end = Point2::from_points(1.0, 1.0);
+            let start = Point2::new(0.0, 0.0);
+            let end = Point2::new(1.0, 1.0);
             let geometry_id1 = sketch.add_geometry(|scope| {
                 Geometry::LineSegment(LineSegment::from_points(&start, &end, scope))
             });

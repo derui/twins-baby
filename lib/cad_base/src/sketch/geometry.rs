@@ -16,8 +16,8 @@ pub struct LineSegment {
 impl LineSegment {
     /// Make a new line with points.
     pub fn from_points(start: &Point2, end: &Point2, registrar: &mut VariableScope) -> Self {
-        let start_ids = (registrar.register(start.x), registrar.register(start.y));
-        let end_ids = (registrar.register(end.x), registrar.register(end.y));
+        let start_ids = (registrar.register(*start.x), registrar.register(*start.y));
+        let end_ids = (registrar.register(*end.x), registrar.register(*end.y));
 
         LineSegment {
             start_points: start_ids.into(),
