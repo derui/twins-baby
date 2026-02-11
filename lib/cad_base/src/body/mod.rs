@@ -19,11 +19,17 @@ pub struct BodyPerspective {
     body_id_gen: IdStore<BodyId>,
 }
 
+impl Default for BodyPerspective {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl BodyPerspective {
     /// Create a new perspective
     pub fn new() -> Self {
         BodyPerspective {
-            bodies: Default::default(),
+            bodies: HashMap::new(),
             body_id_gen: IdStore::of(),
         }
     }

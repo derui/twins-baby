@@ -1,3 +1,4 @@
+#![allow(clippy::manual_non_exhaustive)]
 pub mod body;
 pub mod feature;
 pub mod id;

@@ -123,7 +123,7 @@ mod tests {
 
         // Assert
         assert!(variable.is_some());
-        assert_relative_eq!(variable.unwrap().value, value);
+        assert_relative_eq!(*variable.unwrap().value, value);
     }
 
     #[test]
@@ -153,9 +153,9 @@ mod tests {
         let id3 = scope.register(3.5);
 
         // Assert
-        assert_relative_eq!(scope.get(&id1).unwrap().value, 1.5);
-        assert_relative_eq!(scope.get(&id2).unwrap().value, 2.5);
-        assert_relative_eq!(scope.get(&id3).unwrap().value, 3.5);
+        assert_relative_eq!(*scope.get(&id1).unwrap().value, 1.5);
+        assert_relative_eq!(*scope.get(&id2).unwrap().value, 2.5);
+        assert_relative_eq!(*scope.get(&id3).unwrap().value, 3.5);
     }
 
     #[test]
@@ -182,7 +182,7 @@ mod tests {
 
         // Assert
         assert!(removed.is_some());
-        assert_relative_eq!(removed.unwrap().value, 100.0);
+        assert_relative_eq!(*removed.unwrap().value, 100.0);
         assert!(scope.get(&id).is_none());
     }
 
@@ -224,10 +224,10 @@ mod tests {
 
         // Act
         let variable = scope.get_mut(&id).unwrap();
-        variable.value = 10.0;
+        variable.value = 10.0.into();
 
         // Assert
-        assert_relative_eq!(scope.get(&id).unwrap().value, 10.0);
+        assert_relative_eq!(*scope.get(&id).unwrap().value, 10.0);
     }
 
     #[test]
@@ -274,7 +274,7 @@ mod tests {
         // Verify the remaining variable has the correct value
         let remaining_var = env.get(&id2.to_string());
         assert!(remaining_var.is_some());
-        assert_relative_eq!(remaining_var.unwrap().value, 2.0);
+        assert_relative_eq!(*remaining_var.unwrap().value, 2.0);
     }
 
     #[test]
@@ -301,10 +301,10 @@ mod tests {
         let id_small = scope.register(1e-10);
 
         // Assert
-        assert_relative_eq!(scope.get(&id_zero).unwrap().value, 0.0);
-        assert_relative_eq!(scope.get(&id_negative).unwrap().value, -42.5);
-        assert_relative_eq!(scope.get(&id_large).unwrap().value, 1e10);
-        assert_relative_eq!(scope.get(&id_small).unwrap().value, 1e-10);
+        assert_relative_eq!(*scope.get(&id_zero).unwrap().value, 0.0);
+        assert_relative_eq!(*scope.get(&id_negative).unwrap().value, -42.5);
+        assert_relative_eq!(*scope.get(&id_large).unwrap().value, 1e10);
+        assert_relative_eq!(*scope.get(&id_small).unwrap().value, 1e-10);
     }
 
     #[test]

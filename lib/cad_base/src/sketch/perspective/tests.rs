@@ -118,7 +118,7 @@ mod sketch_perspective {
 
             // Assert
             let sketch = perspective.get(&sketch_id).unwrap();
-            assert_eq!(sketch.attach_target, AttachableTarget::Plane(plane_id));
+            assert_eq!(*sketch.attach_target, AttachableTarget::Plane(plane_id));
         }
     }
 

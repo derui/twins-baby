@@ -277,7 +277,7 @@ mod tests {
 
         // act
         let copied_var = env.get_mut("x").unwrap();
-        copied_var.value = 20.0;
+        copied_var.value = 20.0.into();
 
         // assert
         let original_var = env.get("x").cloned().unwrap();
