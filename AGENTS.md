@@ -117,7 +117,7 @@ All test case must follow these styles:
   - Skip tests for trivial getter methods that only return a field value without any logic
   - Example: `pub fn name(&self) -> &str { &self.name }` does not need a test
   - Focus testing efforts on methods with actual behavior and logic
-- When assertion for Rust's `Result`, avoid `is_ok` or `is_err` for assert generally.
+- When found in Rust's `Result` in testing functions, use `-> Result<()>` to the test method
 - **Do not write overly engineering test**
   - Always write effective test, such as use paratemerized test for patterns
 - **Write more careful test cases for edge cases, MECE conditions**
