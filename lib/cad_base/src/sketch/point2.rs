@@ -1,6 +1,10 @@
 use epsilon::Epsilon;
 use immutable::Im;
 
+/// A 2D point in sketch space with immutable coordinates.
+///
+/// Once created, the x and y coordinates cannot be modified in place.
+/// Use [`Point2::new`] or convert from a `(f32, f32)` tuple to create an instance.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Point2 {
     pub x: Im<f32>,
@@ -9,7 +13,7 @@ pub struct Point2 {
 }
 
 impl Point2 {
-    /// Get a new [Point2]
+    /// Create a new [`Point2`] from the given x and y coordinates.
     pub fn new(x: f32, y: f32) -> Self {
         Point2 {
             x: x.into(),
@@ -18,7 +22,7 @@ impl Point2 {
         }
     }
 
-    /// Get a distance between two points
+    /// Compute the Euclidean distance between `self` and `other`.
     pub fn distance(&self, other: &Point2) -> f32 {
         let x = *other.x - *self.x;
         let y = *other.y - *self.y;
@@ -26,9 +30,23 @@ impl Point2 {
         (x.powi(2) + y.powi(2)).sqrt()
     }
 
-    /// Check between self and other are approximately equal
+    /// Return `true` if `self` and `other` are approximately equal
+    /// within the tolerance defined by the [`Epsilon`] type `E`.
     pub fn approx_eq<E: Epsilon>(&self, other: &Point2) -> bool {
         epsilon::approx_eq::<E>(*self.x, *other.x) && epsilon::approx_eq::<E>(*self.y, *other.y)
+    }
+
+    /// Return `true` if the path `self` -> `o1` -> `o2` makes a
+    /// counter-clockwise (CCW) turn.
+    ///
+    /// Uses the cross-product of vectors (`self` -> `o1`) and (`self` -> `o2`).
+    /// Returns `false` when the points are collinear or clockwise.
+    pub fn detect_ccw(&self, o1: &Point2, o2: &Point2) -> bool {
+        let (ax, ay) = (*self.x, *self.y);
+        let (bx, by) = (*o1.x, *o1.y);
+        let (cx, cy) = (*o2.x, *o2.y);
+
+        (bx - ax) * (cy - ay) > (cx - ax) * (by - ay) 
     }
 }
 
