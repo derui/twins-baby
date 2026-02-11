@@ -1,3 +1,4 @@
+use epsilon::Epsilon;
 use immutable::Im;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -23,6 +24,11 @@ impl Point2 {
         let y = *other.y - *self.y;
 
         (x.powi(2) + y.powi(2)).sqrt()
+    }
+
+    /// Check between self and other are approximately equal
+    pub fn approx_eq<E: Epsilon>(&self, other: &Point2) -> bool {
+        epsilon::approx_eq::<E>(*self.x, *other.x) && epsilon::approx_eq::<E>(*self.y, *other.y)
     }
 }
 
@@ -178,6 +184,84 @@ mod tests {
         // Assert
         assert_relative_eq!(tuple.0, 3.3);
         assert_relative_eq!(tuple.1, 6.6);
+    }
+
+    #[test]
+    fn test_approx_eq_same_points() {
+        // Arrange
+        let point1 = Point2::new(1.0, 2.0);
+        let point2 = Point2::new(1.0, 2.0);
+
+        // Act
+        let result = point1.approx_eq::<epsilon::DefaultEpsilon>(&point2);
+
+        // Assert
+        assert!(result);
+    }
+
+    #[test]
+    fn test_approx_eq_within_epsilon() {
+        // Arrange
+        let point1 = Point2::new(1.0, 2.0);
+        let point2 = Point2::new(1.0 + 1e-8, 2.0 - 1e-8);
+
+        // Act
+        let result = point1.approx_eq::<epsilon::DefaultEpsilon>(&point2);
+
+        // Assert
+        assert!(result);
+    }
+
+    #[test]
+    fn test_approx_eq_different_x() {
+        // Arrange
+        let point1 = Point2::new(1.0, 2.0);
+        let point2 = Point2::new(2.0, 2.0);
+
+        // Act
+        let result = point1.approx_eq::<epsilon::DefaultEpsilon>(&point2);
+
+        // Assert
+        assert!(!result);
+    }
+
+    #[test]
+    fn test_approx_eq_different_y() {
+        // Arrange
+        let point1 = Point2::new(1.0, 2.0);
+        let point2 = Point2::new(1.0, 3.0);
+
+        // Act
+        let result = point1.approx_eq::<epsilon::DefaultEpsilon>(&point2);
+
+        // Assert
+        assert!(!result);
+    }
+
+    #[test]
+    fn test_approx_eq_both_at_origin() {
+        // Arrange
+        let point1 = Point2::new(0.0, 0.0);
+        let point2 = Point2::new(0.0, 0.0);
+
+        // Act
+        let result = point1.approx_eq::<epsilon::DefaultEpsilon>(&point2);
+
+        // Assert
+        assert!(result);
+    }
+
+    #[test]
+    fn test_approx_eq_negative_coordinates() {
+        // Arrange
+        let point1 = Point2::new(-1.0, -2.0);
+        let point2 = Point2::new(-1.0, -2.0);
+
+        // Act
+        let result = point1.approx_eq::<epsilon::DefaultEpsilon>(&point2);
+
+        // Assert
+        assert!(result);
     }
 
     #[test]
