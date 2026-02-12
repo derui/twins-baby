@@ -36,7 +36,7 @@ impl<E: Epsilon> Plane<E> {
         } else {
             Ok(Plane {
                 normal: crossed.unit().into(),
-                r0: (*edge1.0).into(),
+                r0: edge1.0.clone().into(),
                 _data: PhantomData,
             })
         }
@@ -71,7 +71,7 @@ impl<E: Epsilon> Plane<E> {
 
     /// Check the [point] on the plane or not
     pub fn is_on_plane(&self, point: &Point) -> bool {
-        let r0: Vector3 = (*self.r0).into();
+        let r0: Vector3 = (*self.r0).clone().into();
         let r: Vector3 = point.into();
 
         let ret = self.normal.dot(&(r0 - r));

@@ -118,13 +118,13 @@ impl From<Vector3> for (f32, f32, f32) {
 
 impl From<Point> for Vector3 {
     fn from(value: Point) -> Self {
-        Vector3::new(*value.x(), *value.y(), *value.z())
+        Vector3::new(*value.x, *value.y, *value.z)
     }
 }
 
 impl From<&Point> for Vector3 {
     fn from(value: &Point) -> Self {
-        Vector3::new(*value.x(), *value.y(), *value.z())
+        Vector3::new(*value.x, *value.y, *value.z)
     }
 }
 
