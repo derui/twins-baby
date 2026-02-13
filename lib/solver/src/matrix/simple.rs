@@ -25,7 +25,7 @@ impl<M: Clone + std::fmt::Debug> SimpleMatrix<M> {
     ///
     /// # Returns
     /// * A new simple matrix with specified size
-    pub fn new(row: usize, column: usize) -> Result<Self, color_eyre::eyre::Error> {
+    pub fn new(row: usize, column: usize) -> Result<Self> {
         if row == 0 || column == 0 {
             return Err(color_eyre::eyre::eyre!(
                 "Row and column must be greater than zero"
@@ -69,7 +69,7 @@ impl<M: Clone + std::fmt::Debug> Matrix<M> for SimpleMatrix<M> {
         self.size
     }
 
-    fn get(&self, row: usize, col: usize) -> Result<Option<&M>, color_eyre::eyre::Error> {
+    fn get(&self, row: usize, col: usize) -> Result<Option<&M>> {
         if row >= self.size.rows() || col >= self.size.columns() {
             return Err(color_eyre::eyre::eyre!("Index out of bounds"));
         }
