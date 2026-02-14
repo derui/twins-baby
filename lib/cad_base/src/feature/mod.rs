@@ -1,6 +1,8 @@
 pub mod operation;
 mod perspective;
 
+use std::error::Error;
+
 use color_eyre::eyre::Result;
 use immutable::Im;
 use thiserror::Error;
@@ -93,11 +95,14 @@ pub struct FeatureContext<'a> {
     pub target: Im<Vec<AttachedTarget<'a>>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Error)]
+#[derive(Debug, Error)]
 pub enum EvaluateError {
     /// Sketch does not have
-    #[error("Given sketch can not make closed surface")]
+    #[error("No sketches in the context")]
     InsufficientSketch,
+
+    #[error("Given sketch can not make closed surface | {0}")]
+    HaveSomeInvalidSketches(#[from] Box<dyn Error>),
 }
 
 pub trait Evaluate {
