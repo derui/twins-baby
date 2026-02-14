@@ -2,7 +2,7 @@
 mod tests;
 
 mod constraint;
-mod edge;
+pub mod edge;
 mod geometry;
 mod perspective;
 mod point2;
