@@ -50,7 +50,7 @@ The project uses `leptos-bevy-canvas` to embed Bevy applications within Leptos c
 - **TailwindCSS 3.4.17** - Utility-first CSS framework
 
 ### 3D Engine
-- **Bevy 0.17.3** - Game engine with these key features enabled:
+- **Bevy 0.18.0** - Game engine with these key features enabled:
   - `bevy_pbr` - Physically-based rendering
   - `bevy_picking` - 3D object interaction
   - `webgpu` - Web graphics backend
@@ -71,6 +71,10 @@ The project uses Nix flakes for reproducible development environments. The flake
 - All necessary system dependencies for Bevy (graphics libraries, etc.)
 
 To enter the development environment: `nix develop`
+
+### Use LSP
+- If `lspmux` is enabled, launch `lspmux client` as LSP first.
+- If `rust-analyzer` is enabled, launch it as LSP.
 
 ## Code Formatting
 
