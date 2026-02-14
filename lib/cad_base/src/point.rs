@@ -2,6 +2,8 @@ use std::fmt::{Display, Formatter};
 
 use immutable::Im;
 
+use crate::vector3::Vector3;
+
 /// definition of point
 ///
 /// This type is totally immutable
@@ -22,6 +24,11 @@ impl Point {
             z: z.into(),
             _immutable: (),
         }
+    }
+
+    /// Get a new [Point] from [Vector3]
+    pub fn from_vector3(vector: &Vector3) -> Self {
+        Self::new(vector.x, vector.y, vector.z)
     }
 
     /// Get a new zero point
