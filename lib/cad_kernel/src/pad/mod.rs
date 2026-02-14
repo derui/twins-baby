@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use crate::sketcher::{JordanCurve, Sketcher};
 use cad_base::{
     feature::{
@@ -187,7 +190,11 @@ fn compute_pad<'a>(
                 &mut solid,
                 curve,
                 first_plane.as_ref().unwrap_or(plane),
-                length,
+                match *pad.direction {
+                    PadDirection::Normal => 0.0,
+                    PadDirection::InveredNormal => 0.0,
+                    PadDirection::Symmetric => length,
+                },
             );
         }
 
