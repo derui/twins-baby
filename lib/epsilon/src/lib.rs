@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 /// Trait for definition of epsilon for value margin
 pub trait Epsilon {
     const EPSILON: f32;
@@ -27,6 +29,15 @@ impl Epsilon for LowPrecisionEpsitlon {
 /// helper with epsilon
 pub fn approx_eq<E: Epsilon>(a: f32, b: f32) -> bool {
     (a - b).abs() < E::EPSILON
+}
+
+/// helper with epsilon to get total cmp
+pub fn approx_total_cmp<E: Epsilon>(a: f32, b: f32) -> Ordering {
+    if approx_eq::<E>(a, b) {
+        Ordering::Equal
+    } else {
+        a.total_cmp(&b)
+    }
 }
 
 /// helper with epsilon
@@ -208,5 +219,23 @@ mod tests {
 
         // Assert
         assert_eq!(result, false);
+    }
+
+    #[rstest]
+    #[case(1.0, 1.0, Ordering::Equal)]
+    #[case(1.0, 1.000001, Ordering::Equal)] // within epsilon
+    #[case(1.0, 0.999999, Ordering::Equal)] // within epsilon
+    #[case(1.0, 2.0, Ordering::Less)]
+    #[case(2.0, 1.0, Ordering::Greater)]
+    #[case(1.0, 1.00002, Ordering::Less)] // outside epsilon
+    #[case(1.00002, 1.0, Ordering::Greater)] // outside epsilon
+    fn test_approx_total_cmp(#[case] a: f32, #[case] b: f32, #[case] expected: Ordering) {
+        // Arrange - inputs provided by rstest
+
+        // Act
+        let result = approx_total_cmp::<DefaultEpsilon>(a, b);
+
+        // Assert
+        assert_eq!(result, expected);
     }
 }
