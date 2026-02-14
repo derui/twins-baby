@@ -1,4 +1,3 @@
-
 use cad_base::{
     feature::AttachedTarget,
     point::Point,
@@ -76,7 +75,7 @@ impl Sketcher<'_> {
 }
 
 mod graph {
-    use std::collections::{HashMap, HashSet};
+    use std::collections::HashSet;
 
     use cad_base::sketch::{Point2, edge::SketchEdge};
     use color_eyre::eyre::{Result, eyre};
@@ -93,9 +92,9 @@ mod graph {
         /// Create a new [`Graph`]
         pub fn new<E: Epsilon>(edges: &[SketchEdge]) -> Result<Self> {
             if edges.is_empty() {
-                return Err(eyre!("Edges must be greater than 0"))
+                return Err(eyre!("Edges must be greater than 0"));
             }
-            
+
             // flatten and distinct nearly same points as same index
             let mut all_points = edges
                 .iter()
@@ -103,7 +102,7 @@ mod graph {
                 .collect::<Vec<_>>();
             all_points.sort_by(|o1, o2| o1.approx_total_cmp::<E>(o2));
             all_points.dedup_by(|o1, o2| o1.approx_eq::<E>(o2));
-            
+
             // make adjacent list
             let mut adj: Vec<Vec<usize>> = vec![vec![]; all_points.len()];
 
@@ -128,14 +127,15 @@ mod graph {
 
             Ok(Self {
                 adj,
-                points: all_points.into_iter().map(|v| (*v).clone()).collect()
+                points: all_points.into_iter().map(|v| (*v).clone()).collect(),
             })
         }
 
         /// Get all closed loops. Detect the branch in the loop, the loop and related points ignores.
         fn closed_loops(&self) -> Option<Vec<Vec<Point2>>> {
             let mut loops = vec![];
-            let indices: HashSet<usize> = HashSet::from_iter(self.adj.iter().enumerate().map(|(i, _)| i));
+            let indices: HashSet<usize> =
+                HashSet::from_iter(self.adj.iter().enumerate().map(|(i, _)| i));
             let mut through_points: HashSet<usize> = HashSet::new();
 
             let mut start = 0;
@@ -143,7 +143,7 @@ mod graph {
             while through_points.len() < indices.len() {
                 in_loop.push(start);
                 through_points.insert(start);
-                
+
                 let nexts = self.adj.get(start).expect("Should be success");
 
                 // when detecting branch, ignore it.
@@ -153,7 +153,11 @@ mod graph {
 
                 // Detecting the closed loop, reset
                 if in_loop[0] == nexts[0] {
-                    let points: Vec<Point2> = in_loop.iter().filter_map(|v| self.points.get(*v)).cloned().collect();
+                    let points: Vec<Point2> = in_loop
+                        .iter()
+                        .filter_map(|v| self.points.get(*v))
+                        .cloned()
+                        .collect();
                     loops.push(points);
                     in_loop.clear();
 
@@ -167,7 +171,7 @@ mod graph {
                     // Go next loop with next.
                     start = nexts[0];
                 }
-            };
+            }
 
             Some(loops)
         }

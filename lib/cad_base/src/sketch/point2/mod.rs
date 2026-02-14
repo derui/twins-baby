@@ -42,8 +42,8 @@ impl Point2 {
     /// within the tolerance defined by the [`Epsilon`] type `E`.
     pub fn approx_total_cmp<E: Epsilon>(&self, other: &Point2) -> Ordering {
         match epsilon::approx_total_cmp::<E>(*self.x, *other.x) {
-            Ordering::Equal => {},
-            ord => return ord
+            Ordering::Equal => {}
+            ord => return ord,
         };
 
         epsilon::approx_total_cmp::<E>(*self.y, *other.y)

@@ -307,11 +307,7 @@ fn test_round_trip_conversion() {
 #[case(Point2::new(1.0, 1.0), Point2::new(1.0 + 1e-6, 0.0), Ordering::Greater)]
 #[case(Point2::new(-2.0, 0.0), Point2::new(-1.0, 0.0), Ordering::Less)]
 #[case(Point2::new(-1.0, 0.0), Point2::new(-2.0, 0.0), Ordering::Greater)]
-fn test_approx_total_cmp(
-    #[case] lhs: Point2,
-    #[case] rhs: Point2,
-    #[case] expected: Ordering,
-) {
+fn test_approx_total_cmp(#[case] lhs: Point2, #[case] rhs: Point2, #[case] expected: Ordering) {
     // Act
     let result = lhs.approx_total_cmp::<epsilon::DefaultEpsilon>(&rhs);
 
