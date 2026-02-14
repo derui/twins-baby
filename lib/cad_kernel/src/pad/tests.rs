@@ -14,8 +14,7 @@ use solver::equation::Equation;
 use super::PadKernel;
 
 /// Create a pentagon sketch (5 edges, closed).
-/// Pentagon produces a JordanCurve with 5 points and 4 edges,
-/// which satisfies PlanarSurface's requirement of exactly 4 edges.
+/// Pentagon produces a JordanCurve with 5 points and 5 edges,
 fn make_pentagon_sketch() -> Sketch {
     let target = AttachableTarget::Plane(PlaneId::from(1));
     let mut sketch = Sketch::new("pentagon", &target);
