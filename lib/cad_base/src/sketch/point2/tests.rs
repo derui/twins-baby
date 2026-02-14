@@ -1,0 +1,320 @@
+use std::cmp::Ordering;
+
+use super::*;
+use approx::assert_relative_eq;
+use pretty_assertions::assert_eq;
+use rstest::rstest;
+
+#[test]
+fn test_from_points_with_positive_coordinates() {
+    // Arrange
+    let x = 3.0;
+    let y = 4.0;
+
+    // Act
+    let point = Point2::new(x, y);
+
+    // Assert
+    assert_relative_eq!(*point.x, x);
+    assert_relative_eq!(*point.y, y);
+}
+
+#[test]
+fn test_from_points_with_negative_coordinates() {
+    // Arrange
+    let x = -5.0;
+    let y = -10.0;
+
+    // Act
+    let point = Point2::new(x, y);
+
+    // Assert
+    assert_relative_eq!(*point.x, x);
+    assert_relative_eq!(*point.y, y);
+}
+
+#[test]
+fn test_from_points_at_origin() {
+    // Arrange
+    let x = 0.0;
+    let y = 0.0;
+
+    // Act
+    let point = Point2::new(x, y);
+
+    // Assert
+    assert_relative_eq!(*point.x, x);
+    assert_relative_eq!(*point.y, y);
+}
+
+#[test]
+fn test_distance_between_same_point() {
+    // Arrange
+    let point = Point2::new(5.0, 10.0);
+
+    // Act
+    let distance = point.distance(&point);
+
+    // Assert
+    assert_relative_eq!(distance, 0.0);
+}
+
+#[test]
+fn test_distance_horizontal() {
+    // Arrange
+    let point1 = Point2::new(0.0, 5.0);
+    let point2 = Point2::new(10.0, 5.0);
+
+    // Act
+    let distance = point1.distance(&point2);
+
+    // Assert
+    assert_relative_eq!(distance, 10.0);
+}
+
+#[test]
+fn test_distance_vertical() {
+    // Arrange
+    let point1 = Point2::new(5.0, 0.0);
+    let point2 = Point2::new(5.0, 8.0);
+
+    // Act
+    let distance = point1.distance(&point2);
+
+    // Assert
+    assert_relative_eq!(distance, 8.0);
+}
+
+#[test]
+fn test_distance_diagonal_pythagorean() {
+    // Arrange - 3-4-5 Pythagorean triangle
+    let point1 = Point2::new(0.0, 0.0);
+    let point2 = Point2::new(3.0, 4.0);
+
+    // Act
+    let distance = point1.distance(&point2);
+
+    // Assert
+    assert_relative_eq!(distance, 5.0);
+}
+
+#[test]
+fn test_distance_with_negative_coordinates() {
+    // Arrange
+    let point1 = Point2::new(-3.0, -4.0);
+    let point2 = Point2::new(0.0, 0.0);
+
+    // Act
+    let distance = point1.distance(&point2);
+
+    // Assert
+    assert_relative_eq!(distance, 5.0);
+}
+
+#[test]
+fn test_from_tuple_to_point2d() {
+    // Arrange
+    let tuple = (7.5, 9.2);
+
+    // Act
+    let point: Point2 = tuple.into();
+
+    // Assert
+    assert_relative_eq!(*point.x, 7.5);
+    assert_relative_eq!(*point.y, 9.2);
+}
+
+#[test]
+fn test_from_point2d_to_tuple() {
+    // Arrange
+    let point = Point2::new(3.3, 6.6);
+
+    // Act
+    let tuple: (f32, f32) = point.into();
+
+    // Assert
+    assert_relative_eq!(tuple.0, 3.3);
+    assert_relative_eq!(tuple.1, 6.6);
+}
+
+#[test]
+fn test_approx_eq_same_points() {
+    // Arrange
+    let point1 = Point2::new(1.0, 2.0);
+    let point2 = Point2::new(1.0, 2.0);
+
+    // Act
+    let result = point1.approx_eq::<epsilon::DefaultEpsilon>(&point2);
+
+    // Assert
+    assert!(result);
+}
+
+#[test]
+fn test_approx_eq_within_epsilon() {
+    // Arrange
+    let point1 = Point2::new(1.0, 2.0);
+    let point2 = Point2::new(1.0 + 1e-8, 2.0 - 1e-8);
+
+    // Act
+    let result = point1.approx_eq::<epsilon::DefaultEpsilon>(&point2);
+
+    // Assert
+    assert!(result);
+}
+
+#[test]
+fn test_approx_eq_different_x() {
+    // Arrange
+    let point1 = Point2::new(1.0, 2.0);
+    let point2 = Point2::new(2.0, 2.0);
+
+    // Act
+    let result = point1.approx_eq::<epsilon::DefaultEpsilon>(&point2);
+
+    // Assert
+    assert!(!result);
+}
+
+#[test]
+fn test_approx_eq_different_y() {
+    // Arrange
+    let point1 = Point2::new(1.0, 2.0);
+    let point2 = Point2::new(1.0, 3.0);
+
+    // Act
+    let result = point1.approx_eq::<epsilon::DefaultEpsilon>(&point2);
+
+    // Assert
+    assert!(!result);
+}
+
+#[test]
+fn test_approx_eq_both_at_origin() {
+    // Arrange
+    let point1 = Point2::new(0.0, 0.0);
+    let point2 = Point2::new(0.0, 0.0);
+
+    // Act
+    let result = point1.approx_eq::<epsilon::DefaultEpsilon>(&point2);
+
+    // Assert
+    assert!(result);
+}
+
+#[test]
+fn test_approx_eq_negative_coordinates() {
+    // Arrange
+    let point1 = Point2::new(-1.0, -2.0);
+    let point2 = Point2::new(-1.0, -2.0);
+
+    // Act
+    let result = point1.approx_eq::<epsilon::DefaultEpsilon>(&point2);
+
+    // Assert
+    assert!(result);
+}
+
+// CCW: right turn along x then up  → counter-clockwise
+// CW:  right turn along x then down → clockwise
+// Collinear (horizontal/vertical/diagonal) → not CCW
+// Negative-coordinate equivalents of CCW/CW
+// Degenerate: all three points identical → not CCW
+#[rstest]
+#[case(
+    Point2::new(0.0, 0.0),
+    Point2::new(1.0, 0.0),
+    Point2::new(0.0, 1.0),
+    true
+)]
+#[case(
+    Point2::new(0.0, 0.0),
+    Point2::new(0.0, 1.0),
+    Point2::new(1.0, 0.0),
+    false
+)]
+#[case(
+    Point2::new(0.0, 0.0),
+    Point2::new(1.0, 0.0),
+    Point2::new(2.0, 0.0),
+    false
+)]
+#[case(
+    Point2::new(0.0, 0.0),
+    Point2::new(0.0, 1.0),
+    Point2::new(0.0, 2.0),
+    false
+)]
+#[case(
+    Point2::new(0.0, 0.0),
+    Point2::new(1.0, 1.0),
+    Point2::new(2.0, 2.0),
+    false
+)]
+#[case(Point2::new(-2.0, -1.0), Point2::new(-1.0, -1.0), Point2::new(-2.0, 0.0), true)]
+#[case(Point2::new(-2.0, -1.0), Point2::new(-2.0, 0.0), Point2::new(-1.0, -1.0), false)]
+#[case(
+    Point2::new(1.0, 1.0),
+    Point2::new(1.0, 1.0),
+    Point2::new(1.0, 1.0),
+    false
+)]
+fn test_detect_ccw(
+    #[case] p: Point2,
+    #[case] o1: Point2,
+    #[case] o2: Point2,
+    #[case] expected: bool,
+) {
+    // Act
+    let result = p.detect_ccw(&o1, &o2);
+
+    // Assert
+    assert_eq!(result, expected);
+}
+
+#[test]
+fn test_round_trip_conversion() {
+    // Arrange
+    let original_tuple = (12.5, 25.0);
+
+    // Act
+    let point: Point2 = original_tuple.into();
+    let result_tuple: (f32, f32) = point.into();
+
+    // Assert
+    assert_eq!(result_tuple, original_tuple);
+}
+
+// approx_total_cmp test cases:
+// - identical points → Equal
+// - both coordinates within epsilon → Equal
+// - x clearly less, same y → Less
+// - x clearly greater, same y → Greater
+// - x equal (approx), y clearly less → Less
+// - x equal (approx), y clearly greater → Greater
+// - x within epsilon, y less → Less
+// - x within epsilon, y greater → Greater
+// - negative coordinates, x less → Less
+// - negative coordinates, x greater → Greater
+#[rstest]
+#[case(Point2::new(0.0, 0.0), Point2::new(0.0, 0.0), Ordering::Equal)]
+#[case(Point2::new(1.0, 1.0), Point2::new(1.0 + 1e-6, 1.0 - 1e-6), Ordering::Equal)]
+#[case(Point2::new(0.0, 0.0), Point2::new(1.0, 0.0), Ordering::Less)]
+#[case(Point2::new(1.0, 0.0), Point2::new(0.0, 0.0), Ordering::Greater)]
+#[case(Point2::new(0.0, 0.0), Point2::new(0.0, 1.0), Ordering::Less)]
+#[case(Point2::new(0.0, 1.0), Point2::new(0.0, 0.0), Ordering::Greater)]
+#[case(Point2::new(1.0, 0.0), Point2::new(1.0 + 1e-6, 1.0), Ordering::Less)]
+#[case(Point2::new(1.0, 1.0), Point2::new(1.0 + 1e-6, 0.0), Ordering::Greater)]
+#[case(Point2::new(-2.0, 0.0), Point2::new(-1.0, 0.0), Ordering::Less)]
+#[case(Point2::new(-1.0, 0.0), Point2::new(-2.0, 0.0), Ordering::Greater)]
+fn test_approx_total_cmp(
+    #[case] lhs: Point2,
+    #[case] rhs: Point2,
+    #[case] expected: Ordering,
+) {
+    // Act
+    let result = lhs.approx_total_cmp::<epsilon::DefaultEpsilon>(&rhs);
+
+    // Assert
+    assert_eq!(result, expected);
+}
