@@ -130,13 +130,13 @@ mod tests {
     use crate::{
         id::IdStore,
         plane::Plane,
+        point::Point,
         solid::{
             SolidBuilder,
             edge::Edge,
             face::{Face, PlanarSurface},
             vertex::Vertex,
         },
-        point::Point,
     };
 
     fn v(x: f32, y: f32, z: f32) -> Vertex {

@@ -47,7 +47,7 @@ impl<E: Epsilon> Plane<E> {
         Plane {
             normal: normal.clone().unit().into(),
             r0: r.clone().into(),
-            _data: PhantomData
+            _data: PhantomData,
         }
     }
 
@@ -69,7 +69,7 @@ impl<E: Epsilon> Plane<E> {
     /// Get normal-inverted plane
     pub fn normal_inverted(&self) -> Self {
         let inverted = *self.normal * -1;
-        Plane::new_with_parametric(&inverted, &*self.r0)
+        Plane::new_with_parametric(&inverted, &self.r0)
     }
 
     /// Check the [point] on the plane or not
