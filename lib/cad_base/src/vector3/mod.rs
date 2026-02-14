@@ -26,32 +26,17 @@ impl Vector3 {
 
     /// Get a new X unit vector
     pub fn new_x_unit() -> Self {
-        Vector3 {
-            x: 1.0,
-            y: 0.0,
-            z: 0.0,
-            _immutable: (),
-        }
+        Vector3::new(1.0, 0.0, 0.0)
     }
 
     /// Get a new Y unit vector
     pub fn new_y_unit() -> Self {
-        Vector3 {
-            x: 0.0,
-            y: 1.0,
-            z: 0.0,
-            _immutable: (),
-        }
+        Vector3::new(0.0, 1.0, 0.0)
     }
 
     /// Get a new Z unit vector
     pub fn new_z_unit() -> Self {
-        Vector3 {
-            x: 0.0,
-            y: 0.0,
-            z: 1.0,
-            _immutable: (),
-        }
+        Vector3::new(0.0, 0.0, 1.0)
     }
 
     /// Get dot product with another vector
