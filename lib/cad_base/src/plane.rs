@@ -423,6 +423,91 @@ mod tests {
         }
     }
 
+    mod normal_inverted {
+        use super::*;
+
+        #[test]
+        fn inverted_normal_is_negated() {
+            // Arrange
+            let plane = Plane::new_xy();
+
+            // Act
+            let inverted = plane.normal_inverted();
+
+            // Assert
+            assert_relative_eq!(inverted.normal.x, -plane.normal.x, epsilon = 1e-5);
+            assert_relative_eq!(inverted.normal.y, -plane.normal.y, epsilon = 1e-5);
+            assert_relative_eq!(inverted.normal.z, -plane.normal.z, epsilon = 1e-5);
+        }
+
+        #[test]
+        fn inverted_plane_keeps_same_anchor_point() {
+            // Arrange
+            let edge1 = edge(2.0, 3.0, 4.0, 3.0, 3.0, 4.0);
+            let edge2 = edge(2.0, 3.0, 4.0, 2.0, 4.0, 4.0);
+            let plane = Plane::new((&edge1.0, &edge1.1), (&edge2.0, &edge2.1))
+                .expect("should create plane");
+
+            // Act
+            let inverted = plane.normal_inverted();
+
+            // Assert
+            assert_relative_eq!(*inverted.r0.x, *plane.r0.x, epsilon = 1e-5);
+            assert_relative_eq!(*inverted.r0.y, *plane.r0.y, epsilon = 1e-5);
+            assert_relative_eq!(*inverted.r0.z, *plane.r0.z, epsilon = 1e-5);
+        }
+
+        #[test]
+        fn double_inversion_restores_original_normal() {
+            // Arrange
+            let edge1 = edge(0.0, 0.0, 0.0, 1.0, 0.0, 1.0);
+            let edge2 = edge(0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+            let plane = Plane::new((&edge1.0, &edge1.1), (&edge2.0, &edge2.1))
+                .expect("should create plane");
+
+            // Act
+            let restored = plane.normal_inverted().normal_inverted();
+
+            // Assert
+            assert_relative_eq!(restored.normal.x, plane.normal.x, epsilon = 1e-5);
+            assert_relative_eq!(restored.normal.y, plane.normal.y, epsilon = 1e-5);
+            assert_relative_eq!(restored.normal.z, plane.normal.z, epsilon = 1e-5);
+        }
+
+        #[test]
+        fn inverted_normal_remains_unit_length() {
+            // Arrange
+            let edge1 = edge(0.0, 0.0, 0.0, 1.0, 2.0, 0.0);
+            let edge2 = edge(0.0, 0.0, 0.0, 0.0, 1.0, 1.0);
+            let plane = Plane::new((&edge1.0, &edge1.1), (&edge2.0, &edge2.1))
+                .expect("should create plane");
+
+            // Act
+            let inverted = plane.normal_inverted();
+
+            // Assert
+            let norm = inverted.normal.norm2().sqrt();
+            assert_relative_eq!(norm, 1.0, epsilon = 1e-5);
+        }
+
+        #[test]
+        fn points_on_original_plane_are_on_inverted_plane() {
+            // Arrange
+            let edge1 = edge(1.0, 1.0, 1.0, 2.0, 1.0, 1.0);
+            let edge2 = edge(1.0, 1.0, 1.0, 1.0, 2.0, 1.0);
+            let plane = Plane::new((&edge1.0, &edge1.1), (&edge2.0, &edge2.1))
+                .expect("should create plane");
+            let point = p(5.0, 5.0, 1.0);
+
+            // Act
+            let inverted = plane.normal_inverted();
+
+            // Assert
+            assert!(plane.is_on_plane(&point));
+            assert!(inverted.is_on_plane(&point));
+        }
+    }
+
     mod is_on_plane {
         use super::*;
 
