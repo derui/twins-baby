@@ -219,6 +219,106 @@ mod tests {
     }
 
     #[test]
+    fn get_edge_by_pair_returns_edge_id_for_existing_pair() {
+        // Arrange
+        let mut builder = SolidBuilder::default();
+        let vids = builder.add_vertices(&[v(0.0, 0.0, 0.0), v(1.0, 0.0, 0.0)]);
+        let edge = Edge::new(vids[0], vids[1]).unwrap();
+        let eids = builder.add_edges(&[edge]);
+
+        // Act
+        let result = builder.get_edge_by_pair(&vids[0], &vids[1]);
+
+        // Assert
+        assert_eq!(result, Some(eids[0]));
+    }
+
+    #[test]
+    fn get_edge_by_pair_returns_edge_id_for_reversed_pair() {
+        // Arrange
+        let mut builder = SolidBuilder::default();
+        let vids = builder.add_vertices(&[v(0.0, 0.0, 0.0), v(1.0, 0.0, 0.0)]);
+        let edge = Edge::new(vids[0], vids[1]).unwrap();
+        let eids = builder.add_edges(&[edge]);
+
+        // Act
+        let result = builder.get_edge_by_pair(&vids[1], &vids[0]);
+
+        // Assert
+        assert_eq!(result, Some(eids[0]));
+    }
+
+    #[test]
+    fn get_edge_by_pair_returns_none_for_nonexistent_pair() {
+        // Arrange
+        let mut builder = SolidBuilder::default();
+        let vids = builder.add_vertices(&[v(0.0, 0.0, 0.0), v(1.0, 0.0, 0.0), v(2.0, 0.0, 0.0)]);
+        let edge = Edge::new(vids[0], vids[1]).unwrap();
+        builder.add_edges(&[edge]);
+
+        // Act
+        let result = builder.get_edge_by_pair(&vids[0], &vids[2]);
+
+        // Assert
+        assert_eq!(result, None);
+    }
+
+    #[test]
+    fn get_edge_returns_edge_for_valid_id() {
+        // Arrange
+        let mut builder = SolidBuilder::default();
+        let vids = builder.add_vertices(&[v(0.0, 0.0, 0.0), v(1.0, 0.0, 0.0)]);
+        let edge = Edge::new(vids[0], vids[1]).unwrap();
+        let eids = builder.add_edges(&[edge.clone()]);
+
+        // Act
+        let result = builder.get_edge(&eids[0]);
+
+        // Assert
+        assert_eq!(result, Some(&edge));
+    }
+
+    #[test]
+    fn get_edge_returns_none_for_invalid_id() {
+        // Arrange
+        let builder = SolidBuilder::default();
+        let invalid_id = IdStore::of().generate();
+
+        // Act
+        let result = builder.get_edge(&invalid_id);
+
+        // Assert
+        assert_eq!(result, None);
+    }
+
+    #[test]
+    fn get_vertex_returns_vertex_for_valid_id() {
+        // Arrange
+        let mut builder = SolidBuilder::default();
+        let vertex = v(1.0, 2.0, 3.0);
+        let vids = builder.add_vertices(&[vertex.clone()]);
+
+        // Act
+        let result = builder.get_vertex(&vids[0]);
+
+        // Assert
+        assert_eq!(result, Some(&vertex));
+    }
+
+    #[test]
+    fn get_vertex_returns_none_for_invalid_id() {
+        // Arrange
+        let builder = SolidBuilder::default();
+        let invalid_id = IdStore::of().generate();
+
+        // Act
+        let result = builder.get_vertex(&invalid_id);
+
+        // Assert
+        assert_eq!(result, None);
+    }
+
+    #[test]
     fn build_creates_solid_with_correct_counts() {
         // Arrange
         let mut builder = SolidBuilder::default();
