@@ -102,6 +102,25 @@ impl SolidBuilder {
             _immutable: (),
         }
     }
+
+    /// get registered edge by vertex pair. It returns None if there is no edge with the vertex pair.
+    pub fn get_edge_by_pair(&self, start: &VertexId, end: &VertexId) -> Option<EdgeId> {
+        let e = self.edges.iter().find(|(_, e)| {
+            (*e.start == *start && *e.end == *end) || (*e.start == *end && *e.end == *start)
+        });
+
+        e.map(|(k, _)| *k)
+    }
+
+    /// get registered edge by id
+    pub fn get_edge(&self, id: &EdgeId) -> Option<&Edge> {
+        self.edges.get(id)
+    }
+
+    /// get registered vertex by id
+    pub fn get_vertex(&self, id: &VertexId) -> Option<&Vertex> {
+        self.vertices.get(id)
+    }
 }
 
 #[cfg(test)]
