@@ -84,9 +84,9 @@ impl<E: Epsilon> Plane<E> {
 
     /// Get the nearest vector to avoid shrink cross
     fn nearest_normal(&self) -> Vector3 {
-        if self.normal.x < self.normal.y && self.normal.x < self.normal.z {
+        if self.normal.x <= self.normal.y && self.normal.x <= self.normal.z {
             Vector3::new_x_unit()
-        } else if self.normal.y < self.normal.x && self.normal.y < self.normal.z {
+        } else if self.normal.y <= self.normal.x && self.normal.y <= self.normal.z {
             Vector3::new_y_unit()
         } else {
             Vector3::new_z_unit()
@@ -95,7 +95,7 @@ impl<E: Epsilon> Plane<E> {
 
     /// Project [`Point2`] to [`Point`] on this plane
     pub fn point_from_2d(&self, point: &Point2) -> Point {
-        let e1 = self.normal.cross(&self.nearest_normal());
+        let e1 = self.normal.cross(&self.nearest_normal()).unit();
         let e2 = self.normal.cross(&e1);
 
         let u = e1 * *point.x;
@@ -350,6 +350,32 @@ mod tests {
         fn result_lies_on_the_plane_for_xy_plane() {
             // Arrange
             let plane = Plane::new_xy();
+            let point2 = pt2(3.0, 4.0);
+
+            // Act
+            let result = plane.point_from_2d(&point2);
+
+            // Assert
+            assert!(plane.is_on_plane(&result));
+        }
+
+        #[test]
+        fn result_lies_on_the_plane_for_yz_plane() {
+            // Arrange
+            let plane = Plane::new_yz();
+            let point2 = pt2(3.0, 4.0);
+
+            // Act
+            let result = plane.point_from_2d(&point2);
+
+            // Assert
+            assert!(plane.is_on_plane(&result));
+        }
+
+        #[test]
+        fn result_lies_on_the_plane_for_xz_plane() {
+            // Arrange
+            let plane = Plane::new_xz();
             let point2 = pt2(3.0, 4.0);
 
             // Act
