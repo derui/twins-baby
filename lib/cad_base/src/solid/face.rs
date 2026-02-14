@@ -24,8 +24,8 @@ pub struct PlanarSurface {
 impl PlanarSurface {
     /// Get new planar surface
     pub fn new(boundaries: &[EdgeId], plane: &Plane) -> Result<Self> {
-        if boundaries.len() != 4 {
-            return Err(eyre!("Boundaries of planar must be 4"));
+        if boundaries.len() < 3 {
+            return Err(eyre!("Boundaries of planar must be greatee than 3"));
         }
 
         Ok(PlanarSurface {
@@ -56,26 +56,11 @@ mod tests {
         (0..count).map(|_| store.generate()).collect()
     }
 
-    #[test]
-    fn new_planar_surface_with_4_boundaries() {
-        // Arrange
-        let edges = make_edge_ids(4);
-        let plane = Plane::new_xy();
-
-        // Act
-        let surface = PlanarSurface::new(&edges, &plane);
-
-        // Assert
-        let surface = surface.expect("should create planar surface with 4 boundaries");
-        assert_eq!(surface.boundaries.len(), 4);
-    }
-
     #[rstest]
-    #[case(0)]
-    #[case(1)]
-    #[case(2)]
     #[case(3)]
-    fn new_planar_surface_fails_with_non_4_boundaries(#[case] count: usize) {
+    #[case(4)]
+    #[case(5)]
+    fn new_planar_surface_succeeds_with_3_or_more_boundaries(#[case] count: usize) {
         // Arrange
         let edges = make_edge_ids(count);
         let plane = Plane::new_xy();
@@ -84,20 +69,24 @@ mod tests {
         let result = PlanarSurface::new(&edges, &plane);
 
         // Assert
-        result.expect_err("should fail with non-4 boundaries");
+        let surface = result.expect("should create planar surface with 3 or more boundaries");
+        assert_eq!(surface.boundaries.len(), count);
     }
 
-    #[test]
-    fn new_planar_surface_fails_with_5_boundaries() {
+    #[rstest]
+    #[case(0)]
+    #[case(1)]
+    #[case(2)]
+    fn new_planar_surface_fails_with_fewer_than_3_boundaries(#[case] count: usize) {
         // Arrange
-        let edges = make_edge_ids(5);
+        let edges = make_edge_ids(count);
         let plane = Plane::new_xy();
 
         // Act
         let result = PlanarSurface::new(&edges, &plane);
 
         // Assert
-        result.expect_err("should fail with 5 boundaries");
+        result.expect_err("should fail with fewer than 3 boundaries");
     }
 
     #[test]
