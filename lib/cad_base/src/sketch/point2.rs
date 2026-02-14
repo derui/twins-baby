@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 use epsilon::Epsilon;
 use immutable::Im;
 
@@ -36,6 +38,17 @@ impl Point2 {
         epsilon::approx_eq::<E>(*self.x, *other.x) && epsilon::approx_eq::<E>(*self.y, *other.y)
     }
 
+    /// Return `true` if `self` and `other` are approximately equal
+    /// within the tolerance defined by the [`Epsilon`] type `E`.
+    pub fn approx_total_cmp<E: Epsilon>(&self, other: &Point2) -> Ordering {
+        match epsilon::approx_total_cmp::<E>(*self.x, *other.x) {
+            Ordering::Equal => {},
+            ord => return ord
+        };
+
+        epsilon::approx_total_cmp::<E>(*self.y, *other.y)
+    }
+
     /// Return `true` if the path `self` -> `o1` -> `o2` makes a
     /// counter-clockwise (CCW) turn.
     ///
@@ -63,6 +76,17 @@ impl From<(f32, f32)> for Point2 {
 impl From<Point2> for (f32, f32) {
     fn from(value: Point2) -> Self {
         (*value.x, *value.y)
+    }
+}
+
+impl PartialOrd for Point2 {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        match self.x.partial_cmp(&other.x) {
+            Some(core::cmp::Ordering::Equal) => {}
+            ord => return ord,
+        }
+
+        self.y.partial_cmp(&other.y)
     }
 }
 
