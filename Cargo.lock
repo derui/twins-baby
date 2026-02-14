@@ -1845,10 +1845,12 @@ dependencies = [
 name = "cad_kernel"
 version = "0.1.0"
 dependencies = [
+ "approx",
  "cad_base",
  "color-eyre",
  "epsilon",
  "pretty_assertions",
+ "rstest",
  "thiserror 2.0.18",
  "tracing",
 ]

@@ -1,5 +1,8 @@
 mod graph;
 
+#[cfg(test)]
+mod tests;
+
 use cad_base::{
     feature::AttachedTarget,
     point::Point,
