@@ -40,12 +40,7 @@ where
     ///
     /// # Returns
     /// * When succeed setting the element, return old element if exists. Return error string when it failed.
-    fn set(
-        &mut self,
-        row: usize,
-        col: usize,
-        element: Element,
-    ) -> Result<Option<Element>>;
+    fn set(&mut self, row: usize, col: usize, element: Element) -> Result<Option<Element>>;
 
     /// Set the elements to the row.
     fn set_row(&mut self, row: usize, elements: &[Option<Element>]) -> Result<()>;

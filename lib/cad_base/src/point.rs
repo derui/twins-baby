@@ -32,7 +32,7 @@ impl Point {
 
 impl From<(f32, f32, f32)> for Point {
     fn from(value: (f32, f32, f32)) -> Self {
-        Point::new(value.0.into(), value.1.into(), value.2.into())
+        Point::new(value.0, value.1, value.2)
     }
 }
 
