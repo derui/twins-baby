@@ -7,6 +7,7 @@ edition = "2024"
 cad_base = { version = "0.1.0", path = "../cad_base" }
 color-eyre.workspace = true
 epsilon = { version = "0.1.0", path = "../epsilon" }
+solver = { version = "0.1.0", path = "../solver" }
 thiserror.workspace = true
 tracing.workspace = true
 

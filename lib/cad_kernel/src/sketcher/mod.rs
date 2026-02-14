@@ -18,7 +18,7 @@ pub(crate) struct JordanCurve {
     /// 3D points of curve
     pub points: Vec<Point>,
     /// Edges of points indices. first is start, second is end.
-    edges: Vec<(usize, usize)>,
+    pub edges: Vec<(usize, usize)>,
 }
 
 /// Sketcher derives closed surface that is basement of the kernel.
