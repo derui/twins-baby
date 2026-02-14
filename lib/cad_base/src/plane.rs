@@ -5,7 +5,7 @@ use epsilon::{DefaultEpsilon, Epsilon, approx_zero};
 use immutable::Im;
 use tracing::instrument;
 
-use crate::{point::Point, vector3::Vector3};
+use crate::{point::Point, sketch::Point2, vector3::Vector3};
 
 /// Simple plane definition.
 #[derive(Debug, Clone, PartialEq)]
@@ -77,6 +77,29 @@ impl<E: Epsilon> Plane<E> {
         let ret = self.normal.dot(&(r0 - r));
 
         approx_zero::<E>(ret.abs())
+    }
+
+    /// Get the nearest vector to avoid shrink cross
+    fn nearest_normal(&self) -> Vector3 {
+        if self.normal.x < self.normal.y && self.normal.x < self.normal.z {
+            Vector3::new_x_unit()
+        } else if self.normal.y < self.normal.x && self.normal.y < self.normal.z {
+            Vector3::new_y_unit()
+        } else {
+            Vector3::new_z_unit()
+        }
+    }
+
+    /// Project [`Point2`] to [`Point`] on this plane
+    pub fn point_from_2d(&self, point: &Point2) -> Point {
+        let e1 = self.normal.cross(&self.nearest_normal());
+        let e2 = self.normal.cross(&e1);
+
+        let u = e1 * *point.x;
+        let v = e2 * *point.y;
+
+        let r = Vector3::from(&*self.r0) + u + v;
+        Point::from_vector3(&r)
     }
 }
 
