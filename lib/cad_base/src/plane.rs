@@ -321,6 +321,105 @@ mod tests {
         }
     }
 
+    mod point_from_2d {
+        use super::*;
+
+        fn pt2(x: f32, y: f32) -> Point2 {
+            Point2::new(x, y)
+        }
+
+        #[test]
+        fn origin_maps_to_plane_anchor_on_xy_plane() {
+            // Arrange
+            let plane = Plane::new_xy();
+            let point2 = pt2(0.0, 0.0);
+
+            // Act
+            let result = plane.point_from_2d(&point2);
+
+            // Assert
+            assert_relative_eq!(*result.x, 0.0, epsilon = 1e-5);
+            assert_relative_eq!(*result.y, 0.0, epsilon = 1e-5);
+            assert_relative_eq!(*result.z, 0.0, epsilon = 1e-5);
+        }
+
+        #[test]
+        fn result_lies_on_the_plane_for_xy_plane() {
+            // Arrange
+            let plane = Plane::new_xy();
+            let point2 = pt2(3.0, 4.0);
+
+            // Act
+            let result = plane.point_from_2d(&point2);
+
+            // Assert
+            assert!(plane.is_on_plane(&result));
+        }
+
+        #[test]
+        fn result_lies_on_the_plane_for_custom_offset_plane() {
+            // Arrange
+            let edge1 = edge(1.0, 1.0, 1.0, 2.0, 1.0, 1.0);
+            let edge2 = edge(1.0, 1.0, 1.0, 1.0, 2.0, 1.0);
+            let plane = Plane::new((&edge1.0, &edge1.1), (&edge2.0, &edge2.1))
+                .expect("should create plane");
+            let point2 = pt2(2.0, 3.0);
+
+            // Act
+            let result = plane.point_from_2d(&point2);
+
+            // Assert
+            assert!(plane.is_on_plane(&result));
+        }
+
+        #[test]
+        fn negative_coordinates_produce_point_on_plane() {
+            // Arrange
+            let plane = Plane::new_xy();
+            let point2 = pt2(-3.0, -5.0);
+
+            // Act
+            let result = plane.point_from_2d(&point2);
+
+            // Assert
+            assert!(plane.is_on_plane(&result));
+        }
+
+        #[test]
+        fn result_lies_on_the_plane_for_tilted_plane() {
+            // Arrange
+            let edge1 = edge(0.0, 0.0, 0.0, 1.0, 0.0, 1.0);
+            let edge2 = edge(0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+            let plane = Plane::new((&edge1.0, &edge1.1), (&edge2.0, &edge2.1))
+                .expect("should create plane");
+            let point2 = pt2(2.0, 3.0);
+
+            // Act
+            let result = plane.point_from_2d(&point2);
+
+            // Assert
+            assert!(plane.is_on_plane(&result));
+        }
+
+        #[test]
+        fn origin_on_offset_plane_maps_to_anchor_point() {
+            // Arrange
+            let edge1 = edge(2.0, 3.0, 4.0, 3.0, 3.0, 4.0);
+            let edge2 = edge(2.0, 3.0, 4.0, 2.0, 4.0, 4.0);
+            let plane = Plane::new((&edge1.0, &edge1.1), (&edge2.0, &edge2.1))
+                .expect("should create plane");
+            let point2 = pt2(0.0, 0.0);
+
+            // Act
+            let result = plane.point_from_2d(&point2);
+
+            // Assert
+            assert_relative_eq!(*result.x, 2.0, epsilon = 1e-5);
+            assert_relative_eq!(*result.y, 3.0, epsilon = 1e-5);
+            assert_relative_eq!(*result.z, 4.0, epsilon = 1e-5);
+        }
+    }
+
     mod is_on_plane {
         use super::*;
 
