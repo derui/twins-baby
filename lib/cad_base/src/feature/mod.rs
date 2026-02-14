@@ -113,7 +113,7 @@ pub trait Evaluate {
     fn evaluate<'a>(
         feature: &Feature,
         context: &FeatureContext<'a>,
-    ) -> Result<Solid, EvaluateError>;
+    ) -> Result<Vec<Solid>, EvaluateError>;
 }
 
 #[cfg(test)]
