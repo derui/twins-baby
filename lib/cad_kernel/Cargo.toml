@@ -9,3 +9,6 @@ color-eyre.workspace = true
 epsilon = { version = "0.1.0", path = "../epsilon" }
 thiserror.workspace = true
 tracing.workspace = true
+
+[dev-dependencies]
+pretty_assertions.workspace = true

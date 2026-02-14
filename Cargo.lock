@@ -1848,6 +1848,7 @@ dependencies = [
  "cad_base",
  "color-eyre",
  "epsilon",
+ "pretty_assertions",
  "thiserror 2.0.18",
  "tracing",
 ]
