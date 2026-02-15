@@ -232,6 +232,71 @@ mod calculate_jordan_curves {
     }
 
     #[test]
+    fn crossing_two_disconnected_segments_returns_error() {
+        // Arrange – two segments with no shared endpoints that cross at (1,1);
+        // no connectivity, no closed loop.
+        //   (0,0)→(2,2) (diagonal up-right) × (0,2)→(2,0) (diagonal down-right)
+        let mut sketch = plane_sketch();
+        add_segment(&mut sketch, (0.0, 0.0), (2.0, 2.0));
+        add_segment(&mut sketch, (0.0, 2.0), (2.0, 0.0));
+
+        let plane = Plane::<DefaultEpsilon>::new_xy();
+        let target = AttachedTarget::Plane(&plane);
+        let sketcher = Sketcher::new(&sketch, &target).expect("should create sketcher");
+
+        // Act
+        let result = sketcher.calculate_jordan_corves::<DefaultEpsilon>();
+
+        // Assert – crossing is detected before any closed-curve analysis
+        assert!(matches!(result, Err(SketcherError::SketchHasNoJordanCurve)));
+    }
+
+    #[test]
+    fn crossing_open_chain_returns_error() {
+        // Arrange – open chain (no cycle) where non-adjacent edges cross:
+        //   edge 0: (0,0)→(3,0) horizontal
+        //   edge 1: (3,0)→(3,3) vertical    (adjacent to edge 0)
+        //   edge 2: (0,2)→(4,2) horizontal  (not adjacent to edge 1; crosses it at (3,2))
+        let mut sketch = plane_sketch();
+        add_segment(&mut sketch, (0.0, 0.0), (3.0, 0.0));
+        add_segment(&mut sketch, (3.0, 0.0), (3.0, 3.0));
+        add_segment(&mut sketch, (0.0, 2.0), (4.0, 2.0));
+
+        let plane = Plane::<DefaultEpsilon>::new_xy();
+        let target = AttachedTarget::Plane(&plane);
+        let sketcher = Sketcher::new(&sketch, &target).expect("should create sketcher");
+
+        // Act
+        let result = sketcher.calculate_jordan_corves::<DefaultEpsilon>();
+
+        // Assert – crossing fires before the closed-curve check even runs
+        assert!(matches!(result, Err(SketcherError::SketchHasNoJordanCurve)));
+    }
+
+    #[test]
+    fn crossing_pentagram_star_returns_error() {
+        // Arrange – star polygon (pentagram): A(2,0)→B(0,3)→C(4,1)→D(0,1)→E(4,3)→A(2,0)
+        //   Multiple non-adjacent pairs cross, e.g.:
+        //   A-B and C-D cross at (4/3, 1); B-C and D-E cross at (2, 2).
+        let mut sketch = plane_sketch();
+        add_segment(&mut sketch, (2.0, 0.0), (0.0, 3.0));
+        add_segment(&mut sketch, (0.0, 3.0), (4.0, 1.0));
+        add_segment(&mut sketch, (4.0, 1.0), (0.0, 1.0));
+        add_segment(&mut sketch, (0.0, 1.0), (4.0, 3.0));
+        add_segment(&mut sketch, (4.0, 3.0), (2.0, 0.0));
+
+        let plane = Plane::<DefaultEpsilon>::new_xy();
+        let target = AttachedTarget::Plane(&plane);
+        let sketcher = Sketcher::new(&sketch, &target).expect("should create sketcher");
+
+        // Act
+        let result = sketcher.calculate_jordan_corves::<DefaultEpsilon>();
+
+        // Assert – multiple crossings are detected before closed-curve detection
+        assert!(matches!(result, Err(SketcherError::SketchHasNoJordanCurve)));
+    }
+
+    #[test]
     fn concave_l_shape_without_crossings_succeeds() {
         // Arrange – L-shaped hexagon (concave, no edges cross):
         // (0,0)→(2,0)→(2,1)→(1,1)→(1,2)→(0,2)→(0,0)
