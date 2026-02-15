@@ -21,6 +21,8 @@ color-eyre = "0.6.5"
 thiserror = "2.0.18"
 tracing = "0.1.44"
 
+insta = "1.43.1"
+
 # test only dependencies
 futures-lite = { version = "2.6.0", default-features = false }
 tokio = { version = "1.41", default-features = false, features = [
@@ -42,6 +44,7 @@ pretty_assertions.workspace = true
 tokio.workspace = true
 futures-lite.workspace = true
 any_spawner.workspace = true
+insta.workspace = true
 
 [dependencies.bevy]
 version = "0.18.0"
