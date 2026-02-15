@@ -9,9 +9,13 @@ use crate::{
 
 pub mod edge;
 pub mod face;
+mod perspective;
 pub mod vertex;
 
+pub use perspective::*;
+
 /// The struct for a solid
+#[derive(Debug, Clone, PartialEq)]
 pub struct Solid {
     /// Surfaces that constructs the solid. Each edges must be contained in the same solid
     pub faces: Im<HashMap<FaceId, Face>>,
@@ -23,6 +27,7 @@ pub struct Solid {
     _immutable: (),
 }
 
+#[derive(Debug)]
 pub struct SolidBuilder {
     faces: HashMap<FaceId, Face>,
     edges: HashMap<EdgeId, Edge>,
