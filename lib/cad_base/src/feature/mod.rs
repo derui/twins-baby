@@ -9,7 +9,7 @@ use thiserror::Error;
 
 use crate::{
     feature::operation::Operation,
-    id::{SketchId, SolidId},
+    id::SketchId,
     plane::Plane,
     sketch::Sketch,
     solid::{Solid, face::Face},
@@ -38,7 +38,7 @@ pub struct Feature {
     pub status: Im<FeatureStatus>,
 
     /// Solid Id what created by this feature.
-    pub solid: Im<Option<SolidId>>,
+    pub solid: Im<Option<Solid>>,
 
     _immutable: (),
 }
@@ -56,7 +56,7 @@ impl Feature {
             sketch: sketch.into(),
             operation: operation.clone().into(),
             status: FeatureStatus::Stale.into(),
-            solid: (None as Option<SolidId>).into(),
+            solid: None.into(),
             _immutable: (),
         })
     }

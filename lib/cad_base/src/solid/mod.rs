@@ -9,10 +9,7 @@ use crate::{
 
 pub mod edge;
 pub mod face;
-mod perspective;
 pub mod vertex;
-
-pub use perspective::*;
 
 /// The struct for a solid
 #[derive(Debug, Clone, PartialEq)]
