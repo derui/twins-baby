@@ -6,7 +6,7 @@ mod tests;
 use cad_base::{
     feature::AttachedTarget,
     point::Point,
-    sketch::{AttachableTarget, Sketch},
+    sketch::{AttachableTarget, Point2, Sketch},
 };
 use color_eyre::eyre::{Result, eyre};
 use epsilon::Epsilon;
@@ -80,6 +80,10 @@ impl Sketcher<'_> {
         for curve in &curves {
             let edges = Vec::from_iter((0..(curve.len() - 1)).map(|v| (v, v + 1)));
 
+            if !all_edges_not_crossed(&edges, &curve) {
+                return Err(SketcherError::SketchHasNoJordanCurve);
+            }
+
             let plane = match self.target {
                 AttachedTarget::Plane(plane) => *plane,
                 AttachedTarget::Face(_face) => todo!("Plane from face does not implement now"),
@@ -94,4 +98,36 @@ impl Sketcher<'_> {
 
         Ok(ret)
     }
+}
+
+/// Check segment `(p1,p2)` and `(p3, p4)` intersection.
+fn segment_intersect(p1: &Point2, p2: &Point2, p3: &Point2, p4: &Point2) -> bool {
+    (p1.detect_ccw(p3, p4) != p2.detect_ccw(p3, p4))
+        && (p3.detect_ccw(p1, p2) != p4.detect_ccw(p1, p2))
+}
+
+/// Helper function to detect crossed.
+fn all_edges_not_crossed(edges: &[(usize, usize)], points: &[Point2]) -> bool {
+    let edges: Vec<_> = edges
+        .iter()
+        .map(|(start, end)| ((*start, *end), (&points[*start], &points[*end])))
+        .collect();
+
+    for i in 0..edges.len() {
+        for j in (i + 1)..edges.len() {
+            let ei = edges[i];
+            let ej = edges[j];
+
+            // exclude edges that they have shared point
+            if ei.0.0 == ej.0.0 || ei.0.0 == ej.0.1 || ei.0.1 == ej.0.0 || ei.0.1 == ej.0.1 {
+                continue;
+            }
+
+            if segment_intersect(ei.1.0, ei.1.1, ej.1.0, ej.1.1) {
+                return false;
+            }
+        }
+    }
+
+    true
 }
