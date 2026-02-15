@@ -237,4 +237,87 @@ mod tests {
         // assert
         assert_eq!(*feature.name, "Trimmed");
     }
+
+    struct SuccessEvaluator;
+    impl Evaluate for SuccessEvaluator {
+        fn evaluate<'a>(
+            _feature: &Feature,
+            _context: &FeatureContext<'a>,
+        ) -> Result<Vec<Solid>, EvaluateError> {
+            Ok(vec![])
+        }
+    }
+
+    struct FailEvaluator;
+    impl Evaluate for FailEvaluator {
+        fn evaluate<'a>(
+            _feature: &Feature,
+            _context: &FeatureContext<'a>,
+        ) -> Result<Vec<Solid>, EvaluateError> {
+            Err(EvaluateError::InsufficientSketch)
+        }
+    }
+
+    fn make_context<'a>() -> FeatureContext<'a> {
+        FeatureContext {
+            sketches: vec![].into(),
+            target: vec![].into(),
+        }
+    }
+
+    #[test]
+    fn test_evaluate_sets_status_to_valid_on_success() {
+        // arrange
+        let mut feature = Feature::new("Pad1", make_sketch_id(), &make_operation()).unwrap();
+        let context = make_context();
+
+        // act
+        feature.evaluate::<SuccessEvaluator>(&context).unwrap();
+
+        // assert
+        assert_eq!(*feature.status, FeatureStatus::Valid);
+    }
+
+    #[test]
+    fn test_evaluate_stores_solids_on_success() {
+        // arrange
+        let mut feature = Feature::new("Pad1", make_sketch_id(), &make_operation()).unwrap();
+        let context = make_context();
+
+        // act
+        feature.evaluate::<SuccessEvaluator>(&context).unwrap();
+
+        // assert
+        assert!(feature.solids.is_some());
+    }
+
+    #[test]
+    fn test_evaluate_sets_status_to_error_on_failure() {
+        // arrange
+        let mut feature = Feature::new("Pad1", make_sketch_id(), &make_operation()).unwrap();
+        let context = make_context();
+
+        // act
+        let result = feature.evaluate::<FailEvaluator>(&context);
+
+        // assert
+        assert!(result.is_err());
+        assert_eq!(
+            *feature.status,
+            FeatureStatus::Error("No sketches in the context".to_string())
+        );
+    }
+
+    #[test]
+    fn test_evaluate_does_not_update_solids_on_failure() {
+        // arrange
+        let mut feature = Feature::new("Pad1", make_sketch_id(), &make_operation()).unwrap();
+        let context = make_context();
+
+        // act
+        let _ = feature.evaluate::<FailEvaluator>(&context);
+
+        // assert
+        assert!(feature.solids.is_none());
+    }
 }
