@@ -1848,6 +1848,7 @@ dependencies = [
  "approx",
  "cad_base",
  "color-eyre",
+ "enum_dispatch",
  "epsilon",
  "pretty_assertions",
  "rstest",
