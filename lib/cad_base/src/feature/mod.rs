@@ -38,7 +38,7 @@ pub struct Feature {
     pub status: Im<FeatureStatus>,
 
     /// Solid Id what created by this feature.
-    pub solid: Im<Option<Solid>>,
+    pub solids: Im<Option<Vec<Solid>>>,
 
     _immutable: (),
 }
@@ -56,7 +56,7 @@ impl Feature {
             sketch: sketch.into(),
             operation: operation.clone().into(),
             status: FeatureStatus::Stale.into(),
-            solid: None.into(),
+            solids: None.into(),
             _immutable: (),
         })
     }
@@ -77,9 +77,22 @@ impl Feature {
         self.operation = operation.clone().into()
     }
 
-    /// Update status
-    fn set_status(&mut self, status: &FeatureStatus) {
-        self.status = status.clone().into()
+    /// Evaluate the feature. If the feature errors, update status
+    pub fn evaluate<'a, E: Evaluate>(
+        &mut self,
+        context: &'a FeatureContext<'a>,
+    ) -> Result<(), EvaluateError> {
+        match E::evaluate(self, context) {
+            Ok(solids) => {
+                self.solids = Some(solids).into();
+                self.status = FeatureStatus::Valid.into();
+                Ok(())
+            }
+            Err(e) => {
+                self.status = FeatureStatus::Error(e.to_string()).into();
+                Err(e)
+            }
+        }
     }
 }
 
