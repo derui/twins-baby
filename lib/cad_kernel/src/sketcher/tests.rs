@@ -72,6 +72,7 @@ mod sketcher_new {
 
 mod calculate_jordan_curves {
     use approx::assert_relative_eq;
+    use pretty_assertions::assert_eq;
 
     use super::*;
 
@@ -185,5 +186,74 @@ mod calculate_jordan_curves {
         let curve = &curves[0];
         let expected_edge_count = curve.points.len() - 1;
         assert_eq!(curve.edges.len(), expected_edge_count);
+    }
+
+    #[test]
+    fn crossing_hourglass_returns_error() {
+        // Arrange – hourglass (X-shape): A(0,0)→B(2,2)→C(2,0)→D(0,2)→A
+        // The resulting curve is traversed as [A, B, C, D]; edges A-B and C-D are
+        // the two diagonals of a 2×2 square and cross at (1, 1).
+        let mut sketch = plane_sketch();
+        add_segment(&mut sketch, (0.0, 0.0), (2.0, 2.0));
+        add_segment(&mut sketch, (2.0, 2.0), (2.0, 0.0));
+        add_segment(&mut sketch, (2.0, 0.0), (0.0, 2.0));
+        add_segment(&mut sketch, (0.0, 2.0), (0.0, 0.0));
+
+        let plane = Plane::<DefaultEpsilon>::new_xy();
+        let target = AttachedTarget::Plane(&plane);
+        let sketcher = Sketcher::new(&sketch, &target).expect("should create sketcher");
+
+        // Act
+        let result = sketcher.calculate_jordan_corves::<DefaultEpsilon>();
+
+        // Assert
+        assert!(matches!(result, Err(SketcherError::SketchHasNoJordanCurve)));
+    }
+
+    #[test]
+    fn crossing_bowtie_returns_error() {
+        // Arrange – bowtie: A(0,0)→B(2,1)→C(0,1)→D(2,0)→A
+        // The resulting curve is traversed as [A, B, C, D]; edges A-B and C-D cross at (1, 0.5).
+        let mut sketch = plane_sketch();
+        add_segment(&mut sketch, (0.0, 0.0), (2.0, 1.0));
+        add_segment(&mut sketch, (2.0, 1.0), (0.0, 1.0));
+        add_segment(&mut sketch, (0.0, 1.0), (2.0, 0.0));
+        add_segment(&mut sketch, (2.0, 0.0), (0.0, 0.0));
+
+        let plane = Plane::<DefaultEpsilon>::new_xy();
+        let target = AttachedTarget::Plane(&plane);
+        let sketcher = Sketcher::new(&sketch, &target).expect("should create sketcher");
+
+        // Act
+        let result = sketcher.calculate_jordan_corves::<DefaultEpsilon>();
+
+        // Assert
+        assert!(matches!(result, Err(SketcherError::SketchHasNoJordanCurve)));
+    }
+
+    #[test]
+    fn concave_l_shape_without_crossings_succeeds() {
+        // Arrange – L-shaped hexagon (concave, no edges cross):
+        // (0,0)→(2,0)→(2,1)→(1,1)→(1,2)→(0,2)→(0,0)
+        let mut sketch = plane_sketch();
+        add_segment(&mut sketch, (0.0, 0.0), (2.0, 0.0));
+        add_segment(&mut sketch, (2.0, 0.0), (2.0, 1.0));
+        add_segment(&mut sketch, (2.0, 1.0), (1.0, 1.0));
+        add_segment(&mut sketch, (1.0, 1.0), (1.0, 2.0));
+        add_segment(&mut sketch, (1.0, 2.0), (0.0, 2.0));
+        add_segment(&mut sketch, (0.0, 2.0), (0.0, 0.0));
+
+        let plane = Plane::<DefaultEpsilon>::new_xy();
+        let target = AttachedTarget::Plane(&plane);
+        let sketcher = Sketcher::new(&sketch, &target).expect("should create sketcher");
+
+        // Act
+        let result = sketcher.calculate_jordan_corves::<DefaultEpsilon>();
+
+        // Assert
+        assert!(
+            result.is_ok(),
+            "concave L-shape should not produce crossing edges"
+        );
     }
 }

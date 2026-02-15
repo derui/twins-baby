@@ -6,10 +6,10 @@ mod tests;
 use cad_base::{
     feature::AttachedTarget,
     point::Point,
-    sketch::{AttachableTarget, Point2, Sketch},
+    sketch::{AttachableTarget, Point2, Sketch, edge::SketchEdge},
 };
 use color_eyre::eyre::{Result, eyre};
-use epsilon::Epsilon;
+use epsilon::{DefaultEpsilon, Epsilon};
 
 /// struct of representation of Jordan Curve.
 ///
@@ -67,6 +67,10 @@ impl Sketcher<'_> {
             return Err(SketcherError::SketchNotHaveEdge);
         };
 
+        if !all_edges_not_crossed(&edges) {
+            return Err(SketcherError::SketchHasNoJordanCurve);
+        }
+
         // make adjacent list
         let Ok(graph) = graph::Graph::new::<E>(&edges) else {
             return Err(SketcherError::SketchNotHaveEdge);
@@ -79,10 +83,6 @@ impl Sketcher<'_> {
         let mut ret: Vec<JordanCurve> = vec![];
         for curve in &curves {
             let edges = Vec::from_iter((0..(curve.len() - 1)).map(|v| (v, v + 1)));
-
-            if !all_edges_not_crossed(&edges, &curve) {
-                return Err(SketcherError::SketchHasNoJordanCurve);
-            }
 
             let plane = match self.target {
                 AttachedTarget::Plane(plane) => *plane,
@@ -107,23 +107,22 @@ fn segment_intersect(p1: &Point2, p2: &Point2, p3: &Point2, p4: &Point2) -> bool
 }
 
 /// Helper function to detect crossed.
-fn all_edges_not_crossed(edges: &[(usize, usize)], points: &[Point2]) -> bool {
-    let edges: Vec<_> = edges
-        .iter()
-        .map(|(start, end)| ((*start, *end), (&points[*start], &points[*end])))
-        .collect();
-
+fn all_edges_not_crossed(edges: &[SketchEdge]) -> bool {
     for i in 0..edges.len() {
         for j in (i + 1)..edges.len() {
-            let ei = edges[i];
-            let ej = edges[j];
+            let ei = &edges[i];
+            let ej = &edges[j];
 
             // exclude edges that they have shared point
-            if ei.0.0 == ej.0.0 || ei.0.0 == ej.0.1 || ei.0.1 == ej.0.0 || ei.0.1 == ej.0.1 {
+            if ei.start.approx_eq::<DefaultEpsilon>(&ej.start)
+                || ei.start.approx_eq::<DefaultEpsilon>(&ej.end)
+                || ei.end.approx_eq::<DefaultEpsilon>(&ej.start)
+                || ei.end.approx_eq::<DefaultEpsilon>(&ej.end)
+            {
                 continue;
             }
 
-            if segment_intersect(ei.1.0, ei.1.1, ej.1.0, ej.1.1) {
+            if segment_intersect(&ei.start, &ei.end, &ej.start, &ej.end) {
                 return false;
             }
         }
