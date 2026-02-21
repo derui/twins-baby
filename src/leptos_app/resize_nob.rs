@@ -67,7 +67,7 @@ pub fn ResizeXNob(movement: WriteSignal<i32>, #[prop(optional)] class: String) -
                 .then(|| {
                     view! {
                         <div
-                            class="fixed pointer-events-none bg-blue-400 opacity-50 z-50"
+                            class="fixed pointer-events-none bg-blue-400/50 z-50"
                             style=ghost_style
                         ></div>
                     }
@@ -137,7 +137,7 @@ pub fn ResizeYNob(movement: WriteSignal<i32>, #[prop(optional)] class: String) -
                 .then(|| {
                     view! {
                         <div
-                            class="fixed pointer-events-none bg-blue-400 opacity-50 z-50"
+                            class="fixed pointer-events-none bg-blue-400/50 z-50"
                             style=ghost_style
                         ></div>
                     }
