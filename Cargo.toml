@@ -22,6 +22,7 @@ thiserror = "2.0.18"
 tracing = "0.1.44"
 
 insta = "1.43.1"
+leptos = { version = "0.8.8", features = ["csr"] }
 
 # test only dependencies
 futures-lite = { version = "2.6.0", default-features = false }
@@ -35,7 +36,7 @@ any_spawner = {version = "0.3.0", features = ["tokio"] }
 [dependencies]
 coarsetime = "0.1.36"
 console_error_panic_hook = "0.1.7"
-leptos = { version = "0.8.8", features = ["csr"] }
+leptos.workspace = true
 leptos-bevy-canvas = "0.5.0"
 leptos-use = "0.18.0"
 
