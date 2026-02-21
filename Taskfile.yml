@@ -16,3 +16,13 @@ tasks:
     desc: Run test all workspace
     cmds:
       - cargo nextest run --workspace {{.CLI_ARGS}}
+
+  test:e2e:
+    desc: Run Playwright browser tests
+    cmds:
+      - npx playwright test {{.CLI_ARGS}}
+
+  test:e2e:ui:
+    desc: Run Playwright browser tests with interactive UI
+    cmds:
+      - npx playwright test --ui
