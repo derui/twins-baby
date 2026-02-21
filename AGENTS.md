@@ -88,7 +88,7 @@ Both formatters run on `.rs` files to ensure consistent code style.
 
 This project uses Cargo workspace to manage shared dependencies across multiple crates. Common dependencies are defined in the root `Cargo.toml` under `[workspace.dependencies]`.
 
-When adding dependencies to workspace member crates (`lib/cad_base`, `lib/solver`, etc.):
+When adding dependencies to workspace member crates (`lib/cad-base`, `lib/solver`, etc.):
 - **Always check** if the dependency is already defined in `[workspace.dependencies]` in the root `Cargo.toml`
 - **If defined**, use `<dependency>.workspace = true` syntax instead of specifying the version directly
 - **If not defined**, consider adding it to `[workspace.dependencies]` first if it will be used by multiple crates

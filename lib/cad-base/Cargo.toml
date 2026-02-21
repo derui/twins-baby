@@ -1,5 +1,5 @@
 [package]
-name = "cad_base"
+name = "cad-base"
 version = "0.1.0"
 edition = "2024"
 
@@ -10,7 +10,7 @@ rand.workspace = true
 solver = { version = "0.1.0", path = "../solver" }
 immutable = { version = "0.1.0", path = "../immutable" }
 enum_dispatch.workspace = true
-cad_base_macro = { version = "0.1.0", path = "../cad_base_macro" }
+cad-base-macro = { version = "0.1.0", path = "../cad-base-macro" }
 thiserror.workspace = true
 tracing.workspace = true
 

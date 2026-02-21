@@ -1,10 +1,10 @@
 [package]
-name = "cad_kernel"
+name = "cad-kernel"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-cad_base = { version = "0.1.0", path = "../cad_base" }
+cad-base = { version = "0.1.0", path = "../cad-base" }
 color-eyre.workspace = true
 enum_dispatch.workspace = true
 epsilon = { version = "0.1.0", path = "../epsilon" }

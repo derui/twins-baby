@@ -1814,11 +1814,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b35204fbdc0b3f4446b89fc1ac2cf84a8a68971995d0bf2e925ec7cd960f9cb3"
 
 [[package]]
-name = "cad_base"
+name = "cad-base"
 version = "0.1.0"
 dependencies = [
  "approx",
- "cad_base_macro",
+ "cad-base-macro",
  "color-eyre",
  "enum_dispatch",
  "epsilon",
@@ -1832,7 +1832,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "cad_base_macro"
+name = "cad-base-macro"
 version = "0.1.0"
 dependencies = [
  "pretty_assertions",
@@ -1842,11 +1842,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "cad_kernel"
+name = "cad-kernel"
 version = "0.1.0"
 dependencies = [
  "approx",
- "cad_base",
+ "cad-base",
  "color-eyre",
  "enum_dispatch",
  "epsilon",
@@ -6259,6 +6259,10 @@ name = "typewit"
 version = "1.14.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f8c1ae7cc0fdb8b842d65d127cb981574b0d2b249b74d1c7a2986863dc134f71"
+
+[[package]]
+name = "ui-headless"
+version = "0.1.0"
 
 [[package]]
 name = "unic-langid"

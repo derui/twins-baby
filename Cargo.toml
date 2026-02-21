@@ -6,7 +6,7 @@ edition = "2024"
 [workspace]
 
 members = [
-   "lib/cad_base", "lib/cad_base_macro", "lib/cad_kernel", "lib/epsilon", "lib/immutable",
+   "lib/cad-base", "lib/cad-base-macro", "lib/cad-kernel", "lib/epsilon", "lib/immutable",
    "lib/solver"
 , "lib/ui-headless"]
 
