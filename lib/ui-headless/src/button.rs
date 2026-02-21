@@ -1,5 +1,4 @@
 use immutable::Im;
-use leptos::prelude::Callback;
 
 /// A combination of button on clicked.
 #[derive(Debug, Clone, Copy)]
@@ -9,32 +8,56 @@ pub enum MouseButton {
     Secondary,
 }
 
-/// Button behavior. This struct makes contract of button behavior, with accecibility works.
-pub struct UseButton {
-    /// A callback to click. This must be wired to `on_click`
-    pub on_click: Im<Callback<MouseButton>>,
+/// Action of the button
+#[derive(Debug, Clone, Copy)]
+pub enum ButtonAction {
+    Disable,
+    Enable,
+    Toggle,
+}
 
+/// State of the button.
+pub struct ButtonState {
+    pub disabled: Im<bool>,
+    _immutable: (),
+}
+
+impl Default for ButtonState {
+    fn default() -> Self {
+        Self {
+            disabled: false.into(),
+            _immutable: (),
+        }
+    }
+}
+
+pub struct ButtonAttrs {
     /// tabindex of the button
     pub tabindex: Im<i32>,
+    /// disabled/enabled the button
+    pub disabled: Im<bool>,
 
-    /// Role of the button. This must be aria-role
-    pub role: Im<&'static str>,
+    /// Pure role of the button
+    role: Im<&'static str>,
 
     _immutable: (),
 }
 
-/// Make a new behavior of button.
-pub fn use_button<T: 'static + Fn(MouseButton) + Sync + Send>(
-    on_click: T,
-    tabindex: i32,
-) -> UseButton {
-    let on_click = Callback::new(on_click);
-
-    UseButton {
-        on_click: on_click.into(),
-        tabindex: tabindex.into(),
-        role: "button".into(),
-        _immutable: (),
+/// Reduce button states.
+pub fn reduce_button(state: &ButtonState, action: ButtonAction) -> ButtonState {
+    match action {
+        ButtonAction::Disable => ButtonState {
+            disabled: true.into(),
+            ..*state
+        },
+        ButtonAction::Enable => ButtonState {
+            disabled: false.into(),
+            ..*state
+        },
+        ButtonAction::Toggle => ButtonState {
+            disabled: (!*state.disabled).into(),
+            ..*state
+        },
     }
 }
 
