@@ -3,6 +3,12 @@ name = "ui-component"
 version = "0.1.0"
 edition = "2024"
 
+[dev-dependencies]
+insta.workspace = true
+leptos = { workspace = true, features = ["ssr"] }
+leptos-test = { version = "0.1.0", path = "../leptos-test" }
+tokio = { workspace = true, features = ["macros", "rt"] }
+
 [dependencies]
 immutable = { version = "0.1.0", path = "../immutable" }
 leptos.workspace = true

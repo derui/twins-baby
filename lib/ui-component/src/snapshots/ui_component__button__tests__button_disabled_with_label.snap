@@ -1,0 +1,6 @@
+---
+source: lib/ui-component/src/button.rs
+assertion_line: 102
+expression: html
+---
+<button disabled class="inline-flex flex-col items-center w-fit"><!--bo-TypeId(0x41223169ff28813ba79b7268a2a968d9)--><!><!--<() />--><!--bc-TypeId(0x41223169ff28813ba79b7268a2a968d9)--><!--bo-TypeId(0x4d5aeac12ae30dbe1bd7fb06160551fd)-->Disabled<!--bc-TypeId(0x4d5aeac12ae30dbe1bd7fb06160551fd)--></button>

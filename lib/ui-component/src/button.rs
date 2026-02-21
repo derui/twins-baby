@@ -7,15 +7,16 @@ pub fn Button(
     #[prop(optional)] disabled: Option<bool>,
     #[prop(optional)] tabindex: Option<i32>,
     #[prop(optional)] on_click: Option<Callback<MouseEvent>>,
-    #[prop(optional)] icon: Option<impl IntoView>,
-    #[prop(optional)] label: Option<ReadSignal<String>>,
+    #[prop(optional, into)] icon: ViewFn,
+    children: Children,
 ) -> impl IntoView {
     let state = use_button(disabled.unwrap_or(false));
 
-    let attrs = (*state.attrs).get();
+    let disabled = move || (*state.attrs).get().disabled;
+
     view! {
         <button
-            disabled=*attrs.disabled
+            disabled=*disabled()
             tabindex=tabindex
             on:click=move |ev| {
                 let Some(handler) = on_click else {
@@ -25,10 +26,76 @@ pub fn Button(
             }
             class="inline-flex flex-col items-center w-fit"
         >
-            {icon}
-            <Show when=move || label.is_some()>
-                <span class="overflow-hidden h-[16px]">{label.unwrap().get()}</span>
-            </Show>
+            {icon.run()}
+            {children()}
         </button>
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use leptos::prelude::*;
+    use leptos_test::{assert_view_snapshot, with_leptos_owner};
+
+    use super::Button;
+
+    #[tokio::test]
+    async fn test_button_default() {
+        with_leptos_owner(async {
+            // Arrange
+            let view = view! { <Button>"label"</Button> };
+
+            // Act & Assert
+            assert_view_snapshot!("button_default", view);
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn test_button_disabled() {
+        with_leptos_owner(async {
+            // Arrange
+            let view = view! { <Button disabled=true>"label"</Button> };
+
+            // Act & Assert
+            assert_view_snapshot!("button_disabled", view);
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn test_button_with_icon() {
+        with_leptos_owner(async {
+            // Arrange
+            let view = view! { <Button icon=|| view! { <span class="icon" /> }>"label"</Button> };
+
+            // Act & Assert
+            assert_view_snapshot!("button_with_icon", view);
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn test_button_with_icon_and_label() {
+        with_leptos_owner(async {
+            // Arrange
+            let view = view! { <Button icon=|| view! { <span class="icon" /> }>"Save"</Button> };
+
+            // Act & Assert
+            assert_view_snapshot!("button_with_icon_and_label", view);
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn test_button_disabled_with_label() {
+        with_leptos_owner(async {
+            // Arrange
+            let view = view! { <Button disabled=true>"Disabled"</Button> };
+
+            // Act & Assert
+            assert_view_snapshot!("button_disabled_with_label", view);
+        })
+        .await;
     }
 }
