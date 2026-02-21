@@ -117,6 +117,8 @@
               cargo install trunk
               cargo install cargo-nextest@0.9.122 --locked
               cargo install cargo-watch cargo-llvm-cov leptosfmt
+
+              export PATH=$(pwd)/node_modules/.bin:$PATH
             '';
           };
         }
