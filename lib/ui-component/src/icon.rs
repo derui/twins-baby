@@ -96,7 +96,7 @@ impl IconType {
 pub fn Icon(typ: IconType, #[prop(optional)] size: Option<IconSize>) -> impl IntoView {
     let size = size.unwrap_or(IconSize::Medium).to_class();
     let class = typ.to_class();
-    let class = format!("{} bg-no-repeat bg-center {}", size, class);
+    let class = format!("inline-block shrink-0 bg-no-repeat bg-center {} {}", size, class);
 
     view! {
          <span class={class}></span>
