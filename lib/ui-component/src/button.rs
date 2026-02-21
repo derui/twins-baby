@@ -15,7 +15,8 @@ pub fn ToolButton(
     let state = use_button(disabled.unwrap_or(false));
 
     let disabled = move || (*state.attrs).get().disabled;
-    let icon_class = icon.to_class();
+    let icon_url = icon.to_url();
+    let icon_class = icon.size_class();
 
     view! {
         <button
@@ -30,7 +31,9 @@ pub fn ToolButton(
             }
             class="inline-flex flex-col items-center w-fit rounded-lg border-none shadow focus:outline-none focus:shadow-md focus:shadow-blue-400/50"
         >
-            <span class=icon_class></span>
+            <span class=icon_class>
+                <img src=icon_url class="w-full h-full" />
+            </span>
         </button>
     }
 }

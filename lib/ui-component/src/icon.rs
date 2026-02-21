@@ -51,42 +51,72 @@ pub enum IconType {
 }
 
 impl IconType {
-    pub(crate) fn to_class(&self) -> String {
-        let (url_class, size) = match self {
-            IconType::Axis(s) => ("bg-[url('/assets/icons/axis.svg')]", s),
-            IconType::BooleanIntersect(s) => ("bg-[url('/assets/icons/boolean-intersect.svg')]", s),
-            IconType::BooleanSubtract(s) => ("bg-[url('/assets/icons/boolean-subtract.svg')]", s),
-            IconType::BooleanUnion(s) => ("bg-[url('/assets/icons/boolean-union.svg')]", s),
-            IconType::Chamfer(s) => ("bg-[url('/assets/icons/chamfer.svg')]", s),
-            IconType::Cube(s) => ("bg-[url('/assets/icons/cube.svg')]", s),
-            IconType::Delete(s) => ("bg-[url('/assets/icons/delete.svg')]", s),
-            IconType::Dimension(s) => ("bg-[url('/assets/icons/dimension.svg')]", s),
-            IconType::Duplicate(s) => ("bg-[url('/assets/icons/duplicate.svg')]", s),
-            IconType::Export(s) => ("bg-[url('/assets/icons/export.svg')]", s),
-            IconType::Extrude(s) => ("bg-[url('/assets/icons/extrude.svg')]", s),
-            IconType::Fillet(s) => ("bg-[url('/assets/icons/fillet.svg')]", s),
-            IconType::GridSnap(s) => ("bg-[url('/assets/icons/grid-snap.svg')]", s),
-            IconType::Group(s) => ("bg-[url('/assets/icons/group.svg')]", s),
-            IconType::Import(s) => ("bg-[url('/assets/icons/import.svg')]", s),
-            IconType::Layers(s) => ("bg-[url('/assets/icons/layers.svg')]", s),
-            IconType::Mirror(s) => ("bg-[url('/assets/icons/mirror.svg')]", s),
-            IconType::Move(s) => ("bg-[url('/assets/icons/move.svg')]", s),
-            IconType::Orbit(s) => ("bg-[url('/assets/icons/orbit.svg')]", s),
-            IconType::Redo(s) => ("bg-[url('/assets/icons/redo.svg')]", s),
-            IconType::Rotate(s) => ("bg-[url('/assets/icons/rotate.svg')]", s),
-            IconType::Scale(s) => ("bg-[url('/assets/icons/scale.svg')]", s),
-            IconType::SectionCut(s) => ("bg-[url('/assets/icons/section-cut.svg')]", s),
-            IconType::Select(s) => ("bg-[url('/assets/icons/select.svg')]", s),
-            IconType::Sketch(s) => ("bg-[url('/assets/icons/sketch.svg')]", s),
-            IconType::SolidView(s) => ("bg-[url('/assets/icons/solid-view.svg')]", s),
-            IconType::Undo(s) => ("bg-[url('/assets/icons/undo.svg')]", s),
-            IconType::Wireframe(s) => ("bg-[url('/assets/icons/wireframe.svg')]", s),
-            IconType::ZoomFit(s) => ("bg-[url('/assets/icons/zoom-fit.svg')]", s),
+    pub(crate) fn to_url(&self) -> &'static str {
+        match self {
+            IconType::Axis(_) => "/assets/icons/axis.svg",
+            IconType::BooleanIntersect(_) => "/assets/icons/boolean-intersect.svg",
+            IconType::BooleanSubtract(_) => "/assets/icons/boolean-subtract.svg",
+            IconType::BooleanUnion(_) => "/assets/icons/boolean-union.svg",
+            IconType::Chamfer(_) => "/assets/icons/chamfer.svg",
+            IconType::Cube(_) => "/assets/icons/cube.svg",
+            IconType::Delete(_) => "/assets/icons/delete.svg",
+            IconType::Dimension(_) => "/assets/icons/dimension.svg",
+            IconType::Duplicate(_) => "/assets/icons/duplicate.svg",
+            IconType::Export(_) => "/assets/icons/export.svg",
+            IconType::Extrude(_) => "/assets/icons/extrude.svg",
+            IconType::Fillet(_) => "/assets/icons/fillet.svg",
+            IconType::GridSnap(_) => "/assets/icons/grid-snap.svg",
+            IconType::Group(_) => "/assets/icons/group.svg",
+            IconType::Import(_) => "/assets/icons/import.svg",
+            IconType::Layers(_) => "/assets/icons/layers.svg",
+            IconType::Mirror(_) => "/assets/icons/mirror.svg",
+            IconType::Move(_) => "/assets/icons/move.svg",
+            IconType::Orbit(_) => "/assets/icons/orbit.svg",
+            IconType::Redo(_) => "/assets/icons/redo.svg",
+            IconType::Rotate(_) => "/assets/icons/rotate.svg",
+            IconType::Scale(_) => "/assets/icons/scale.svg",
+            IconType::SectionCut(_) => "/assets/icons/section-cut.svg",
+            IconType::Select(_) => "/assets/icons/select.svg",
+            IconType::Sketch(_) => "/assets/icons/sketch.svg",
+            IconType::SolidView(_) => "/assets/icons/solid-view.svg",
+            IconType::Undo(_) => "/assets/icons/undo.svg",
+            IconType::Wireframe(_) => "/assets/icons/wireframe.svg",
+            IconType::ZoomFit(_) => "/assets/icons/zoom-fit.svg",
+        }
+    }
+
+    pub(crate) fn size_class(&self) -> String {
+        let size = match self {
+            IconType::Axis(s)
+            | IconType::BooleanIntersect(s)
+            | IconType::BooleanSubtract(s)
+            | IconType::BooleanUnion(s)
+            | IconType::Chamfer(s)
+            | IconType::Cube(s)
+            | IconType::Delete(s)
+            | IconType::Dimension(s)
+            | IconType::Duplicate(s)
+            | IconType::Export(s)
+            | IconType::Extrude(s)
+            | IconType::Fillet(s)
+            | IconType::GridSnap(s)
+            | IconType::Group(s)
+            | IconType::Import(s)
+            | IconType::Layers(s)
+            | IconType::Mirror(s)
+            | IconType::Move(s)
+            | IconType::Orbit(s)
+            | IconType::Redo(s)
+            | IconType::Rotate(s)
+            | IconType::Scale(s)
+            | IconType::SectionCut(s)
+            | IconType::Select(s)
+            | IconType::Sketch(s)
+            | IconType::SolidView(s)
+            | IconType::Undo(s)
+            | IconType::Wireframe(s)
+            | IconType::ZoomFit(s) => s,
         };
-        format!(
-            "inline-block shrink-0 bg-no-repeat bg-center {} {}",
-            size.to_class(),
-            url_class
-        )
+        format!("inline-block shrink-0 {}", size.to_class())
     }
 }
