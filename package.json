@@ -17,6 +17,6 @@
   },
   "homepage": "https://github.com/derui/twins-baby#readme",
   "dependencies": {
-    "tailwindcss": "^3.4.17"
+    "tailwindcss": "^4.2.0"
   }
 }
