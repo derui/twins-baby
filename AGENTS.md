@@ -135,6 +135,38 @@ All test case must follow these styles:
 - Use `approx::assert_relative_eq!` for floating point comparisons in tests
 - Import approx at the top of test modules with `use approx::assert_relative_eq;`
 
+
+### For Leptos's reactive and snapshotting 
+Use `leptos-test` crate in `lib/` . 
+
+Usage of `with_leptos_owner` is here:
+
+```rust
+#[tokio::test]
+async fn test() {
+   with_leptos_owner(async {
+     let (now, set_now) = signal(Utc::now());
+     assert_eq!(now.get_untracked(), Utc::now());
+     Executor::tick().await;
+     assert_ne!(now.get_untracked(), Utc::now());
+   }).await
+}
+```
+
+When it need snapshotting, use `assert_view_snapshot` for that:
+
+```rust
+#[tokio::test]
+async fn test_my_component() {
+    with_leptos_owner(async {
+        use leptos::prelude::*;
+        use leptos::view;
+        let view = view! { <div>"hello"</div> };
+        assert_view_snapshot!("my_component", view);
+    }).await;
+}
+```
+
 # Commit convention
 
 All commit must follow these styles:

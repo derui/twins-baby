@@ -3769,6 +3769,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "leptos-test"
+version = "0.1.0"
+dependencies = [
+ "any_spawner",
+ "futures-lite",
+ "insta",
+ "leptos",
+ "tokio",
+]
+
+[[package]]
 name = "leptos-use"
 version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6274,6 +6285,8 @@ name = "ui-headless"
 version = "0.1.0"
 dependencies = [
  "immutable",
+ "leptos",
+ "leptos-test",
  "pretty_assertions",
  "rstest",
 ]
