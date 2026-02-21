@@ -52,7 +52,7 @@ mod tests {
     #[case(-1)]
     fn test_new_sets_tabindex(#[case] tabindex: i32) {
         // Arrange & Act
-        let button = UseButton::new(|_| {}, tabindex);
+        let button = use_button(|_| {}, tabindex);
 
         // Assert
         assert_eq!(*button.tabindex, tabindex);
@@ -61,7 +61,7 @@ mod tests {
     #[test]
     fn test_new_sets_role_as_button() {
         // Arrange & Act
-        let button = UseButton::new(|_| {}, 0);
+        let button = use_button(|_| {}, 0);
 
         // Assert
         assert_eq!(*button.role, "button");
@@ -75,7 +75,7 @@ mod tests {
         // Arrange
         let received = Arc::new(Mutex::new(None::<MouseButton>));
         let received_clone = received.clone();
-        let button = UseButton::new(move |b| *received_clone.lock().unwrap() = Some(b), 0);
+        let button = use_button(move |b| *received_clone.lock().unwrap() = Some(b), 0);
 
         // Act
         button.on_click.run(variant);
