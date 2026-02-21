@@ -5,9 +5,8 @@
 
 
 # Added by cargo
-
-target/
-/dist
-/node_modules
+target
+dist
+node_modules
 .FCBak
 #*#
