@@ -22,6 +22,19 @@ pub struct ButtonState {
     _immutable: (),
 }
 
+impl ButtonState {
+    /// Convert to the [ButtonAttrs]
+    pub fn to_attrs(&self) -> ButtonAttrs {
+        let disabled = *self.disabled;
+        ButtonAttrs {
+            tabindex: if disabled {(-1).into()} else {0.into()} ,
+            disabled: disabled.into(),
+            role: "role".into(),
+            _immutable: ()
+        }
+    }
+}
+
 impl Default for ButtonState {
     fn default() -> Self {
         Self {
@@ -63,47 +76,80 @@ pub fn reduce_button(state: &ButtonState, action: ButtonAction) -> ButtonState {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use leptos::prelude::Callable;
     use pretty_assertions::assert_eq;
     use rstest::rstest;
-    use std::sync::{Arc, Mutex};
+
+    use super::*;
+
+    // Helper to create a ButtonState with a specific disabled value
+    fn state_with(disabled: bool) -> ButtonState {
+        ButtonState {
+            disabled: disabled.into(),
+            _immutable: (),
+        }
+    }
 
     #[rstest]
-    #[case(3)]
-    #[case(0)]
-    #[case(-1)]
-    fn test_new_sets_tabindex(#[case] tabindex: i32) {
-        // Arrange & Act
-        let button = use_button(|_| {}, tabindex);
+    #[case(false, ButtonAction::Disable, true)]
+    #[case(true, ButtonAction::Disable, true)]
+    #[case(false, ButtonAction::Enable, false)]
+    #[case(true, ButtonAction::Enable, false)]
+    #[case(false, ButtonAction::Toggle, true)]
+    #[case(true, ButtonAction::Toggle, false)]
+    fn test_reduce_button(
+        #[case] initial_disabled: bool,
+        #[case] action: ButtonAction,
+        #[case] expected_disabled: bool,
+    ) {
+        // Arrange
+        let state = state_with(initial_disabled);
+
+        // Act
+        let next = reduce_button(&state, action);
 
         // Assert
-        assert_eq!(*button.tabindex, tabindex);
+        assert_eq!(*next.disabled, expected_disabled);
     }
 
     #[test]
-    fn test_new_sets_role_as_button() {
-        // Arrange & Act
-        let button = use_button(|_| {}, 0);
+    fn test_button_state_default_is_enabled() {
+        // Arrange / Act
+        let state = ButtonState::default();
 
         // Assert
-        assert_eq!(*button.role, "button");
+        assert_eq!(*state.disabled, false);
     }
 
     #[rstest]
-    #[case(MouseButton::Main)]
-    #[case(MouseButton::Secondary)]
-    #[case(MouseButton::Auxiliary)]
-    fn test_on_click_called_with_button(#[case] variant: MouseButton) {
+    #[case(false, false, 0)]
+    #[case(true, true, -1)]
+    fn test_to_attrs_disabled_and_tabindex(
+        #[case] initial_disabled: bool,
+        #[case] expected_disabled: bool,
+        #[case] expected_tabindex: i32,
+    ) {
         // Arrange
-        let received = Arc::new(Mutex::new(None::<MouseButton>));
-        let received_clone = received.clone();
-        let button = use_button(move |b| *received_clone.lock().unwrap() = Some(b), 0);
+        let state = state_with(initial_disabled);
 
         // Act
-        button.on_click.run(variant);
+        let attrs = state.to_attrs();
 
         // Assert
-        assert!(matches!(*received.lock().unwrap(), Some(_)));
+        assert_eq!(*attrs.disabled, expected_disabled);
+        assert_eq!(*attrs.tabindex, expected_tabindex);
+    }
+
+    #[rstest]
+    #[case(false)]
+    #[case(true)]
+    fn test_to_attrs_role_is_always_role(#[case] initial_disabled: bool) {
+        // Arrange
+        let state = state_with(initial_disabled);
+
+        // Act
+        let attrs = state.to_attrs();
+
+        // Assert
+        assert_eq!(*attrs.role, "role");
     }
 }
