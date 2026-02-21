@@ -6,7 +6,7 @@ use leptos::prelude::Callback;
 pub enum MouseButton {
     Main,
     Auxiliary,
-    Secondary
+    Secondary,
 }
 
 /// Button behavior. This struct makes contract of button behavior, with accecibility works.
@@ -23,17 +23,18 @@ pub struct UseButton {
     _immutable: (),
 }
 
-impl UseButton {
-    /// Make a new behavior of button.
-    pub fn new<T: 'static + Fn(MouseButton) + Sync + Send>(on_click: T, tabindex: i32) -> UseButton {
-        let on_click = Callback::new(on_click);
+/// Make a new behavior of button.
+pub fn use_button<T: 'static + Fn(MouseButton) + Sync + Send>(
+    on_click: T,
+    tabindex: i32,
+) -> UseButton {
+    let on_click = Callback::new(on_click);
 
-        UseButton {
-            on_click: on_click.into(),
-            tabindex: tabindex.into(),
-            role: "button".into(),
-            _immutable: (),
-        }
+    UseButton {
+        on_click: on_click.into(),
+        tabindex: tabindex.into(),
+        role: "button".into(),
+        _immutable: (),
     }
 }
 
