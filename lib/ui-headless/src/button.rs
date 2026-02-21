@@ -38,7 +38,7 @@ pub struct ButtonAttrs {
     pub disabled: Im<bool>,
 
     /// Pure role of the button
-    role: Im<&'static str>,
+    pub role: Im<&'static str>,
 
     _immutable: (),
 }
