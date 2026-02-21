@@ -6261,6 +6261,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f8c1ae7cc0fdb8b842d65d127cb981574b0d2b249b74d1c7a2986863dc134f71"
 
 [[package]]
+name = "ui-component"
+version = "0.1.0"
+
+[[package]]
 name = "ui-headless"
 version = "0.1.0"
 dependencies = [
