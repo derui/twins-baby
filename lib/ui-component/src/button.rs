@@ -1,23 +1,27 @@
 use leptos::{component, ev::MouseEvent, prelude::*};
 use ui_headless::button::use_button;
 
-/// Create button. This button is `icon-based` button, the label is bottom of the button, with fits icon size.
+use crate::icon::IconType;
+
+/// Create tool button. This button is icon-based with an aria-label for accessibility.
 #[component]
-pub fn Button(
+pub fn ToolButton(
+    icon: IconType,
+    #[prop(into)] label: String,
     #[prop(optional)] disabled: Option<bool>,
     #[prop(optional)] tabindex: Option<i32>,
     #[prop(optional)] on_click: Option<Callback<MouseEvent>>,
-    #[prop(optional, into)] icon: ViewFn,
-    children: Children,
 ) -> impl IntoView {
     let state = use_button(disabled.unwrap_or(false));
 
     let disabled = move || (*state.attrs).get().disabled;
+    let icon_class = icon.to_class();
 
     view! {
         <button
             disabled=*disabled()
             tabindex=tabindex
+            aria-label=label
             on:click=move |ev| {
                 let Some(handler) = on_click else {
                     return;
@@ -26,8 +30,7 @@ pub fn Button(
             }
             class="inline-flex flex-col items-center w-fit rounded-lg border-none shadow focus:outline-none focus:shadow-md focus:shadow-blue-400/50"
         >
-            {icon.run()}
-            <span class="h-4 overflow-hidden text-xs leading-4">{children()}</span>
+            <span class=icon_class></span>
         </button>
     }
 }
@@ -37,64 +40,59 @@ mod tests {
     use leptos::prelude::*;
     use leptos_test::{assert_view_snapshot, with_leptos_owner};
 
-    use super::Button;
+    use crate::icon::{IconSize, IconType};
+
+    use super::ToolButton;
 
     #[tokio::test]
-    async fn test_button_default() {
+    async fn test_tool_button_default() {
         with_leptos_owner(async {
             // Arrange
-            let view = view! { <Button>"label"</Button> };
+            let view =
+                view! { <ToolButton icon=IconType::Cube(IconSize::Medium) label="Cube" /> };
 
             // Act & Assert
-            assert_view_snapshot!("button_default", view);
+            assert_view_snapshot!("tool_button_default", view);
         })
         .await;
     }
 
     #[tokio::test]
-    async fn test_button_disabled() {
+    async fn test_tool_button_disabled() {
         with_leptos_owner(async {
             // Arrange
-            let view = view! { <Button disabled=true>"label"</Button> };
+            let view = view! {
+                <ToolButton icon=IconType::Cube(IconSize::Medium) label="Cube" disabled=true />
+            };
 
             // Act & Assert
-            assert_view_snapshot!("button_disabled", view);
+            assert_view_snapshot!("tool_button_disabled", view);
         })
         .await;
     }
 
     #[tokio::test]
-    async fn test_button_with_icon() {
+    async fn test_tool_button_small_icon() {
         with_leptos_owner(async {
             // Arrange
-            let view = view! { <Button icon=|| view! { <span class="icon" /> }>"label"</Button> };
+            let view =
+                view! { <ToolButton icon=IconType::Cube(IconSize::Small) label="Cube" /> };
 
             // Act & Assert
-            assert_view_snapshot!("button_with_icon", view);
+            assert_view_snapshot!("tool_button_small_icon", view);
         })
         .await;
     }
 
     #[tokio::test]
-    async fn test_button_with_icon_and_label() {
+    async fn test_tool_button_large_icon() {
         with_leptos_owner(async {
             // Arrange
-            let view = view! { <Button icon=|| view! { <span class="icon" /> }>"Save"</Button> };
+            let view =
+                view! { <ToolButton icon=IconType::Cube(IconSize::Large) label="Cube" /> };
 
             // Act & Assert
-            assert_view_snapshot!("button_with_icon_and_label", view);
-        })
-        .await;
-    }
-
-    #[tokio::test]
-    async fn test_button_disabled_with_label() {
-        with_leptos_owner(async {
-            // Arrange
-            let view = view! { <Button disabled=true>"Disabled"</Button> };
-
-            // Act & Assert
-            assert_view_snapshot!("button_disabled_with_label", view);
+            assert_view_snapshot!("tool_button_large_icon", view);
         })
         .await;
     }

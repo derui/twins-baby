@@ -1,5 +1,3 @@
-use leptos::{IntoView, component, prelude::ClassAttribute, view};
-
 /// Definition of icon sizes
 #[derive(Debug, Clone, Copy)]
 pub enum IconSize {
@@ -9,7 +7,7 @@ pub enum IconSize {
 }
 
 impl IconSize {
-    fn to_class(&self) -> String {
+    pub(crate) fn to_class(&self) -> String {
         match self {
             IconSize::Small => "w-4 h-4".to_string(),
             IconSize::Medium => "w-6 h-6".to_string(),
@@ -18,87 +16,77 @@ impl IconSize {
     }
 }
 
-/// Definition of icons
+/// Definition of icons with their size
 #[derive(Debug, Clone, Copy)]
 pub enum IconType {
-    Axis,
-    BooleanIntersect,
-    BooleanSubtract,
-    BooleanUnion,
-    Chamfer,
-    Cube,
-    Delete,
-    Dimension,
-    Duplicate,
-    Export,
-    Extrude,
-    Fillet,
-    GridSnap,
-    Group,
-    Import,
-    Layers,
-    Mirror,
-    Move,
-    Orbit,
-    Redo,
-    Rotate,
-    Scale,
-    SectionCut,
-    Select,
-    Sketch,
-    SolidView,
-    Undo,
-    Wireframe,
-    ZoomFit,
+    Axis(IconSize),
+    BooleanIntersect(IconSize),
+    BooleanSubtract(IconSize),
+    BooleanUnion(IconSize),
+    Chamfer(IconSize),
+    Cube(IconSize),
+    Delete(IconSize),
+    Dimension(IconSize),
+    Duplicate(IconSize),
+    Export(IconSize),
+    Extrude(IconSize),
+    Fillet(IconSize),
+    GridSnap(IconSize),
+    Group(IconSize),
+    Import(IconSize),
+    Layers(IconSize),
+    Mirror(IconSize),
+    Move(IconSize),
+    Orbit(IconSize),
+    Redo(IconSize),
+    Rotate(IconSize),
+    Scale(IconSize),
+    SectionCut(IconSize),
+    Select(IconSize),
+    Sketch(IconSize),
+    SolidView(IconSize),
+    Undo(IconSize),
+    Wireframe(IconSize),
+    ZoomFit(IconSize),
 }
 
 impl IconType {
-    fn to_class(&self) -> String {
-        match self {
-            IconType::Axis => "bg-[url('/assets/icons/axis.svg')]".to_string(),
-            IconType::BooleanIntersect => {
-                "bg-[url('/assets/icons/boolean-intersect.svg')]".to_string()
-            }
-            IconType::BooleanSubtract => {
-                "bg-[url('/assets/icons/boolean-subtract.svg')]".to_string()
-            }
-            IconType::BooleanUnion => "bg-[url('/assets/icons/boolean-union.svg')]".to_string(),
-            IconType::Chamfer => "bg-[url('/assets/icons/chamfer.svg')]".to_string(),
-            IconType::Cube => "bg-[url('/assets/icons/cube.svg')]".to_string(),
-            IconType::Delete => "bg-[url('/assets/icons/delete.svg')]".to_string(),
-            IconType::Dimension => "bg-[url('/assets/icons/dimension.svg')]".to_string(),
-            IconType::Duplicate => "bg-[url('/assets/icons/duplicate.svg')]".to_string(),
-            IconType::Export => "bg-[url('/assets/icons/export.svg')]".to_string(),
-            IconType::Extrude => "bg-[url('/assets/icons/extrude.svg')]".to_string(),
-            IconType::Fillet => "bg-[url('/assets/icons/fillet.svg')]".to_string(),
-            IconType::GridSnap => "bg-[url('/assets/icons/grid-snap.svg')]".to_string(),
-            IconType::Group => "bg-[url('/assets/icons/group.svg')]".to_string(),
-            IconType::Import => "bg-[url('/assets/icons/import.svg')]".to_string(),
-            IconType::Layers => "bg-[url('/assets/icons/layers.svg')]".to_string(),
-            IconType::Mirror => "bg-[url('/assets/icons/mirror.svg')]".to_string(),
-            IconType::Move => "bg-[url('/assets/icons/move.svg')]".to_string(),
-            IconType::Orbit => "bg-[url('/assets/icons/orbit.svg')]".to_string(),
-            IconType::Redo => "bg-[url('/assets/icons/redo.svg')]".to_string(),
-            IconType::Rotate => "bg-[url('/assets/icons/rotate.svg')]".to_string(),
-            IconType::Scale => "bg-[url('/assets/icons/scale.svg')]".to_string(),
-            IconType::SectionCut => "bg-[url('/assets/icons/section-cut.svg')]".to_string(),
-            IconType::Select => "bg-[url('/assets/icons/select.svg')]".to_string(),
-            IconType::Sketch => "bg-[url('/assets/icons/sketch.svg')]".to_string(),
-            IconType::SolidView => "bg-[url('/assets/icons/solid-view.svg')]".to_string(),
-            IconType::Undo => "bg-[url('/assets/icons/undo.svg')]".to_string(),
-            IconType::Wireframe => "bg-[url('/assets/icons/wireframe.svg')]".to_string(),
-            IconType::ZoomFit => "bg-[url('/assets/icons/zoom-fit.svg')]".to_string(),
-        }
-    }
-}
-
-#[component]
-pub fn Icon(typ: IconType, #[prop(optional)] size: Option<IconSize>) -> impl IntoView {
-    let size = size.unwrap_or(IconSize::Medium).to_class();
-    let class = typ.to_class();
-    let class = format!("inline-block shrink-0 bg-no-repeat bg-center {} {}", size, class);
-
-    view! {
-         <span class={class}></span>
+    pub(crate) fn to_class(&self) -> String {
+        let (url_class, size) = match self {
+            IconType::Axis(s) => ("bg-[url('/assets/icons/axis.svg')]", s),
+            IconType::BooleanIntersect(s) => ("bg-[url('/assets/icons/boolean-intersect.svg')]", s),
+            IconType::BooleanSubtract(s) => ("bg-[url('/assets/icons/boolean-subtract.svg')]", s),
+            IconType::BooleanUnion(s) => ("bg-[url('/assets/icons/boolean-union.svg')]", s),
+            IconType::Chamfer(s) => ("bg-[url('/assets/icons/chamfer.svg')]", s),
+            IconType::Cube(s) => ("bg-[url('/assets/icons/cube.svg')]", s),
+            IconType::Delete(s) => ("bg-[url('/assets/icons/delete.svg')]", s),
+            IconType::Dimension(s) => ("bg-[url('/assets/icons/dimension.svg')]", s),
+            IconType::Duplicate(s) => ("bg-[url('/assets/icons/duplicate.svg')]", s),
+            IconType::Export(s) => ("bg-[url('/assets/icons/export.svg')]", s),
+            IconType::Extrude(s) => ("bg-[url('/assets/icons/extrude.svg')]", s),
+            IconType::Fillet(s) => ("bg-[url('/assets/icons/fillet.svg')]", s),
+            IconType::GridSnap(s) => ("bg-[url('/assets/icons/grid-snap.svg')]", s),
+            IconType::Group(s) => ("bg-[url('/assets/icons/group.svg')]", s),
+            IconType::Import(s) => ("bg-[url('/assets/icons/import.svg')]", s),
+            IconType::Layers(s) => ("bg-[url('/assets/icons/layers.svg')]", s),
+            IconType::Mirror(s) => ("bg-[url('/assets/icons/mirror.svg')]", s),
+            IconType::Move(s) => ("bg-[url('/assets/icons/move.svg')]", s),
+            IconType::Orbit(s) => ("bg-[url('/assets/icons/orbit.svg')]", s),
+            IconType::Redo(s) => ("bg-[url('/assets/icons/redo.svg')]", s),
+            IconType::Rotate(s) => ("bg-[url('/assets/icons/rotate.svg')]", s),
+            IconType::Scale(s) => ("bg-[url('/assets/icons/scale.svg')]", s),
+            IconType::SectionCut(s) => ("bg-[url('/assets/icons/section-cut.svg')]", s),
+            IconType::Select(s) => ("bg-[url('/assets/icons/select.svg')]", s),
+            IconType::Sketch(s) => ("bg-[url('/assets/icons/sketch.svg')]", s),
+            IconType::SolidView(s) => ("bg-[url('/assets/icons/solid-view.svg')]", s),
+            IconType::Undo(s) => ("bg-[url('/assets/icons/undo.svg')]", s),
+            IconType::Wireframe(s) => ("bg-[url('/assets/icons/wireframe.svg')]", s),
+            IconType::ZoomFit(s) => ("bg-[url('/assets/icons/zoom-fit.svg')]", s),
+        };
+        format!(
+            "inline-block shrink-0 bg-no-repeat bg-center {} {}",
+            size.to_class(),
+            url_class
+        )
     }
 }

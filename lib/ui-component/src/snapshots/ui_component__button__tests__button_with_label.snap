@@ -1,6 +1,0 @@
----
-source: lib/ui-component/src/button.rs
-assertion_line: 43
-expression: html
----
-<button class="inline-flex flex-col items-center w-fit"><!--bo-0--><!><!--bc-0--><!--bo-0--><span class="overflow-hidden h-[16px]">Click me</span><!--bc-0--></button>

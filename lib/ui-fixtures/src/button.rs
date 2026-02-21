@@ -1,104 +1,97 @@
 use leptos::prelude::*;
 
-use ui_component::button::Button;
-use ui_component::icon::{Icon, IconType};
+use ui_component::button::ToolButton;
+use ui_component::icon::{IconSize, IconType};
 
 #[component]
 pub fn ButtonFixtures() -> impl IntoView {
     view! {
-        <div data-fixture="button-default">
-            <Button>{"button"}</Button>
-        </div>
         <div data-fixture="button-with-axis">
-            <Button icon=|| view! { <Icon typ=IconType::Axis /> }>{"Axis"}</Button>
+            <ToolButton icon=IconType::Axis(IconSize::Medium) label="Axis" />
         </div>
         <div data-fixture="button-with-boolean-intersect">
-            <Button icon=|| {
-                view! { <Icon typ=IconType::BooleanIntersect /> }
-            }>{"BooleanIntersect"}</Button>
+            <ToolButton icon=IconType::BooleanIntersect(IconSize::Medium) label="BooleanIntersect" />
         </div>
         <div data-fixture="button-with-boolean-subtract">
-            <Button icon=|| {
-                view! { <Icon typ=IconType::BooleanSubtract /> }
-            }>{"BooleanSubtract"}</Button>
+            <ToolButton icon=IconType::BooleanSubtract(IconSize::Medium) label="BooleanSubtract" />
         </div>
         <div data-fixture="button-with-boolean-union">
-            <Button icon=|| view! { <Icon typ=IconType::BooleanUnion /> }>{"BooleanUnion"}</Button>
+            <ToolButton icon=IconType::BooleanUnion(IconSize::Medium) label="BooleanUnion" />
         </div>
         <div data-fixture="button-with-chamfer">
-            <Button icon=|| view! { <Icon typ=IconType::Chamfer /> }>{"Chamfer"}</Button>
+            <ToolButton icon=IconType::Chamfer(IconSize::Medium) label="Chamfer" />
         </div>
         <div data-fixture="button-with-cube">
-            <Button icon=|| view! { <Icon typ=IconType::Cube /> }>{"Cube"}</Button>
+            <ToolButton icon=IconType::Cube(IconSize::Medium) label="Cube" />
         </div>
         <div data-fixture="button-with-delete">
-            <Button icon=|| view! { <Icon typ=IconType::Delete /> }>{"Delete"}</Button>
+            <ToolButton icon=IconType::Delete(IconSize::Medium) label="Delete" />
         </div>
         <div data-fixture="button-with-dimension">
-            <Button icon=|| view! { <Icon typ=IconType::Dimension /> }>{"Dimension"}</Button>
+            <ToolButton icon=IconType::Dimension(IconSize::Medium) label="Dimension" />
         </div>
         <div data-fixture="button-with-duplicate">
-            <Button icon=|| view! { <Icon typ=IconType::Duplicate /> }>{"Duplicate"}</Button>
+            <ToolButton icon=IconType::Duplicate(IconSize::Medium) label="Duplicate" />
         </div>
         <div data-fixture="button-with-export">
-            <Button icon=|| view! { <Icon typ=IconType::Export /> }>{"Export"}</Button>
+            <ToolButton icon=IconType::Export(IconSize::Medium) label="Export" />
         </div>
         <div data-fixture="button-with-extrude">
-            <Button icon=|| view! { <Icon typ=IconType::Extrude /> }>{"Extrude"}</Button>
+            <ToolButton icon=IconType::Extrude(IconSize::Medium) label="Extrude" />
         </div>
         <div data-fixture="button-with-fillet">
-            <Button icon=|| view! { <Icon typ=IconType::Fillet /> }>{"Fillet"}</Button>
+            <ToolButton icon=IconType::Fillet(IconSize::Medium) label="Fillet" />
         </div>
         <div data-fixture="button-with-grid-snap">
-            <Button icon=|| view! { <Icon typ=IconType::GridSnap /> }>{"GridSnap"}</Button>
+            <ToolButton icon=IconType::GridSnap(IconSize::Medium) label="GridSnap" />
         </div>
         <div data-fixture="button-with-group">
-            <Button icon=|| view! { <Icon typ=IconType::Group /> }>{"Group"}</Button>
+            <ToolButton icon=IconType::Group(IconSize::Medium) label="Group" />
         </div>
         <div data-fixture="button-with-import">
-            <Button icon=|| view! { <Icon typ=IconType::Import /> }>{"Import"}</Button>
+            <ToolButton icon=IconType::Import(IconSize::Medium) label="Import" />
         </div>
         <div data-fixture="button-with-layers">
-            <Button icon=|| view! { <Icon typ=IconType::Layers /> }>{"Layers"}</Button>
+            <ToolButton icon=IconType::Layers(IconSize::Medium) label="Layers" />
         </div>
         <div data-fixture="button-with-mirror">
-            <Button icon=|| view! { <Icon typ=IconType::Mirror /> }>{"Mirror"}</Button>
+            <ToolButton icon=IconType::Mirror(IconSize::Medium) label="Mirror" />
         </div>
         <div data-fixture="button-with-move">
-            <Button icon=|| view! { <Icon typ=IconType::Move /> }>{"Move"}</Button>
+            <ToolButton icon=IconType::Move(IconSize::Medium) label="Move" />
         </div>
         <div data-fixture="button-with-orbit">
-            <Button icon=|| view! { <Icon typ=IconType::Orbit /> }>{"Orbit"}</Button>
+            <ToolButton icon=IconType::Orbit(IconSize::Medium) label="Orbit" />
         </div>
         <div data-fixture="button-with-redo">
-            <Button icon=|| view! { <Icon typ=IconType::Redo /> }>{"Redo"}</Button>
+            <ToolButton icon=IconType::Redo(IconSize::Medium) label="Redo" />
         </div>
         <div data-fixture="button-with-rotate">
-            <Button icon=|| view! { <Icon typ=IconType::Rotate /> }>{"Rotate"}</Button>
+            <ToolButton icon=IconType::Rotate(IconSize::Medium) label="Rotate" />
         </div>
         <div data-fixture="button-with-scale">
-            <Button icon=|| view! { <Icon typ=IconType::Scale /> }>{"Scale"}</Button>
+            <ToolButton icon=IconType::Scale(IconSize::Medium) label="Scale" />
         </div>
         <div data-fixture="button-with-section-cut">
-            <Button icon=|| view! { <Icon typ=IconType::SectionCut /> }>{"SectionCut"}</Button>
+            <ToolButton icon=IconType::SectionCut(IconSize::Medium) label="SectionCut" />
         </div>
         <div data-fixture="button-with-select">
-            <Button icon=|| view! { <Icon typ=IconType::Select /> }>{"Select"}</Button>
+            <ToolButton icon=IconType::Select(IconSize::Medium) label="Select" />
         </div>
         <div data-fixture="button-with-sketch">
-            <Button icon=|| view! { <Icon typ=IconType::Sketch /> }>{"Sketch"}</Button>
+            <ToolButton icon=IconType::Sketch(IconSize::Medium) label="Sketch" />
         </div>
         <div data-fixture="button-with-solid-view">
-            <Button icon=|| view! { <Icon typ=IconType::SolidView /> }>{"SolidView"}</Button>
+            <ToolButton icon=IconType::SolidView(IconSize::Medium) label="SolidView" />
         </div>
         <div data-fixture="button-with-undo">
-            <Button icon=|| view! { <Icon typ=IconType::Undo /> }>{"Undo"}</Button>
+            <ToolButton icon=IconType::Undo(IconSize::Medium) label="Undo" />
         </div>
         <div data-fixture="button-with-wireframe">
-            <Button icon=|| view! { <Icon typ=IconType::Wireframe /> }>{"Wireframe"}</Button>
+            <ToolButton icon=IconType::Wireframe(IconSize::Medium) label="Wireframe" />
         </div>
         <div data-fixture="button-with-zoom-fit">
-            <Button icon=|| view! { <Icon typ=IconType::ZoomFit /> }>{"ZoomFit"}</Button>
+            <ToolButton icon=IconType::ZoomFit(IconSize::Medium) label="ZoomFit" />
         </div>
     }
 }

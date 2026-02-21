@@ -1,0 +1,5 @@
+---
+source: lib/ui-component/src/button.rs
+expression: html
+---
+<button disabled aria-label="Cube" class="inline-flex flex-col items-center w-fit rounded-lg border-none shadow focus:outline-none focus:shadow-md focus:shadow-blue-400/50"><span class="inline-block shrink-0 bg-no-repeat bg-center w-6 h-6 bg-[url('/assets/icons/cube.svg')]"></span></button>

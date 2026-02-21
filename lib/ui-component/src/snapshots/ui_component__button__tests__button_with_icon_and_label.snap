@@ -1,5 +1,0 @@
----
-source: lib/ui-component/src/button.rs
-expression: html
----
-<button class="inline-flex flex-col items-center w-fit"><!--bo-TypeId(0x624b2baaa6f2a41c40bc96296327316f)--><span class="icon"></span><!--bc-TypeId(0x624b2baaa6f2a41c40bc96296327316f)--><!--bo-TypeId(0x4d5aeac12ae30dbe1bd7fb06160551fd)-->Save<!--bc-TypeId(0x4d5aeac12ae30dbe1bd7fb06160551fd)--></button>
