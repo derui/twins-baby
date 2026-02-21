@@ -1,52 +1,8 @@
 use immutable::Im;
+use leptos::prelude::{Callback, Get as _, Memo, Set, signal};
 
-/// A combination of button on clicked.
-#[derive(Debug, Clone, Copy)]
-pub enum MouseButton {
-    Main,
-    Auxiliary,
-    Secondary,
-}
-
-/// Action of the button
-#[derive(Debug, Clone, Copy)]
-pub enum ButtonAction {
-    Disable,
-    Enable,
-    Toggle,
-}
-
-/// State of the button.
-pub struct ButtonState {
-    pub disabled: Im<bool>,
-    _immutable: (),
-}
-
-impl ButtonState {
-    /// Convert to the [ButtonAttrs]
-    pub fn to_attrs(&self) -> ButtonAttrs {
-        let disabled = *self.disabled;
-        ButtonAttrs {
-            tabindex: if disabled {(-1).into()} else {0.into()} ,
-            disabled: disabled.into(),
-            role: "role".into(),
-            _immutable: ()
-        }
-    }
-}
-
-impl Default for ButtonState {
-    fn default() -> Self {
-        Self {
-            disabled: false.into(),
-            _immutable: (),
-        }
-    }
-}
-
+#[derive(Debug, Clone, PartialEq)]
 pub struct ButtonAttrs {
-    /// tabindex of the button
-    pub tabindex: Im<i32>,
     /// disabled/enabled the button
     pub disabled: Im<bool>,
 
@@ -56,100 +12,138 @@ pub struct ButtonAttrs {
     _immutable: (),
 }
 
-/// Reduce button states.
-pub fn reduce_button(state: &ButtonState, action: ButtonAction) -> ButtonState {
-    match action {
-        ButtonAction::Disable => ButtonState {
-            disabled: true.into(),
-            ..*state
-        },
-        ButtonAction::Enable => ButtonState {
-            disabled: false.into(),
-            ..*state
-        },
-        ButtonAction::Toggle => ButtonState {
-            disabled: (!*state.disabled).into(),
-            ..*state
-        },
+/// Manage Button state.
+///
+/// Our headless, do not manage element-related state, such as on-click callback.
+/// It should be handled by the component layer.
+pub struct UseButtonReturn {
+    /// Disable the button
+    pub disable: Im<Callback<()>>,
+
+    /// Enable the button
+    pub enable: Im<Callback<()>>,
+
+    /// Attributes memoized
+    pub attrs: Im<Memo<ButtonAttrs>>,
+
+    _immutable: (),
+}
+
+pub fn use_button(initial_disabled: bool) -> UseButtonReturn {
+    let (disabled, set_disabled) = signal(initial_disabled);
+    let disable = Callback::new(move |_| set_disabled.set(true));
+    let enable = Callback::new(move |_| set_disabled.set(false));
+
+    let attrs = Memo::new(move |_| ButtonAttrs {
+        disabled: disabled.get().into(),
+        role: "button".into(),
+        _immutable: (),
+    });
+
+    UseButtonReturn {
+        disable: disable.into(),
+        enable: enable.into(),
+        attrs: attrs.into(),
+        _immutable: (),
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use any_spawner::Executor;
+    use leptos::prelude::{Callable as _, Get as _};
+    use leptos_test::with_leptos_owner;
     use pretty_assertions::assert_eq;
-    use rstest::rstest;
 
     use super::*;
 
-    // Helper to create a ButtonState with a specific disabled value
-    fn state_with(disabled: bool) -> ButtonState {
-        ButtonState {
-            disabled: disabled.into(),
-            _immutable: (),
-        }
+    #[tokio::test]
+    async fn initial_disabled_false_reflects_in_attrs() {
+        with_leptos_owner(async {
+            // Arrange
+            let ret = use_button(false);
+
+            // Act
+            Executor::tick().await;
+            let attrs = ret.attrs.get();
+
+            // Assert
+            assert_eq!(*attrs.disabled, false);
+            assert_eq!(*attrs.role, "button");
+        })
+        .await;
     }
 
-    #[rstest]
-    #[case(false, ButtonAction::Disable, true)]
-    #[case(true, ButtonAction::Disable, true)]
-    #[case(false, ButtonAction::Enable, false)]
-    #[case(true, ButtonAction::Enable, false)]
-    #[case(false, ButtonAction::Toggle, true)]
-    #[case(true, ButtonAction::Toggle, false)]
-    fn test_reduce_button(
-        #[case] initial_disabled: bool,
-        #[case] action: ButtonAction,
-        #[case] expected_disabled: bool,
-    ) {
-        // Arrange
-        let state = state_with(initial_disabled);
+    #[tokio::test]
+    async fn initial_disabled_true_reflects_in_attrs() {
+        with_leptos_owner(async {
+            // Arrange
+            let ret = use_button(true);
 
-        // Act
-        let next = reduce_button(&state, action);
+            // Act
+            Executor::tick().await;
+            let attrs = ret.attrs.get();
 
-        // Assert
-        assert_eq!(*next.disabled, expected_disabled);
+            // Assert
+            assert_eq!(*attrs.disabled, true);
+        })
+        .await;
     }
 
-    #[test]
-    fn test_button_state_default_is_enabled() {
-        // Arrange / Act
-        let state = ButtonState::default();
+    #[tokio::test]
+    async fn disable_callback_sets_disabled_true() {
+        with_leptos_owner(async {
+            // Arrange
+            let ret = use_button(false);
 
-        // Assert
-        assert_eq!(*state.disabled, false);
+            // Act
+            ret.disable.run(());
+            Executor::tick().await;
+            let attrs = ret.attrs.get();
+
+            // Assert
+            assert_eq!(*attrs.disabled, true);
+        })
+        .await;
     }
 
-    #[rstest]
-    #[case(false, false, 0)]
-    #[case(true, true, -1)]
-    fn test_to_attrs_disabled_and_tabindex(
-        #[case] initial_disabled: bool,
-        #[case] expected_disabled: bool,
-        #[case] expected_tabindex: i32,
-    ) {
-        // Arrange
-        let state = state_with(initial_disabled);
+    #[tokio::test]
+    async fn enable_callback_sets_disabled_false() {
+        with_leptos_owner(async {
+            // Arrange
+            let ret = use_button(true);
 
-        // Act
-        let attrs = state.to_attrs();
+            // Act
+            ret.enable.run(());
+            Executor::tick().await;
+            let attrs = ret.attrs.get();
 
-        // Assert
-        assert_eq!(*attrs.disabled, expected_disabled);
-        assert_eq!(*attrs.tabindex, expected_tabindex);
+            // Assert
+            assert_eq!(*attrs.disabled, false);
+        })
+        .await;
     }
 
-    #[rstest]
-    #[case(false)]
-    #[case(true)]
-    fn test_to_attrs_role_is_always_role(#[case] initial_disabled: bool) {
-        // Arrange
-        let state = state_with(initial_disabled);
+    #[tokio::test]
+    async fn disable_then_enable_toggles_state() {
+        with_leptos_owner(async {
+            // Arrange
+            let ret = use_button(false);
 
-        // Act
-        let attrs = state.to_attrs();
+            // Act - disable first
+            ret.disable.run(());
+            Executor::tick().await;
+            let disabled_attrs = ret.attrs.get();
 
-        // Assert
-        assert_eq!(*attrs.role, "role");
+            // Act - then enable
+            ret.enable.run(());
+            Executor::tick().await;
+            let enabled_attrs = ret.attrs.get();
+
+            // Assert
+            assert_eq!(*disabled_attrs.disabled, true);
+            assert_eq!(*enabled_attrs.disabled, false);
+        })
+        .await;
     }
 }

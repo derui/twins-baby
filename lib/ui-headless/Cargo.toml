@@ -5,7 +5,11 @@ edition = "2024"
 
 [dependencies]
 immutable = { version = "0.1.0", path = "../immutable" }
+leptos.workspace = true
 
 [dev-dependencies]
+any_spawner.workspace = true
 pretty_assertions.workspace = true
 rstest.workspace = true
+tokio.workspace = true
+leptos-test = { version = "0.1.0", path = "../leptos-test" }
