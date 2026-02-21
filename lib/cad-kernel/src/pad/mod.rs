@@ -26,7 +26,7 @@ use solver::{environment::Environment, equation::Evaluate as _};
 pub struct PadKernel;
 
 /// Compute moved vertex and register it.
-fn compute_moved_face<'a>(
+fn compute_moved_face(
     builder: &mut SolidBuilder,
     curve: &JordanCurve,
     plane: &Plane,
@@ -48,12 +48,8 @@ fn compute_moved_face<'a>(
         .edges
         .iter()
         .filter_map(|(start, end)| {
-            let Some(start) = vertex_ids.get(*start) else {
-                return None;
-            };
-            let Some(end) = vertex_ids.get(*end) else {
-                return None;
-            };
+            let start = vertex_ids.get(*start)?;
+            let end = vertex_ids.get(*end)?;
 
             Some(Edge::new(*start, *end).expect("Must be success"))
         })

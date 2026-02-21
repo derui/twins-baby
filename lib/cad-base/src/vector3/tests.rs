@@ -189,7 +189,6 @@ mod cross_product {
 mod addition {
     use crate::vector3::Vector3;
 
-    use super::*;
     use approx::assert_relative_eq;
 
     #[test]
@@ -271,7 +270,6 @@ mod addition {
 mod subtraction {
     use crate::vector3::Vector3;
 
-    use super::*;
     use approx::assert_relative_eq;
 
     #[test]
@@ -352,7 +350,6 @@ mod subtraction {
 mod scalar_multiplication {
     use crate::vector3::Vector3;
 
-    use super::*;
     use approx::assert_relative_eq;
 
     #[test]
@@ -429,7 +426,6 @@ mod scalar_multiplication {
 mod scalar_division {
     use crate::vector3::Vector3;
 
-    use super::*;
     use approx::assert_relative_eq;
 
     #[test]
@@ -506,7 +502,6 @@ mod scalar_division {
 mod equality {
     use crate::vector3::Vector3;
 
-    use super::*;
     use pretty_assertions::assert_eq;
 
     #[test]
@@ -533,7 +528,6 @@ mod equality {
 mod copy_clone {
     use crate::vector3::Vector3;
 
-    use super::*;
     use pretty_assertions::assert_eq;
 
     #[test]
@@ -565,7 +559,6 @@ mod copy_clone {
 mod unit {
     use crate::vector3::Vector3;
 
-    use super::*;
     use approx::assert_relative_eq;
 
     #[test]

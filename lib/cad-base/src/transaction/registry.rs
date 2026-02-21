@@ -49,9 +49,7 @@ impl PerspectiveRegistry {
     ///
     /// Notice: this might occur panic when your history implementation and type are mismatch. be careful.
     pub fn get<S: Snapshot>(&self) -> Option<&S> {
-        let Some(s) = self.perspectives.get(&TypeId::of::<S>()) else {
-            return None;
-        };
+        let s = self.perspectives.get(&TypeId::of::<S>())?;
 
         s.as_any()
             .downcast_ref::<TypedPerspective<S>>()

@@ -103,7 +103,7 @@ pub enum AttachedTarget<'a> {
     Face(&'a Face),
 }
 
-///
+/// Context of feature.
 #[derive(Debug, Clone)]
 pub struct FeatureContext<'a> {
     /// Sketches based on feature operation. For example, pad operation must only have 1 sketch for.

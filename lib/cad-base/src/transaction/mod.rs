@@ -3,12 +3,11 @@ mod tests;
 
 mod registry;
 
+use crate::transaction::registry::PerspectiveRegistry;
 use std::{
     any::{Any, TypeId},
     mem::replace,
 };
-
-pub use registry::*;
 
 /// Marker trait for snapshot
 pub trait Snapshot: Clone + Send + Sync + 'static {}

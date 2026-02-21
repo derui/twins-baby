@@ -98,8 +98,8 @@ impl<M: Clone + std::fmt::Debug> Matrix<M> for SimpleMatrix<M> {
         let pos = min(self.size.rows(), self.size.columns());
 
         let mut ret: Vec<Option<M>> = vec![None; pos];
-        for p in 0..pos {
-            ret[p] = self.values[p][p].clone();
+        for (p, item) in ret.iter_mut().enumerate().take(pos) {
+            *item = self.values[p][p].clone();
         }
 
         Some(ret)

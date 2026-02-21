@@ -106,9 +106,9 @@ impl<M: Clone + std::fmt::Debug> Matrix<M> for SparseMatrix<M> {
         let len = min(self.size.rows(), self.size.columns());
         let mut vec: Vec<Option<M>> = vec![None; len];
 
-        for i in 0..len {
+        for (i, item) in vec.iter_mut().enumerate().take(len) {
             if let Ok(v) = self.get(i, i) {
-                vec[i] = v.cloned();
+                *item = v.cloned();
             }
         }
 
