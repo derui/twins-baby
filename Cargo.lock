@@ -6267,6 +6267,7 @@ dependencies = [
  "immutable",
  "leptos",
  "pretty_assertions",
+ "rstest",
 ]
 
 [[package]]
