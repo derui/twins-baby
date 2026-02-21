@@ -6287,6 +6287,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "ui-fixtures"
+version = "0.1.0"
+dependencies = [
+ "leptos",
+ "ui-component",
+]
+
+[[package]]
 name = "ui-headless"
 version = "0.1.0"
 dependencies = [
