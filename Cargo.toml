@@ -22,7 +22,7 @@ thiserror = "2.0.18"
 tracing = "0.1.44"
 
 insta = "1.43.1"
-leptos = { version = "0.8.8", features = ["csr"] }
+leptos = { version = "0.8.16", features = ["csr"] }
 
 # test only dependencies
 futures-lite = { version = "2.6.0", default-features = false }

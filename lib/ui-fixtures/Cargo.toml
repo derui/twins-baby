@@ -5,4 +5,5 @@ edition = "2024"
 
 [dependencies]
 leptos.workspace = true
+leptos_router = "0.8.12"
 ui-component = { version = "0.1.0", path = "../ui-component" }
