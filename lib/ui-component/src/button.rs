@@ -24,10 +24,10 @@ pub fn Button(
                 };
                 handler.run(ev)
             }
-            class="inline-flex flex-col items-center w-fit"
+            class="inline-flex flex-col items-center w-fit rounded-lg border-none shadow focus:outline-none focus:shadow-md focus:shadow-blue-400/50"
         >
             {icon.run()}
-            {children()}
+            <span class="h-4 overflow-hidden text-xs leading-4">{children()}</span>
         </button>
     }
 }
