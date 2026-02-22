@@ -40,10 +40,12 @@ fn FixtureIndex() -> impl IntoView {
 
 #[component]
 fn App() -> impl IntoView {
+    let redirect = || view! { <Redirect path="/fixtures" /> };
     view! {
         <Router>
             <main>
                 <Routes fallback=|| "Not found">
+                    <Route path=path!("") view=redirect />
                     <Route path=path!("/fixtures") view=FixtureIndex />
                     <Route path=path!("/fixtures/accordion") view=AccordionFixtures />
                     <Route path=path!("/fixtures/button") view=ButtonFixtures />
