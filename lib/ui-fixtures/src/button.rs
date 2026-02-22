@@ -4,13 +4,32 @@ use ui_component::button::ToolButton;
 use ui_component::icon::{IconSize, IconType};
 
 #[component]
+fn DefaultButtonBehavior() -> impl IntoView {
+    let (clicked, set_clicked) = signal("not clicked");
+
+    let on_click = Callback::new(move |_| set_clicked.set("clicked"));
+
+    view! {
+        <div data-fixture="button-default">
+            <span data-fixture="-clicked-label">{clicked}</span>
+            <ToolButton icon=IconType::Axis(IconSize::Medium) label="Axis" on_click=on_click />
+        </div>
+    }
+}
+
+#[component]
 pub fn ButtonFixtures() -> impl IntoView {
     view! {
+        <DefaultButtonBehavior />
+
         <div data-fixture="button-with-axis">
             <ToolButton icon=IconType::Axis(IconSize::Medium) label="Axis" />
         </div>
         <div data-fixture="button-with-boolean-intersect">
-            <ToolButton icon=IconType::BooleanIntersect(IconSize::Medium) label="BooleanIntersect" />
+            <ToolButton
+                icon=IconType::BooleanIntersect(IconSize::Medium)
+                label="BooleanIntersect"
+            />
         </div>
         <div data-fixture="button-with-boolean-subtract">
             <ToolButton icon=IconType::BooleanSubtract(IconSize::Medium) label="BooleanSubtract" />

@@ -5,7 +5,6 @@ test.beforeEach(async ({ page }) => {
 });
 
 const fixtures = [
-  "button-default",
   "button-with-axis",
   "button-with-boolean-intersect",
   "button-with-boolean-subtract",
@@ -44,3 +43,14 @@ for (const fixture of fixtures) {
     await expect(el).toHaveScreenshot(`${fixture}.png`);
   });
 }
+
+test("button-default: shows 'not clicked' initially", async ({ page }) => {
+  const fixture = page.locator('[data-fixture="button-default"]');
+  const label = fixture.locator('[data-fixture="-clicked-label"]');
+  await expect(label).toHaveText("not clicked");
+
+  const button = fixture.locator('button');
+  await button.click();
+
+  await expect(label).toHaveText("clicked");
+});
