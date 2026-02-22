@@ -27,9 +27,7 @@ impl UiState {
     pub fn new() -> Self {
         let (perspective, set_perspective) = signal(PerspectiveKind::default());
 
-        let ui = Signal::derive(move || UiSignal {
-            perspective,
-        });
+        let ui = Signal::derive(move || UiSignal { perspective });
 
         UiState {
             perspective: set_perspective,

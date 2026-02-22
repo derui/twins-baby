@@ -22,12 +22,13 @@ use crate::{
             setup_navigation_texture, setup_ui,
         },
     },
-    events::{CanvasResizeEvent, LoggingEvent},
+    events::{CanvasResizeEvent, LoggingEvent, SketchToolEvent},
 };
 
 pub fn init_bevy_app(
     logger: BevyMessageSender<LoggingEvent>,
     resizer: BevyMessageReceiver<CanvasResizeEvent>,
+    sketch_tool_receiver: BevyMessageReceiver<SketchToolEvent>,
 ) -> App {
     let mut app = App::new();
     app.add_plugins((
@@ -53,6 +54,7 @@ pub fn init_bevy_app(
     .insert_resource(ClearColor(Color::srgb(0.7, 0.7, 0.7)))
     .export_message_to_leptos(logger)
     .import_message_from_leptos(resizer)
+    .import_message_from_leptos(sketch_tool_receiver)
     .add_systems(
         Startup,
         (

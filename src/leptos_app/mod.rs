@@ -1,7 +1,8 @@
 mod component;
 mod resize_nob;
-mod ui_state;
+mod tool_command;
 mod ui_events;
+mod ui_state;
 mod use_perspective;
 mod use_resize;
 
@@ -10,10 +11,11 @@ use leptos_bevy_canvas::prelude::*;
 
 use crate::{
     bevy_app::init_bevy_app,
-    events::{CanvasResizeEvent, LoggingEvent, PerspectiveKind},
+    events::{CanvasResizeEvent, LoggingEvent, PerspectiveKind, SketchToolEvent},
     leptos_app::{
         component::{FeatureIsland, InfoIsland, PerspectiveIsland, SupportIsland},
         resize_nob::NOB_AREA,
+        tool_command::ToolCommand,
         ui_state::UiState,
     },
 };
@@ -48,6 +50,8 @@ fn build_grid_rows_css(first: Signal<u32>, third: Signal<u32>) -> Signal<String>
 pub fn App() -> impl IntoView {
     // Get initial window dimensions
     let (resize_sender, receiver) = message_l2b::<CanvasResizeEvent>();
+    let (tool_sender, tool_receiver) = message_l2b::<SketchToolEvent>();
+    provide_context(ToolCommand(tool_sender));
     let initial_width = window()
         .inner_width()
         .ok()
@@ -145,6 +149,7 @@ pub fn App() -> impl IntoView {
                     set_col_first_move=set_col_first_move
                     set_col_third_move=set_col_third_move
                     resize_sender=receiver
+                    tool_receiver=tool_receiver
                 />
 
                 // Row 4: Y nob between middle and bottom
@@ -165,6 +170,7 @@ pub fn CenterResizableRow(
     set_col_first_move: WriteSignal<i32>,
     set_col_third_move: WriteSignal<i32>,
     resize_sender: BevyMessageReceiver<CanvasResizeEvent>,
+    tool_receiver: BevyMessageReceiver<SketchToolEvent>,
 ) -> impl IntoView {
     let (_log_receiver, log_sender) = message_b2l::<LoggingEvent>();
 
@@ -175,7 +181,7 @@ pub fn CenterResizableRow(
             <ResizeXNob movement=set_col_first_move />
         </div>
 
-        <BevyCanvas init=move || { init_bevy_app(log_sender, resize_sender) } {..} />
+        <BevyCanvas init=move || { init_bevy_app(log_sender, resize_sender, tool_receiver) } {..} />
 
         <div class="relative h-full">
             <ResizeXNob movement=set_col_third_move />

@@ -1,6 +1,22 @@
 use bevy::ecs::message::Message;
 use coarsetime::Instant;
 
+/// Tool selection for sketch mode
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum SketchTool {
+    #[default]
+    Select,
+    Line,
+    Circle,
+    Rectangle,
+}
+
+/// An event to change the active sketch tool
+#[derive(Message, Debug, Clone)]
+pub struct SketchToolEvent {
+    pub tool: SketchTool,
+}
+
 /// An event to notice canvas resize
 #[derive(Message, Debug, Clone)]
 pub struct CanvasResizeEvent {

@@ -2,7 +2,7 @@ use leptos::prelude::{Callback, Get, ReadSignal, use_context};
 
 use crate::{
     events::PerspectiveKind,
-    leptos_app::{ui_state::UiState, ui_events::PerspectiveChangedEvent},
+    leptos_app::{ui_events::PerspectiveChangedEvent, ui_state::UiState},
 };
 
 /// This module provides a hook to manage global **perspective** of the app.
