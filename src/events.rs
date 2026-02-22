@@ -2,10 +2,8 @@ use bevy::ecs::message::Message;
 use coarsetime::Instant;
 
 /// Tool selection for sketch mode
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SketchTool {
-    #[default]
-    Select,
     Line,
     Circle,
     Rectangle,

@@ -112,5 +112,14 @@ pub fn ButtonFixtures() -> impl IntoView {
         <div data-fixture="button-with-zoom-fit">
             <ToolButton icon=IconType::ZoomFit(IconSize::Medium) label="ZoomFit" />
         </div>
+        <div data-fixture="button-with-sketch-line">
+            <ToolButton icon=IconType::SketchLine(IconSize::Medium) label="SketchLine" />
+        </div>
+        <div data-fixture="button-with-sketch-circle">
+            <ToolButton icon=IconType::SketchCircle(IconSize::Medium) label="SketchCircle" />
+        </div>
+        <div data-fixture="button-with-sketch-rectangle">
+            <ToolButton icon=IconType::SketchRectangle(IconSize::Medium) label="SketchRectangle" />
+        </div>
     }
 }

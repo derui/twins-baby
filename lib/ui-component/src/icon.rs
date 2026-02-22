@@ -48,6 +48,9 @@ pub enum IconType {
     Undo(IconSize),
     Wireframe(IconSize),
     ZoomFit(IconSize),
+    SketchLine(IconSize),
+    SketchCircle(IconSize),
+    SketchRectangle(IconSize),
 }
 
 impl IconType {
@@ -82,6 +85,9 @@ impl IconType {
             IconType::Undo(_) => "/assets/icons/undo.svg",
             IconType::Wireframe(_) => "/assets/icons/wireframe.svg",
             IconType::ZoomFit(_) => "/assets/icons/zoom-fit.svg",
+            IconType::SketchLine(_) => "/assets/icons/sketch-line.svg",
+            IconType::SketchCircle(_) => "/assets/icons/sketch-circle.svg",
+            IconType::SketchRectangle(_) => "/assets/icons/sketch-rect.svg",
         }
     }
 
@@ -115,7 +121,10 @@ impl IconType {
             | IconType::SolidView(s)
             | IconType::Undo(s)
             | IconType::Wireframe(s)
-            | IconType::ZoomFit(s) => s,
+            | IconType::ZoomFit(s)
+            | IconType::SketchLine(s)
+            | IconType::SketchCircle(s)
+            | IconType::SketchRectangle(s) => s,
         };
         format!("inline-block shrink-0 {}", size.to_class())
     }

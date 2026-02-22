@@ -26,22 +26,17 @@ pub fn SketchIsland() -> impl IntoView {
     view! {
         <div class="flex flex-row gap-2 p-2">
             <ToolButton
-                icon=IconType::Select(IconSize::Medium)
-                label="Select"
-                on_click=Callback::new(make_on_click(SketchTool::Select))
-            />
-            <ToolButton
-                icon=IconType::Dimension(IconSize::Medium)
+                icon=IconType::SketchLine(IconSize::Medium)
                 label="Line"
                 on_click=Callback::new(make_on_click(SketchTool::Line))
             />
             <ToolButton
-                icon=IconType::Sketch(IconSize::Medium)
+                icon=IconType::SketchCircle(IconSize::Medium)
                 label="Circle"
                 on_click=Callback::new(make_on_click(SketchTool::Circle))
             />
             <ToolButton
-                icon=IconType::SolidView(IconSize::Medium)
+                icon=IconType::SketchRectangle(IconSize::Medium)
                 label="Rectangle"
                 on_click=Callback::new(make_on_click(SketchTool::Rectangle))
             />
