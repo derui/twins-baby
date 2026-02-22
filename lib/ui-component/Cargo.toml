@@ -5,7 +5,7 @@ edition = "2024"
 
 [dev-dependencies]
 insta.workspace = true
-leptos = { workspace = true, features = ["ssr"] }
+leptos = { workspace = true, features = ["ssr", "csr"] }
 leptos-test = { version = "0.1.0", path = "../leptos-test" }
 tokio = { workspace = true, features = ["macros", "rt"] }
 
@@ -13,3 +13,4 @@ tokio = { workspace = true, features = ["macros", "rt"] }
 immutable = { version = "0.1.0", path = "../immutable" }
 leptos.workspace = true
 ui-headless = { version = "0.1.0", path = "../ui-headless" }
+web-sys = { workspace = true , features = ["DomRect", "Element"] }

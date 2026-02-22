@@ -1,6 +1,4 @@
-use std::ops::Index;
-
-use leptos::{ev::FocusEvent, prelude::*};
+use leptos::{ev::FocusEvent, portal::Portal, prelude::*};
 use ui_headless::select::{SelectItem, UseSelect, use_select, use_select_with_initial};
 
 #[component]
@@ -12,6 +10,7 @@ pub fn SelectBox<N, T: SelectItem>(
     selected_view: impl Fn(Option<T>) -> N + Clone + Send + Sync + 'static,
     #[prop(optional)] initial_selected: Option<T>,
     #[prop(optional)] on_change: Option<Callback<Option<T>>>,
+    #[prop(optional)] button_class: Option<&'static str>,
 ) -> impl IntoView
 where
     N: IntoView + 'static,
@@ -37,14 +36,6 @@ where
         }
     });
 
-    let toggle = move |_| {
-        if *(attrs.get()).opened {
-            close.run(());
-        } else {
-            open.run(());
-        }
-    };
-
     let on_focusout = move |_: FocusEvent| {
         close.run(());
     };
@@ -56,6 +47,31 @@ where
             cb.run((*selected).clone());
         });
     }
+
+    let trigger_ref = NodeRef::<leptos::html::Button>::new();
+    let (rect, set_rect) = signal((0.0_f64, 0.0_f64, 0.0_f64, 0.0_f64)); // top, left, width, height
+
+    let toggle = move |_| {
+        if *(attrs.get()).opened {
+            close.run(());
+        } else {
+            if let Some(el) = trigger_ref.get() {
+                use leptos::wasm_bindgen::JsCast;
+                use leptos::web_sys::*;
+                let reference_element: &HtmlElement = el.as_ref();
+                let ref_rect = reference_element
+                    .unchecked_ref::<Element>()
+                    .get_bounding_client_rect();
+                set_rect.set((
+                    ref_rect.top() + ref_rect.height(),
+                    ref_rect.left(),
+                    ref_rect.width(),
+                    0.0,
+                ));
+            }
+            open.run(());
+        }
+    };
 
     let is_open = move || *(attrs.get()).opened;
     let selected = move || selected_view((*(attrs.get()).selected).clone());
@@ -69,32 +85,51 @@ where
     view! {
         <div on:focusout=on_focusout tabindex="-1" class="relative inline-block outline-none">
             <button
+                node_ref=trigger_ref
                 on:click=toggle
-                class="flex items-center justify-between gap-2 w-full px-3 py-2 rounded-md border border-white/10 bg-black/50 shadow-md backdrop-blur-md hover:bg-black/70 transition-colors"
+                class=move || {
+                    format!(
+                        "flex items-center justify-between w-full {}",
+                        button_class.unwrap_or(""),
+                    )
+                }
             >
                 {selected}
             </button>
             <Show when=is_open>
-                <div class="absolute left-0 top-full mt-1 min-w-full bg-black/80 border border-white/10 rounded-md shadow-xl backdrop-blur-md overflow-hidden z-50">
-                    <For
-                        each=move || items.get().into_iter().enumerate()
-                        key=|item| item.0
-                        children=move |(index, _)| {
-                            let item = item_view.run(index);
-                            view! {
-                                <div
-                                    on:mousedown=move |_| {
-                                        select_cb.run(index);
-                                        close.run(());
-                                    }
-                                    class="cursor-pointer hover:bg-white/10 transition-colors"
-                                >
-                                    {item}
-                                </div>
-                            }
+                <Portal>
+                    <div
+                        style=move || {
+                            let (top, left, width, height) = rect.get();
+                            format!(
+                                "position:fixed;top:{}px;left:{}px;min-width:{}px;z-index:9999;",
+                                top + height,
+                                left,
+                                width,
+                            )
                         }
-                    />
-                </div>
+                        class="rounded-md shadow-xl overflow-hidden"
+                    >
+                        <For
+                            each=move || items.get().into_iter().enumerate()
+                            key=|item| item.0
+                            children=move |(index, _)| {
+                                let item = item_view.run(index);
+                                view! {
+                                    <div
+                                        on:mousedown=move |_| {
+                                            select_cb.run(index);
+                                            close.run(());
+                                        }
+                                        class="flex flex-row cursor-pointer"
+                                    >
+                                        {item}
+                                    </div>
+                                }
+                            }
+                        />
+                    </div>
+                </Portal>
             </Show>
         </div>
     }

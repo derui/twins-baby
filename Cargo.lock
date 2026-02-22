@@ -6226,6 +6226,7 @@ dependencies = [
  "leptos-test",
  "tokio",
  "ui-headless",
+ "web-sys",
 ]
 
 [[package]]

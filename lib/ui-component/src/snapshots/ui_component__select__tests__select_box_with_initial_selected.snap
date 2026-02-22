@@ -2,4 +2,4 @@
 source: lib/ui-component/src/select.rs
 expression: html
 ---
-<div tabindex="-1" class="relative inline-block outline-none"><button class="flex items-center justify-between gap-2 w-full px-3 py-2 rounded-md border border-white/10 bg-black/50 shadow-md backdrop-blur-md hover:bg-black/70 transition-colors"><!--bo-TypeId(0x92988742bbed4d6d298428200debe123)--><span>Banana</span><!--bc-TypeId(0x92988742bbed4d6d298428200debe123)--></button><!--bo-1--><!--bo-TypeId(0x41223169ff28813ba79b7268a2a968d9)--><!><!--<() />--><!--bc-TypeId(0x41223169ff28813ba79b7268a2a968d9)--><!--bc-1--></div>
+<div tabindex="-1" class="relative inline-block outline-none"><button class="flex items-center justify-between gap-2 w-full px-3 py-2 rounded-md border shadow-md"><!--bo-TypeId(0x911744b49c11b6517d84e6f35054e82c)--><span>Banana</span><!--bc-TypeId(0x911744b49c11b6517d84e6f35054e82c)--></button><!--bo-1--><!--bo-TypeId(0x41223169ff28813ba79b7268a2a968d9)--><!><!--<() />--><!--bc-TypeId(0x41223169ff28813ba79b7268a2a968d9)--><!--bc-1--></div>
