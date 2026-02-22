@@ -3,8 +3,7 @@ use ui_headless::accordion::use_accordion;
 
 #[component]
 pub fn TreeAccordion(
-    #[prop(into)]
-    trigger: ViewFn,
+    #[prop(into)] trigger: ViewFn,
     children: Children,
     #[prop(optional)] initial_open: Option<bool>,
 ) -> impl IntoView {
