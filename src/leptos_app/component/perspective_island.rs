@@ -44,7 +44,7 @@ pub fn PerspectiveIsland() -> impl IntoView {
     let UsePerspective { perspective, .. } = use_perspective();
 
     view! {
-        <div class="flex flex-col h-full w-full col-span-5 rounded-lg bg-gray-900/90">
+        <div class="flex flex-row h-full w-full col-span-5 rounded-lg bg-gray-700/90">
             <PerspectiveSwitcher />
             <Show when=move || perspective.get() == PerspectiveKind::Sketch>
                 <SketchIsland />
