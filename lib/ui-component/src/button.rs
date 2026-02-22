@@ -17,6 +17,9 @@ pub fn ToolButton(
     let disabled = move || (*state.attrs).get().disabled;
     let icon_url = icon.to_url();
     let icon_class = icon.size_class();
+    let mask_style = format!(
+        "mask-image: url({icon_url}); mask-size: contain; mask-repeat: no-repeat; mask-position: center;"
+    );
 
     view! {
         <button
@@ -29,11 +32,9 @@ pub fn ToolButton(
                 };
                 handler.run(ev)
             }
-            class="inline-flex flex-col items-center w-fit rounded-lg border-none shadow focus:outline-none focus:shadow-md focus:shadow-blue-400/50"
+            class="inline-flex flex-col items-center p-2 rounded-xl border border-white/10 bg-black/50 shadow-lg backdrop-blur-md hover:bg-black/70 transition-colors"
         >
-            <span class=icon_class>
-                <img src=icon_url class="w-full h-full" />
-            </span>
+            <span class=format!("{} bg-white", icon_class) style=mask_style />
         </button>
     }
 }
