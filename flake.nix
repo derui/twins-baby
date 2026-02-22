@@ -52,6 +52,7 @@
         let
           pkgs = nixpkgsFor.${system};
           fenix-pkg = fenix.packages.${system};
+          stdenv = pkgs.stdenvAdapters.useMoldLinker pkgs.clangStdenv;
         in
         {
           default = let
@@ -65,7 +66,7 @@
                 fenix-pkg.stable.llvm-tools-preview
                 fenix-pkg.targets.wasm32-unknown-unknown.stable.rust-std
               ])
-              pkgs.stdenv
+              stdenv
 
               pkgs.rust-analyzer-nightly
               pkgs.openssl
