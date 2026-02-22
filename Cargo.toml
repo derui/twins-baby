@@ -46,6 +46,7 @@ tokio.workspace = true
 futures-lite.workspace = true
 any_spawner.workspace = true
 insta.workspace = true
+leptos-test = { version = "0.1.0", path = "lib/leptos-test" }
 
 [dependencies.bevy]
 version = "0.18.0"

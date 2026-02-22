@@ -70,9 +70,8 @@ pub fn use_resize(initial: (u32, u32), window_size: Signal<u32>) -> UseResize {
 
 #[cfg(test)]
 mod tests {
+    use leptos_test::with_leptos_owner;
     use pretty_assertions::assert_eq;
-
-    use crate::leptos_app::test_leptos::with_leptos_owner;
 
     use super::*;
 

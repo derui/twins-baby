@@ -44,9 +44,8 @@ pub fn use_perspective(sender: LeptosMessageSender<PerspectiveChangeEvent>) -> U
 mod tests {
     use leptos::prelude::provide_context;
     use leptos_bevy_canvas::prelude::message_l2b;
+    use leptos_test::with_leptos_owner;
     use pretty_assertions::assert_eq;
-
-    use crate::leptos_app::test_leptos::with_leptos_owner;
 
     use super::*;
 

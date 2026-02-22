@@ -6283,6 +6283,7 @@ dependencies = [
  "insta",
  "leptos",
  "leptos-bevy-canvas",
+ "leptos-test",
  "leptos-use",
  "pretty_assertions",
  "tokio",

@@ -2,4 +2,4 @@
 source: lib/ui-component/src/button.rs
 expression: html
 ---
-<button disabled aria-label="Cube" class="inline-flex flex-col items-center w-fit rounded-lg border-none shadow focus:outline-none focus:shadow-md focus:shadow-blue-400/50"><span class="inline-block shrink-0 bg-no-repeat bg-center w-6 h-6 bg-[url('/assets/icons/cube.svg')]"></span></button>
+<button disabled aria-label="Cube" class="inline-flex flex-col items-center p-2 rounded-xl border border-white/10 bg-black/50 shadow-lg backdrop-blur-md hover:bg-black/70 transition-colors"><span class="inline-block shrink-0 w-12 h-12 bg-white" style="mask-image: url(/assets/icons/cube.svg); mask-size: contain; mask-repeat: no-repeat; mask-position: center;;"></span></button>

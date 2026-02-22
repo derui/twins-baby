@@ -1,7 +1,5 @@
 mod component;
 mod resize_nob;
-#[cfg(test)]
-mod test_leptos;
 mod use_perspective;
 mod use_resize;
 
