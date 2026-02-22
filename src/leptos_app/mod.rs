@@ -1,11 +1,11 @@
 mod component;
 mod resize_nob;
+mod ui_state;
+mod ui_events;
 mod use_perspective;
 mod use_resize;
-mod state;
-mod ui_events;
 
-use leptos::{context::Provider, ev::UiEvent, prelude::*};
+use leptos::{context::Provider, prelude::*};
 use leptos_bevy_canvas::prelude::*;
 
 use crate::{
@@ -13,7 +13,8 @@ use crate::{
     events::{CanvasResizeEvent, LoggingEvent, PerspectiveKind},
     leptos_app::{
         component::{FeatureIsland, InfoIsland, PerspectiveIsland, SupportIsland},
-        resize_nob::NOB_AREA, state::UiState,
+        resize_nob::NOB_AREA,
+        ui_state::UiState,
     },
 };
 use resize_nob::{ResizeXNob, ResizeYNob};
@@ -114,9 +115,7 @@ pub fn App() -> impl IntoView {
         }
     });
 
-    Effect::new(move || {
-        provide_context(UiState::new())
-    });
+    Effect::new(move || provide_context(UiState::new()));
 
     // Build grid templates with dynamic sizes
     let grid_cols_css = build_grid_cols_css(col_resize.sizes.0, col_resize.sizes.2);

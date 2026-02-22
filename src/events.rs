@@ -1,6 +1,5 @@
 use bevy::ecs::message::Message;
 use coarsetime::Instant;
-use leptos::ev::UiEvent;
 
 /// An event to notice canvas resize
 #[derive(Message, Debug, Clone)]

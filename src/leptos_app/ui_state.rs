@@ -1,7 +1,6 @@
+use crate::{events::PerspectiveKind, leptos_app::ui_events::PerspectiveChangedEvent};
 use enum_dispatch::enum_dispatch;
 use leptos::prelude::*;
-use crate::{events::PerspectiveKind, leptos_app::ui_events::PerspectiveChangedEvent};
-
 
 /// The centralized state of UI. This state is the single source of truth in UI,
 /// but some states which bevy has are do not inclued this, exclude ID or metadata.
@@ -10,32 +9,33 @@ pub struct UiState {
     /// Current selected perspective, this is only for UI view.
     pub perspective: WriteSignal<PerspectiveKind>,
 
-    /// centralized UI state. see this 
+    /// centralized UI state. see this
     pub ui: Signal<UiSignal>,
 
-    _immutable: ()
+    _immutable: (),
 }
 
 /// Global single signal store.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct UiSignal {
     /// Current selected perspective, this is only for UI view.
-    pub perspective: ReadSignal<PerspectiveKind>
+    pub perspective: ReadSignal<PerspectiveKind>,
 }
 
 impl UiState {
-    /// New UI state. 
+    /// New UI state.
     pub fn new() -> Self {
         let (perspective, set_perspective) = signal(PerspectiveKind::default());
 
-        let ui = Signal::derive(move || {
-            UiSignal {
-                perspective: perspective
-            }
+        let ui = Signal::derive(move || UiSignal {
+            perspective,
         });
-        
-        UiState { perspective: set_perspective, ui,
-            _immutable: ()}
+
+        UiState {
+            perspective: set_perspective,
+            ui,
+            _immutable: (),
+        }
     }
 
     /// Dispatch the [event]
@@ -57,5 +57,5 @@ pub trait UiReducer {
 #[enum_dispatch]
 pub enum UiEvents {
     /// Occurance of changes
-    PerspectiveChanged(PerspectiveChangedEvent)
+    PerspectiveChanged(PerspectiveChangedEvent),
 }
