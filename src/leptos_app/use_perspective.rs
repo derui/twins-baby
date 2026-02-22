@@ -1,14 +1,13 @@
 use leptos::prelude::{
-    Effect, Get, Set, Signal, WriteSignal, provide_context, signal, use_context,
+    Callback, Get, ReadSignal, use_context
 };
-use leptos_bevy_canvas::prelude::{LeptosChannelMessageSender, LeptosMessageSender};
 
-use crate::events::{PerspectiveChangeEvent, PerspectiveKind};
+use crate::{events::PerspectiveKind, leptos_app::{state::UiState, ui_events::PerspectiveChangedEvent}};
 
 /// This module provides a hook to manage global **perspective** of the app.
 pub struct UsePerspective {
-    pub perspective: Signal<PerspectiveKind>,
-    pub set_perspective: WriteSignal<PerspectiveKind>,
+    pub perspective: ReadSignal<PerspectiveKind>,
+    pub set_perspective: Callback<PerspectiveKind>,
 }
 
 /// Get a hook of perspective. The hook can:
@@ -17,46 +16,42 @@ pub struct UsePerspective {
 /// - set a perspective in global, including beby
 ///
 /// This hook requires wrapping with `Provider` with [PerspectiveKind] value.
-pub fn use_perspective(sender: LeptosMessageSender<PerspectiveChangeEvent>) -> UsePerspective {
-    let (value, set_value) = signal::<PerspectiveKind>(PerspectiveKind::default());
-
-    Effect::new(move || {
-        let value = value.get();
-        provide_context(value);
-        let _ = sender.send(PerspectiveChangeEvent { next: value });
-    });
-
-    Effect::new(move || {
-        let Some(v) = use_context() else { return };
-
-        if v != value.get() {
-            set_value.set(v);
-        }
+pub fn use_perspective() -> UsePerspective {
+    let context = use_context::<UiState>().expect("Should be provided");
+    let set_perspective = Callback::new(move |v| {
+            context.dispatch(PerspectiveChangedEvent {next: v}.into());
     });
 
     UsePerspective {
-        perspective: value.into(),
-        set_perspective: set_value,
+        perspective: context.ui.get().perspective,
+        set_perspective,
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use leptos::prelude::provide_context;
-    use leptos_bevy_canvas::prelude::message_l2b;
+    use leptos::prelude::{Callable as _, provide_context};
     use leptos_test::with_leptos_owner;
     use pretty_assertions::assert_eq;
 
+    use crate::leptos_app::state::UiState;
+
     use super::*;
+
+    fn setup_context() -> UiState {
+        let state = UiState::new();
+        provide_context(state);
+        state
+    }
 
     #[tokio::test]
     async fn hook_initializes_with_default_perspective() {
         with_leptos_owner(async {
             // Arrange
-            let (sender, _receiver) = message_l2b::<PerspectiveChangeEvent>();
+            setup_context();
 
             // Act
-            let hook = use_perspective(sender);
+            let hook = use_perspective();
             any_spawner::Executor::tick().await;
 
             // Assert
@@ -66,31 +61,15 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn hook_initializes_with_feature_perspective() {
-        with_leptos_owner(async {
-            // Arrange
-            let (sender, _receiver) = message_l2b::<PerspectiveChangeEvent>();
-
-            // Act
-            let hook = use_perspective(sender);
-            any_spawner::Executor::tick().await;
-
-            // Assert
-            assert_eq!(hook.perspective.get(), PerspectiveKind::Feature);
-        })
-        .await;
-    }
-
-    #[tokio::test]
     async fn hook_updates_value_to_sketch() {
         with_leptos_owner(async {
             // Arrange
-            let (sender, _receiver) = message_l2b::<PerspectiveChangeEvent>();
-            let hook = use_perspective(sender);
+            setup_context();
+            let hook = use_perspective();
             any_spawner::Executor::tick().await;
 
             // Act
-            hook.set_perspective.set(PerspectiveKind::Sketch);
+            hook.set_perspective.run(PerspectiveKind::Sketch);
             any_spawner::Executor::tick().await;
 
             // Assert
@@ -103,12 +82,12 @@ mod tests {
     async fn hook_updates_value_to_feature() {
         with_leptos_owner(async {
             // Arrange
-            let (sender, _receiver) = message_l2b::<PerspectiveChangeEvent>();
-            let hook = use_perspective(sender);
+            setup_context();
+            let hook = use_perspective();
             any_spawner::Executor::tick().await;
 
             // Act
-            hook.set_perspective.set(PerspectiveKind::Feature);
+            hook.set_perspective.run(PerspectiveKind::Feature);
             any_spawner::Executor::tick().await;
 
             // Assert
@@ -118,36 +97,19 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn hook_syncs_from_pre_existing_context() {
-        with_leptos_owner(async {
-            // Arrange
-            let (sender, _receiver) = message_l2b::<PerspectiveChangeEvent>();
-            provide_context(PerspectiveKind::Sketch);
-
-            // Act
-            let hook = use_perspective(sender);
-            any_spawner::Executor::tick().await;
-
-            // Assert
-            assert_eq!(hook.perspective.get(), PerspectiveKind::Sketch);
-        })
-        .await;
-    }
-
-    #[tokio::test]
     async fn hook_multiple_updates_reflect_latest_value() {
         with_leptos_owner(async {
             // Arrange
-            let (sender, _receiver) = message_l2b::<PerspectiveChangeEvent>();
-            let hook = use_perspective(sender);
+            setup_context();
+            let hook = use_perspective();
             any_spawner::Executor::tick().await;
 
             // Act - multiple updates
-            hook.set_perspective.set(PerspectiveKind::Sketch);
+            hook.set_perspective.run(PerspectiveKind::Sketch);
             any_spawner::Executor::tick().await;
-            hook.set_perspective.set(PerspectiveKind::Feature);
+            hook.set_perspective.run(PerspectiveKind::Feature);
             any_spawner::Executor::tick().await;
-            hook.set_perspective.set(PerspectiveKind::Sketch);
+            hook.set_perspective.run(PerspectiveKind::Sketch);
             any_spawner::Executor::tick().await;
 
             // Assert
