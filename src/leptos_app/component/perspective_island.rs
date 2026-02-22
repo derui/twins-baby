@@ -13,5 +13,5 @@ pub fn PerspectiveIsland(sender: LeptosMessageSender<PerspectiveChangeEvent>) ->
         set_perspective: _,
     } = use_perspective(sender);
 
-    view! { <div class="flex flex-col h-full w-full col-span-5 rounded-lg bg-white"></div> }
+    view! { <div class="flex flex-col h-full w-full col-span-5 rounded-lg bg-gray-900/90"></div> }
 }

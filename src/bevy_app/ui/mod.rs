@@ -14,7 +14,7 @@ use bevy::{
 use crate::bevy_app::camera::CAMERA_CUBE_LAYER;
 use crate::bevy_app::ui::components::{NavigationCube, NeedsRenderLayers, NeedsTextureSetup};
 
-const NAVIGATION_CUBE_SCALE: f32 = 1.0 * 4.; // 100 = 1mm to 1m, 4 to 4unit = 40px on UI
+const NAVIGATION_CUBE_SCALE: f32 = 4.8; // 4.8 to 4.8unit = 48px on UI
 
 pub use gizmo::AxesGizmoGroup;
 pub use gizmo::draw_gizmos;
