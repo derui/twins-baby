@@ -19,10 +19,14 @@ tasks:
 
   test:e2e:
     desc: Run Playwright browser tests
+    env:
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
     cmds:
-      - npx playwright test {{.CLI_ARGS}}
+      - bun --bun playwright test {{.CLI_ARGS}}
 
   test:e2e:ui:
     desc: Run Playwright browser tests with interactive UI
+    env:
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
     cmds:
-      - npx playwright test --ui
+      - bun --bun playwright test --ui

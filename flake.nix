@@ -102,7 +102,14 @@
 
               # for trunk
               pkgs.bzip2
+
+              # for browser test
+              pkgs.bun
+              pkgs.playwright-driver.browsers
             ];
+             browsers =
+          (builtins.fromJSON (builtins.readFile "${pkgs.playwright-driver}/browsers.json")).browsers;
+            chromium-rev = (builtins.head (builtins.filter (x: x.name == "chromium") browsers)).revision;
           in
             pkgs.mkShell {
             nativeBuildInputs = with pkgs; [ pkg-config ];
@@ -119,6 +126,7 @@
               cargo install cargo-watch cargo-llvm-cov leptosfmt
 
               export PATH=$(pwd)/node_modules/.bin:$PATH
+              export PLAYWRIGHT_LAUNCH_OPTIONS_EXECUTABLE_PATH="${pkgs.playwright-driver.browsers}/chromium-${chromium-rev}/chrome-linux64/chrome";
             '';
           };
         }
