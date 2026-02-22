@@ -1,5 +1,6 @@
 mod accordion;
 mod button;
+mod select;
 
 use leptos::mount::mount_to_body;
 use leptos::prelude::*;
@@ -7,6 +8,7 @@ use leptos_router::{components::*, path};
 
 use crate::accordion::AccordionFixtures;
 use crate::button::ButtonFixtures;
+use crate::select::SelectFixtures;
 
 fn main() {
     mount_to_body(App);
@@ -33,6 +35,14 @@ fn FixtureIndex() -> impl IntoView {
                         "Button"
                     </a>
                 </li>
+                <li>
+                    <a
+                        href="/fixtures/select"
+                        class="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                    >
+                        "Select"
+                    </a>
+                </li>
             </ul>
         </nav>
     }
@@ -49,6 +59,7 @@ fn App() -> impl IntoView {
                     <Route path=path!("/fixtures") view=FixtureIndex />
                     <Route path=path!("/fixtures/accordion") view=AccordionFixtures />
                     <Route path=path!("/fixtures/button") view=ButtonFixtures />
+                    <Route path=path!("/fixtures/select") view=SelectFixtures />
                 </Routes>
             </main>
         </Router>

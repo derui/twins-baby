@@ -96,8 +96,8 @@ pub fn use_select<T: SelectItem>(items: &[T]) -> UseSelect<T> {
 }
 
 /// Create a select logic with given items and initial selected item.
-pub fn use_select_with_initial<T: SelectItem>(items: &[T], initial: Option<T>) -> UseSelect<T> {
-    use_select_inner(items, initial)
+pub fn use_select_with_initial<T: SelectItem>(items: &[T], initial: T) -> UseSelect<T> {
+    use_select_inner(items, Some(initial))
 }
 
 #[cfg(test)]
@@ -186,7 +186,7 @@ mod tests {
     async fn user_defined_struct_with_initial_and_unselect() {
         with_leptos_owner(async {
             // Arrange
-            let ret = use_select_with_initial(&color_items(), Some(Color::new("red")));
+            let ret = use_select_with_initial(&color_items(), Color::new("red"));
             ret.open.run(());
             Executor::tick().await;
 
@@ -344,7 +344,7 @@ mod tests {
     async fn unselect_clears_selected_when_opened() {
         with_leptos_owner(async {
             // Arrange
-            let ret = use_select_with_initial(&items(), Some("a".to_string()));
+            let ret = use_select_with_initial(&items(), "a".to_string());
             ret.open.run(());
             Executor::tick().await;
 
@@ -363,7 +363,7 @@ mod tests {
     async fn unselect_is_noop_when_closed() {
         with_leptos_owner(async {
             // Arrange
-            let ret = use_select_with_initial(&items(), Some("a".to_string()));
+            let ret = use_select_with_initial(&items(), "a".to_string());
 
             // Act
             ret.unselect.run(());
@@ -380,7 +380,7 @@ mod tests {
     async fn use_select_with_initial_sets_selected() {
         with_leptos_owner(async {
             // Arrange
-            let ret = use_select_with_initial(&items(), Some("a".to_string()));
+            let ret = use_select_with_initial(&items(), "a".to_string());
 
             // Act
             Executor::tick().await;
