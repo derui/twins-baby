@@ -38,7 +38,6 @@ coarsetime = "0.1.36"
 console_error_panic_hook = "0.1.7"
 leptos.workspace = true
 leptos-bevy-canvas = "0.5.0"
-leptos-use = "0.18.0"
 
 [dev-dependencies]
 pretty_assertions.workspace = true
