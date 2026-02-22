@@ -1,9 +1,11 @@
+use std::str::FromStr;
+
 use immutable::Im;
 use leptos::prelude::*;
 
 /// Marker trait for SelectItem
-pub trait SelectItem: ToString + From<String> + Clone + PartialEq + Send + Sync + 'static {}
-impl<T: ToString + From<String> + Clone + PartialEq + Send + Sync + 'static> SelectItem for T {}
+pub trait SelectItem: ToString + FromStr + Clone + PartialEq + Send + Sync + 'static {}
+impl<T: ToString + FromStr + Clone + PartialEq + Send + Sync + 'static> SelectItem for T {}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SelectAttrs<T: SelectItem> {
@@ -96,4 +98,297 @@ pub fn use_select<T: SelectItem>(items: &[T]) -> UseSelect<T> {
 /// Create a select logic with given items and initial selected item.
 pub fn use_select_with_initial<T: SelectItem>(items: &[T], initial: Option<T>) -> UseSelect<T> {
     use_select_inner(items, initial)
+}
+
+#[cfg(test)]
+mod tests {
+    use any_spawner::Executor;
+    use leptos::prelude::{Callable as _, Get as _};
+    use leptos_test::with_leptos_owner;
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+
+    fn items() -> Vec<String> {
+        vec!["a".to_string(), "b".to_string(), "c".to_string()]
+    }
+
+    #[derive(Debug, Clone, PartialEq)]
+    struct Color {
+        name: String,
+    }
+
+    impl Color {
+        fn new(name: &str) -> Self {
+            Self {
+                name: name.to_string(),
+            }
+        }
+    }
+
+    impl std::fmt::Display for Color {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(f, "{}", self.name)
+        }
+    }
+
+    impl std::str::FromStr for Color {
+        type Err = std::convert::Infallible;
+
+        fn from_str(s: &str) -> Result<Self, Self::Err> {
+            Ok(Self::new(s))
+        }
+    }
+
+    fn color_items() -> Vec<Color> {
+        vec![Color::new("red"), Color::new("green"), Color::new("blue")]
+    }
+
+    #[tokio::test]
+    async fn user_defined_struct_select_when_opened() {
+        with_leptos_owner(async {
+            // Arrange
+            let ret = use_select(&color_items());
+            ret.open.run(());
+            Executor::tick().await;
+
+            // Act
+            ret.select.run(Color::new("green"));
+            Executor::tick().await;
+            let attrs = ret.attrs.get();
+
+            // Assert
+            assert_eq!(*attrs.selected, Some(Color::new("green")));
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn user_defined_struct_select_is_noop_for_unknown_item() {
+        with_leptos_owner(async {
+            // Arrange
+            let ret = use_select(&color_items());
+            ret.open.run(());
+            Executor::tick().await;
+
+            // Act
+            ret.select.run(Color::new("yellow"));
+            Executor::tick().await;
+            let attrs = ret.attrs.get();
+
+            // Assert
+            assert_eq!(*attrs.selected, None);
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn user_defined_struct_with_initial_and_unselect() {
+        with_leptos_owner(async {
+            // Arrange
+            let ret = use_select_with_initial(&color_items(), Some(Color::new("red")));
+            ret.open.run(());
+            Executor::tick().await;
+
+            // Act
+            ret.unselect.run(());
+            Executor::tick().await;
+            let attrs = ret.attrs.get();
+
+            // Assert
+            assert_eq!(*attrs.selected, None);
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn initial_selected_is_none() {
+        with_leptos_owner(async {
+            // Arrange
+            let ret = use_select(&items());
+
+            // Act
+            Executor::tick().await;
+            let attrs = ret.attrs.get();
+
+            // Assert
+            assert_eq!(*attrs.selected, None);
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn initial_opened_is_false() {
+        with_leptos_owner(async {
+            // Arrange
+            let ret = use_select(&items());
+
+            // Act
+            Executor::tick().await;
+            let attrs = ret.attrs.get();
+
+            // Assert
+            assert_eq!(*attrs.opened, false);
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn initial_items_reflect_given_slice() {
+        with_leptos_owner(async {
+            // Arrange
+            let ret = use_select(&items());
+
+            // Act
+            Executor::tick().await;
+            let attrs = ret.attrs.get();
+
+            // Assert
+            assert_eq!(*attrs.items, items());
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn open_sets_opened_true() {
+        with_leptos_owner(async {
+            // Arrange
+            let ret = use_select(&items());
+
+            // Act
+            ret.open.run(());
+            Executor::tick().await;
+            let attrs = ret.attrs.get();
+
+            // Assert
+            assert_eq!(*attrs.opened, true);
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn close_sets_opened_false() {
+        with_leptos_owner(async {
+            // Arrange
+            let ret = use_select(&items());
+            ret.open.run(());
+            Executor::tick().await;
+
+            // Act
+            ret.close.run(());
+            Executor::tick().await;
+            let attrs = ret.attrs.get();
+
+            // Assert
+            assert_eq!(*attrs.opened, false);
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn select_sets_selected_when_opened() {
+        with_leptos_owner(async {
+            // Arrange
+            let ret = use_select(&items());
+            ret.open.run(());
+            Executor::tick().await;
+
+            // Act
+            ret.select.run("b".to_string());
+            Executor::tick().await;
+            let attrs = ret.attrs.get();
+
+            // Assert
+            assert_eq!(*attrs.selected, Some("b".to_string()));
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn select_is_noop_when_closed() {
+        with_leptos_owner(async {
+            // Arrange
+            let ret = use_select(&items());
+
+            // Act
+            ret.select.run("b".to_string());
+            Executor::tick().await;
+            let attrs = ret.attrs.get();
+
+            // Assert
+            assert_eq!(*attrs.selected, None);
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn select_is_noop_for_item_not_in_list() {
+        with_leptos_owner(async {
+            // Arrange
+            let ret = use_select(&items());
+            ret.open.run(());
+            Executor::tick().await;
+
+            // Act
+            ret.select.run("z".to_string());
+            Executor::tick().await;
+            let attrs = ret.attrs.get();
+
+            // Assert
+            assert_eq!(*attrs.selected, None);
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn unselect_clears_selected_when_opened() {
+        with_leptos_owner(async {
+            // Arrange
+            let ret = use_select_with_initial(&items(), Some("a".to_string()));
+            ret.open.run(());
+            Executor::tick().await;
+
+            // Act
+            ret.unselect.run(());
+            Executor::tick().await;
+            let attrs = ret.attrs.get();
+
+            // Assert
+            assert_eq!(*attrs.selected, None);
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn unselect_is_noop_when_closed() {
+        with_leptos_owner(async {
+            // Arrange
+            let ret = use_select_with_initial(&items(), Some("a".to_string()));
+
+            // Act
+            ret.unselect.run(());
+            Executor::tick().await;
+            let attrs = ret.attrs.get();
+
+            // Assert
+            assert_eq!(*attrs.selected, Some("a".to_string()));
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn use_select_with_initial_sets_selected() {
+        with_leptos_owner(async {
+            // Arrange
+            let ret = use_select_with_initial(&items(), Some("a".to_string()));
+
+            // Act
+            Executor::tick().await;
+            let attrs = ret.attrs.get();
+
+            // Assert
+            assert_eq!(*attrs.selected, Some("a".to_string()));
+        })
+        .await;
+    }
 }
