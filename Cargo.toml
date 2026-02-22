@@ -39,6 +39,7 @@ console_error_panic_hook = "0.1.7"
 enum_dispatch.workspace = true
 leptos.workspace = true
 leptos-bevy-canvas = "0.5.0"
+ui-component = { version = "0.1.0", path = "lib/ui-component" }
 
 [dev-dependencies]
 pretty_assertions.workspace = true

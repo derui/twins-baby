@@ -6167,6 +6167,7 @@ dependencies = [
  "leptos-test",
  "pretty_assertions",
  "tokio",
+ "ui-component",
 ]
 
 [[package]]
