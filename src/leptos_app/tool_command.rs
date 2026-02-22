@@ -1,4 +1,3 @@
-
 use leptos_bevy_canvas::prelude::LeptosMessageSender;
 
 use crate::events::SketchToolEvent;

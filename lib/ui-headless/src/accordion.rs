@@ -1,16 +1,15 @@
 use immutable::Im;
 use leptos::prelude::*;
 
-
 #[derive(Debug, Clone, PartialEq)]
 pub struct AccordionAttrs {
     /// extracted or not
     pub extracted: Im<bool>,
 
-    /// Role of the accordion 
+    /// Role of the accordion
     pub role: Im<&'static str>,
 
-    _immutable: ()
+    _immutable: (),
 }
 
 pub struct UseAccordion {
@@ -21,7 +20,7 @@ pub struct UseAccordion {
     /// Attributes memoized
     pub attrs: Im<Memo<AccordionAttrs>>,
 
-    _immutable: ()
+    _immutable: (),
 }
 
 /// Create accordion logic
@@ -31,15 +30,20 @@ pub fn use_accordion(initial_extracted: bool) -> UseAccordion {
     let close = Callback::new(move |_| set_extracted.set(false)).into();
     let toggle = Callback::new(move |_| set_extracted.update(|v| *v = !*v)).into();
 
-    let attrs = Memo::new(move |_| {
-        AccordionAttrs {
-            extracted: extracted.get().into(),
-            role: "button".into(),
-            _immutable: ()
-        }
-    }).into();
+    let attrs = Memo::new(move |_| AccordionAttrs {
+        extracted: extracted.get().into(),
+        role: "button".into(),
+        _immutable: (),
+    })
+    .into();
 
-    UseAccordion { toggle, open, close, attrs, _immutable: () }
+    UseAccordion {
+        toggle,
+        open,
+        close,
+        attrs,
+        _immutable: (),
+    }
 }
 
 #[cfg(test)]

@@ -53,7 +53,7 @@ pub fn App() -> impl IntoView {
     let (tool_sender, tool_receiver) = message_l2b::<SketchToolEvent>();
     provide_context(ToolCommand(tool_sender));
     provide_context(UiState::new());
-    
+
     let initial_width = window()
         .inner_width()
         .ok()

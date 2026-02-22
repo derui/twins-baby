@@ -1,2 +1,2 @@
-pub mod button;
 pub mod accordion;
+pub mod button;

@@ -30,6 +30,26 @@ pub enum PerspectiveKind {
     Sketch,
 }
 
+impl PerspectiveKind {
+    /// Create a `PerspectiveKind` from a string
+    pub fn from_string(str: &str) -> eyre::Result<PerspectiveKind> {
+        match str {
+            "Feature" => Ok(PerspectiveKind::Feature),
+            "Sketch" => Ok(PerspectiveKind::Sketch),
+            _ => Err(eyre::eyre!("Invalid perspective kind: {}", str)),
+        }
+    }
+}
+
+impl ToString for PerspectiveKind {
+    fn to_string(&self) -> String {
+        match self {
+            PerspectiveKind::Feature => "Feature".to_string(),
+            PerspectiveKind::Sketch => "Sketch".to_string(),
+        }
+    }
+}
+
 /// Log levels for logging events
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LogLevel {
