@@ -19,14 +19,13 @@ pub fn TreeAccordion(
             <button
                 role=move || *attrs.get().role
                 on:click=move |_| toggle.run(())
-                class="flex flex-row items-center gap-2 w-full px-3 py-2 rounded-md border border-white/10 bg-black/50 hover:bg-black/70 transition-colors text-left text-white/90"
+                class="flex flex-row items-center gap-2 w-full rounded-md border border-white/10 transition-colors text-left"
             >
-                <span
-                    class="transition-transform duration-200 text-white/60 text-xs"
+                <img
+                    src="/assets/icons/chevron-right.svg"
+                    class="w-4 h-4 transition-transform duration-200 opacity-60"
                     class:rotate-90=is_open
-                >
-                    "▶"
-                </span>
+                />
                {trigger.run()}
             </button>
             <div class=move || {

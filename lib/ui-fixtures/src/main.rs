@@ -1,9 +1,11 @@
+mod accordion;
 mod button;
 
 use leptos::mount::mount_to_body;
 use leptos::prelude::*;
 use leptos_router::{components::*, path};
 
+use crate::accordion::AccordionFixtures;
 use crate::button::ButtonFixtures;
 
 fn main() {
@@ -15,6 +17,14 @@ fn FixtureIndex() -> impl IntoView {
     view! {
         <nav class="p-4">
             <ul class="flex flex-col gap-2">
+                <li>
+                    <a
+                        href="/fixtures/accordion"
+                        class="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                    >
+                        "Accordion"
+                    </a>
+                </li>
                 <li>
                     <a
                         href="/fixtures/button"
@@ -35,6 +45,7 @@ fn App() -> impl IntoView {
             <main>
                 <Routes fallback=|| "Not found">
                     <Route path=path!("/fixtures") view=FixtureIndex />
+                    <Route path=path!("/fixtures/accordion") view=AccordionFixtures />
                     <Route path=path!("/fixtures/button") view=ButtonFixtures />
                 </Routes>
             </main>
