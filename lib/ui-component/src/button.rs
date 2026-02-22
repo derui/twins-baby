@@ -52,8 +52,7 @@ mod tests {
     async fn test_tool_button_default() {
         with_leptos_owner(async {
             // Arrange
-            let view =
-                view! { <ToolButton icon=IconType::Cube(IconSize::Medium) label="Cube" /> };
+            let view = view! { <ToolButton icon=IconType::Cube(IconSize::Medium) label="Cube" /> };
 
             // Act & Assert
             assert_view_snapshot!("tool_button_default", view);
@@ -79,8 +78,7 @@ mod tests {
     async fn test_tool_button_small_icon() {
         with_leptos_owner(async {
             // Arrange
-            let view =
-                view! { <ToolButton icon=IconType::Cube(IconSize::Small) label="Cube" /> };
+            let view = view! { <ToolButton icon=IconType::Cube(IconSize::Small) label="Cube" /> };
 
             // Act & Assert
             assert_view_snapshot!("tool_button_small_icon", view);
@@ -92,8 +90,7 @@ mod tests {
     async fn test_tool_button_large_icon() {
         with_leptos_owner(async {
             // Arrange
-            let view =
-                view! { <ToolButton icon=IconType::Cube(IconSize::Large) label="Cube" /> };
+            let view = view! { <ToolButton icon=IconType::Cube(IconSize::Large) label="Cube" /> };
 
             // Act & Assert
             assert_view_snapshot!("tool_button_large_icon", view);

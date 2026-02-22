@@ -11,6 +11,7 @@ tasks:
       - cargo fmt
       - cargo clippy --fix --allow-dirty --allow-staged --workspace
       - leptosfmt '**/*.rs$'
+      - prettier --write '**/*.ts'
 
   test:
     desc: Run test all workspace

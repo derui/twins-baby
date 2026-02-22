@@ -13,3 +13,8 @@ repos:
       entry: leptosfmt
       language: system
       files: "\\.rs$"
+    - id: prettier
+      name: prettier
+      entry: prettier
+      language: system
+      files: "\\.ts$"

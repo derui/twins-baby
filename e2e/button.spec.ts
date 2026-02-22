@@ -49,7 +49,7 @@ test("button-default: shows 'not clicked' initially", async ({ page }) => {
   const label = fixture.locator('[data-fixture="-clicked-label"]');
   await expect(label).toHaveText("not clicked");
 
-  const button = fixture.locator('button');
+  const button = fixture.locator("button");
   await button.click();
 
   await expect(label).toHaveText("clicked");
