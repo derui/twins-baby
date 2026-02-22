@@ -1,39 +1,51 @@
-use leptos::prelude::*;
-use ui_headless::select::{SelectItem, use_select, use_select_with_initial};
+use std::ops::Index;
+
+use leptos::{ev::FocusEvent, prelude::*};
+use ui_headless::select::{SelectItem, UseSelect, use_select, use_select_with_initial};
 
 #[component]
-pub fn SelectBox<T: SelectItem>(
+pub fn SelectBox<N, T: SelectItem>(
     items: Vec<T>,
     /// Renders each item in the dropdown list
-    item_view: impl Fn(T) -> AnyView + Clone + Send + Sync + 'static,
+    item_view: impl Fn(T) -> N + Clone + Send + Sync + 'static,
     /// Renders the currently selected item in the trigger button
-    selected_view: impl Fn(Option<T>) -> AnyView + Clone + Send + Sync + 'static,
+    selected_view: impl Fn(Option<T>) -> N + Clone + Send + Sync + 'static,
     #[prop(optional)] initial_selected: Option<T>,
     #[prop(optional)] on_change: Option<Callback<Option<T>>>,
-) -> impl IntoView {
-    let hook = if let Some(v) = initial_selected {
+) -> impl IntoView
+where
+    N: IntoView + 'static,
+{
+    let UseSelect {
+        open,
+        close,
+        select,
+        attrs,
+        ..
+    } = if let Some(v) = initial_selected {
         use_select_with_initial(&items, v)
     } else {
         use_select(&items)
     };
 
-    let open = hook.open;
-    let close = hook.close;
-    let select = hook.select;
-    let attrs = hook.attrs;
     let (items, _) = signal(items);
-    let item_view = StoredValue::new(item_view);
+    let select_cb = Callback::new(move |index: usize| {
+        let items = items.get();
+
+        if let Some(v) = items.get(index) {
+            select.run(v.clone());
+        }
+    });
 
     let toggle = move |_| {
-        let current_attrs = attrs.get();
-        if *current_attrs.opened {
+        if *(attrs.get()).opened {
             close.run(());
         } else {
             open.run(());
         }
     };
 
-    let on_focusout = move |_: leptos::web_sys::FocusEvent| {
+    let on_focusout = move |_: FocusEvent| {
         close.run(());
     };
 
@@ -45,7 +57,14 @@ pub fn SelectBox<T: SelectItem>(
         });
     }
 
-    let is_open = move || *attrs.get().opened;
+    let is_open = move || *(attrs.get()).opened;
+    let selected = move || selected_view((*(attrs.get()).selected).clone());
+    let item_view = Callback::new(move |index: usize| {
+        let items = items.get();
+        let v = items.get(index).expect("Should be get in valid index");
+
+        item_view(v.clone())
+    });
 
     view! {
         <div on:focusout=on_focusout tabindex="-1" class="relative inline-block outline-none">
@@ -53,28 +72,24 @@ pub fn SelectBox<T: SelectItem>(
                 on:click=toggle
                 class="flex items-center justify-between gap-2 w-full px-3 py-2 rounded-md border border-white/10 bg-black/50 shadow-md backdrop-blur-md hover:bg-black/70 transition-colors"
             >
-                {move || {
-                    let current = attrs.get().selected.clone();
-                    selected_view((*current).clone())
-                }}
+                {selected}
             </button>
             <Show when=is_open>
                 <div class="absolute left-0 top-full mt-1 min-w-full bg-black/80 border border-white/10 rounded-md shadow-xl backdrop-blur-md overflow-hidden z-50">
                     <For
-                        each=move || items.get()
-                        key=|item| item.to_string()
-                        children=move |item| {
-                            let item_for_select = item.clone();
-                            let rendered = item_view.with_value(|f| f(item));
+                        each=move || items.get().into_iter().enumerate()
+                        key=|item| item.0
+                        children=move |(index, _)| {
+                            let item = item_view.run(index);
                             view! {
                                 <div
                                     on:mousedown=move |_| {
-                                        select.run(item_for_select.clone());
+                                        select_cb.run(index);
                                         close.run(());
                                     }
                                     class="cursor-pointer hover:bg-white/10 transition-colors"
                                 >
-                                    {rendered}
+                                    {item}
                                 </div>
                             }
                         }
