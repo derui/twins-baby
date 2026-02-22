@@ -2,7 +2,8 @@
 .direnv
 .claude/
 .agent-shell/
-
+test-results/
+playwright-report/
 
 # Added by cargo
 target
