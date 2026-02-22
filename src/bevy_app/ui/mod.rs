@@ -31,6 +31,7 @@ pub fn setup_ui(mut commands: Commands, asset: Res<AssetServer>) -> Result<(), B
         // current navigation cube model is located XY plane. so translate it a bit down to avoid z-fighting with grid.
         Transform::from_scale(Vec3::splat(NAVIGATION_CUBE_SCALE))
             .with_translation(Vec3::new(0., 0., 0.)),
+        Visibility::Hidden,
         NavigationCube,
         NeedsRenderLayers(RenderLayers::layer(CAMERA_CUBE_LAYER)),
     ));
@@ -67,6 +68,8 @@ pub fn insert_render_layer(
             });
 
         commands.entity(entity).remove::<NeedsRenderLayers>();
+        commands.entity(entity).remove::<Visibility>();
+        commands.entity(entity).insert(Visibility::Inherited);
     }
 
     Ok(())
