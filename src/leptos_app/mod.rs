@@ -2,16 +2,18 @@ mod component;
 mod resize_nob;
 mod use_perspective;
 mod use_resize;
+mod state;
+mod ui_events;
 
-use leptos::{context::Provider, prelude::*};
+use leptos::{context::Provider, ev::UiEvent, prelude::*};
 use leptos_bevy_canvas::prelude::*;
 
 use crate::{
     bevy_app::init_bevy_app,
-    events::{CanvasResizeEvent, LoggingEvent, PerspectiveChangeEvent, PerspectiveKind},
+    events::{CanvasResizeEvent, LoggingEvent, PerspectiveKind},
     leptos_app::{
         component::{FeatureIsland, InfoIsland, PerspectiveIsland, SupportIsland},
-        resize_nob::NOB_AREA,
+        resize_nob::NOB_AREA, state::UiState,
     },
 };
 use resize_nob::{ResizeXNob, ResizeYNob};
@@ -45,7 +47,6 @@ fn build_grid_rows_css(first: Signal<u32>, third: Signal<u32>) -> Signal<String>
 pub fn App() -> impl IntoView {
     // Get initial window dimensions
     let (resize_sender, receiver) = message_l2b::<CanvasResizeEvent>();
-    let (perspective_sender, _) = message_l2b::<PerspectiveChangeEvent>();
     let initial_width = window()
         .inner_width()
         .ok()
@@ -113,6 +114,10 @@ pub fn App() -> impl IntoView {
         }
     });
 
+    Effect::new(move || {
+        provide_context(UiState::new())
+    });
+
     // Build grid templates with dynamic sizes
     let grid_cols_css = build_grid_cols_css(col_resize.sizes.0, col_resize.sizes.2);
     let grid_rows_css = build_grid_rows_css(row_resize.sizes.0, row_resize.sizes.2);
@@ -129,7 +134,7 @@ pub fn App() -> impl IntoView {
         <Provider value=PerspectiveKind::default()>
             <div class="grid items-center p-5 mx-auto h-full w-full bg-black/80" style=grid_style>
                 // Row 1: PerspectiveIsland (spans all 5 columns)
-                <PerspectiveIsland sender=perspective_sender />
+                <PerspectiveIsland />
 
                 // Row 2: Y nob between top and middle
                 <div class="col-span-5 relative">

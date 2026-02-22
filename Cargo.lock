@@ -6159,6 +6159,7 @@ dependencies = [
  "bevy",
  "coarsetime",
  "console_error_panic_hook",
+ "enum_dispatch",
  "futures-lite",
  "insta",
  "leptos",

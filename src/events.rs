@@ -1,5 +1,6 @@
 use bevy::ecs::message::Message;
 use coarsetime::Instant;
+use leptos::ev::UiEvent;
 
 /// An event to notice canvas resize
 #[derive(Message, Debug, Clone)]
@@ -14,13 +15,6 @@ pub enum PerspectiveKind {
     #[default]
     Feature,
     Sketch,
-}
-
-/// An event to notice feature change
-#[derive(Message, Debug, Clone)]
-pub struct PerspectiveChangeEvent {
-    /// The perspective changed
-    pub next: PerspectiveKind,
 }
 
 /// Log levels for logging events
