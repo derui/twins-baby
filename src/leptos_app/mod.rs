@@ -52,6 +52,8 @@ pub fn App() -> impl IntoView {
     let (resize_sender, receiver) = message_l2b::<CanvasResizeEvent>();
     let (tool_sender, tool_receiver) = message_l2b::<SketchToolEvent>();
     provide_context(ToolCommand(tool_sender));
+    provide_context(UiState::new());
+    
     let initial_width = window()
         .inner_width()
         .ok()
@@ -118,8 +120,6 @@ pub fn App() -> impl IntoView {
             set_row_third_move.set(0);
         }
     });
-
-    Effect::new(move || provide_context(UiState::new()));
 
     // Build grid templates with dynamic sizes
     let grid_cols_css = build_grid_cols_css(col_resize.sizes.0, col_resize.sizes.2);
