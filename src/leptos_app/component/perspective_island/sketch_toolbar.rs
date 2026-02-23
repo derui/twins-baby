@@ -7,7 +7,7 @@ use ui_component::{
 };
 
 use crate::{
-    events::{SketchTool, SketchToolEvent},
+    events::{SketchTool, SketchToolCommand},
     leptos_app::tool_command::ToolCommand,
 };
 
@@ -19,7 +19,7 @@ pub fn SketchToolbar() -> impl IntoView {
     let make_on_click = move |t: SketchTool| {
         let tool_command = tool_command.clone();
         move |_ev: leptos::web_sys::MouseEvent| {
-            let _ = tool_command.0.send(SketchToolEvent { tool: t });
+            let _ = tool_command.0.send(SketchToolCommand { tool: t });
         }
     };
 

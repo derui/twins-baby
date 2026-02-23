@@ -11,7 +11,7 @@ use leptos_bevy_canvas::prelude::*;
 
 use crate::{
     bevy_app::init_bevy_app,
-    events::{CanvasResizeEvent, LoggingEvent, PerspectiveKind, SketchToolEvent},
+    events::{CanvasResizeEvent, LoggingEvent, PerspectiveKind, SketchToolCommand},
     leptos_app::{
         component::{FeatureIsland, InfoIsland, PerspectiveIsland, SupportIsland},
         resize_nob::NOB_AREA,
@@ -50,7 +50,7 @@ fn build_grid_rows_css(first: Signal<u32>, third: Signal<u32>) -> Signal<String>
 pub fn App() -> impl IntoView {
     // Get initial window dimensions
     let (resize_sender, receiver) = message_l2b::<CanvasResizeEvent>();
-    let (tool_sender, tool_receiver) = message_l2b::<SketchToolEvent>();
+    let (tool_sender, tool_receiver) = message_l2b::<SketchToolCommand>();
     provide_context(ToolCommand(tool_sender));
     provide_context(UiStore::new());
 
@@ -170,7 +170,7 @@ pub fn CenterResizableRow(
     set_col_first_move: WriteSignal<i32>,
     set_col_third_move: WriteSignal<i32>,
     resize_sender: BevyMessageReceiver<CanvasResizeEvent>,
-    tool_receiver: BevyMessageReceiver<SketchToolEvent>,
+    tool_receiver: BevyMessageReceiver<SketchToolCommand>,
 ) -> impl IntoView {
     let (_log_receiver, log_sender) = message_b2l::<LoggingEvent>();
 

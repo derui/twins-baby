@@ -22,13 +22,13 @@ use crate::{
             setup_navigation_texture, setup_ui,
         },
     },
-    events::{CanvasResizeEvent, LoggingEvent, SketchToolEvent},
+    events::{CanvasResizeEvent, LoggingEvent, SketchToolCommand},
 };
 
 pub fn init_bevy_app(
     logger: BevyMessageSender<LoggingEvent>,
     resizer: BevyMessageReceiver<CanvasResizeEvent>,
-    sketch_tool_receiver: BevyMessageReceiver<SketchToolEvent>,
+    sketch_tool_receiver: BevyMessageReceiver<SketchToolCommand>,
 ) -> App {
     let mut app = App::new();
     app.add_plugins((

@@ -11,7 +11,7 @@ pub enum SketchTool {
 
 /// An event to change the active sketch tool
 #[derive(Message, Debug, Clone)]
-pub struct SketchToolEvent {
+pub struct SketchToolCommand {
     pub tool: SketchTool,
 }
 
