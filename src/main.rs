@@ -1,5 +1,4 @@
 mod bevy_app;
-mod events;
 mod leptos_app;
 
 use leptos::mount::mount_to_body;

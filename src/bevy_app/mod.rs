@@ -52,9 +52,7 @@ pub fn init_bevy_app(setting: BevyAppSettings) -> App {
             .set(AssetPlugin {
                 meta_check: AssetMetaCheck::Never,
                 ..default()
-            })
-            // disable input to avoid configuration
-            .disable::<InputPlugin>(),
+            }),
         MeshPickingPlugin,
         WindowResizePlugin,
     ))

@@ -1,9 +1,12 @@
+use std::borrow::{BorrowMut as _};
+use std::cell::{Cell, RefCell};
+use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 
 use leptos::web_sys::MouseEvent;
 use leptos::{
     prelude::*,
-    wasm_bindgen::{JsCast, closure::Closure},
+    wasm_bindgen::prelude::*,
 };
 use leptos_bevy_canvas::prelude::{LeptosChannelMessageSender, LeptosMessageSender};
 use ui_event::{
@@ -36,6 +39,14 @@ pub struct UseCanvasMouseHandler {
     pub on_mouse_up: Callback<MouseEvent>,
 }
 
+// Helper function to register an animation frame callback.
+fn request_animation_frame(f: &Closure<dyn FnMut()>) {
+     leptos::web_sys::window()
+        .unwrap()
+        .request_animation_frame(f.as_ref().unchecked_ref())
+        .expect("should register `requestAnimationFrame` OK");
+}
+
 /// Hook that wires up mouse event handling for the Bevy canvas.
 ///
 /// - `mousemove` events are accumulated per animation frame and sent as a single
@@ -46,7 +57,7 @@ pub fn use_canvas_mouse_handler(
     down_sender: LeptosMessageSender<MouseDownNotification>,
     up_sender: LeptosMessageSender<MouseUpNotification>,
 ) -> UseCanvasMouseHandler {
-    let accumulated: Arc<Mutex<Option<AccumulatedMove>>> = Arc::new(Mutex::new(None));
+    let accumulated = Arc::new(Mutex::new(None::<AccumulatedMove>));
 
     let accumulated_move = accumulated.clone();
     let on_mouse_move = Callback::new(move |ev: MouseEvent| {
@@ -77,9 +88,12 @@ pub fn use_canvas_mouse_handler(
     {
         let accumulated = accumulated.clone();
 
-        let closure = Closure::once(move || {
+        let closure = Rc::new(RefCell::new(None::<ScopedClosure<_>>));
+        let closure_g = closure.clone();
+
+        *(*closure_g).borrow_mut() = Some(Closure::new(move || {
             if let Ok(mut acc) = accumulated.lock() {
-                if let Some(acc) = acc.as_ref() {
+                if let Some(acc) = *acc {
                     let _ = move_sender.send(MouseMovementNotification {
                         delta_x: acc.delta_x.into(),
                         delta_y: acc.delta_y.into(),
@@ -90,12 +104,11 @@ pub fn use_canvas_mouse_handler(
 
                 *acc = None;
             }
-        });
 
-        leptos::web_sys::window()
-            .unwrap()
-            .request_animation_frame(closure.as_ref().unchecked_ref())
-            .unwrap();
+            request_animation_frame(closure.borrow().as_ref().unwrap())
+        }));
+
+        request_animation_frame(closure_g.borrow().as_ref().unwrap())
     }
 
     let on_mouse_down = Callback::new(move |ev: MouseEvent| {

@@ -23,7 +23,6 @@ use crate::{
     bevy_app::camera::{
         CameraMoveDuration, CameraMoveOperation, CameraMoveRequest, MainCamera, PanOrbitOperation,
     },
-    events::LoggingEvent,
 };
 
 /// This module provides component and system for pan-orbit controller for App.
@@ -121,7 +120,6 @@ pub fn pan_orbit_camera(
     mut evr_scroll: MessageReader<MouseWheel>,
     mut q_camere: Query<(&PanOrbitSettings, &mut PanOrbitOperation)>,
     q_transform: Query<&Transform, With<MainCamera>>,
-    mut logger: MessageWriter<LoggingEvent>,
 ) -> Result<(), BevyError> {
     let mut total_motion: Vec2 = evr_motion.read().map(|ev| ev.delta).sum();
 
@@ -247,18 +245,6 @@ pub fn pan_orbit_camera(
         }
 
         if any || state.is_added() {
-            logger.write(LoggingEvent::debug(&format!(
-                "motion: ({}, {}), scroll_lines: ({}, {}), scroll pixels: ({}, {}), {:?}, {:?}",
-                total_motion.x,
-                total_motion.y,
-                total_scroll_lines.x,
-                total_scroll_lines.y,
-                total_scroll_pixels.x,
-                total_scroll_pixels.y,
-                q_transform.single().unwrap().translation,
-                state
-            )));
-
             commands.spawn(CameraMoveRequest::new(
                 CameraMoveOperation::ByOrbit(state.clone()),
                 CameraMoveDuration::Immediate,
