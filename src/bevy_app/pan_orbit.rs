@@ -6,7 +6,7 @@ use bevy::{
         change_detection::DetectChanges,
         component::Component,
         error::BevyError,
-        message::{MessageReader, MessageWriter},
+        message::MessageReader,
         query::With,
         system::{Commands, Query, Res},
     },
@@ -19,10 +19,8 @@ use bevy::{
     transform::components::Transform,
 };
 
-use crate::{
-    bevy_app::camera::{
-        CameraMoveDuration, CameraMoveOperation, CameraMoveRequest, MainCamera, PanOrbitOperation,
-    },
+use crate::bevy_app::camera::{
+    CameraMoveDuration, CameraMoveOperation, CameraMoveRequest, MainCamera, PanOrbitOperation,
 };
 
 /// This module provides component and system for pan-orbit controller for App.

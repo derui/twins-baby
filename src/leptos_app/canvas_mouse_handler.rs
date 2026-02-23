@@ -1,13 +1,10 @@
-use std::borrow::{BorrowMut as _};
-use std::cell::{Cell, RefCell};
+use std::borrow::BorrowMut as _;
+use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 
 use leptos::web_sys::MouseEvent;
-use leptos::{
-    prelude::*,
-    wasm_bindgen::prelude::*,
-};
+use leptos::{prelude::*, wasm_bindgen::prelude::*};
 use leptos_bevy_canvas::prelude::{LeptosChannelMessageSender, LeptosMessageSender};
 use ui_event::{
     MouseButton, MouseDownNotification, MouseMovementNotification, MouseUpNotification,
@@ -41,7 +38,7 @@ pub struct UseCanvasMouseHandler {
 
 // Helper function to register an animation frame callback.
 fn request_animation_frame(f: &Closure<dyn FnMut()>) {
-     leptos::web_sys::window()
+    leptos::web_sys::window()
         .unwrap()
         .request_animation_frame(f.as_ref().unchecked_ref())
         .expect("should register `requestAnimationFrame` OK");

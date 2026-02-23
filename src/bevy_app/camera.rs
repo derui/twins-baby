@@ -221,7 +221,7 @@ pub fn setup_camera(mut commands: Commands, window: Query<&Window>) -> Result<()
         Camera {
             // clear color, use background
             clear_color: ClearColorConfig::None,
-            order: 1,
+            order: 2,
             viewport: Some(Viewport {
                 physical_position: UVec2::new(right, bottom),
                 physical_size: UVec2::new(96, 96),
