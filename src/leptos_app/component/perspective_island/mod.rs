@@ -42,7 +42,7 @@ fn PerspectiveSwitcher() -> impl IntoView {
                 initial_selected=initial
                 item_view=perspective_item_view
                 selected_view=perspective_selected_view
-                button_class="bg-gray-700 hover:bg-gray-600 rounded px-1 text-gray-200"
+                button_class="p-2 rounded-xl border border-white/10 bg-black/50 shadow-lg backdrop-blur-md hover:bg-black/70 transition-colors text-gray-200 text-sm"
                 on_change=Callback::new(move |kind: Option<PerspectiveKind>| {
                     if let Some(k) = kind {
                         set_perspective.run(k);
