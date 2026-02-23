@@ -8,4 +8,6 @@ bevy = "0.18.0"
 cad-base = { version = "0.1.0", path = "../cad-base" }
 color-eyre.workspace = true
 immutable = { version = "0.1.0", path = "../immutable" }
+smol_str = "0.2"
 tracing.workspace = true
+web-sys = { workspace = true, features = ["KeyboardEvent"] }

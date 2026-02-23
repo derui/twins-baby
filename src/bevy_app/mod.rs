@@ -8,8 +8,9 @@ mod ui;
 use bevy::{asset::AssetMetaCheck, prelude::*};
 use leptos_bevy_canvas::prelude::{BevyMessageReceiver, LeptosBevyApp};
 use ui_event::{
-    CanvasResizeNotification, MouseDownNotification, MouseMovementNotification,
-    MouseUpNotification, MouseWheelNotification, SketchToolChangeNotification,
+    CanvasResizeNotification, KeyboardNotification, MouseDownNotification,
+    MouseMovementNotification, MouseUpNotification, MouseWheelNotification,
+    SketchToolChangeNotification,
 };
 
 use crate::bevy_app::{
@@ -35,6 +36,7 @@ pub struct BevyAppSettings {
     pub mouse_down: BevyMessageReceiver<MouseDownNotification>,
     pub mouse_up: BevyMessageReceiver<MouseUpNotification>,
     pub mouse_wheel: BevyMessageReceiver<MouseWheelNotification>,
+    pub keyboard: BevyMessageReceiver<KeyboardNotification>,
 }
 
 pub fn init_bevy_app(setting: BevyAppSettings) -> App {
@@ -66,6 +68,7 @@ pub fn init_bevy_app(setting: BevyAppSettings) -> App {
     .import_message_from_leptos(setting.mouse_down)
     .import_message_from_leptos(setting.mouse_up)
     .import_message_from_leptos(setting.mouse_wheel)
+    .import_message_from_leptos(setting.keyboard)
     .add_systems(
         Startup,
         (

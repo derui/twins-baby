@@ -3,12 +3,12 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 
-use leptos::web_sys::{MouseEvent, WheelEvent};
+use leptos::web_sys::{KeyboardEvent, MouseEvent, WheelEvent};
 use leptos::{prelude::*, wasm_bindgen::prelude::*};
 use leptos_bevy_canvas::prelude::{LeptosChannelMessageSender, LeptosMessageSender};
 use ui_event::{
-    MouseButton, MouseDownNotification, MouseMovementNotification, MouseUpNotification,
-    MouseWheelNotification,
+    KeyboardNotification, MouseButton, MouseDownNotification, MouseMovementNotification,
+    MouseUpNotification, MouseWheelNotification, keyboard_event_to_notification,
 };
 
 /// Accumulated mouse movement within a single animation frame.
@@ -47,6 +47,8 @@ pub struct UseCanvasMouseHandler {
     pub on_mouse_down: Callback<MouseEvent>,
     pub on_mouse_up: Callback<MouseEvent>,
     pub on_wheel: Callback<WheelEvent>,
+    pub on_key_down: Callback<KeyboardEvent>,
+    pub on_key_up: Callback<KeyboardEvent>,
 }
 
 // Helper function to register an animation frame callback.
@@ -67,6 +69,7 @@ pub fn use_canvas_mouse_handler(
     down_sender: LeptosMessageSender<MouseDownNotification>,
     up_sender: LeptosMessageSender<MouseUpNotification>,
     wheel_sender: LeptosMessageSender<MouseWheelNotification>,
+    keyboard_sender: LeptosMessageSender<KeyboardNotification>,
 ) -> UseCanvasMouseHandler {
     let accumulated = Arc::new(Mutex::new(None::<AccumulatedMove>));
 
@@ -149,11 +152,21 @@ pub fn use_canvas_mouse_handler(
         });
     });
 
+    let keyboard_sender_up = keyboard_sender.clone();
+    let on_key_down = Callback::new(move |ev: KeyboardEvent| {
+        let _ = keyboard_sender.send(keyboard_event_to_notification(&ev));
+    });
+    let on_key_up = Callback::new(move |ev: KeyboardEvent| {
+        let _ = keyboard_sender_up.send(keyboard_event_to_notification(&ev));
+    });
+
     UseCanvasMouseHandler {
         on_mouse_move,
         on_mouse_down,
         on_mouse_up,
         on_wheel,
+        on_key_down,
+        on_key_up,
     }
 }
 

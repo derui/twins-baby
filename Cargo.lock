@@ -6259,7 +6259,9 @@ dependencies = [
  "cad-base",
  "color-eyre",
  "immutable",
+ "smol_str",
  "tracing",
+ "web-sys",
 ]
 
 [[package]]

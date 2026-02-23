@@ -54,3 +54,10 @@ pub enum MouseButton {
     Right,
     Center,
 }
+
+/// Button state representation for keyboard and other input events.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum ButtonState {
+    Pressed,
+    Released,
+}

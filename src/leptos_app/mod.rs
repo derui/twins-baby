@@ -10,8 +10,9 @@ mod use_resize;
 use leptos::{context::Provider, prelude::*};
 use leptos_bevy_canvas::prelude::*;
 use ui_event::{
-    CanvasResizeNotification, MouseDownNotification, MouseMovementNotification,
-    MouseUpNotification, MouseWheelNotification, PerspectiveKind, SketchToolChangeNotification,
+    CanvasResizeNotification, KeyboardNotification, MouseDownNotification,
+    MouseMovementNotification, MouseUpNotification, MouseWheelNotification, PerspectiveKind,
+    SketchToolChangeNotification,
 };
 
 use crate::{
@@ -180,18 +181,22 @@ pub fn CenterResizableRow(
     let (mouse_down_sender, mouse_down_receiver) = message_l2b::<MouseDownNotification>();
     let (mouse_up_sender, mouse_up_receiver) = message_l2b::<MouseUpNotification>();
     let (mouse_wheel_sender, mouse_wheel_receiver) = message_l2b::<MouseWheelNotification>();
+    let (keyboard_sender, keyboard_receiver) = message_l2b::<KeyboardNotification>();
 
     let mouse_handler = canvas_mouse_handler::use_canvas_mouse_handler(
         mouse_move_sender,
         mouse_down_sender,
         mouse_up_sender,
         mouse_wheel_sender,
+        keyboard_sender,
     );
 
     let on_mouse_move = move |e| mouse_handler.on_mouse_move.run(e);
     let on_mouse_down = move |e| mouse_handler.on_mouse_down.run(e);
     let on_mouse_up = move |e| mouse_handler.on_mouse_up.run(e);
     let on_wheel = move |e| mouse_handler.on_wheel.run(e);
+    let on_key_down = move |e| mouse_handler.on_key_down.run(e);
+    let on_key_up = move |e| mouse_handler.on_key_up.run(e);
 
     view! {
         <FeatureIsland />
@@ -202,10 +207,13 @@ pub fn CenterResizableRow(
 
         <div
             class="h-full w-full"
+            tabindex="0"
             on:mousemove=on_mouse_move
             on:mousedown=on_mouse_down
             on:mouseup=on_mouse_up
             on:wheel=on_wheel
+            on:keydown=on_key_down
+            on:keyup=on_key_up
         >
             <BevyCanvas
                 init=move || {
@@ -216,8 +224,8 @@ pub fn CenterResizableRow(
                         mouse_down: mouse_down_receiver,
                         mouse_up: mouse_up_receiver,
                         mouse_wheel: mouse_wheel_receiver,
-                    }
-                    )
+                        keyboard: keyboard_receiver,
+                    })
                 }
                 {..}
             />
