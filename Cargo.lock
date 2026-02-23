@@ -6261,7 +6261,6 @@ dependencies = [
  "immutable",
  "smol_str",
  "tracing",
- "web-sys",
 ]
 
 [[package]]

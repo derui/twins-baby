@@ -33,6 +33,7 @@ tokio = { version = "1.41", default-features = false, features = [
 ] }
 any_spawner = {version = "0.3.0", features = ["tokio"] }
 web-sys = "0.3.80"
+bevy = "0.18.0"
 
 [dependencies]
 coarsetime = "0.1.36"
@@ -55,9 +56,9 @@ insta.workspace = true
 leptos-test = { version = "0.1.0", path = "lib/leptos-test" }
 
 [dependencies.bevy]
-version = "0.18.0"
+workspace = true
 features = [
-"debug",
+    "debug",
     "mesh_picking",
     "bevy_pbr",
     "bevy_picking",

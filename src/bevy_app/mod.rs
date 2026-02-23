@@ -1,4 +1,5 @@
 mod camera;
+mod keyboard;
 mod pan_orbit;
 mod resize;
 mod setup;

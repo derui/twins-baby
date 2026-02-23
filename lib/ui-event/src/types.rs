@@ -1,4 +1,5 @@
 use color_eyre::eyre;
+use smol_str::SmolStr;
 
 /// Tool selection for sketch mode
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -54,6 +55,10 @@ pub enum MouseButton {
     Right,
     Center,
 }
+
+/// Key representation from keyboard event.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct NotifiedKey(pub SmolStr);
 
 /// Button state representation for keyboard and other input events.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

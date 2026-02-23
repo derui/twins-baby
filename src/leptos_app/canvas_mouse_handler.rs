@@ -1,4 +1,3 @@
-use std::borrow::BorrowMut as _;
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::{Arc, Mutex};
@@ -7,8 +6,8 @@ use leptos::web_sys::{KeyboardEvent, MouseEvent, WheelEvent};
 use leptos::{prelude::*, wasm_bindgen::prelude::*};
 use leptos_bevy_canvas::prelude::{LeptosChannelMessageSender, LeptosMessageSender};
 use ui_event::{
-    KeyboardNotification, MouseButton, MouseDownNotification, MouseMovementNotification,
-    MouseUpNotification, MouseWheelNotification, keyboard_event_to_notification,
+    ButtonState, KeyboardNotification, MouseButton, MouseDownNotification,
+    MouseMovementNotification, MouseUpNotification, MouseWheelNotification, NotifiedKey,
 };
 
 /// Accumulated mouse movement within a single animation frame.
@@ -57,6 +56,19 @@ fn request_animation_frame(f: &Closure<dyn FnMut()>) {
         .unwrap()
         .request_animation_frame(f.as_ref().unchecked_ref())
         .expect("should register `requestAnimationFrame` OK");
+}
+
+/// Convert a DOM keyboard event into a [KeyboardNotification].
+fn keyboard_event_to_notification(event: &KeyboardEvent) -> KeyboardNotification {
+    let state = match event.type_().as_str() {
+        "keydown" => ButtonState::Pressed,
+        _ => ButtonState::Released,
+    };
+
+    KeyboardNotification {
+        key: NotifiedKey(event.key().into()).into(),
+        state: state.into(),
+    }
 }
 
 /// Hook that wires up mouse event handling for the Bevy canvas.

@@ -1,0 +1,46 @@
+use bevy::input::keyboard::Key;
+use ui_event::NotifiedKey;
+
+/// Map to bevy's key
+pub(crate) fn map_dom_key_to_bevy(key: &NotifiedKey) -> Key {
+    match key.0.as_str() {
+        "Enter" => Key::Enter,
+        "Escape" => Key::Escape,
+        "Backspace" => Key::Backspace,
+        " " => Key::Space,
+        "Tab" => Key::Tab,
+        "Delete" => Key::Delete,
+        "Insert" => Key::Insert,
+        "Home" => Key::Home,
+        "End" => Key::End,
+        "PageUp" => Key::PageUp,
+        "PageDown" => Key::PageDown,
+        "ArrowUp" => Key::ArrowUp,
+        "ArrowDown" => Key::ArrowDown,
+        "ArrowLeft" => Key::ArrowLeft,
+        "ArrowRight" => Key::ArrowRight,
+        "Shift" => Key::Shift,
+        "Control" => Key::Control,
+        "Alt" => Key::Alt,
+        "Meta" => Key::Meta,
+        "CapsLock" => Key::CapsLock,
+        "NumLock" => Key::NumLock,
+        "ScrollLock" => Key::ScrollLock,
+        "ContextMenu" => Key::ContextMenu,
+        "PrintScreen" => Key::PrintScreen,
+        "Pause" => Key::Pause,
+        "F1" => Key::F1,
+        "F2" => Key::F2,
+        "F3" => Key::F3,
+        "F4" => Key::F4,
+        "F5" => Key::F5,
+        "F6" => Key::F6,
+        "F7" => Key::F7,
+        "F8" => Key::F8,
+        "F9" => Key::F9,
+        "F10" => Key::F10,
+        "F11" => Key::F11,
+        "F12" => Key::F12,
+        _ => Key::Character(key.0.clone()),
+    }
+}
