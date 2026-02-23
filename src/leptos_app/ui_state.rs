@@ -1,6 +1,8 @@
-use crate::{events::PerspectiveKind, leptos_app::ui_events::PerspectiveChangedEvent};
 use enum_dispatch::enum_dispatch;
 use leptos::prelude::*;
+use ui_event::PerspectiveKind;
+
+use crate::leptos_app::ui_action::PerspectiveChangedAction;
 
 /// The centralized state of UI. This state is the single source of truth in UI,
 /// but some states which bevy has are do not inclued this, exclude ID or metadata.
@@ -37,12 +39,12 @@ impl UiStore {
     }
 
     /// Dispatch the [event]
-    pub fn dispatch(&self, event: UiEvents) {
+    pub fn dispatch(&self, event: UiActions) {
         event.apply(self);
     }
 }
 
-#[enum_dispatch(UiEvents)]
+#[enum_dispatch(UiActions)]
 pub trait UiReducer {
     /// Apply state change from the event.
     ///
@@ -53,7 +55,7 @@ pub trait UiReducer {
 /// Events enum of UI.
 #[derive(Debug, Clone)]
 #[enum_dispatch]
-pub enum UiEvents {
+pub enum UiActions {
     /// Occurance of changes
-    PerspectiveChanged(PerspectiveChangedEvent),
+    PerspectiveChanged(PerspectiveChangedAction),
 }

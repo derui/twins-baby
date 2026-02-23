@@ -1,17 +1,18 @@
 mod component;
 mod resize_nob;
 mod tool_command;
-mod ui_events;
+mod ui_action;
 mod ui_state;
 mod use_perspective;
 mod use_resize;
 
 use leptos::{context::Provider, prelude::*};
 use leptos_bevy_canvas::prelude::*;
+use ui_event::{CanvasResizeNotification, PerspectiveKind, SketchToolChangeNotification};
 
 use crate::{
     bevy_app::init_bevy_app,
-    events::{CanvasResizeEvent, LoggingEvent, PerspectiveKind, SketchToolCommand},
+    events::LoggingEvent,
     leptos_app::{
         component::{FeatureIsland, InfoIsland, PerspectiveIsland, SupportIsland},
         resize_nob::NOB_AREA,
@@ -49,8 +50,8 @@ fn build_grid_rows_css(first: Signal<u32>, third: Signal<u32>) -> Signal<String>
 #[component]
 pub fn App() -> impl IntoView {
     // Get initial window dimensions
-    let (resize_sender, receiver) = message_l2b::<CanvasResizeEvent>();
-    let (tool_sender, tool_receiver) = message_l2b::<SketchToolCommand>();
+    let (resize_sender, receiver) = message_l2b::<CanvasResizeNotification>();
+    let (tool_sender, tool_receiver) = message_l2b::<SketchToolChangeNotification>();
     provide_context(ToolCommand(tool_sender));
     provide_context(UiStore::new());
 
@@ -82,9 +83,9 @@ pub fn App() -> impl IntoView {
         let width = col_resize.sizes.1;
         let height = row_resize.sizes.1;
 
-        let _ = resize_sender.send(CanvasResizeEvent {
-            width: width.get() - DEAD_ZONES,
-            height: height.get() - DEAD_ZONES,
+        let _ = resize_sender.send(CanvasResizeNotification {
+            width: (width.get() - DEAD_ZONES).into(),
+            height: (height.get() - DEAD_ZONES).into(),
         });
     });
 
@@ -169,8 +170,8 @@ pub fn App() -> impl IntoView {
 pub fn CenterResizableRow(
     set_col_first_move: WriteSignal<i32>,
     set_col_third_move: WriteSignal<i32>,
-    resize_sender: BevyMessageReceiver<CanvasResizeEvent>,
-    tool_receiver: BevyMessageReceiver<SketchToolCommand>,
+    resize_sender: BevyMessageReceiver<CanvasResizeNotification>,
+    tool_receiver: BevyMessageReceiver<SketchToolChangeNotification>,
 ) -> impl IntoView {
     let (_log_receiver, log_sender) = message_b2l::<LoggingEvent>();
 

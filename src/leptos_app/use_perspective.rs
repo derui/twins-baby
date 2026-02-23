@@ -1,9 +1,7 @@
 use leptos::prelude::{Callback, Get, ReadSignal, use_context};
+use ui_event::PerspectiveKind;
 
-use crate::{
-    events::PerspectiveKind,
-    leptos_app::{ui_events::PerspectiveChangedEvent, ui_state::UiStore},
-};
+use crate::leptos_app::{ui_action::PerspectiveChangedAction, ui_state::UiStore};
 
 /// This module provides a hook to manage global **perspective** of the app.
 pub struct UsePerspective {
@@ -20,7 +18,7 @@ pub struct UsePerspective {
 pub fn use_perspective() -> UsePerspective {
     let context = use_context::<UiStore>().expect("Should be provided");
     let set_perspective = Callback::new(move |v| {
-        context.dispatch(PerspectiveChangedEvent { next: v }.into());
+        context.dispatch(PerspectiveChangedAction { next: v }.into());
     });
 
     UsePerspective {

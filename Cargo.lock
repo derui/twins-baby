@@ -6186,6 +6186,7 @@ dependencies = [
  "pretty_assertions",
  "tokio",
  "ui-component",
+ "ui-event",
 ]
 
 [[package]]

@@ -7,6 +7,7 @@ mod ui;
 // This initializes a normal Bevy app
 use bevy::{asset::AssetMetaCheck, prelude::*};
 use leptos_bevy_canvas::prelude::{BevyMessageReceiver, BevyMessageSender, LeptosBevyApp};
+use ui_event::{CanvasResizeNotification, SketchToolChangeNotification};
 
 use crate::{
     bevy_app::{
@@ -22,13 +23,13 @@ use crate::{
             setup_navigation_texture, setup_ui,
         },
     },
-    events::{CanvasResizeEvent, LoggingEvent, SketchToolCommand},
+    events::LoggingEvent,
 };
 
 pub fn init_bevy_app(
     logger: BevyMessageSender<LoggingEvent>,
-    resizer: BevyMessageReceiver<CanvasResizeEvent>,
-    sketch_tool_receiver: BevyMessageReceiver<SketchToolCommand>,
+    resizer: BevyMessageReceiver<CanvasResizeNotification>,
+    sketch_tool_receiver: BevyMessageReceiver<SketchToolChangeNotification>,
 ) -> App {
     let mut app = App::new();
     app.add_plugins((

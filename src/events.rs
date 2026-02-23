@@ -1,63 +1,6 @@
 use bevy::ecs::message::Message;
 use coarsetime::Instant;
 
-/// Tool selection for sketch mode
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum SketchTool {
-    Line,
-    Circle,
-    Rectangle,
-}
-
-/// An event to change the active sketch tool
-#[derive(Message, Debug, Clone)]
-pub struct SketchToolCommand {
-    pub tool: SketchTool,
-}
-
-/// An event to notice canvas resize
-#[derive(Message, Debug, Clone)]
-pub struct CanvasResizeEvent {
-    pub width: u32,
-    pub height: u32,
-}
-
-/// Kind of perspective
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub enum PerspectiveKind {
-    #[default]
-    Feature,
-    Sketch,
-}
-
-impl PerspectiveKind {
-    /// Create a `PerspectiveKind` from a string
-    pub fn from_string(str: &str) -> eyre::Result<PerspectiveKind> {
-        match str {
-            "Feature" => Ok(PerspectiveKind::Feature),
-            "Sketch" => Ok(PerspectiveKind::Sketch),
-            _ => Err(eyre::eyre!("Invalid perspective kind: {}", str)),
-        }
-    }
-}
-
-impl ToString for PerspectiveKind {
-    fn to_string(&self) -> String {
-        match self {
-            PerspectiveKind::Feature => "Feature".to_string(),
-            PerspectiveKind::Sketch => "Sketch".to_string(),
-        }
-    }
-}
-
-impl std::str::FromStr for PerspectiveKind {
-    type Err = eyre::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Self::from_string(s)
-    }
-}
-
 /// Log levels for logging events
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LogLevel {

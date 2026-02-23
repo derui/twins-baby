@@ -3,12 +3,10 @@ mod sketch_toolbar;
 use leptos::prelude::*;
 use leptos::{IntoView, component, view};
 use ui_component::select::SelectBox;
+use ui_event::PerspectiveKind;
 
 use crate::leptos_app::component::perspective_island::sketch_toolbar::SketchToolbar;
-use crate::{
-    events::PerspectiveKind,
-    leptos_app::use_perspective::{UsePerspective, use_perspective},
-};
+use crate::leptos_app::use_perspective::{UsePerspective, use_perspective};
 
 fn perspective_item_view(kind: PerspectiveKind) -> AnyView {
     view! {
