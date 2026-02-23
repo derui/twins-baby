@@ -1,5 +1,6 @@
 use leptos::prelude::*;
 use leptos::{IntoView, component, view};
+use ui_component::select::SelectBox;
 
 use crate::{
     events::PerspectiveKind,
@@ -9,31 +10,45 @@ use crate::{
     },
 };
 
+fn perspective_item_view(kind: PerspectiveKind) -> AnyView {
+    view! {
+        <span class="px-3 py-1 text-sm text-gray-200 hover:bg-gray-600 w-full block">
+            {kind.to_string()}
+        </span>
+    }
+    .into_any()
+}
+
+fn perspective_selected_view(kind: Option<PerspectiveKind>) -> AnyView {
+    let label = kind.map(|k| k.to_string()).unwrap_or_default();
+    view! { <span class="px-3 py-1 text-sm text-gray-200">{label}</span> }.into_any()
+}
+
 /// Switcher of perspective
+#[component]
 fn PerspectiveSwitcher() -> impl IntoView {
     let UsePerspective {
         perspective,
         set_perspective,
     } = use_perspective();
 
-    let feature_selected = move || perspective.get() == PerspectiveKind::Feature;
-    let sketch_selected = move || perspective.get() == PerspectiveKind::Sketch;
+    let items = vec![PerspectiveKind::Feature, PerspectiveKind::Sketch];
+    let initial = perspective.get_untracked();
 
     view! {
-        <div>
-            <select on:change:target=move |ev| {
-                let Ok(kind) = PerspectiveKind::from_string(&ev.target().value()) else {
-                    return;
-                };
-                set_perspective.run(kind);
-            }>
-                <option value=PerspectiveKind::Feature.to_string() selected=feature_selected>
-                    Feature
-                </option>
-                <option value=PerspectiveKind::Sketch.to_string() selected=sketch_selected>
-                    Sketch
-                </option>
-            </select>
+        <div class="flex items-center px-2 border-r border-gray-600">
+            <SelectBox
+                items=items
+                initial_selected=initial
+                item_view=perspective_item_view
+                selected_view=perspective_selected_view
+                button_class="bg-gray-700 hover:bg-gray-600 rounded px-1 text-gray-200"
+                on_change=Callback::new(move |kind: Option<PerspectiveKind>| {
+                    if let Some(k) = kind {
+                        set_perspective.run(k);
+                    }
+                })
+            />
         </div>
     }
 }
