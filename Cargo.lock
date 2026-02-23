@@ -6188,6 +6188,7 @@ dependencies = [
  "leptos-bevy-canvas",
  "leptos-test",
  "pretty_assertions",
+ "rstest",
  "tokio",
  "ui-component",
  "ui-event",

@@ -11,7 +11,7 @@ use leptos::{context::Provider, prelude::*};
 use leptos_bevy_canvas::prelude::*;
 use ui_event::{
     CanvasResizeNotification, MouseDownNotification, MouseMovementNotification,
-    MouseUpNotification, PerspectiveKind, SketchToolChangeNotification,
+    MouseUpNotification, MouseWheelNotification, PerspectiveKind, SketchToolChangeNotification,
 };
 
 use crate::{
@@ -179,16 +179,19 @@ pub fn CenterResizableRow(
     let (mouse_move_sender, mouse_move_receiver) = message_l2b::<MouseMovementNotification>();
     let (mouse_down_sender, mouse_down_receiver) = message_l2b::<MouseDownNotification>();
     let (mouse_up_sender, mouse_up_receiver) = message_l2b::<MouseUpNotification>();
+    let (mouse_wheel_sender, mouse_wheel_receiver) = message_l2b::<MouseWheelNotification>();
 
     let mouse_handler = canvas_mouse_handler::use_canvas_mouse_handler(
         mouse_move_sender,
         mouse_down_sender,
         mouse_up_sender,
+        mouse_wheel_sender,
     );
 
     let on_mouse_move = move |e| mouse_handler.on_mouse_move.run(e);
     let on_mouse_down = move |e| mouse_handler.on_mouse_down.run(e);
     let on_mouse_up = move |e| mouse_handler.on_mouse_up.run(e);
+    let on_wheel = move |e| mouse_handler.on_wheel.run(e);
 
     view! {
         <FeatureIsland />
@@ -202,6 +205,7 @@ pub fn CenterResizableRow(
             on:mousemove=on_mouse_move
             on:mousedown=on_mouse_down
             on:mouseup=on_mouse_up
+            on:wheel=on_wheel
         >
             <BevyCanvas
                 init=move || {
@@ -211,6 +215,7 @@ pub fn CenterResizableRow(
                         mouse_movement: mouse_move_receiver,
                         mouse_down: mouse_down_receiver,
                         mouse_up: mouse_up_receiver,
+                        mouse_wheel: mouse_wheel_receiver,
                     }
                     )
                 }

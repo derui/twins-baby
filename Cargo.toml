@@ -47,6 +47,7 @@ ui-event = { version = "0.1.0", path = "lib/ui-event" }
 
 [dev-dependencies]
 pretty_assertions.workspace = true
+rstest.workspace = true
 tokio.workspace = true
 futures-lite.workspace = true
 any_spawner.workspace = true

@@ -3,11 +3,12 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 
-use leptos::web_sys::MouseEvent;
+use leptos::web_sys::{MouseEvent, WheelEvent};
 use leptos::{prelude::*, wasm_bindgen::prelude::*};
 use leptos_bevy_canvas::prelude::{LeptosChannelMessageSender, LeptosMessageSender};
 use ui_event::{
     MouseButton, MouseDownNotification, MouseMovementNotification, MouseUpNotification,
+    MouseWheelNotification,
 };
 
 /// Accumulated mouse movement within a single animation frame.
@@ -18,6 +19,17 @@ struct AccumulatedMove {
     /// Last client position within the canvas
     client_x: u32,
     client_y: u32,
+}
+
+/// Normalizes a wheel delta value to -1.0, 0.0, or +1.0.
+fn normalize_delta(delta: f64) -> f32 {
+    if delta > 0.0 {
+        1.0
+    } else if delta < 0.0 {
+        -1.0
+    } else {
+        0.0
+    }
 }
 
 fn convert_button(button: i16) -> Option<MouseButton> {
@@ -34,6 +46,7 @@ pub struct UseCanvasMouseHandler {
     pub on_mouse_move: Callback<MouseEvent>,
     pub on_mouse_down: Callback<MouseEvent>,
     pub on_mouse_up: Callback<MouseEvent>,
+    pub on_wheel: Callback<WheelEvent>,
 }
 
 // Helper function to register an animation frame callback.
@@ -53,6 +66,7 @@ pub fn use_canvas_mouse_handler(
     move_sender: LeptosMessageSender<MouseMovementNotification>,
     down_sender: LeptosMessageSender<MouseDownNotification>,
     up_sender: LeptosMessageSender<MouseUpNotification>,
+    wheel_sender: LeptosMessageSender<MouseWheelNotification>,
 ) -> UseCanvasMouseHandler {
     let accumulated = Arc::new(Mutex::new(None::<AccumulatedMove>));
 
@@ -128,9 +142,43 @@ pub fn use_canvas_mouse_handler(
         }
     });
 
+    let on_wheel = Callback::new(move |ev: WheelEvent| {
+        let _ = wheel_sender.send(MouseWheelNotification {
+            delta_x: normalize_delta(ev.delta_x()).into(),
+            delta_y: normalize_delta(ev.delta_y()).into(),
+        });
+    });
+
     UseCanvasMouseHandler {
         on_mouse_move,
         on_mouse_down,
         on_mouse_up,
+        on_wheel,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::normalize_delta;
+    use pretty_assertions::assert_eq;
+    use rstest::rstest;
+
+    #[rstest]
+    #[case(1.0, 1.0)]
+    #[case(100.0, 1.0)]
+    #[case(0.001, 1.0)]
+    #[case(-1.0, -1.0)]
+    #[case(-100.0, -1.0)]
+    #[case(-0.001, -1.0)]
+    #[case(0.0, 0.0)]
+    fn test_normalize_delta(#[case] input: f64, #[case] expected: f32) {
+        // Arrange
+        // (inputs provided via rstest)
+
+        // Act
+        let result = normalize_delta(input);
+
+        // Assert
+        assert_eq!(result, expected);
     }
 }
