@@ -50,6 +50,15 @@ impl ToString for PerspectiveKind {
     }
 }
 
+impl std::str::FromStr for PerspectiveKind {
+    type Err = eyre::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Self::from_string(s)
+    }
+}
+
+
 /// Log levels for logging events
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LogLevel {
