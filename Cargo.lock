@@ -6246,6 +6246,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "ui-event"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+]
+
+[[package]]
 name = "ui-fixtures"
 version = "0.1.0"
 dependencies = [

@@ -8,7 +8,7 @@ edition = "2024"
 members = [
    "lib/cad-base", "lib/cad-base-macro", "lib/cad-kernel", "lib/epsilon", "lib/immutable", "lib/leptos-test",
    "lib/solver"
-, "lib/ui-component", "lib/ui-fixtures", "lib/ui-headless"]
+, "lib/ui-component", "lib/ui-event", "lib/ui-fixtures", "lib/ui-headless"]
 
 [workspace.dependencies]
 approx = "0.5.1"
