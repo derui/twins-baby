@@ -1,3 +1,4 @@
+mod canvas_mouse_handler;
 mod component;
 mod resize_nob;
 mod tool_command;
@@ -8,11 +9,13 @@ mod use_resize;
 
 use leptos::{context::Provider, prelude::*};
 use leptos_bevy_canvas::prelude::*;
-use ui_event::{CanvasResizeNotification, PerspectiveKind, SketchToolChangeNotification};
+use ui_event::{
+    CanvasResizeNotification, MouseDownNotification, MouseMovementNotification,
+    MouseUpNotification, PerspectiveKind, SketchToolChangeNotification,
+};
 
 use crate::{
-    bevy_app::init_bevy_app,
-    events::LoggingEvent,
+    bevy_app::{BevyAppSettings, init_bevy_app},
     leptos_app::{
         component::{FeatureIsland, InfoIsland, PerspectiveIsland, SupportIsland},
         resize_nob::NOB_AREA,
@@ -173,7 +176,19 @@ pub fn CenterResizableRow(
     resize_sender: BevyMessageReceiver<CanvasResizeNotification>,
     tool_receiver: BevyMessageReceiver<SketchToolChangeNotification>,
 ) -> impl IntoView {
-    let (_log_receiver, log_sender) = message_b2l::<LoggingEvent>();
+    let (mouse_move_sender, mouse_move_receiver) = message_l2b::<MouseMovementNotification>();
+    let (mouse_down_sender, mouse_down_receiver) = message_l2b::<MouseDownNotification>();
+    let (mouse_up_sender, mouse_up_receiver) = message_l2b::<MouseUpNotification>();
+
+    let mouse_handler = canvas_mouse_handler::use_canvas_mouse_handler(
+        mouse_move_sender,
+        mouse_down_sender,
+        mouse_up_sender,
+    );
+
+    let on_mouse_move = move |e| mouse_handler.on_mouse_move.run(e);
+    let on_mouse_down = move |e| mouse_handler.on_mouse_down.run(e);
+    let on_mouse_up = move |e| mouse_handler.on_mouse_up.run(e);
 
     view! {
         <FeatureIsland />
@@ -182,7 +197,26 @@ pub fn CenterResizableRow(
             <ResizeXNob movement=set_col_first_move />
         </div>
 
-        <BevyCanvas init=move || { init_bevy_app(log_sender, resize_sender, tool_receiver) } {..} />
+        <div
+            class="h-full w-full"
+            on:mousemove=on_mouse_move
+            on:mousedown=on_mouse_down
+            on:mouseup=on_mouse_up
+        >
+            <BevyCanvas
+                init=move || {
+                    init_bevy_app(BevyAppSettings {
+                        canvas_resize: resize_sender,
+                        sketch_tool_change: tool_receiver,
+                        mouse_movement: mouse_move_receiver,
+                        mouse_down: mouse_down_receiver,
+                        mouse_up: mouse_up_receiver,
+                    }
+                    )
+                }
+                {..}
+            />
+        </div>
 
         <div class="relative h-full">
             <ResizeXNob movement=set_col_third_move />
