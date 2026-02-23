@@ -104,6 +104,9 @@
               # for trunk
               pkgs.bzip2
 
+              # for claude sandboxing
+              pkgs.bubblewrap
+
               # for browser test
               pkgs.bun
               pkgs.playwright-driver.browsers
