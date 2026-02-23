@@ -89,3 +89,15 @@ pub struct MouseUpNotification {
     /// pressed button on event.
     pub button: Im<MouseButton>,
 }
+
+/// DOM's wheel event representation
+///
+/// Currently, browser's wheel event gives value and some types we can not control,
+/// but we can control per-delta value, which is only -1 / +1 / 0 only. So this event is designed to be simple.
+#[derive(Message, Debug, Clone)]
+pub struct MouseWheelNotification {
+    /// delta of x. it is only -1 / +1 / 0 only.
+    pub delta_x: Im<f32>,
+    /// delta of y. it is only -1 / +1 / 0 only.
+    pub delta_y: Im<f32>,
+}
