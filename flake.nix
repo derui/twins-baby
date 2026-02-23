@@ -122,7 +122,7 @@
             RUST_SRC_PATH = "${fenix-pkg.stable.rust-src}/lib/rustlib/src/rust/library";
             RUST_BACKTRACE = 1;
             LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath _buildInputs;
-
+            
             shellHook = ''
               pre-commit install
               cargo install trunk

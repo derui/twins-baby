@@ -65,6 +65,10 @@ features = [
     "webgpu",
 ]
 
+[target.wasm32-unknown-unknown.dependencies]
+getrandom    = { version = "0.3.4", features = ["wasm_js"] }
+getrandom_v4    = { version = "0.4.1", features = ["wasm_js"], package = "getrandom" }
+
 # Optimize build performance
 [profile.dev]
 # Faster builds with less optimization in dev mode
