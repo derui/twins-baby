@@ -13,7 +13,7 @@ use crate::{
 
 /// Toolbar displayed when the perspective is set to Sketch.
 #[component]
-pub fn SketchIsland() -> impl IntoView {
+pub fn SketchToolbar() -> impl IntoView {
     let tool_command = use_context::<ToolCommand>().expect("ToolCommand context must be provided");
 
     let make_on_click = move |t: SketchTool| {

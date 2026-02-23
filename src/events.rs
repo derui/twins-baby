@@ -58,7 +58,6 @@ impl std::str::FromStr for PerspectiveKind {
     }
 }
 
-
 /// Log levels for logging events
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LogLevel {

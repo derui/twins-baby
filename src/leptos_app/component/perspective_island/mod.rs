@@ -1,13 +1,13 @@
+mod sketch_toolbar;
+
 use leptos::prelude::*;
 use leptos::{IntoView, component, view};
 use ui_component::select::SelectBox;
 
+use crate::leptos_app::component::perspective_island::sketch_toolbar::SketchToolbar;
 use crate::{
     events::PerspectiveKind,
-    leptos_app::{
-        component::SketchIsland,
-        use_perspective::{UsePerspective, use_perspective},
-    },
+    leptos_app::use_perspective::{UsePerspective, use_perspective},
 };
 
 fn perspective_item_view(kind: PerspectiveKind) -> AnyView {
@@ -62,7 +62,7 @@ pub fn PerspectiveIsland() -> impl IntoView {
         <div class="flex flex-row h-full w-full col-span-5 rounded-lg bg-gray-700/90">
             <PerspectiveSwitcher />
             <Show when=move || perspective.get() == PerspectiveKind::Sketch>
-                <SketchIsland />
+                <SketchToolbar />
             </Show>
         </div>
     }
