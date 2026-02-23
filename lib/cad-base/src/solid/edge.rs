@@ -114,7 +114,7 @@ mod tests {
         let result = edge.with_start(*edge.end);
 
         // Assert
-        result.expect_err("should fail when same as end");
+        let _ = result.expect_err("should fail when same as end");
     }
 
     #[test]
@@ -141,7 +141,7 @@ mod tests {
         let result = edge.with_end(*edge.start);
 
         // Assert
-        result.expect_err("should fail when same as start");
+        let _ = result.expect_err("should fail when same as start");
     }
 
     #[test]

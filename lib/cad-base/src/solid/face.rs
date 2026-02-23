@@ -86,7 +86,7 @@ mod tests {
         let result = PlanarSurface::new(&edges, &plane);
 
         // Assert
-        result.expect_err("should fail with fewer than 3 boundaries");
+        let _ = result.expect_err("should fail with fewer than 3 boundaries");
     }
 
     #[test]
