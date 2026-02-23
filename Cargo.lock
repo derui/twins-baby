@@ -6250,6 +6250,10 @@ name = "ui-event"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "cad-base",
+ "color-eyre",
+ "immutable",
+ "tracing",
 ]
 
 [[package]]
