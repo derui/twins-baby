@@ -16,7 +16,7 @@ use crate::{
         component::{FeatureIsland, InfoIsland, PerspectiveIsland, SupportIsland},
         resize_nob::NOB_AREA,
         tool_command::ToolCommand,
-        ui_state::UiState,
+        ui_state::UiStore,
     },
 };
 use resize_nob::{ResizeXNob, ResizeYNob};
@@ -52,7 +52,7 @@ pub fn App() -> impl IntoView {
     let (resize_sender, receiver) = message_l2b::<CanvasResizeEvent>();
     let (tool_sender, tool_receiver) = message_l2b::<SketchToolEvent>();
     provide_context(ToolCommand(tool_sender));
-    provide_context(UiState::new());
+    provide_context(UiStore::new());
 
     let initial_width = window()
         .inner_width()

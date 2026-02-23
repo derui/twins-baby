@@ -2,7 +2,7 @@ use leptos::prelude::{Callback, Get, ReadSignal, use_context};
 
 use crate::{
     events::PerspectiveKind,
-    leptos_app::{ui_events::PerspectiveChangedEvent, ui_state::UiState},
+    leptos_app::{ui_events::PerspectiveChangedEvent, ui_state::UiStore},
 };
 
 /// This module provides a hook to manage global **perspective** of the app.
@@ -18,7 +18,7 @@ pub struct UsePerspective {
 ///
 /// This hook requires wrapping with `Provider` with [PerspectiveKind] value.
 pub fn use_perspective() -> UsePerspective {
-    let context = use_context::<UiState>().expect("Should be provided");
+    let context = use_context::<UiStore>().expect("Should be provided");
     let set_perspective = Callback::new(move |v| {
         context.dispatch(PerspectiveChangedEvent { next: v }.into());
     });
@@ -35,12 +35,12 @@ mod tests {
     use leptos_test::with_leptos_owner;
     use pretty_assertions::assert_eq;
 
-    use crate::leptos_app::ui_state::UiState;
+    use crate::leptos_app::ui_state::UiStore;
 
     use super::*;
 
-    fn setup_context() -> UiState {
-        let state = UiState::new();
+    fn setup_context() -> UiStore {
+        let state = UiStore::new();
         provide_context(state);
         state
     }
