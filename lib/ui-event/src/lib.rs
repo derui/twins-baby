@@ -68,26 +68,16 @@ pub struct MouseMovementNotification {
     pub client_y: Im<u32>,
 }
 
-/// DOM's mousedown event representation
+/// DOM's mousedown/up event representation
 #[derive(Message, Debug, Clone)]
-pub struct MouseDownNotification {
+pub struct MouseButtonNotification {
     /// Last point of moved in canvas
     pub client_x: Im<u32>,
     pub client_y: Im<u32>,
 
     /// pressed button on event.
     pub button: Im<MouseButton>,
-}
-
-/// DOM's mousedown event representation
-#[derive(Message, Debug, Clone)]
-pub struct MouseUpNotification {
-    /// Last point of moved in canvas
-    pub client_x: Im<u32>,
-    pub client_y: Im<u32>,
-
-    /// pressed button on event.
-    pub button: Im<MouseButton>,
+    pub state: Im<ButtonState>,
 }
 
 /// DOM's wheel event representation

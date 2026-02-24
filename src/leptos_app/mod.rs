@@ -10,8 +10,8 @@ mod use_resize;
 use leptos::{context::Provider, prelude::*};
 use leptos_bevy_canvas::prelude::*;
 use ui_event::{
-    CanvasResizeNotification, KeyboardNotification, MouseDownNotification,
-    MouseMovementNotification, MouseUpNotification, MouseWheelNotification, PerspectiveKind,
+    CanvasResizeNotification, KeyboardNotification, MouseButtonNotification,
+    MouseMovementNotification, MouseWheelNotification, PerspectiveKind,
     SketchToolChangeNotification,
 };
 
@@ -178,15 +178,13 @@ pub fn CenterResizableRow(
     tool_receiver: BevyMessageReceiver<SketchToolChangeNotification>,
 ) -> impl IntoView {
     let (mouse_move_sender, mouse_move_receiver) = message_l2b::<MouseMovementNotification>();
-    let (mouse_down_sender, mouse_down_receiver) = message_l2b::<MouseDownNotification>();
-    let (mouse_up_sender, mouse_up_receiver) = message_l2b::<MouseUpNotification>();
+    let (mouse_down_sender, mouse_down_receiver) = message_l2b::<MouseButtonNotification>();
     let (mouse_wheel_sender, mouse_wheel_receiver) = message_l2b::<MouseWheelNotification>();
     let (keyboard_sender, keyboard_receiver) = message_l2b::<KeyboardNotification>();
 
     let mouse_handler = canvas_mouse_handler::use_canvas_mouse_handler(
         mouse_move_sender,
         mouse_down_sender,
-        mouse_up_sender,
         mouse_wheel_sender,
         keyboard_sender,
     );
@@ -221,8 +219,7 @@ pub fn CenterResizableRow(
                         canvas_resize: resize_sender,
                         sketch_tool_change: tool_receiver,
                         mouse_movement: mouse_move_receiver,
-                        mouse_down: mouse_down_receiver,
-                        mouse_up: mouse_up_receiver,
+                        mouse_button: mouse_down_receiver,
                         mouse_wheel: mouse_wheel_receiver,
                         keyboard: keyboard_receiver,
                     })

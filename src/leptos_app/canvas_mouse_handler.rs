@@ -6,8 +6,8 @@ use leptos::web_sys::{KeyboardEvent, MouseEvent, WheelEvent};
 use leptos::{prelude::*, wasm_bindgen::prelude::*};
 use leptos_bevy_canvas::prelude::{LeptosChannelMessageSender, LeptosMessageSender};
 use ui_event::{
-    ButtonState, KeyboardNotification, MouseButton, MouseDownNotification,
-    MouseMovementNotification, MouseUpNotification, MouseWheelNotification, NotifiedKey,
+    ButtonState, KeyboardNotification, MouseButton, MouseButtonNotification,
+    MouseMovementNotification, MouseWheelNotification, NotifiedKey,
 };
 
 /// Accumulated mouse movement within a single animation frame.
@@ -78,8 +78,7 @@ fn keyboard_event_to_notification(event: &KeyboardEvent) -> KeyboardNotification
 /// - `mousedown` and `mouseup` events are converted and sent immediately.
 pub fn use_canvas_mouse_handler(
     move_sender: LeptosMessageSender<MouseMovementNotification>,
-    down_sender: LeptosMessageSender<MouseDownNotification>,
-    up_sender: LeptosMessageSender<MouseUpNotification>,
+    mouse_button_sender: LeptosMessageSender<MouseButtonNotification>,
     wheel_sender: LeptosMessageSender<MouseWheelNotification>,
     keyboard_sender: LeptosMessageSender<KeyboardNotification>,
 ) -> UseCanvasMouseHandler {
@@ -137,22 +136,26 @@ pub fn use_canvas_mouse_handler(
         request_animation_frame(closure_g.borrow().as_ref().unwrap())
     }
 
+    let sender_in_down = mouse_button_sender.clone();
     let on_mouse_down = Callback::new(move |ev: MouseEvent| {
         if let Some(button) = convert_button(ev.button()) {
-            let _ = down_sender.send(MouseDownNotification {
+            let _ = sender_in_down.send(MouseButtonNotification {
                 client_x: (ev.offset_x().max(0) as u32).into(),
                 client_y: (ev.offset_y().max(0) as u32).into(),
                 button: button.into(),
+                state: ButtonState::Pressed.into(),
             });
         }
     });
 
+    let sender_in_up = mouse_button_sender.clone();
     let on_mouse_up = Callback::new(move |ev: MouseEvent| {
         if let Some(button) = convert_button(ev.button()) {
-            let _ = up_sender.send(MouseUpNotification {
+            let _ = sender_in_up.send(MouseButtonNotification {
                 client_x: (ev.offset_x().max(0) as u32).into(),
                 client_y: (ev.offset_y().max(0) as u32).into(),
                 button: button.into(),
+                state: ButtonState::Released.into(),
             });
         }
     });

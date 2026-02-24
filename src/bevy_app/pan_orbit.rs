@@ -13,7 +13,7 @@ use bevy::{
     input::{
         ButtonInput,
         keyboard::KeyCode,
-        mouse::{MouseButton, MouseMotion, MouseScrollUnit, MouseWheel},
+        mouse::MouseButton,
     },
     math::{Vec2, Vec3},
     transform::components::Transform,

@@ -1,17 +1,21 @@
 mod camera;
 mod keyboard;
+mod mouse;
 mod pan_orbit;
 mod resize;
 mod setup;
 mod ui;
 
 // This initializes a normal Bevy app
-use bevy::{asset::AssetMetaCheck, prelude::*};
+use bevy::{
+    asset::AssetMetaCheck,
+    input::{InputPlugin, keyboard::Key},
+    prelude::*,
+};
 use leptos_bevy_canvas::prelude::{BevyMessageReceiver, LeptosBevyApp};
 use ui_event::{
-    CanvasResizeNotification, KeyboardNotification, MouseDownNotification,
-    MouseMovementNotification, MouseUpNotification, MouseWheelNotification,
-    SketchToolChangeNotification,
+    CanvasResizeNotification, KeyboardNotification, MouseButtonNotification,
+    MouseMovementNotification, MouseWheelNotification, SketchToolChangeNotification,
 };
 
 use crate::bevy_app::{
@@ -19,6 +23,8 @@ use crate::bevy_app::{
         LastWindowSize, PanOrbitOperation, move_camera_with_request, reposition_ui_cameras,
         setup_camera,
     },
+    keyboard::keyboard_input_system,
+    mouse::mouse_input_system,
     pan_orbit::{pan_orbit_camera, setup_pan_orbit},
     resize::WindowResizePlugin,
     setup::setup_scene,
@@ -34,8 +40,7 @@ pub struct BevyAppSettings {
     pub canvas_resize: BevyMessageReceiver<CanvasResizeNotification>,
     pub sketch_tool_change: BevyMessageReceiver<SketchToolChangeNotification>,
     pub mouse_movement: BevyMessageReceiver<MouseMovementNotification>,
-    pub mouse_down: BevyMessageReceiver<MouseDownNotification>,
-    pub mouse_up: BevyMessageReceiver<MouseUpNotification>,
+    pub mouse_button: BevyMessageReceiver<MouseButtonNotification>,
     pub mouse_wheel: BevyMessageReceiver<MouseWheelNotification>,
     pub keyboard: BevyMessageReceiver<KeyboardNotification>,
 }
@@ -56,18 +61,20 @@ pub fn init_bevy_app(setting: BevyAppSettings) -> App {
             .set(AssetPlugin {
                 meta_check: AssetMetaCheck::Never,
                 ..default()
-            }),
+            })
+            .disable::<InputPlugin>(),
         MeshPickingPlugin,
         WindowResizePlugin,
     ))
     .init_gizmo_group::<AxesGizmoGroup>()
     .init_resource::<LastWindowSize>()
+    .init_resource::<ButtonInput<MouseButton>>()
+    .init_resource::<ButtonInput<Key>>()
     .insert_resource(ClearColor(Color::srgb(0.7, 0.7, 0.7)))
     .import_message_from_leptos(setting.canvas_resize)
     .import_message_from_leptos(setting.sketch_tool_change)
     .import_message_from_leptos(setting.mouse_movement)
-    .import_message_from_leptos(setting.mouse_down)
-    .import_message_from_leptos(setting.mouse_up)
+    .import_message_from_leptos(setting.mouse_button)
     .import_message_from_leptos(setting.mouse_wheel)
     .import_message_from_leptos(setting.keyboard)
     .add_systems(
@@ -80,6 +87,8 @@ pub fn init_bevy_app(setting: BevyAppSettings) -> App {
             setup_gizmos,
         ),
     )
+    .add_systems(Update, keyboard_input_system)
+    .add_systems(Update, mouse_input_system)
     .add_systems(Update, setup_navigation_texture)
     .add_systems(
         Update,
