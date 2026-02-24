@@ -173,3 +173,30 @@ fn test_keyboard_input_system_clears_just_pressed_each_frame() {
         "pressed persists until an explicit release event"
     );
 }
+
+#[test]
+fn test_keyboard_input_system_just_pressed_after_a_frame() {
+    use super::keyboard_input_system;
+    use bevy::app::{App, Update};
+
+    // Arrange
+    let mut app = App::new();
+    app.init_resource::<ButtonInput<Key>>();
+    app.add_message::<KeyboardNotification>();
+    app.add_systems(Update, keyboard_input_system);
+
+    app.world_mut()
+        .write_message(make_notification("ArrowLeft", ButtonState::Pressed));
+    app.update();
+
+    // Assert
+    let key_input = app.world().resource::<ButtonInput<Key>>();
+    assert!(
+        key_input.just_pressed(Key::ArrowLeft),
+        "just_pressed should be cleared after the frame"
+    );
+    assert!(
+        key_input.pressed(Key::ArrowLeft),
+        "pressed persists until an explicit release event"
+    );
+}
