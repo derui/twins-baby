@@ -18,6 +18,7 @@ use bevy::{
     math::{Vec2, Vec3},
     transform::components::Transform,
 };
+use ui_event::{MouseMovementNotification, MouseWheelNotification};
 
 use crate::bevy_app::camera::{
     CameraMoveDuration, CameraMoveOperation, CameraMoveRequest, MainCamera, PanOrbitOperation,
@@ -114,29 +115,23 @@ pub fn pan_orbit_camera(
     mut commands: Commands,
     kbd: Res<ButtonInput<KeyCode>>,
     mouse: Res<ButtonInput<MouseButton>>,
-    mut evr_motion: MessageReader<MouseMotion>,
-    mut evr_scroll: MessageReader<MouseWheel>,
+    mut evr_motion: MessageReader<MouseMovementNotification>,
+    mut evr_scroll: MessageReader<MouseWheelNotification>,
     mut q_camere: Query<(&PanOrbitSettings, &mut PanOrbitOperation)>,
     q_transform: Query<&Transform, With<MainCamera>>,
 ) -> Result<(), BevyError> {
-    let mut total_motion: Vec2 = evr_motion.read().map(|ev| ev.delta).sum();
+    let mut total_motion: Vec2 = evr_motion
+        .read()
+        .map(|ev| Vec2::new(*ev.delta_x as f32, *ev.delta_y as f32))
+        .sum();
 
     // Reverse Y. (Worldscpace coodinate system has Y up, but mouse Y goes down)
     total_motion.y = -total_motion.y;
 
-    let mut total_scroll_lines = Vec2::ZERO;
     let mut total_scroll_pixels = Vec2::ZERO;
     for ev in evr_scroll.read() {
-        match ev.unit {
-            MouseScrollUnit::Line => {
-                total_scroll_lines.x += ev.x;
-                total_scroll_lines.y -= ev.y;
-            }
-            MouseScrollUnit::Pixel => {
-                total_scroll_pixels.x += ev.x;
-                total_scroll_pixels.y -= ev.y;
-            }
-        }
+        total_scroll_pixels.x += *ev.delta_x;
+        total_scroll_pixels.y -= *ev.delta_y;
     }
 
     for (settings, mut state) in &mut q_camere {
@@ -167,8 +162,6 @@ pub fn pan_orbit_camera(
         }
         if settings.pan_input == Some(InputMethod::Scroll) {
             total_pan -=
-                total_scroll_lines * settings.scroll_line_sensitivity * settings.pan_sensitivity;
-            total_pan -=
                 total_scroll_pixels * settings.scroll_pixel_sensitivity * settings.pan_sensitivity;
         }
 
@@ -177,8 +170,6 @@ pub fn pan_orbit_camera(
             total_orbit -= total_motion * settings.orbit_sensitivity;
         }
         if settings.orbit_input == Some(InputMethod::Scroll) {
-            total_orbit -=
-                total_scroll_lines * settings.scroll_line_sensitivity * settings.orbit_sensitivity;
             total_orbit -= total_scroll_pixels
                 * settings.scroll_pixel_sensitivity
                 * settings.orbit_sensitivity;
@@ -189,8 +180,6 @@ pub fn pan_orbit_camera(
             total_zoom -= total_motion * settings.zoom_sensitivity;
         }
         if settings.zoom_input == Some(InputMethod::Scroll) {
-            total_zoom -=
-                total_scroll_lines * settings.scroll_line_sensitivity * settings.zoom_sensitivity;
             total_zoom -=
                 total_scroll_pixels * settings.scroll_pixel_sensitivity * settings.zoom_sensitivity;
         }
