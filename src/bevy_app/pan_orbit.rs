@@ -10,7 +10,11 @@ use bevy::{
         query::With,
         system::{Commands, Query, Res},
     },
-    input::{ButtonInput, keyboard::KeyCode, mouse::MouseButton},
+    input::{
+        ButtonInput,
+        keyboard::Key,
+        mouse::MouseButton,
+    },
     math::{Vec2, Vec3},
     transform::components::Transform,
 };
@@ -63,10 +67,10 @@ pub enum PanOrbitAction {
 }
 
 /// Input method for an action
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum InputMethod {
     /// Pressing key with mouse motion.
-    Key(KeyCode),
+    Key(Key),
 
     /// Pressing button with mouse motion
     MouseButton(MouseButton),
@@ -83,8 +87,8 @@ impl Default for PanOrbitSettings {
             // 0.1 degree per pixel
             orbit_sensitivity: 0.1f32.to_radians(),
             zoom_sensitivity: 0.01,
-            pan_input: Some(InputMethod::Key(KeyCode::ControlLeft)),
-            orbit_input: Some(InputMethod::Key(KeyCode::AltLeft)),
+            pan_input: Some(InputMethod::Key(Key::Control)),
+            orbit_input: Some(InputMethod::Key(Key::Alt)),
             zoom_input: Some(InputMethod::Scroll),
             // 1 line = 16 pixels of motion
             scroll_line_sensitivity: 16.0,
@@ -109,7 +113,7 @@ pub fn setup_pan_orbit(mut commands: Commands) -> Result<(), BevyError> {
 
 pub fn pan_orbit_camera(
     mut commands: Commands,
-    kbd: Res<ButtonInput<KeyCode>>,
+    kbd: Res<ButtonInput<Key>>,
     mouse: Res<ButtonInput<MouseButton>>,
     mut evr_motion: MessageReader<MouseMovementNotification>,
     mut evr_scroll: MessageReader<MouseWheelNotification>,
@@ -153,7 +157,7 @@ pub fn pan_orbit_camera(
 
         // Calculate pan/orbit/zoom based on configured input methods
         let mut total_pan = Vec2::ZERO;
-        if is_input_active(settings.pan_input) {
+        if is_input_active(settings.pan_input.clone()) {
             total_pan -= total_motion * settings.pan_sensitivity;
         }
         if settings.pan_input == Some(InputMethod::Scroll) {
@@ -162,7 +166,7 @@ pub fn pan_orbit_camera(
         }
 
         let mut total_orbit = Vec2::ZERO;
-        if is_input_active(settings.orbit_input) {
+        if is_input_active(settings.orbit_input.clone()) {
             total_orbit -= total_motion * settings.orbit_sensitivity;
         }
         if settings.orbit_input == Some(InputMethod::Scroll) {
@@ -172,7 +176,7 @@ pub fn pan_orbit_camera(
         }
 
         let mut total_zoom = Vec2::ZERO;
-        if is_input_active(settings.zoom_input) {
+        if is_input_active(settings.zoom_input.clone()) {
             total_zoom -= total_motion * settings.zoom_sensitivity;
         }
         if settings.zoom_input == Some(InputMethod::Scroll) {
@@ -181,7 +185,7 @@ pub fn pan_orbit_camera(
         }
 
         // Upon starting a new orbit maneuver
-        if is_input_just_pressed(settings.orbit_input) {
+        if is_input_just_pressed(settings.orbit_input.clone()) {
             state.upside_down = state.pitch < -FRAC_PI_2 || state.pitch > FRAC_PI_2;
         }
 
