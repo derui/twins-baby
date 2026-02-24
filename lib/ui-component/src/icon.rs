@@ -7,7 +7,7 @@ pub enum IconSize {
 }
 
 impl IconSize {
-    pub(crate) fn to_class(&self) -> String {
+    pub(crate) fn as_class(&self) -> String {
         match self {
             IconSize::Small => "w-9 h-9".to_string(),
             IconSize::Medium => "w-12 h-12".to_string(),
@@ -54,7 +54,7 @@ pub enum IconType {
 }
 
 impl IconType {
-    pub(crate) fn to_url(&self) -> &'static str {
+    pub(crate) fn as_url(&self) -> &'static str {
         match self {
             IconType::Axis(_) => "/assets/icons/axis.svg",
             IconType::BooleanIntersect(_) => "/assets/icons/boolean-intersect.svg",
@@ -91,7 +91,7 @@ impl IconType {
         }
     }
 
-    pub(crate) fn size_class(&self) -> String {
+    pub(crate) fn as_size_class(&self) -> String {
         let size = match self {
             IconType::Axis(s)
             | IconType::BooleanIntersect(s)
@@ -126,6 +126,6 @@ impl IconType {
             | IconType::SketchCircle(s)
             | IconType::SketchRectangle(s) => s,
         };
-        format!("inline-block shrink-0 {}", size.to_class())
+        format!("inline-block shrink-0 {}", size.as_class())
     }
 }

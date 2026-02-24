@@ -15,8 +15,8 @@ pub fn ToolButton(
     let state = use_button(disabled.unwrap_or(false));
 
     let disabled = move || (*state.attrs).get().disabled;
-    let icon_url = icon.to_url();
-    let icon_class = icon.size_class();
+    let icon_url = icon.as_url();
+    let icon_class = icon.as_size_class();
     let mask_style = format!(
         "mask-image: url({icon_url}); mask-size: contain; mask-repeat: no-repeat; mask-position: center;"
     );
