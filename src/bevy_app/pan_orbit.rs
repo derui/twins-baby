@@ -10,11 +10,7 @@ use bevy::{
         query::With,
         system::{Commands, Query, Res},
     },
-    input::{
-        ButtonInput,
-        keyboard::KeyCode,
-        mouse::MouseButton,
-    },
+    input::{ButtonInput, keyboard::KeyCode, mouse::MouseButton},
     math::{Vec2, Vec3},
     transform::components::Transform,
 };

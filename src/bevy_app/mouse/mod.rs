@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use bevy::{
     ecs::{change_detection::DetectChangesMut as _, message::MessageReader, system::ResMut},
     input::{ButtonInput, mouse::MouseButton},
