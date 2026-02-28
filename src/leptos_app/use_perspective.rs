@@ -33,12 +33,12 @@ mod tests {
     use leptos_test::with_leptos_owner;
     use pretty_assertions::assert_eq;
 
-    use crate::leptos_app::ui_state::UiStore;
+    use crate::leptos_app::{app_state::AppStore, ui_state::UiStore};
 
     use super::*;
 
     fn setup_context() -> UiStore {
-        let state = UiStore::new();
+        let state = UiStore::new(&AppStore::new());
         provide_context(state);
         state
     }

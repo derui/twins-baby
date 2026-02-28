@@ -6,7 +6,7 @@ use immutable::Im;
 use leptos::prelude::*;
 use ui_event::PerspectiveKind;
 
-use crate::leptos_app::ui_action::PerspectiveChangedAction;
+use crate::leptos_app::{app_state::AppStore, ui_action::PerspectiveChangedAction};
 
 /// Immutable UI DTO for Body.
 #[derive(Debug, Clone)]
@@ -37,8 +37,6 @@ pub struct UiStore {
     /// Current selected perspective, this is only for UI view.
     pub perspective: WriteSignal<PerspectiveKind>,
 
-    pub bodies: WriteSignal<HashMap<BodyId, BodyUI>>,
-
     /// centralized UI state. see this
     pub ui: UiState,
 
@@ -59,12 +57,12 @@ pub struct UiState {
 
 impl UiStore {
     /// New UI state.
-    pub fn new() -> Self {
+    pub fn new(app_store: &AppStore) -> Self {
         let (perspective, set_perspective) = signal(PerspectiveKind::default());
-        let (bodies, set_bodies) = signal(HashMap::<BodyId, BodyUI>::new());
 
+        let bodies = app_store.state.bodies.clone();
         let body_list = Signal::derive(move || {
-            let mut bodies = bodies.get().into_values().collect::<Vec<_>>();
+            let mut bodies = bodies.read().values().cloned().collect::<Vec<_>>();
             bodies.sort_by_key(|v| *v.order);
 
             bodies
@@ -72,7 +70,6 @@ impl UiStore {
 
         UiStore {
             perspective: set_perspective,
-            bodies: set_bodies,
             ui: UiState {
                 perspective,
                 bodies: body_list,

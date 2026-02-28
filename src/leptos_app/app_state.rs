@@ -1,31 +1,9 @@
 use std::collections::HashMap;
 
 use cad_base::id::BodyId;
-use immutable::Im;
 use leptos::prelude::*;
 
-
-/// Immutable UI DTO for Body.
-#[derive(Debug, Clone)]
-pub struct BodyUI {
-    pub id: Im<BodyId>,
-    pub name: Im<String>,
-    pub order: Im<u32>,
-
-    _immutable: (),
-}
-
-impl BodyUI {
-    /// Make new [BodyUI]
-    pub fn new(id: BodyId, name: &str, order: u32) -> BodyUI {
-        BodyUI {
-            id: id.into(),
-            name: name.to_string().into(),
-            order: order.into(),
-            _immutable: (),
-        }
-    }
-}
+use crate::leptos_app::ui_state::BodyUI;
 
 /// Application State derived by AppStore
 #[derive(Debug, Clone, Copy)]

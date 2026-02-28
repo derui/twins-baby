@@ -19,6 +19,7 @@ use ui_event::{
 use crate::{
     bevy_app::{BevyAppSettings, init_bevy_app},
     leptos_app::{
+        app_state::AppStore,
         command_sender::CommandSender,
         component::{FeatureIsland, InfoIsland, PerspectiveIsland, SupportIsland},
         resize_nob::NOB_AREA,
@@ -57,8 +58,10 @@ pub fn App() -> impl IntoView {
     // Get initial window dimensions
     let (notification_sender, notification_receiver) = message_l2b::<Intents>();
     let (command_sender, _command_receiver) = message_l2b::<Commands>();
+    let store = AppStore::new();
     provide_context(CommandSender::new(command_sender));
-    provide_context(UiStore::new());
+    provide_context(store);
+    provide_context(UiStore::new(&store));
 
     let initial_width = window()
         .inner_width()
