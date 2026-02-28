@@ -6175,6 +6175,7 @@ version = "0.1.0"
 dependencies = [
  "any_spawner",
  "bevy",
+ "cad-base",
  "coarsetime",
  "color-eyre",
  "console_error_panic_hook",

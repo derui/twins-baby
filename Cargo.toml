@@ -41,11 +41,13 @@ quote = "1.0.44"
 syn = "2.0.117"
 
 [dependencies]
+cad-base = { version = "0.1.0", path = "lib/cad-base" }
 coarsetime = "0.1.36"
 color-eyre.workspace = true
 console_error_panic_hook = "0.1.7"
 enum_dispatch.workspace = true
 eyre = "0.6.12"
+immutable = { version = "0.1.0", path = "lib/immutable" }
 leptos.workspace = true
 leptos-bevy-canvas = "0.5.0"
 tracing.workspace = true
