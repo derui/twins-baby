@@ -6259,6 +6259,7 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "cad-base",
+ "cad-base-macro",
  "color-eyre",
  "enum_dispatch",
  "immutable",

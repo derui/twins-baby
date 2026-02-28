@@ -1,7 +1,12 @@
 use std::fmt::Display;
 
+use cad_base_macro::MakeId;
 use color_eyre::eyre;
 use smol_str::SmolStr;
+
+/// Identifier of the command.
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, MakeId)]
+pub struct CommandId(u64);
 
 /// Tool selection for sketch mode
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
