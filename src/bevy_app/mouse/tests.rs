@@ -4,7 +4,7 @@ use pretty_assertions::assert_eq;
 use rstest::rstest;
 use ui_event::{
     ButtonState, MouseButton as MB,
-    intent::{MouseButtonIntent, Intents},
+    intent::{Intents, MouseButtonIntent},
 };
 
 use super::to_bevy_mouse_button;

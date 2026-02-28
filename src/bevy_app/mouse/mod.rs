@@ -6,8 +6,7 @@ use bevy::{
     input::{ButtonInput, mouse::MouseButton},
 };
 use ui_event::{
-    ButtonState, MouseButton as MB, intent::MouseButtonIntent,
-    intent::Intent, intent::Intents,
+    ButtonState, MouseButton as MB, intent::Intent, intent::Intents, intent::MouseButtonIntent,
 };
 
 /// leptos-connected version of mouse input system
@@ -19,8 +18,7 @@ pub fn mouse_input_system(
     mouse_input.bypass_change_detection().clear();
 
     for event in mouse_input_reader.read() {
-        let Some(MouseButtonIntent { button, state, .. }) =
-            event.select_ref::<MouseButtonIntent>()
+        let Some(MouseButtonIntent { button, state, .. }) = event.select_ref::<MouseButtonIntent>()
         else {
             continue;
         };

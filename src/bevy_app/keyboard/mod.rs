@@ -4,7 +4,7 @@ use bevy::{
 };
 use ui_event::{
     ButtonState, NotifiedKey,
-    intent::{KeyboardIntent, Intent, Intents},
+    intent::{Intent, Intents, KeyboardIntent},
 };
 
 #[cfg(test)]
@@ -63,9 +63,7 @@ pub fn keyboard_input_system(
     key_input.bypass_change_detection().clear();
 
     for event in keyboard_input_reader.read() {
-        let Some(KeyboardIntent { key, state, .. }) =
-            event.select_ref::<KeyboardIntent>()
-        else {
+        let Some(KeyboardIntent { key, state, .. }) = event.select_ref::<KeyboardIntent>() else {
             continue;
         };
 

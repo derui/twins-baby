@@ -6,8 +6,7 @@ use leptos::web_sys::{KeyboardEvent, MouseEvent, WheelEvent};
 use leptos::{prelude::*, wasm_bindgen::prelude::*};
 use leptos_bevy_canvas::prelude::{LeptosChannelMessageSender, LeptosMessageSender};
 use ui_event::intent::{
-    KeyboardIntent, MouseButtonIntent, MouseMovementIntent,
-    MouseWheelIntent, Intents,
+    Intents, KeyboardIntent, MouseButtonIntent, MouseMovementIntent, MouseWheelIntent,
 };
 use ui_event::{ButtonState, MouseButton, NotifiedKey};
 

@@ -5,7 +5,7 @@ use rstest::rstest;
 use smol_str::SmolStr;
 use ui_event::{
     ButtonState, NotifiedKey,
-    intent::{KeyboardIntent, Intents},
+    intent::{Intents, KeyboardIntent},
 };
 
 use super::map_dom_key_to_bevy;

@@ -14,9 +14,7 @@ use bevy::{
     math::{Vec2, Vec3},
     transform::components::Transform,
 };
-use ui_event::intent::{
-    MouseMovementIntent, MouseWheelIntent, Intent, Intents,
-};
+use ui_event::intent::{Intent, Intents, MouseMovementIntent, MouseWheelIntent};
 
 use crate::bevy_app::camera::{
     CameraMoveDuration, CameraMoveOperation, CameraMoveRequest, MainCamera, PanOrbitOperation,
