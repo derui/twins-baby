@@ -6192,6 +6192,7 @@ dependencies = [
  "rstest",
  "smol_str",
  "tokio",
+ "tracing",
  "ui-component",
  "ui-event",
 ]

@@ -1,7 +1,7 @@
 mod canvas_mouse_handler;
+mod command_sender;
 mod component;
 mod resize_nob;
-mod tool_command;
 mod ui_action;
 mod ui_state;
 mod use_perspective;
@@ -18,9 +18,9 @@ use ui_event::{
 use crate::{
     bevy_app::{BevyAppSettings, init_bevy_app},
     leptos_app::{
+        command_sender::CommandSender,
         component::{FeatureIsland, InfoIsland, PerspectiveIsland, SupportIsland},
         resize_nob::NOB_AREA,
-        tool_command::ToolCommand,
         ui_state::UiStore,
     },
 };
@@ -56,7 +56,7 @@ pub fn App() -> impl IntoView {
     // Get initial window dimensions
     let (notification_sender, notification_receiver) = message_l2b::<Intents>();
     let (command_sender, _command_receiver) = message_l2b::<Commands>();
-    provide_context(ToolCommand(command_sender));
+    provide_context(CommandSender::new(command_sender));
     provide_context(UiStore::new());
 
     let initial_width = window()

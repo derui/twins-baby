@@ -6,17 +6,10 @@ use ui_component::{
 };
 use ui_event::SketchTool;
 
-use crate::leptos_app::tool_command::ToolCommand;
-
 /// Toolbar displayed when the perspective is set to Sketch.
 #[component]
 pub fn SketchToolbar() -> impl IntoView {
-    let tool_command = use_context::<ToolCommand>().expect("ToolCommand context must be provided");
-
-    let make_on_click = move |_t: SketchTool| {
-        let _tool_command = tool_command.clone();
-        move |_ev: leptos::web_sys::MouseEvent| {}
-    };
+    let make_on_click = move |_t: SketchTool| move |_ev: leptos::web_sys::MouseEvent| {};
 
     view! {
         <div class="flex flex-row gap-2 p-2">
