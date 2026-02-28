@@ -7,7 +7,7 @@ use color_eyre::eyre::Result;
 
 use crate::matrix::{Matrix, simple::SimpleMatrix};
 
-/// Offer simple multi-dimension vector. This works with `matrix` module in this library.
+// Offer simple multi-dimension vector. This works with `matrix` module in this library.
 
 /// A simple vector type
 #[derive(Debug, Clone, PartialEq)]

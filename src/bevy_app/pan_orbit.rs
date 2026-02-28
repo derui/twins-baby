@@ -22,8 +22,8 @@ use crate::bevy_app::camera::{
     CameraMoveDuration, CameraMoveOperation, CameraMoveRequest, MainCamera, PanOrbitOperation,
 };
 
-/// This module provides component and system for pan-orbit controller for App.
-/// based on https://bevy-cheatbook.github.io/cookbook/pan-orbit-camera.html
+// This module provides component and system for pan-orbit controller for App.
+// based on https://bevy-cheatbook.github.io/cookbook/pan-orbit-camera.html
 
 /// Bundre to spawn pan-orbit controller.
 #[derive(Bundle, Default)]

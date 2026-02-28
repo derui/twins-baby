@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use color_eyre::eyre;
 use smol_str::SmolStr;
 
@@ -29,12 +31,14 @@ impl PerspectiveKind {
     }
 }
 
-impl ToString for PerspectiveKind {
-    fn to_string(&self) -> String {
-        match self {
+impl Display for PerspectiveKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let str = match self {
             PerspectiveKind::Feature => "Feature".to_string(),
             PerspectiveKind::Sketch => "Sketch".to_string(),
-        }
+        };
+
+        f.write_str(&str)
     }
 }
 
