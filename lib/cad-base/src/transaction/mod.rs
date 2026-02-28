@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests;
 
-mod registry;
+pub mod registry;
 
 use crate::transaction::registry::PerspectiveRegistry;
 use std::{

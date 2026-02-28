@@ -5,7 +5,7 @@ use crate::transaction::{
 };
 
 /// Simple registry implementation for perspective
-pub(crate) struct PerspectiveRegistry {
+pub struct PerspectiveRegistry {
     /// All histories for perspective, each `TypeId` must be type of the state of history.
     pub(crate) perspectives: HashMap<TypeId, Box<dyn PerspectiveHistory>>,
 

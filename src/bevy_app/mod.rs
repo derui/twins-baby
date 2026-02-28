@@ -1,6 +1,7 @@
 mod camera;
 mod pan_orbit;
 mod resize;
+mod resource;
 mod setup;
 mod ui;
 
@@ -16,6 +17,7 @@ use crate::bevy_app::{
     },
     pan_orbit::{pan_orbit_camera, setup_pan_orbit},
     resize::WindowResizePlugin,
+    resource::EngineState,
     setup::setup_scene,
     ui::{
         AxesGizmoGroup, draw_gizmos, insert_render_layer, setup_gizmos, setup_navigation_texture,
@@ -53,6 +55,7 @@ pub fn init_bevy_app(setting: BevyAppSettings) -> App {
     .init_gizmo_group::<AxesGizmoGroup>()
     .init_resource::<LastWindowSize>()
     .insert_resource(ClearColor(Color::srgb(0.7, 0.7, 0.7)))
+    .init_resource::<EngineState>()
     .import_message_from_leptos(setting.intent)
     .add_systems(
         Startup,
