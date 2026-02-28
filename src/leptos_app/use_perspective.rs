@@ -29,7 +29,7 @@ pub fn use_perspective() -> UsePerspective {
 
 #[cfg(test)]
 mod tests {
-    use leptos::prelude::{Callable as _, provide_context};
+    use leptos::prelude::{Callable as _, Get as _, provide_context};
     use leptos_test::with_leptos_owner;
     use pretty_assertions::assert_eq;
 

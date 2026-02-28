@@ -100,6 +100,6 @@ pub trait UiReducer {
 #[derive(Debug, Clone)]
 #[enum_dispatch]
 pub enum UiActions {
-    /// Occurance of changes
+    /// Occurance of perspective
     PerspectiveChanged(PerspectiveChangedAction),
 }

@@ -1,3 +1,4 @@
+mod app_state;
 mod canvas_mouse_handler;
 mod command_sender;
 mod component;
