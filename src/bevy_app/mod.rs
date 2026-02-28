@@ -1,17 +1,11 @@
 mod camera;
-mod keyboard;
-mod mouse;
 mod pan_orbit;
 mod resize;
 mod setup;
 mod ui;
 
 // This initializes a normal Bevy app
-use bevy::{
-    asset::AssetMetaCheck,
-    input::{InputPlugin, keyboard::Key},
-    prelude::*,
-};
+use bevy::{asset::AssetMetaCheck, prelude::*};
 use leptos_bevy_canvas::prelude::{BevyMessageReceiver, LeptosBevyApp};
 use ui_event::intent::Intents;
 
@@ -20,8 +14,6 @@ use crate::bevy_app::{
         LastWindowSize, PanOrbitOperation, move_camera_with_request, reposition_ui_cameras,
         setup_camera,
     },
-    keyboard::keyboard_input_system,
-    mouse::mouse_input_system,
     pan_orbit::{pan_orbit_camera, setup_pan_orbit},
     resize::WindowResizePlugin,
     setup::setup_scene,
@@ -34,7 +26,7 @@ use crate::bevy_app::{
 /// Settings for bevy application, to pass massive message recievers
 #[derive(Debug)]
 pub struct BevyAppSettings {
-    pub notification: BevyMessageReceiver<Intents>,
+    pub intent: BevyMessageReceiver<Intents>,
 }
 
 pub fn init_bevy_app(setting: BevyAppSettings) -> App {
@@ -54,16 +46,14 @@ pub fn init_bevy_app(setting: BevyAppSettings) -> App {
                 meta_check: AssetMetaCheck::Never,
                 ..default()
             })
-            .disable::<InputPlugin>(),
+            .disable::<GilrsPlugin>(),
         MeshPickingPlugin,
         WindowResizePlugin,
     ))
     .init_gizmo_group::<AxesGizmoGroup>()
     .init_resource::<LastWindowSize>()
-    .init_resource::<ButtonInput<MouseButton>>()
-    .init_resource::<ButtonInput<Key>>()
     .insert_resource(ClearColor(Color::srgb(0.7, 0.7, 0.7)))
-    .import_message_from_leptos(setting.notification)
+    .import_message_from_leptos(setting.intent)
     .add_systems(
         Startup,
         (
@@ -74,8 +64,6 @@ pub fn init_bevy_app(setting: BevyAppSettings) -> App {
             setup_gizmos,
         ),
     )
-    .add_systems(Update, keyboard_input_system)
-    .add_systems(Update, mouse_input_system)
     .add_systems(Update, setup_navigation_texture)
     .add_systems(
         Update,

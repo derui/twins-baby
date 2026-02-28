@@ -2,7 +2,6 @@ use std::fmt::Display;
 
 use cad_base_macro::MakeId;
 use color_eyre::eyre;
-use smol_str::SmolStr;
 
 /// Identifier of the command.
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, MakeId)]
@@ -62,25 +61,4 @@ impl std::str::FromStr for PerspectiveKind {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Self::from_string(s)
     }
-}
-
-/// Mouse button representation.
-///
-/// NOTE: we have bevy's mouse input, but it is for bevy, this is for our system
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum MouseButton {
-    Left,
-    Right,
-    Center,
-}
-
-/// Key representation from keyboard event.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct NotifiedKey(pub SmolStr);
-
-/// Button state representation for keyboard and other input events.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum ButtonState {
-    Pressed,
-    Released,
 }

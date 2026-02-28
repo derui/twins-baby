@@ -1,5 +1,4 @@
 mod app_state;
-mod canvas_mouse_handler;
 mod command_sender;
 mod component;
 mod resize_nob;
@@ -161,7 +160,6 @@ pub fn App() -> impl IntoView {
                 <CenterResizableRow
                     set_col_first_move=set_col_first_move
                     set_col_third_move=set_col_third_move
-                    notification_sender=notification_sender
                     notification_receiver=notification_receiver
                 />
 
@@ -182,18 +180,8 @@ pub fn App() -> impl IntoView {
 pub fn CenterResizableRow(
     set_col_first_move: WriteSignal<i32>,
     set_col_third_move: WriteSignal<i32>,
-    notification_sender: LeptosMessageSender<Intents>,
     notification_receiver: BevyMessageReceiver<Intents>,
 ) -> impl IntoView {
-    let mouse_handler = canvas_mouse_handler::use_canvas_mouse_handler(notification_sender.clone());
-
-    let on_mouse_move = move |e| mouse_handler.on_mouse_move.run(e);
-    let on_mouse_down = move |e| mouse_handler.on_mouse_down.run(e);
-    let on_mouse_up = move |e| mouse_handler.on_mouse_up.run(e);
-    let on_wheel = move |e| mouse_handler.on_wheel.run(e);
-    let on_key_down = move |e| mouse_handler.on_key_down.run(e);
-    let on_key_up = move |e| mouse_handler.on_key_up.run(e);
-
     view! {
         <FeatureIsland />
 
@@ -201,20 +189,11 @@ pub fn CenterResizableRow(
             <ResizeXNob movement=set_col_first_move />
         </div>
 
-        <div
-            class="h-full w-full"
-            tabindex="0"
-            on:mousemove=on_mouse_move
-            on:mousedown=on_mouse_down
-            on:mouseup=on_mouse_up
-            on:wheel=on_wheel
-            on:keydown=on_key_down
-            on:keyup=on_key_up
-        >
+        <div class="h-full w-full" tabindex="0">
             <BevyCanvas
                 init=move || {
                     init_bevy_app(BevyAppSettings {
-                        notification: notification_receiver,
+                        intent: notification_receiver,
                     })
                 }
                 {..}

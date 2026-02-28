@@ -6265,7 +6265,6 @@ dependencies = [
  "color-eyre",
  "enum_dispatch",
  "immutable",
- "smol_str",
  "tracing",
  "ui-event-macros",
 ]

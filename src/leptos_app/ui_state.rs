@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use cad_base::id::BodyId;
 use enum_dispatch::enum_dispatch;
 use immutable::Im;
@@ -60,7 +58,7 @@ impl UiStore {
     pub fn new(app_store: &AppStore) -> Self {
         let (perspective, set_perspective) = signal(PerspectiveKind::default());
 
-        let bodies = app_store.state.bodies.clone();
+        let bodies = app_store.state.bodies;
         let body_list = Signal::derive(move || {
             let mut bodies = bodies.read().values().cloned().collect::<Vec<_>>();
             bodies.sort_by_key(|v| *v.order);

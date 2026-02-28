@@ -10,6 +10,5 @@ color-eyre.workspace = true
 enum_dispatch.workspace = true
 immutable = { version = "0.1.0", path = "../immutable" }
 ui-event-macros = { version = "0.1.0", path = "../ui-event-macros" }
-smol_str.workspace = true
 tracing.workspace = true
 cad-base-macro = { version = "0.1.0", path = "../cad-base-macro" }
