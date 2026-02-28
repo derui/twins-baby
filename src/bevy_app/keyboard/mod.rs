@@ -4,7 +4,7 @@ use bevy::{
 };
 use ui_event::{
     ButtonState, NotifiedKey,
-    notification::{KeyboardNotification, Notification, Notifications},
+    intent::{KeyboardIntent, Intent, Intents},
 };
 
 #[cfg(test)]
@@ -57,14 +57,14 @@ fn map_dom_key_to_bevy(key: &NotifiedKey) -> Key {
 /// leptos-connected version of keyboard input system
 pub fn keyboard_input_system(
     mut key_input: ResMut<ButtonInput<Key>>,
-    mut keyboard_input_reader: MessageReader<Notifications>,
+    mut keyboard_input_reader: MessageReader<Intents>,
 ) {
     // Avoid clearing if not empty to ensure change detection is not triggered.
     key_input.bypass_change_detection().clear();
 
     for event in keyboard_input_reader.read() {
-        let Some(KeyboardNotification { key, state, .. }) =
-            event.select_ref::<KeyboardNotification>()
+        let Some(KeyboardIntent { key, state, .. }) =
+            event.select_ref::<KeyboardIntent>()
         else {
             continue;
         };

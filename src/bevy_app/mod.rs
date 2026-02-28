@@ -13,7 +13,7 @@ use bevy::{
     prelude::*,
 };
 use leptos_bevy_canvas::prelude::{BevyMessageReceiver, LeptosBevyApp};
-use ui_event::notification::Notifications;
+use ui_event::intent::Intents;
 
 use crate::bevy_app::{
     camera::{
@@ -34,7 +34,7 @@ use crate::bevy_app::{
 /// Settings for bevy application, to pass massive message recievers
 #[derive(Debug)]
 pub struct BevyAppSettings {
-    pub notification: BevyMessageReceiver<Notifications>,
+    pub notification: BevyMessageReceiver<Intents>,
 }
 
 pub fn init_bevy_app(setting: BevyAppSettings) -> App {

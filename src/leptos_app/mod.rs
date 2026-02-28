@@ -12,7 +12,7 @@ use leptos_bevy_canvas::prelude::*;
 use ui_event::{
     PerspectiveKind,
     command::Commands,
-    notification::{CanvasResizeNotification, Notifications},
+    intent::{CanvasResizeIntent, Intents},
 };
 
 use crate::{
@@ -54,7 +54,7 @@ fn build_grid_rows_css(first: Signal<u32>, third: Signal<u32>) -> Signal<String>
 #[component]
 pub fn App() -> impl IntoView {
     // Get initial window dimensions
-    let (notification_sender, notification_receiver) = message_l2b::<Notifications>();
+    let (notification_sender, notification_receiver) = message_l2b::<Intents>();
     let (command_sender, _command_receiver) = message_l2b::<Commands>();
     provide_context(ToolCommand(command_sender));
     provide_context(UiStore::new());
@@ -89,7 +89,7 @@ pub fn App() -> impl IntoView {
         let height = row_resize.sizes.1;
 
         let _ = resize_sender.send(
-            CanvasResizeNotification {
+            CanvasResizeIntent {
                 width: (width.get() - DEAD_ZONES).into(),
                 height: (height.get() - DEAD_ZONES).into(),
             }
@@ -178,8 +178,8 @@ pub fn App() -> impl IntoView {
 pub fn CenterResizableRow(
     set_col_first_move: WriteSignal<i32>,
     set_col_third_move: WriteSignal<i32>,
-    notification_sender: LeptosMessageSender<Notifications>,
-    notification_receiver: BevyMessageReceiver<Notifications>,
+    notification_sender: LeptosMessageSender<Intents>,
+    notification_receiver: BevyMessageReceiver<Intents>,
 ) -> impl IntoView {
     let mouse_handler = canvas_mouse_handler::use_canvas_mouse_handler(notification_sender.clone());
 

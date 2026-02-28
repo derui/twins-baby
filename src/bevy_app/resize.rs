@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use ui_event::notification::{CanvasResizeNotification, Notification, Notifications};
+use ui_event::intent::{CanvasResizeIntent, Intent, Intents};
 
 /// From https://github.com/Leinnan/bevy_wasm_window_resize/blob/master/src/lib.rs
 pub struct WindowResizePlugin;
@@ -12,7 +12,7 @@ impl Plugin for WindowResizePlugin {
 
 /// handle resizing window each frames with message.
 fn handle_browser_resize(
-    mut message_reader: MessageReader<Notifications>,
+    mut message_reader: MessageReader<Intents>,
     mut primary_query: bevy::ecs::system::Query<
         &mut bevy::window::Window,
         bevy::ecs::query::With<bevy::window::PrimaryWindow>,
@@ -20,7 +20,7 @@ fn handle_browser_resize(
 ) {
     for mut window in &mut primary_query {
         for message in message_reader.read() {
-            let Some(message) = message.select_ref::<CanvasResizeNotification>() else {
+            let Some(message) = message.select_ref::<CanvasResizeIntent>() else {
                 continue;
             };
 

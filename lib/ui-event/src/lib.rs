@@ -1,5 +1,5 @@
 pub mod command;
-pub mod notification;
+pub mod intent;
 mod types;
 use cad_base::id::{BodyId, PlaneId, SketchId};
 pub use types::*;

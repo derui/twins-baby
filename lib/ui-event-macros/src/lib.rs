@@ -3,24 +3,24 @@ extern crate proc_macro;
 use proc_macro::TokenStream;
 use quote::quote;
 
-/// Derive [Notification] to make Notification
-#[proc_macro_derive(Notification)]
-pub fn notification_derive(input: TokenStream) -> TokenStream {
+/// Derive [Intent] to make Intent
+#[proc_macro_derive(Intent)]
+pub fn intent_derive(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).unwrap();
 
-    impl_notification_macro(&ast)
+    impl_intent_macro(&ast)
 }
 
-fn impl_notification_macro(ast: &syn::DeriveInput) -> TokenStream {
+fn impl_intent_macro(ast: &syn::DeriveInput) -> TokenStream {
     let name = &ast.ident;
 
-    if !name.to_string().ends_with("Notification") {
-        panic!("[Notification] macro needs the type name ends with `Notification`");
+    if !name.to_string().ends_with("Intent") {
+        panic!("[Intent] macro needs the type name ends with `Intent`");
     }
 
     let generated = quote! {
-        impl crate::notification::Notification for #name {
-            fn select_ref<T: Notification + 'static>(&self) -> Option<&T> {
+        impl crate::intent::Intent for #name {
+            fn select_ref<T: Intent + 'static>(&self) -> Option<&T> {
                 let type_id = std::any::TypeId::of::<T>();
                 let current = std::any::TypeId::of::<#name>();
 

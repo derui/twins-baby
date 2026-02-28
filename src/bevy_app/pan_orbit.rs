@@ -14,8 +14,8 @@ use bevy::{
     math::{Vec2, Vec3},
     transform::components::Transform,
 };
-use ui_event::notification::{
-    MouseMovementNotification, MouseWheelNotification, Notification, Notifications,
+use ui_event::intent::{
+    MouseMovementIntent, MouseWheelIntent, Intent, Intents,
 };
 
 use crate::bevy_app::camera::{
@@ -113,13 +113,13 @@ pub fn pan_orbit_camera(
     mut commands: Commands,
     kbd: Res<ButtonInput<Key>>,
     mouse: Res<ButtonInput<MouseButton>>,
-    mut evr: MessageReader<Notifications>,
+    mut evr: MessageReader<Intents>,
     mut q_camere: Query<(&PanOrbitSettings, &mut PanOrbitOperation)>,
     q_transform: Query<&Transform, With<MainCamera>>,
 ) -> Result<(), BevyError> {
     let mut total_motion: Vec2 = evr
         .read()
-        .filter_map(|e| e.select_ref::<MouseMovementNotification>())
+        .filter_map(|e| e.select_ref::<MouseMovementIntent>())
         .map(|ev| Vec2::new(*ev.delta_x as f32, *ev.delta_y as f32))
         .sum();
 
@@ -129,7 +129,7 @@ pub fn pan_orbit_camera(
     let mut total_scroll_pixels = Vec2::ZERO;
     for ev in evr
         .read()
-        .filter_map(|e| e.select_ref::<MouseWheelNotification>())
+        .filter_map(|e| e.select_ref::<MouseWheelIntent>())
     {
         total_scroll_pixels.x += *ev.delta_x;
         total_scroll_pixels.y -= *ev.delta_y;

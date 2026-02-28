@@ -5,9 +5,9 @@ use std::sync::{Arc, Mutex};
 use leptos::web_sys::{KeyboardEvent, MouseEvent, WheelEvent};
 use leptos::{prelude::*, wasm_bindgen::prelude::*};
 use leptos_bevy_canvas::prelude::{LeptosChannelMessageSender, LeptosMessageSender};
-use ui_event::notification::{
-    KeyboardNotification, MouseButtonNotification, MouseMovementNotification,
-    MouseWheelNotification, Notifications,
+use ui_event::intent::{
+    KeyboardIntent, MouseButtonIntent, MouseMovementIntent,
+    MouseWheelIntent, Intents,
 };
 use ui_event::{ButtonState, MouseButton, NotifiedKey};
 
@@ -60,13 +60,13 @@ fn request_animation_frame(f: &Closure<dyn FnMut()>) {
 }
 
 /// Convert a DOM keyboard event into a [KeyboardNotification].
-fn keyboard_event_to_notification(event: &KeyboardEvent) -> KeyboardNotification {
+fn keyboard_event_to_notification(event: &KeyboardEvent) -> KeyboardIntent {
     let state = match event.type_().as_str() {
         "keydown" => ButtonState::Pressed,
         _ => ButtonState::Released,
     };
 
-    KeyboardNotification {
+    KeyboardIntent {
         key: NotifiedKey(event.key().into()).into(),
         state: state.into(),
     }
@@ -78,7 +78,7 @@ fn keyboard_event_to_notification(event: &KeyboardEvent) -> KeyboardNotification
 ///   [`MouseMovementNotification`] once per frame.
 /// - `mousedown` and `mouseup` events are converted and sent immediately.
 pub fn use_canvas_mouse_handler(
-    notification_sender: LeptosMessageSender<Notifications>,
+    notification_sender: LeptosMessageSender<Intents>,
 ) -> UseCanvasMouseHandler {
     let accumulated = Arc::new(Mutex::new(None::<AccumulatedMove>));
 
@@ -119,7 +119,7 @@ pub fn use_canvas_mouse_handler(
             if let Ok(mut acc) = accumulated.lock() {
                 if let Some(acc) = *acc {
                     let _ = notification_sender.send(
-                        MouseMovementNotification {
+                        MouseMovementIntent {
                             delta_x: acc.delta_x.into(),
                             delta_y: acc.delta_y.into(),
                             client_x: acc.client_x.into(),
@@ -142,7 +142,7 @@ pub fn use_canvas_mouse_handler(
     let on_mouse_down = Callback::new(move |ev: MouseEvent| {
         if let Some(button) = convert_button(ev.button()) {
             let _ = sender_in_down.send(
-                MouseButtonNotification {
+                MouseButtonIntent {
                     client_x: (ev.offset_x().max(0) as u32).into(),
                     client_y: (ev.offset_y().max(0) as u32).into(),
                     button: button.into(),
@@ -157,7 +157,7 @@ pub fn use_canvas_mouse_handler(
     let on_mouse_up = Callback::new(move |ev: MouseEvent| {
         if let Some(button) = convert_button(ev.button()) {
             let _ = sender_in_up.send(
-                MouseButtonNotification {
+                MouseButtonIntent {
                     client_x: (ev.offset_x().max(0) as u32).into(),
                     client_y: (ev.offset_y().max(0) as u32).into(),
                     button: button.into(),
@@ -171,7 +171,7 @@ pub fn use_canvas_mouse_handler(
     let wheel_sender = notification_sender.clone();
     let on_wheel = Callback::new(move |ev: WheelEvent| {
         let _ = wheel_sender.send(
-            MouseWheelNotification {
+            MouseWheelIntent {
                 delta_x: normalize_delta(ev.delta_x()).into(),
                 delta_y: normalize_delta(ev.delta_y()).into(),
             }
