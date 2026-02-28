@@ -10,7 +10,8 @@ mod use_resize;
 use leptos::{context::Provider, prelude::*};
 use leptos_bevy_canvas::prelude::*;
 use ui_event::{
-    Commands, PerspectiveKind,
+    PerspectiveKind,
+    command::Commands,
     notification::{CanvasResizeNotification, Notifications},
 };
 

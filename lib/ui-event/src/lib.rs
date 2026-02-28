@@ -1,3 +1,4 @@
+pub mod command;
 pub mod notification;
 mod types;
 use cad_base::id::{BodyId, PlaneId, SketchId};
@@ -6,9 +7,6 @@ pub use types::*;
 use immutable::Im;
 
 use bevy::ecs::message::Message;
-
-#[derive(Message, Debug, Clone)]
-pub enum Commands {}
 
 /// Command series for creating sketch. This command must be sequential to send system.
 ///
