@@ -5,7 +5,7 @@ use crate::transaction::{
 };
 
 /// Simple registry implementation for perspective
-pub struct PerspectiveRegistry {
+pub(crate) struct PerspectiveRegistry {
     /// All histories for perspective, each `TypeId` must be type of the state of history.
     pub(crate) perspectives: HashMap<TypeId, Box<dyn PerspectiveHistory>>,
 
@@ -20,7 +20,7 @@ pub struct PerspectiveRegistry {
 
 impl PerspectiveRegistry {
     /// Make a new registry
-    pub fn new() -> Self {
+    pub(crate) fn new() -> Self {
         PerspectiveRegistry {
             perspectives: HashMap::new(),
             transaction_log: Vec::new(),
@@ -34,7 +34,7 @@ impl PerspectiveRegistry {
     /// # Summary
     /// This function will register a history for the type `P` . This will replace the history if already exists.
     /// Old transaction and redo logs must be trancated. because it can not be restored
-    pub fn register<S: Snapshot>(&mut self, initial: S) {
+    pub(crate) fn register<S: Snapshot>(&mut self, initial: S) {
         let history = TypedPerspective {
             history: SnapshotHistory::new(initial, 100),
         };
