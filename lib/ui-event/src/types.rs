@@ -8,6 +8,15 @@ use smol_str::SmolStr;
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, MakeId)]
 pub struct CommandId(u64);
 
+/// Tool of feature
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum FeatureTool {
+    /// Create the body
+    Body,
+    /// Create sketch
+    Sketch,
+}
+
 /// Tool selection for sketch mode
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum SketchTool {
