@@ -9,7 +9,12 @@ pub mod solid;
 pub mod transaction;
 pub mod vector3;
 
-use crate::transaction::{Transaction, registry::PerspectiveRegistry};
+use crate::{
+    body::BodyPerspective,
+    feature::FeaturePerspective,
+    sketch::SketchPerspective,
+    transaction::{Transaction, registry::PerspectiveRegistry},
+};
 
 /// Whole engine state of CAD
 pub struct CadEngine {
@@ -20,9 +25,11 @@ pub struct CadEngine {
 impl CadEngine {
     /// Create a new CAD engine.
     pub fn new() -> Self {
-        Self {
-            registry: PerspectiveRegistry::new(),
-        }
+        let mut registry = PerspectiveRegistry::new();
+        registry.register(BodyPerspective::new());
+        registry.register(SketchPerspective::new());
+        registry.register(FeaturePerspective::new());
+        Self { registry }
     }
 
     /// A simple transaction undo

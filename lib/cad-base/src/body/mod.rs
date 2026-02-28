@@ -11,6 +11,7 @@ use crate::{
 #[cfg(test)]
 mod tests;
 
+#[derive(Clone)]
 pub struct BodyPerspective {
     /// All bodies in application
     bodies: HashMap<BodyId, Body>,
