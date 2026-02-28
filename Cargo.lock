@@ -6260,9 +6260,21 @@ dependencies = [
  "bevy",
  "cad-base",
  "color-eyre",
+ "enum_dispatch",
  "immutable",
  "smol_str",
  "tracing",
+ "ui-event-macros",
+]
+
+[[package]]
+name = "ui-event-macros"
+version = "0.1.0"
+dependencies = [
+ "enum_dispatch",
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]

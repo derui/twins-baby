@@ -5,10 +5,11 @@ use std::sync::{Arc, Mutex};
 use leptos::web_sys::{KeyboardEvent, MouseEvent, WheelEvent};
 use leptos::{prelude::*, wasm_bindgen::prelude::*};
 use leptos_bevy_canvas::prelude::{LeptosChannelMessageSender, LeptosMessageSender};
-use ui_event::{
-    ButtonState, KeyboardNotification, MouseButton, MouseButtonNotification,
-    MouseMovementNotification, MouseWheelNotification, NotifiedKey,
+use ui_event::notification::{
+    KeyboardNotification, MouseButtonNotification, MouseMovementNotification,
+    MouseWheelNotification, Notifications,
 };
+use ui_event::{ButtonState, MouseButton, NotifiedKey};
 
 /// Accumulated mouse movement within a single animation frame.
 #[derive(Debug, Clone, Default, Copy)]
@@ -77,10 +78,7 @@ fn keyboard_event_to_notification(event: &KeyboardEvent) -> KeyboardNotification
 ///   [`MouseMovementNotification`] once per frame.
 /// - `mousedown` and `mouseup` events are converted and sent immediately.
 pub fn use_canvas_mouse_handler(
-    move_sender: LeptosMessageSender<MouseMovementNotification>,
-    mouse_button_sender: LeptosMessageSender<MouseButtonNotification>,
-    wheel_sender: LeptosMessageSender<MouseWheelNotification>,
-    keyboard_sender: LeptosMessageSender<KeyboardNotification>,
+    notification_sender: LeptosMessageSender<Notifications>,
 ) -> UseCanvasMouseHandler {
     let accumulated = Arc::new(Mutex::new(None::<AccumulatedMove>));
 
@@ -115,16 +113,20 @@ pub fn use_canvas_mouse_handler(
 
         let closure = Rc::new(RefCell::new(None::<ScopedClosure<_>>));
         let closure_g = closure.clone();
+        let notification_sender = notification_sender.clone();
 
         *(*closure_g).borrow_mut() = Some(Closure::new(move || {
             if let Ok(mut acc) = accumulated.lock() {
                 if let Some(acc) = *acc {
-                    let _ = move_sender.send(MouseMovementNotification {
-                        delta_x: acc.delta_x.into(),
-                        delta_y: acc.delta_y.into(),
-                        client_x: acc.client_x.into(),
-                        client_y: acc.client_y.into(),
-                    });
+                    let _ = notification_sender.send(
+                        MouseMovementNotification {
+                            delta_x: acc.delta_x.into(),
+                            delta_y: acc.delta_y.into(),
+                            client_x: acc.client_x.into(),
+                            client_y: acc.client_y.into(),
+                        }
+                        .into(),
+                    );
                 }
 
                 *acc = None;
@@ -136,43 +138,54 @@ pub fn use_canvas_mouse_handler(
         request_animation_frame(closure_g.borrow().as_ref().unwrap())
     }
 
-    let sender_in_down = mouse_button_sender.clone();
+    let sender_in_down = notification_sender.clone();
     let on_mouse_down = Callback::new(move |ev: MouseEvent| {
         if let Some(button) = convert_button(ev.button()) {
-            let _ = sender_in_down.send(MouseButtonNotification {
-                client_x: (ev.offset_x().max(0) as u32).into(),
-                client_y: (ev.offset_y().max(0) as u32).into(),
-                button: button.into(),
-                state: ButtonState::Pressed.into(),
-            });
+            let _ = sender_in_down.send(
+                MouseButtonNotification {
+                    client_x: (ev.offset_x().max(0) as u32).into(),
+                    client_y: (ev.offset_y().max(0) as u32).into(),
+                    button: button.into(),
+                    state: ButtonState::Pressed.into(),
+                }
+                .into(),
+            );
         }
     });
 
-    let sender_in_up = mouse_button_sender.clone();
+    let sender_in_up = notification_sender.clone();
     let on_mouse_up = Callback::new(move |ev: MouseEvent| {
         if let Some(button) = convert_button(ev.button()) {
-            let _ = sender_in_up.send(MouseButtonNotification {
-                client_x: (ev.offset_x().max(0) as u32).into(),
-                client_y: (ev.offset_y().max(0) as u32).into(),
-                button: button.into(),
-                state: ButtonState::Released.into(),
-            });
+            let _ = sender_in_up.send(
+                MouseButtonNotification {
+                    client_x: (ev.offset_x().max(0) as u32).into(),
+                    client_y: (ev.offset_y().max(0) as u32).into(),
+                    button: button.into(),
+                    state: ButtonState::Released.into(),
+                }
+                .into(),
+            );
         }
     });
 
+    let wheel_sender = notification_sender.clone();
     let on_wheel = Callback::new(move |ev: WheelEvent| {
-        let _ = wheel_sender.send(MouseWheelNotification {
-            delta_x: normalize_delta(ev.delta_x()).into(),
-            delta_y: normalize_delta(ev.delta_y()).into(),
-        });
+        let _ = wheel_sender.send(
+            MouseWheelNotification {
+                delta_x: normalize_delta(ev.delta_x()).into(),
+                delta_y: normalize_delta(ev.delta_y()).into(),
+            }
+            .into(),
+        );
     });
 
-    let keyboard_sender_up = keyboard_sender.clone();
+    let keyboard_sender_down = notification_sender.clone();
     let on_key_down = Callback::new(move |ev: KeyboardEvent| {
-        let _ = keyboard_sender.send(keyboard_event_to_notification(&ev));
+        let _ = keyboard_sender_down.send(keyboard_event_to_notification(&ev).into());
     });
+    let keyboard_sender_up = notification_sender.clone();
     let on_key_up = Callback::new(move |ev: KeyboardEvent| {
-        let _ = keyboard_sender_up.send(keyboard_event_to_notification(&ev));
+        let _ = keyboard_sender_up.send(keyboard_event_to_notification(&ev).into());
     });
 
     UseCanvasMouseHandler {

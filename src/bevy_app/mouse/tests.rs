@@ -2,17 +2,21 @@ use bevy::input::{ButtonInput, mouse::MouseButton};
 use immutable::Im;
 use pretty_assertions::assert_eq;
 use rstest::rstest;
-use ui_event::{ButtonState, MouseButton as MB, MouseButtonNotification};
+use ui_event::{
+    ButtonState, MouseButton as MB,
+    notification::{MouseButtonNotification, Notifications},
+};
 
 use super::to_bevy_mouse_button;
 
-fn make_notification(button: MB, state: ButtonState) -> MouseButtonNotification {
+fn make_notification(button: MB, state: ButtonState) -> Notifications {
     MouseButtonNotification {
         client_x: Im::new(0),
         client_y: Im::new(0),
         button: Im::new(button),
         state: Im::new(state),
     }
+    .into()
 }
 
 // --- to_bevy_mouse_button: button mappings ---
@@ -39,7 +43,7 @@ fn test_mouse_input_system_press_registers_button() {
     // Arrange
     let mut app = App::new();
     app.init_resource::<ButtonInput<MouseButton>>();
-    app.add_message::<MouseButtonNotification>();
+    app.add_message::<Notifications>();
     app.add_systems(Update, mouse_input_system);
 
     app.world_mut()
@@ -61,7 +65,7 @@ fn test_mouse_input_system_release_registers_button() {
     // Arrange
     let mut app = App::new();
     app.init_resource::<ButtonInput<MouseButton>>();
-    app.add_message::<MouseButtonNotification>();
+    app.add_message::<Notifications>();
     app.add_systems(Update, mouse_input_system);
 
     // First update: press
@@ -89,7 +93,7 @@ fn test_mouse_input_system_clears_just_pressed_each_frame() {
     // Arrange
     let mut app = App::new();
     app.init_resource::<ButtonInput<MouseButton>>();
-    app.add_message::<MouseButtonNotification>();
+    app.add_message::<Notifications>();
     app.add_systems(Update, mouse_input_system);
 
     app.world_mut()
@@ -119,7 +123,7 @@ fn test_mouse_input_system_just_pressed_after_a_frame() {
     // Arrange
     let mut app = App::new();
     app.init_resource::<ButtonInput<MouseButton>>();
-    app.add_message::<MouseButtonNotification>();
+    app.add_message::<Notifications>();
     app.add_systems(Update, mouse_input_system);
 
     app.world_mut()

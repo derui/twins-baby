@@ -1,6 +1,6 @@
 use leptos_bevy_canvas::prelude::LeptosMessageSender;
-use ui_event::SketchToolChangeNotification;
+use ui_event::Commands;
 
 /// Context type providing the channel to send sketch tool events to Bevy.
 #[derive(Clone)]
-pub struct ToolCommand(pub LeptosMessageSender<SketchToolChangeNotification>);
+pub struct ToolCommand(pub LeptosMessageSender<Commands>);

@@ -10,9 +10,8 @@ mod use_resize;
 use leptos::{context::Provider, prelude::*};
 use leptos_bevy_canvas::prelude::*;
 use ui_event::{
-    CanvasResizeNotification, KeyboardNotification, MouseButtonNotification,
-    MouseMovementNotification, MouseWheelNotification, PerspectiveKind,
-    SketchToolChangeNotification,
+    Commands, PerspectiveKind,
+    notification::{CanvasResizeNotification, Notifications},
 };
 
 use crate::{
@@ -54,9 +53,9 @@ fn build_grid_rows_css(first: Signal<u32>, third: Signal<u32>) -> Signal<String>
 #[component]
 pub fn App() -> impl IntoView {
     // Get initial window dimensions
-    let (resize_sender, receiver) = message_l2b::<CanvasResizeNotification>();
-    let (tool_sender, tool_receiver) = message_l2b::<SketchToolChangeNotification>();
-    provide_context(ToolCommand(tool_sender));
+    let (notification_sender, notification_receiver) = message_l2b::<Notifications>();
+    let (command_sender, _command_receiver) = message_l2b::<Commands>();
+    provide_context(ToolCommand(command_sender));
     provide_context(UiStore::new());
 
     let initial_width = window()
@@ -83,14 +82,18 @@ pub fn App() -> impl IntoView {
     let (row_first_move, set_row_first_move) = signal(0i32);
     let (row_third_move, set_row_third_move) = signal(0i32);
 
+    let resize_sender = notification_sender.clone();
     Effect::new(move || {
         let width = col_resize.sizes.1;
         let height = row_resize.sizes.1;
 
-        let _ = resize_sender.send(CanvasResizeNotification {
-            width: (width.get() - DEAD_ZONES).into(),
-            height: (height.get() - DEAD_ZONES).into(),
-        });
+        let _ = resize_sender.send(
+            CanvasResizeNotification {
+                width: (width.get() - DEAD_ZONES).into(),
+                height: (height.get() - DEAD_ZONES).into(),
+            }
+            .into(),
+        );
     });
 
     // Connect nob movements to resize hooks (convert i32 to Option<i32>)
@@ -153,8 +156,8 @@ pub fn App() -> impl IntoView {
                 <CenterResizableRow
                     set_col_first_move=set_col_first_move
                     set_col_third_move=set_col_third_move
-                    resize_sender=receiver
-                    tool_receiver=tool_receiver
+                    notification_sender=notification_sender
+                    notification_receiver=notification_receiver
                 />
 
                 // Row 4: Y nob between middle and bottom
@@ -174,20 +177,10 @@ pub fn App() -> impl IntoView {
 pub fn CenterResizableRow(
     set_col_first_move: WriteSignal<i32>,
     set_col_third_move: WriteSignal<i32>,
-    resize_sender: BevyMessageReceiver<CanvasResizeNotification>,
-    tool_receiver: BevyMessageReceiver<SketchToolChangeNotification>,
+    notification_sender: LeptosMessageSender<Notifications>,
+    notification_receiver: BevyMessageReceiver<Notifications>,
 ) -> impl IntoView {
-    let (mouse_move_sender, mouse_move_receiver) = message_l2b::<MouseMovementNotification>();
-    let (mouse_down_sender, mouse_down_receiver) = message_l2b::<MouseButtonNotification>();
-    let (mouse_wheel_sender, mouse_wheel_receiver) = message_l2b::<MouseWheelNotification>();
-    let (keyboard_sender, keyboard_receiver) = message_l2b::<KeyboardNotification>();
-
-    let mouse_handler = canvas_mouse_handler::use_canvas_mouse_handler(
-        mouse_move_sender,
-        mouse_down_sender,
-        mouse_wheel_sender,
-        keyboard_sender,
-    );
+    let mouse_handler = canvas_mouse_handler::use_canvas_mouse_handler(notification_sender.clone());
 
     let on_mouse_move = move |e| mouse_handler.on_mouse_move.run(e);
     let on_mouse_down = move |e| mouse_handler.on_mouse_down.run(e);
@@ -216,12 +209,7 @@ pub fn CenterResizableRow(
             <BevyCanvas
                 init=move || {
                     init_bevy_app(BevyAppSettings {
-                        canvas_resize: resize_sender,
-                        sketch_tool_change: tool_receiver,
-                        mouse_movement: mouse_move_receiver,
-                        mouse_button: mouse_down_receiver,
-                        mouse_wheel: mouse_wheel_receiver,
-                        keyboard: keyboard_receiver,
+                        notification: notification_receiver,
                     })
                 }
                 {..}

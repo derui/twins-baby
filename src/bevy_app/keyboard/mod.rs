@@ -2,7 +2,10 @@ use bevy::{
     ecs::{change_detection::DetectChangesMut as _, message::MessageReader, system::ResMut},
     input::{ButtonInput, keyboard::Key},
 };
-use ui_event::{ButtonState, KeyboardNotification, NotifiedKey};
+use ui_event::{
+    ButtonState, NotifiedKey,
+    notification::{KeyboardNotification, Notification, Notifications},
+};
 
 #[cfg(test)]
 mod tests;
@@ -54,13 +57,17 @@ fn map_dom_key_to_bevy(key: &NotifiedKey) -> Key {
 /// leptos-connected version of keyboard input system
 pub fn keyboard_input_system(
     mut key_input: ResMut<ButtonInput<Key>>,
-    mut keyboard_input_reader: MessageReader<KeyboardNotification>,
+    mut keyboard_input_reader: MessageReader<Notifications>,
 ) {
     // Avoid clearing if not empty to ensure change detection is not triggered.
     key_input.bypass_change_detection().clear();
 
     for event in keyboard_input_reader.read() {
-        let KeyboardNotification { key, state, .. } = event;
+        let Some(KeyboardNotification { key, state, .. }) =
+            event.select_ref::<KeyboardNotification>()
+        else {
+            continue;
+        };
 
         let key = map_dom_key_to_bevy(key);
 

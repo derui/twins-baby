@@ -5,7 +5,7 @@ use ui_component::{
     button::ToolButton,
     icon::{IconSize, IconType},
 };
-use ui_event::{SketchTool, SketchToolChangeNotification};
+use ui_event::SketchTool;
 
 use crate::leptos_app::tool_command::ToolCommand;
 
@@ -16,11 +16,7 @@ pub fn SketchToolbar() -> impl IntoView {
 
     let make_on_click = move |t: SketchTool| {
         let tool_command = tool_command.clone();
-        move |_ev: leptos::web_sys::MouseEvent| {
-            let _ = tool_command
-                .0
-                .send(SketchToolChangeNotification { tool: t.into() });
-        }
+        move |_ev: leptos::web_sys::MouseEvent| {}
     };
 
     view! {

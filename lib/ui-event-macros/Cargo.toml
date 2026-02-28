@@ -1,5 +1,5 @@
 [package]
-name = "cad-base-macro"
+name = "ui-event-macros"
 version = "0.1.0"
 edition = "2024"
 
@@ -7,9 +7,7 @@ edition = "2024"
 proc-macro = true
 
 [dependencies]
+enum_dispatch.workspace = true
+proc-macro2 = "1.0.106"
 quote.workspace = true
 syn.workspace = true
-
-[dev-dependencies]
-pretty_assertions.workspace = true
-trybuild = "1.0"

@@ -14,7 +14,9 @@ use bevy::{
     math::{Vec2, Vec3},
     transform::components::Transform,
 };
-use ui_event::{MouseMovementNotification, MouseWheelNotification};
+use ui_event::notification::{
+    MouseMovementNotification, MouseWheelNotification, Notification, Notifications,
+};
 
 use crate::bevy_app::camera::{
     CameraMoveDuration, CameraMoveOperation, CameraMoveRequest, MainCamera, PanOrbitOperation,
@@ -111,13 +113,13 @@ pub fn pan_orbit_camera(
     mut commands: Commands,
     kbd: Res<ButtonInput<Key>>,
     mouse: Res<ButtonInput<MouseButton>>,
-    mut evr_motion: MessageReader<MouseMovementNotification>,
-    mut evr_scroll: MessageReader<MouseWheelNotification>,
+    mut evr: MessageReader<Notifications>,
     mut q_camere: Query<(&PanOrbitSettings, &mut PanOrbitOperation)>,
     q_transform: Query<&Transform, With<MainCamera>>,
 ) -> Result<(), BevyError> {
-    let mut total_motion: Vec2 = evr_motion
+    let mut total_motion: Vec2 = evr
         .read()
+        .filter_map(|e| e.select_ref::<MouseMovementNotification>())
         .map(|ev| Vec2::new(*ev.delta_x as f32, *ev.delta_y as f32))
         .sum();
 
@@ -125,7 +127,10 @@ pub fn pan_orbit_camera(
     total_motion.y = -total_motion.y;
 
     let mut total_scroll_pixels = Vec2::ZERO;
-    for ev in evr_scroll.read() {
+    for ev in evr
+        .read()
+        .filter_map(|e| e.select_ref::<MouseWheelNotification>())
+    {
         total_scroll_pixels.x += *ev.delta_x;
         total_scroll_pixels.y -= *ev.delta_y;
     }

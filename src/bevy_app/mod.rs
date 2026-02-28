@@ -13,10 +13,7 @@ use bevy::{
     prelude::*,
 };
 use leptos_bevy_canvas::prelude::{BevyMessageReceiver, LeptosBevyApp};
-use ui_event::{
-    CanvasResizeNotification, KeyboardNotification, MouseButtonNotification,
-    MouseMovementNotification, MouseWheelNotification, SketchToolChangeNotification,
-};
+use ui_event::notification::Notifications;
 
 use crate::bevy_app::{
     camera::{
@@ -37,12 +34,7 @@ use crate::bevy_app::{
 /// Settings for bevy application, to pass massive message recievers
 #[derive(Debug)]
 pub struct BevyAppSettings {
-    pub canvas_resize: BevyMessageReceiver<CanvasResizeNotification>,
-    pub sketch_tool_change: BevyMessageReceiver<SketchToolChangeNotification>,
-    pub mouse_movement: BevyMessageReceiver<MouseMovementNotification>,
-    pub mouse_button: BevyMessageReceiver<MouseButtonNotification>,
-    pub mouse_wheel: BevyMessageReceiver<MouseWheelNotification>,
-    pub keyboard: BevyMessageReceiver<KeyboardNotification>,
+    pub notification: BevyMessageReceiver<Notifications>,
 }
 
 pub fn init_bevy_app(setting: BevyAppSettings) -> App {
@@ -71,12 +63,7 @@ pub fn init_bevy_app(setting: BevyAppSettings) -> App {
     .init_resource::<ButtonInput<MouseButton>>()
     .init_resource::<ButtonInput<Key>>()
     .insert_resource(ClearColor(Color::srgb(0.7, 0.7, 0.7)))
-    .import_message_from_leptos(setting.canvas_resize)
-    .import_message_from_leptos(setting.sketch_tool_change)
-    .import_message_from_leptos(setting.mouse_movement)
-    .import_message_from_leptos(setting.mouse_button)
-    .import_message_from_leptos(setting.mouse_wheel)
-    .import_message_from_leptos(setting.keyboard)
+    .import_message_from_leptos(setting.notification)
     .add_systems(
         Startup,
         (

@@ -3,7 +3,10 @@ use immutable::Im;
 use pretty_assertions::assert_eq;
 use rstest::rstest;
 use smol_str::SmolStr;
-use ui_event::{ButtonState, KeyboardNotification, NotifiedKey};
+use ui_event::{
+    ButtonState, NotifiedKey,
+    notification::{KeyboardNotification, Notifications},
+};
 
 use super::map_dom_key_to_bevy;
 
@@ -86,11 +89,12 @@ fn test_map_character_fallback(#[case] dom_key: &str) {
 
 // --- keyboard_input_system: behavior via Bevy App ---
 
-fn make_notification(key: &str, state: ButtonState) -> KeyboardNotification {
+fn make_notification(key: &str, state: ButtonState) -> Notifications {
     KeyboardNotification {
         key: Im::new(NotifiedKey(SmolStr::new(key))),
         state: Im::new(state),
     }
+    .into()
 }
 
 #[test]
@@ -101,7 +105,7 @@ fn test_keyboard_input_system_press_registers_key() {
     // Arrange
     let mut app = App::new();
     app.init_resource::<ButtonInput<Key>>();
-    app.add_message::<KeyboardNotification>();
+    app.add_message::<Notifications>();
     app.add_systems(Update, keyboard_input_system);
 
     app.world_mut()
@@ -123,7 +127,7 @@ fn test_keyboard_input_system_release_registers_key() {
     // Arrange
     let mut app = App::new();
     app.init_resource::<ButtonInput<Key>>();
-    app.add_message::<KeyboardNotification>();
+    app.add_message::<Notifications>();
     app.add_systems(Update, keyboard_input_system);
 
     // First update: press
@@ -151,7 +155,7 @@ fn test_keyboard_input_system_clears_just_pressed_each_frame() {
     // Arrange
     let mut app = App::new();
     app.init_resource::<ButtonInput<Key>>();
-    app.add_message::<KeyboardNotification>();
+    app.add_message::<Notifications>();
     app.add_systems(Update, keyboard_input_system);
 
     app.world_mut()
@@ -182,7 +186,7 @@ fn test_keyboard_input_system_just_pressed_after_a_frame() {
     // Arrange
     let mut app = App::new();
     app.init_resource::<ButtonInput<Key>>();
-    app.add_message::<KeyboardNotification>();
+    app.add_message::<Notifications>();
     app.add_systems(Update, keyboard_input_system);
 
     app.world_mut()
