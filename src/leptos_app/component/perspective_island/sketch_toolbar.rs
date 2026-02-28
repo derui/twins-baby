@@ -1,6 +1,5 @@
 use leptos::prelude::*;
 use leptos::{IntoView, component, view};
-use leptos_bevy_canvas::prelude::LeptosChannelMessageSender as _;
 use ui_component::{
     button::ToolButton,
     icon::{IconSize, IconType},
@@ -14,8 +13,8 @@ use crate::leptos_app::tool_command::ToolCommand;
 pub fn SketchToolbar() -> impl IntoView {
     let tool_command = use_context::<ToolCommand>().expect("ToolCommand context must be provided");
 
-    let make_on_click = move |t: SketchTool| {
-        let tool_command = tool_command.clone();
+    let make_on_click = move |_t: SketchTool| {
+        let _tool_command = tool_command.clone();
         move |_ev: leptos::web_sys::MouseEvent| {}
     };
 

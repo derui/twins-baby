@@ -5,13 +5,6 @@ use ui_event_macros::Notification;
 
 use crate::{ButtonState, MouseButton, NotifiedKey};
 
-/// A notification marker trait.
-#[enum_dispatch(Notifications)]
-pub trait Notification {
-    /// Get the ref when the type is for the specified <T>
-    fn select_ref<T: Notification + 'static>(&self) -> Option<&T>;
-}
-
 #[enum_dispatch]
 #[derive(Message, Debug, Clone)]
 pub enum Notifications {
@@ -20,6 +13,13 @@ pub enum Notifications {
     MouseButton(MouseButtonNotification),
     MouseWheel(MouseWheelNotification),
     Keyboard(KeyboardNotification),
+}
+
+/// A notification marker trait.
+#[enum_dispatch(Notifications)]
+pub trait Notification {
+    /// Get the ref when the type is for the specified <T>
+    fn select_ref<T: Notification + 'static>(&self) -> Option<&T>;
 }
 
 /// An event to notice canvas resize
