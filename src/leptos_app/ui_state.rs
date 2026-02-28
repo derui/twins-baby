@@ -12,7 +12,7 @@ pub struct UiStore {
     pub perspective: WriteSignal<PerspectiveKind>,
 
     /// centralized UI state. see this
-    pub ui: Signal<UiState>,
+    pub ui: UiState,
 
     _immutable: (),
 }
@@ -22,6 +22,8 @@ pub struct UiStore {
 pub struct UiState {
     /// Current selected perspective, this is only for UI view.
     pub perspective: ReadSignal<PerspectiveKind>,
+
+    _immutable: (),
 }
 
 impl UiStore {
@@ -29,11 +31,12 @@ impl UiStore {
     pub fn new() -> Self {
         let (perspective, set_perspective) = signal(PerspectiveKind::default());
 
-        let ui = Signal::derive(move || UiState { perspective });
-
         UiStore {
             perspective: set_perspective,
-            ui,
+            ui: UiState {
+                perspective,
+                _immutable: (),
+            },
             _immutable: (),
         }
     }

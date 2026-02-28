@@ -22,7 +22,7 @@ pub fn use_perspective() -> UsePerspective {
     });
 
     UsePerspective {
-        perspective: context.ui.get().perspective,
+        perspective: context.ui.perspective,
         set_perspective,
     }
 }
