@@ -72,13 +72,7 @@ impl BodyPerspective {
         let names_other = self
             .bodies
             .iter()
-            .filter_map(|(k, v)| {
-                if k == id {
-                    None
-                } else {
-                    Some(v.name.clone())
-                }
-            })
+            .filter_map(|(k, v)| if k == id { None } else { Some(v.name.clone()) })
             .collect::<Vec<_>>();
 
         if names_other.iter().all(|v| **v != name) {
