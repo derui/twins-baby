@@ -174,4 +174,73 @@ mod body_perspective {
         // Assert
         assert!(result.is_none());
     }
+
+    #[test]
+    fn rename_body_returns_old_name_on_success() {
+        // Arrange
+        let mut perspective = BodyPerspective::new();
+        let id = perspective.add_body();
+        let old_name = (*perspective.get(&id).unwrap().name).clone();
+
+        // Act
+        let result = perspective.rename_body(&id, "NewName");
+
+        // Assert
+        assert_eq!(result.unwrap(), old_name);
+    }
+
+    #[test]
+    fn rename_body_updates_name() {
+        // Arrange
+        let mut perspective = BodyPerspective::new();
+        let id = perspective.add_body();
+
+        // Act
+        perspective.rename_body(&id, "Renamed").unwrap();
+
+        // Assert
+        assert_eq!(*perspective.get(&id).unwrap().name, "Renamed");
+    }
+
+    #[test]
+    fn rename_body_fails_for_unknown_id() {
+        // Arrange
+        let mut perspective = BodyPerspective::new();
+        let unknown_id = BodyId::new(999);
+
+        // Act
+        let result = perspective.rename_body(&unknown_id, "AnyName");
+
+        // Assert
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn rename_body_fails_when_name_already_used_by_another_body() {
+        // Arrange
+        let mut perspective = BodyPerspective::new();
+        let id1 = perspective.add_body();
+        let id2 = perspective.add_body();
+        perspective.rename_body(&id1, "Taken").unwrap();
+
+        // Act
+        let result = perspective.rename_body(&id2, "Taken");
+
+        // Assert
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn rename_body_allows_same_name_for_same_body() {
+        // Arrange
+        let mut perspective = BodyPerspective::new();
+        let id = perspective.add_body();
+        perspective.rename_body(&id, "SameName").unwrap();
+
+        // Act - rename to the same name it already has
+        let result = perspective.rename_body(&id, "SameName");
+
+        // Assert
+        assert!(result.is_ok());
+    }
 }

@@ -72,8 +72,8 @@ impl BodyPerspective {
         let names_other = self
             .bodies
             .iter()
-            .filter_map(|(id, v)| {
-                if *id == *id {
+            .filter_map(|(k, v)| {
+                if k == id {
                     None
                 } else {
                     Some(v.name.clone())
