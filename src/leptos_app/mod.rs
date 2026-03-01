@@ -13,6 +13,7 @@ use ui_event::{
     PerspectiveKind,
     command::Commands,
     intent::{CanvasResizeIntent, Intents},
+    notification::Notifications,
 };
 
 use crate::{
@@ -22,7 +23,7 @@ use crate::{
         command_sender::CommandSender,
         component::{FeatureIsland, InfoIsland, PerspectiveIsland, SupportIsland},
         resize_nob::NOB_AREA,
-        ui_state::UiStore,
+        ui_state::{BodyUI, UiStore},
     },
 };
 use resize_nob::{ResizeXNob, ResizeYNob};
@@ -55,8 +56,9 @@ fn build_grid_rows_css(first: Signal<u32>, third: Signal<u32>) -> Signal<String>
 #[component]
 pub fn App() -> impl IntoView {
     // Get initial window dimensions
-    let (notification_sender, notification_receiver) = message_l2b::<Intents>();
-    let (command_sender, _command_receiver) = message_l2b::<Commands>();
+    let (intent_sender, intent_receiver) = message_l2b::<Intents>();
+    let (command_sender, command_receiver) = message_l2b::<Commands>();
+    let (leptos_notification_receiver, bevy_notification_sender) = message_b2l::<Notifications>();
     let store = AppStore::new();
     provide_context(CommandSender::new(command_sender));
     provide_context(store);
@@ -86,7 +88,7 @@ pub fn App() -> impl IntoView {
     let (row_first_move, set_row_first_move) = signal(0i32);
     let (row_third_move, set_row_third_move) = signal(0i32);
 
-    let resize_sender = notification_sender.clone();
+    let resize_sender = intent_sender.clone();
     Effect::new(move || {
         let width = col_resize.sizes.1;
         let height = row_resize.sizes.1;
@@ -98,6 +100,20 @@ pub fn App() -> impl IntoView {
             }
             .into(),
         );
+    });
+
+    Effect::new(move || {
+        if let Some(notification) = leptos_notification_receiver.get() {
+            match notification {
+                Notifications::BodyCreated(n) => {
+                    store.bodies.update(|bodies| {
+                        let order = bodies.len() as u32;
+                        bodies.insert(*n.body_id, BodyUI::new(*n.body_id, &n.name, order));
+                    });
+                }
+                Notifications::SketchCreated(_) => {}
+            }
+        }
     });
 
     // Connect nob movements to resize hooks (convert i32 to Option<i32>)
@@ -160,7 +176,9 @@ pub fn App() -> impl IntoView {
                 <CenterResizableRow
                     set_col_first_move=set_col_first_move
                     set_col_third_move=set_col_third_move
-                    notification_receiver=notification_receiver
+                    intent_receiver=intent_receiver
+                    command_receiver=command_receiver
+                    bevy_notification_sender=bevy_notification_sender
                 />
 
                 // Row 4: Y nob between middle and bottom
@@ -180,7 +198,9 @@ pub fn App() -> impl IntoView {
 pub fn CenterResizableRow(
     set_col_first_move: WriteSignal<i32>,
     set_col_third_move: WriteSignal<i32>,
-    notification_receiver: BevyMessageReceiver<Intents>,
+    intent_receiver: BevyMessageReceiver<Intents>,
+    command_receiver: BevyMessageReceiver<Commands>,
+    bevy_notification_sender: BevyMessageSender<Notifications>,
 ) -> impl IntoView {
     view! {
         <FeatureIsland />
@@ -193,7 +213,9 @@ pub fn CenterResizableRow(
             <BevyCanvas
                 init=move || {
                     init_bevy_app(BevyAppSettings {
-                        intent: notification_receiver,
+                        intent: intent_receiver,
+                        command: command_receiver,
+                        notification: bevy_notification_sender,
                     })
                 }
                 {..}
