@@ -16,6 +16,7 @@ use crate::bevy_app::{
         LastWindowSize, PanOrbitOperation, move_camera_with_request, reposition_ui_cameras,
         setup_camera,
     },
+    command::{HandlerRegistrar, command_system, setup_command_handlers},
     pan_orbit::{pan_orbit_camera, setup_pan_orbit},
     resize::WindowResizePlugin,
     resource::EngineState,
@@ -57,6 +58,7 @@ pub fn init_bevy_app(setting: BevyAppSettings) -> App {
     .init_resource::<LastWindowSize>()
     .insert_resource(ClearColor(Color::srgb(0.7, 0.7, 0.7)))
     .init_resource::<EngineState>()
+    .insert_resource(HandlerRegistrar::new())
     .import_message_from_leptos(setting.intent)
     .add_systems(
         Startup,
@@ -66,9 +68,11 @@ pub fn init_bevy_app(setting: BevyAppSettings) -> App {
             setup_ui,
             setup_pan_orbit,
             setup_gizmos,
+            setup_command_handlers,
         ),
     )
     .add_systems(Update, setup_navigation_texture)
+    .add_systems(Update, command_system)
     .add_systems(
         Update,
         (

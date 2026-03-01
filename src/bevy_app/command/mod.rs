@@ -68,6 +68,13 @@ impl HandlerRegistrar {
     }
 }
 
+/// System to setup command handlers. This system should be run once at the startup of the app.
+pub fn setup_command_handlers(_registrar: ResMut<HandlerRegistrar>) {
+    // Register handlers for commands here.
+    // Example:
+    // registrar.register::<MyCommand>(Box::new(MyCommandHandler));
+}
+
 /// System to handle the command.
 pub fn command_system(
     registrar: Res<HandlerRegistrar>,
