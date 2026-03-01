@@ -1,3 +1,5 @@
+mod body;
+
 use std::{
     any::{Any, TypeId},
     collections::HashMap,
@@ -12,11 +14,11 @@ use bevy::ecs::{
 use cad_base::CadEngine;
 use eyre::{Result, eyre};
 use ui_event::{
-    command::{Command, Commands},
+    command::{Command, Commands, CreateBodyCommand},
     notification::Notifications,
 };
 
-use crate::bevy_app::resource::EngineState;
+use crate::bevy_app::{command::body::CreateBodyCommandHandler, resource::EngineState};
 
 pub trait Handler {
     /// Handle the command with mutable engine.
@@ -52,6 +54,7 @@ impl HandlerRegistrar {
     }
 
     /// Dispatch the command to the handler. If no handler is found, return an error.
+    #[tracing::instrument(skip(self, engine, writer))]
     fn dispatch(
         &self,
         command: &Commands,
@@ -69,10 +72,8 @@ impl HandlerRegistrar {
 }
 
 /// System to setup command handlers. This system should be run once at the startup of the app.
-pub fn setup_command_handlers(_registrar: ResMut<HandlerRegistrar>) {
-    // Register handlers for commands here.
-    // Example:
-    // registrar.register::<MyCommand>(Box::new(MyCommandHandler));
+pub fn setup_command_handlers(mut registrar: ResMut<HandlerRegistrar>) {
+    registrar.register::<CreateBodyCommand>(Box::new(CreateBodyCommandHandler));
 }
 
 /// System to handle the command.

@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use color_eyre::eyre::{self, Result};
 use immutable::Im;
 
 use crate::{
@@ -56,6 +57,38 @@ impl BodyPerspective {
     /// Remove a body by id, returning it if it existed
     pub fn remove_body(&mut self, id: &BodyId) -> Option<Body> {
         self.bodies.remove(id)
+    }
+
+    /// Rename the body. Return Ok with old string when succeeded.
+    ///
+    /// # Returns
+    /// * Ok - when the name is not duplicated
+    /// * Err - when the name is duplicated
+    pub fn rename_body(&mut self, id: &BodyId, name: &str) -> Result<String> {
+        if !self.bodies.contains_key(id) {
+            return Err(eyre::eyre!("Do not found id : {:?}", id));
+        }
+
+        let names_other = self
+            .bodies
+            .iter()
+            .filter_map(|(id, v)| {
+                if *id == *id {
+                    None
+                } else {
+                    Some(v.name.clone())
+                }
+            })
+            .collect::<Vec<_>>();
+
+        if names_other.iter().all(|v| **v != name) {
+            let old = self.bodies[id].name.clone();
+            let body = self.bodies.get_mut(id).expect("Sholud be found");
+            body.name = name.to_string().into();
+            Ok((*old).clone())
+        } else {
+            Err(color_eyre::eyre::eyre!("The name duplicated : {}", name))
+        }
     }
 }
 
