@@ -47,3 +47,9 @@ impl CadEngine {
         self.registry.begin()
     }
 }
+
+impl Default for CadEngine {
+    fn default() -> Self {
+        Self::new()
+    }
+}

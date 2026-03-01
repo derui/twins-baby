@@ -1,4 +1,5 @@
 mod camera;
+mod command;
 mod pan_orbit;
 mod resize;
 mod resource;
