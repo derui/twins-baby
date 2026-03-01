@@ -54,6 +54,7 @@ mod tests {
     use bevy::ecs::{message::Messages, system::RunSystemOnce, world::World};
     use cad_base::id::BodyId;
     use cad_base::{CadEngine, body::BodyPerspective};
+    use eyre::Result;
     use pretty_assertions::assert_eq;
     use ui_event::{
         CommandId,
@@ -81,14 +82,13 @@ mod tests {
         let mut world = make_world();
 
         // Act
-        let result: eyre::Result<(), BevyError> = world
-            .run_system_once(move |mut writer: MessageWriter<Notifications>| {
-                handler.handle(&command, &mut engine, &mut writer)
-            })
-            .unwrap();
+        let _ = world.run_system_once(move |mut writer: MessageWriter<Notifications>| {
+            handler
+                .handle(&command, &mut engine, &mut writer)
+                .expect("should be OK")
+        });
 
         // Assert
-        assert!(result.is_ok());
         let messages = world.resource::<Messages<Notifications>>();
         let mut cursor = messages.get_cursor();
         assert_eq!(cursor.read(messages).count(), 0);
@@ -106,14 +106,11 @@ mod tests {
         let mut world = make_world();
 
         // Act
-        let system_result: eyre::Result<(), BevyError> = world
-            .run_system_once(
-                move |mut writer: MessageWriter<Notifications>| -> eyre::Result<(), BevyError> {
-                    handler.handle(&command, &mut engine, &mut writer)
-                },
-            )
-            .unwrap();
-        system_result.unwrap();
+        let _ = world.run_system_once(move |mut writer: MessageWriter<Notifications>| {
+            handler
+                .handle(&command, &mut engine, &mut writer)
+                .expect("should be OK")
+        });
 
         // Assert
         let messages = world.resource::<Messages<Notifications>>();
@@ -127,7 +124,7 @@ mod tests {
     }
 
     #[test]
-    fn writes_notification_with_fallback_name_when_name_already_exists() {
+    fn writes_notification_with_fallback_name_when_name_already_exists() -> Result<()> {
         // Arrange
         let handler = CreateBodyCommandHandler;
         let mut engine = CadEngine::new();
@@ -145,14 +142,11 @@ mod tests {
         let mut world = make_world();
 
         // Act
-        let system_result: eyre::Result<(), BevyError> = world
-            .run_system_once(
-                move |mut writer: MessageWriter<Notifications>| -> eyre::Result<(), BevyError> {
-                    handler.handle(&command, &mut engine, &mut writer)
-                },
-            )
-            .unwrap();
-        system_result.unwrap();
+        let _ = world.run_system_once(move |mut writer: MessageWriter<Notifications>| {
+            handler
+                .handle(&command, &mut engine, &mut writer)
+                .expect("should be OK")
+        });
 
         // Assert
         let messages = world.resource::<Messages<Notifications>>();
@@ -162,5 +156,6 @@ mod tests {
             .select_ref::<BodyCreatedNotification>()
             .unwrap();
         assert_eq!(*notif.name, "body1_new");
+        Ok(())
     }
 }
