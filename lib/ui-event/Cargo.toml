@@ -11,4 +11,4 @@ enum_dispatch.workspace = true
 immutable = { version = "0.1.0", path = "../immutable" }
 ui-event-macros = { version = "0.1.0", path = "../ui-event-macros" }
 tracing.workspace = true
-cad-base-macro = { version = "0.1.0", path = "../cad-base-macro" }
+cad-base-macros = { version = "0.1.0", path = "../cad-base-macros" }

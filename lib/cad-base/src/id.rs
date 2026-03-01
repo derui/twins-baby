@@ -1,6 +1,6 @@
 use std::{fmt::Debug, marker::PhantomData};
 
-use cad_base_macro::MakeId;
+use cad_base_macros::MakeId;
 
 /// A unique identifier for a plane.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, MakeId)]

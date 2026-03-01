@@ -1,4 +1,4 @@
-use cad_base_macro::MakeId;
+use cad_base_macros::MakeId;
 
 // Should panic: type name doesn't end with "Id"
 #[derive(MakeId)]

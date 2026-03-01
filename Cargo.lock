@@ -1818,7 +1818,7 @@ name = "cad-base"
 version = "0.1.0"
 dependencies = [
  "approx",
- "cad-base-macro",
+ "cad-base-macros",
  "color-eyre",
  "enum_dispatch",
  "epsilon",
@@ -1832,7 +1832,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "cad-base-macro"
+name = "cad-base-macros"
 version = "0.1.0"
 dependencies = [
  "pretty_assertions",
@@ -6261,7 +6261,7 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "cad-base",
- "cad-base-macro",
+ "cad-base-macros",
  "color-eyre",
  "enum_dispatch",
  "immutable",

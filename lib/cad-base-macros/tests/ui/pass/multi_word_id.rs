@@ -1,4 +1,4 @@
-use cad_base_macro::MakeId;
+use cad_base_macros::MakeId;
 
 #[derive(MakeId)]
 struct UserAccountId(u64);
