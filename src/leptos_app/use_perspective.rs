@@ -17,8 +17,9 @@ pub struct UsePerspective {
 /// This hook requires wrapping with `Provider` with [PerspectiveKind] value.
 pub fn use_perspective() -> UsePerspective {
     let context = use_context::<UiStore>().expect("Should be provided");
+    let store = context.clone();
     let set_perspective = Callback::new(move |v| {
-        context.dispatch(PerspectiveChangedAction { next: v }.into());
+        store.dispatch(&PerspectiveChangedAction { next: v });
     });
 
     UsePerspective {
@@ -39,7 +40,7 @@ mod tests {
 
     fn setup_context() -> UiStore {
         let state = UiStore::new(&AppStore::new());
-        provide_context(state);
+        provide_context(state.clone());
         state
     }
 

@@ -1,8 +1,13 @@
+use std::sync::{
+    Arc,
+    atomic::{AtomicU64, Ordering},
+};
+
 use cad_base::id::BodyId;
 use enum_dispatch::enum_dispatch;
 use immutable::Im;
 use leptos::prelude::*;
-use ui_event::PerspectiveKind;
+use ui_event::{CommandId, PerspectiveKind, command::Commands};
 
 use crate::leptos_app::{app_state::AppStore, ui_action::PerspectiveChangedAction};
 
@@ -30,7 +35,7 @@ impl BodyUI {
 
 /// The centralized state of UI. This state is the single source of truth in UI,
 /// but some states which bevy has are do not inclued this, exclude ID or metadata.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct UiStore {
     /// Current selected perspective, this is only for UI view.
     pub perspective: WriteSignal<PerspectiveKind>,
@@ -38,11 +43,13 @@ pub struct UiStore {
     /// centralized UI state. see this
     pub ui: UiState,
 
+    id_gen: Arc<AtomicU64>,
+
     _immutable: (),
 }
 
 /// Global single signal store.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct UiState {
     /// Current selected perspective, this is only for UI view.
     pub perspective: ReadSignal<PerspectiveKind>,
@@ -73,28 +80,22 @@ impl UiStore {
                 bodies: body_list,
                 _immutable: (),
             },
+            id_gen: Arc::new(AtomicU64::new(1)),
             _immutable: (),
         }
     }
 
     /// Dispatch the [event]
-    pub fn dispatch(&self, event: UiActions) {
-        event.apply(self);
+    pub fn dispatch(&self, action: &dyn UiAction) {
+        let id = self.id_gen.fetch_add(1, Ordering::Relaxed).into();
+
+        action.apply(self, id);
     }
 }
 
-#[enum_dispatch(UiActions)]
-pub trait UiReducer {
+pub trait UiAction {
     /// Apply state change from the event.
     ///
     /// UiState can not mutate directly, allow only exposed write signal
-    fn apply(&self, state: &UiStore);
-}
-
-/// Events enum of UI.
-#[derive(Debug, Clone)]
-#[enum_dispatch]
-pub enum UiActions {
-    /// Occurance of perspective
-    PerspectiveChanged(PerspectiveChangedAction),
+    fn apply(&self, state: &UiStore, id: CommandId) -> Option<Commands>;
 }
