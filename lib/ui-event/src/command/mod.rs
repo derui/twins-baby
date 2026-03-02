@@ -1,3 +1,5 @@
+use std::any::TypeId;
+
 use bevy::ecs::message::Message;
 use cad_base::id::{BodyId, PlaneId};
 use enum_dispatch::enum_dispatch;
@@ -9,6 +11,9 @@ use crate::CommandId;
 /// A command marker trait.
 #[enum_dispatch(Commands)]
 pub trait Command {
+    /// Get [TypeId] of self.
+    fn raw_type_id(&self) -> TypeId;
+
     /// Get ID of the command.
     fn id(&self) -> &CommandId;
 
@@ -56,6 +61,9 @@ pub struct CancelSketchCreationCommand {
 /// A command to create body
 #[derive(Debug, Clone, Command)]
 pub struct CreateBodyCommand {
+    /// Id of command
     pub id: Im<CommandId>,
+
+    /// Name of the body
     pub name: Im<String>,
 }

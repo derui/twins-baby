@@ -11,6 +11,10 @@ pub(crate) fn impl_command_macro(ast: &syn::DeriveInput) -> TokenStream {
 
     let generated = quote! {
         impl crate::command::Command for #name {
+            fn raw_type_id(&self) -> std::any::TypeId {
+                std::any::TypeId::of::<#name>()
+            }
+
             fn id(&self) -> &CommandId {
                 &(*self.id)
             }

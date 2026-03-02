@@ -43,6 +43,7 @@ impl Handler for CreateBodyCommandHandler {
                 }
                 .into(),
             );
+            transaction.commit();
         }
 
         Ok(())

@@ -11,14 +11,14 @@ use crate::leptos_app::{app_state::AppStore, ui_action::PerspectiveChangedAction
 pub struct BodyUI {
     pub id: Im<BodyId>,
     pub name: Im<String>,
-    pub order: Im<u32>,
+    pub order: Im<usize>,
 
     _immutable: (),
 }
 
 impl BodyUI {
     /// Make new [BodyUI]
-    pub fn new(id: BodyId, name: &str, order: u32) -> BodyUI {
+    pub fn new(id: BodyId, name: &str, order: usize) -> BodyUI {
         BodyUI {
             id: id.into(),
             name: name.to_string().into(),

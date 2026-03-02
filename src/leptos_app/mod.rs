@@ -107,7 +107,7 @@ pub fn App() -> impl IntoView {
             match notification {
                 Notifications::BodyCreated(n) => {
                     store.bodies.update(|bodies| {
-                        let order = bodies.len() as u32;
+                        let order = bodies.len();
                         bodies.insert(*n.body_id, BodyUI::new(*n.body_id, &n.name, order));
                     });
                 }

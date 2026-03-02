@@ -61,7 +61,7 @@ impl HandlerRegistrar {
         engine: &mut CadEngine,
         writer: &mut MessageWriter<Notifications>,
     ) -> Result<(), BevyError> {
-        let type_id = command.type_id();
+        let type_id = command.raw_type_id();
 
         if let Some(handler) = self.handlers.get(&type_id) {
             handler.handle(command, engine, writer)
