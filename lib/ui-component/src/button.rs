@@ -14,7 +14,8 @@ pub fn ToolButton(
 ) -> impl IntoView {
     let state = use_button(disabled.unwrap_or(false));
 
-    let disabled = move || (*state.attrs).get().disabled;
+    let disabled = move || state.attrs.get().disabled;
+    let disabled = move || *disabled();
     let icon_url = icon.as_url();
     let icon_class = icon.as_size_class();
     let mask_style = format!(
@@ -23,7 +24,7 @@ pub fn ToolButton(
 
     view! {
         <button
-            disabled=*disabled()
+            disabled=disabled
             tabindex=tabindex
             aria-label=label
             on:click=move |ev| {
@@ -64,9 +65,7 @@ mod tests {
     async fn test_tool_button_disabled() {
         with_leptos_owner(async {
             // Arrange
-            let view = view! {
-                <ToolButton icon=IconType::Cube(IconSize::Medium) label="Cube" disabled=true />
-            };
+            let view = view! { <ToolButton icon=IconType::Cube(IconSize::Medium) label="Cube" disabled=true /> };
 
             // Act & Assert
             assert_view_snapshot!("tool_button_disabled", view);
