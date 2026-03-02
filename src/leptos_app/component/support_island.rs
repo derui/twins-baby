@@ -3,5 +3,7 @@ use leptos::prelude::*;
 /// A component for support island.
 #[component]
 pub fn SupportIsland() -> impl IntoView {
-    view! { <div class="flex flex-col h-full w-full rounded-lg bg-gray-700/90"></div> }
+    view! {
+        <div class="flex flex-col h-full w-full rounded-lg bg-white/10 backdrop-blur-sm border border-white/20"></div>
+    }
 }

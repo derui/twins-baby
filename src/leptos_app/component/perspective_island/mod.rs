@@ -12,7 +12,7 @@ use crate::leptos_app::use_perspective::{UsePerspective, use_perspective};
 
 fn perspective_item_view(kind: PerspectiveKind) -> AnyView {
     view! {
-        <span class="px-3 py-1 text-sm text-gray-200 hover:bg-gray-600 w-full block">
+        <span class="px-3 py-1 text-sm text-gray-200 bg-gray-800 hover:bg-gray-600 w-full block">
             {kind.to_string()}
         </span>
     }
@@ -59,7 +59,7 @@ pub fn PerspectiveIsland() -> impl IntoView {
     let UsePerspective { perspective, .. } = use_perspective();
 
     view! {
-        <div class="flex flex-row h-full w-full col-span-5 rounded-lg bg-gray-700/90">
+        <div class="flex flex-row h-full w-full col-span-5 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20">
             <PerspectiveSwitcher />
             <Show when=move || perspective.get() == PerspectiveKind::Feature>
                 <FeatureToolbar />

@@ -108,7 +108,7 @@ where
                                 width,
                             )
                         }
-                        class="rounded-md shadow-xl overflow-hidden"
+                        class="rounded-md shadow-xl overflow-hidden bg-gray-800 border border-gray-600"
                     >
                         <For
                             each=move || items.get().into_iter().enumerate()

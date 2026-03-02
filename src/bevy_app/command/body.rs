@@ -30,7 +30,7 @@ impl Handler for CreateBodyCommandHandler {
 
             let body_id = body.add_body();
             let mut name = (*command.name).clone();
-            if let Err(_) = body.rename_body(&body_id, &name) {
+            if body.rename_body(&body_id, &name).is_err() {
                 name = format!("{}{}", &name, "_new");
                 body.rename_body(&body_id, &name)?;
             }
