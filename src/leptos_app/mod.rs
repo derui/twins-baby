@@ -5,6 +5,7 @@ mod message_hub;
 mod resize_nob;
 mod ui_action;
 mod ui_state;
+mod use_action;
 mod use_perspective;
 mod use_resize;
 
@@ -62,7 +63,7 @@ pub fn App() -> impl IntoView {
     let (leptos_notification_receiver, bevy_notification_sender) = message_b2l::<Notifications>();
     let store = AppStore::new();
     provide_context(CommandSender::new(command_sender));
-    provide_context(store.clone());
+    provide_context(store);
     provide_context(UiStore::new(&store));
 
     let initial_width = window()

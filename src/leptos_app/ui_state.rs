@@ -1,15 +1,14 @@
 use std::sync::{
     Arc,
-    atomic::{AtomicU64, Ordering},
+    atomic::AtomicU64,
 };
 
 use cad_base::id::BodyId;
-use enum_dispatch::enum_dispatch;
 use immutable::Im;
 use leptos::prelude::*;
-use ui_event::{CommandId, PerspectiveKind, command::Commands};
+use ui_event::PerspectiveKind;
 
-use crate::leptos_app::{app_state::AppStore, ui_action::PerspectiveChangedAction};
+use crate::leptos_app::app_state::AppStore;
 
 /// Immutable UI DTO for Body.
 #[derive(Debug, Clone)]
@@ -84,18 +83,4 @@ impl UiStore {
             _immutable: (),
         }
     }
-
-    /// Dispatch the [event]
-    pub fn dispatch(&self, action: &dyn UiAction) {
-        let id = self.id_gen.fetch_add(1, Ordering::Relaxed).into();
-
-        action.apply(self, id);
-    }
-}
-
-pub trait UiAction {
-    /// Apply state change from the event.
-    ///
-    /// UiState can not mutate directly, allow only exposed write signal
-    fn apply(&self, state: &UiStore, id: CommandId) -> Option<Commands>;
 }

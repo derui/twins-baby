@@ -1,7 +1,11 @@
-use leptos::prelude::{Callback, ReadSignal, use_context};
+use leptos::prelude::{Callable as _, Callback, ReadSignal, use_context};
 use ui_event::PerspectiveKind;
 
-use crate::leptos_app::{ui_action::PerspectiveChangedAction, ui_state::UiStore};
+use crate::leptos_app::{
+    ui_action::PerspectiveChangedAction,
+    ui_state::UiStore,
+    use_action::{UseActionReturn, use_action},
+};
 
 /// This module provides a hook to manage global **perspective** of the app.
 pub struct UsePerspective {
@@ -17,9 +21,10 @@ pub struct UsePerspective {
 /// This hook requires wrapping with `Provider` with [PerspectiveKind] value.
 pub fn use_perspective() -> UsePerspective {
     let context = use_context::<UiStore>().expect("Should be provided");
-    let store = context.clone();
+    let UseActionReturn { dispatch, .. } = use_action();
+
     let set_perspective = Callback::new(move |v| {
-        store.dispatch(&PerspectiveChangedAction { next: v });
+        dispatch.run(Box::new(PerspectiveChangedAction { next: v }));
     });
 
     UsePerspective {
@@ -31,16 +36,24 @@ pub fn use_perspective() -> UsePerspective {
 #[cfg(test)]
 mod tests {
     use leptos::prelude::{Callable as _, Get as _, provide_context};
+    use leptos_bevy_canvas::prelude::message_l2b;
     use leptos_test::with_leptos_owner;
     use pretty_assertions::assert_eq;
+    use ui_event::command::Commands;
 
-    use crate::leptos_app::{app_state::AppStore, ui_state::UiStore};
+    use crate::leptos_app::{
+        app_state::AppStore, command_sender::CommandSender, ui_state::UiStore,
+    };
 
     use super::*;
 
     fn setup_context() -> UiStore {
-        let state = UiStore::new(&AppStore::new());
+        let app_store = AppStore::new();
+        let state = UiStore::new(&app_store);
+        let (sender, _receiver) = message_l2b::<Commands>();
+        provide_context(app_store);
         provide_context(state.clone());
+        provide_context(CommandSender::new(sender));
         state
     }
 

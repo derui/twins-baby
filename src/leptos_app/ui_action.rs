@@ -4,7 +4,7 @@ use ui_event::{
     command::{Commands, CreateBodyCommand},
 };
 
-use crate::leptos_app::ui_state::{UiAction, UiStore};
+use crate::leptos_app::use_action::{ActionContext, UiAction};
 
 /// An event to notice perpective change
 #[derive(Debug, Clone)]
@@ -14,8 +14,8 @@ pub struct PerspectiveChangedAction {
 }
 
 impl UiAction for PerspectiveChangedAction {
-    fn apply(&self, state: &UiStore, _id: CommandId) -> Option<Commands> {
-        state.perspective.set(self.next);
+    fn apply(&self, _id: CommandId, context: &ActionContext) -> Option<Commands> {
+        context.ui_store.perspective.set(self.next);
 
         None
     }
@@ -25,11 +25,11 @@ impl UiAction for PerspectiveChangedAction {
 #[derive(Debug, Clone)]
 pub struct BodyCreatedAction {
     /// The perspective changed
-    pub next: PerspectiveKind,
+    pub name: String,
 }
 
 impl UiAction for BodyCreatedAction {
-    fn apply(&self, state: &UiStore, id: CommandId) -> Option<Commands> {
+    fn apply(&self, id: CommandId, _context: &ActionContext) -> Option<Commands> {
         Some(
             CreateBodyCommand {
                 id: id.into(),

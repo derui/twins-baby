@@ -1,7 +1,7 @@
 mod body;
 
 use std::{
-    any::{Any, TypeId},
+    any::TypeId,
     collections::HashMap,
 };
 

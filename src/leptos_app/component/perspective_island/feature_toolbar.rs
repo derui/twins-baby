@@ -4,25 +4,19 @@ use ui_component::{
     button::ToolButton,
     icon::{IconSize, IconType},
 };
-use ui_event::FeatureTool;
-use ui_event::command::CreateBodyCommand;
 
-use crate::leptos_app::command_sender::CommandSender;
+use crate::leptos_app::ui_action::BodyCreatedAction;
+use crate::leptos_app::use_action::{UseActionReturn, use_action};
 
 /// Toolbar displayed when the perspective is set to Feature.
 #[component]
 pub fn FeatureToolbar() -> impl IntoView {
-    let sender = use_context::<CommandSender>().expect("should be set before");
-    let (event, set_event) = signal(None::<FeatureTool>);
+    let UseActionReturn { dispatch, .. } = use_action();
 
     let on_click_body = move |_ev: leptos::web_sys::MouseEvent| {
-        sender.send(|id| {
-            CreateBodyCommand {
-                id: id.into(),
-                name: "Body".to_string().into(),
-            }
-            .into()
-        })
+        dispatch.run(Box::new(BodyCreatedAction {
+            name: "Body".to_string(),
+        }))
     };
 
     let on_click_sketch = move |_ev: leptos::web_sys::MouseEvent| todo!();
@@ -32,12 +26,12 @@ pub fn FeatureToolbar() -> impl IntoView {
             <ToolButton
                 icon=IconType::Cube(IconSize::Medium)
                 label="Body"
-                on:click=move |ev| on_click_body(ev)
+                on:click=on_click_body
             />
             <ToolButton
                 icon=IconType::Sketch(IconSize::Medium)
                 label="Sketch"
-                on:click=move |ev| on_click_sketch(ev)
+                on:click=on_click_sketch
             />
         </div>
     }
