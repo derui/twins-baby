@@ -1,9 +1,6 @@
 mod body;
 
-use std::{
-    any::TypeId,
-    collections::HashMap,
-};
+use std::{any::TypeId, collections::HashMap};
 
 use bevy::ecs::{
     error::BevyError,

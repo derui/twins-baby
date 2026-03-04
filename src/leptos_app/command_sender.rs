@@ -1,4 +1,3 @@
-
 use leptos_bevy_canvas::prelude::{LeptosChannelMessageSender, LeptosMessageSender};
 use ui_event::command::Commands;
 

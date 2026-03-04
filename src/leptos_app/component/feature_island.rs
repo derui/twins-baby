@@ -14,7 +14,7 @@ pub fn FeatureIsland() -> impl IntoView {
             <h3 class="text-xs font-semibold text-white/70 uppercase tracking-wider mb-2 px-1">
                 "Features"
             </h3>
-            <For each=move || bodies.get() key=|body| (*body.id) let:body>
+            <For each=move || bodies.get() key=|body| *body.id  let:body>
                 <TreeAccordion
                     trigger=move || {
                         let name = body.name.clone();
