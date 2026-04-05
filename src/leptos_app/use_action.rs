@@ -3,9 +3,12 @@ use ui_event::{CommandId, command::Commands};
 
 use crate::leptos_app::{app_state::AppStore, command_sender::CommandSender, ui_state::UiStore};
 
-pub struct UseActionReturn {
+pub struct UseActionReturn<DispatchFn>
+where
+    DispatchFn: Fn(Box<dyn UiAction>) + Clone,
+{
     /// Dispatch the action
-    pub dispatch: Callback<Box<dyn UiAction>>,
+    pub dispatch: DispatchFn,
 
     _immutable: (),
 }
@@ -16,7 +19,7 @@ pub struct ActionContext {
     pub app_store: AppStore,
 }
 
-pub fn use_action() -> UseActionReturn {
+pub fn use_action() -> UseActionReturn<impl Fn(Box<dyn UiAction>) + Clone + Send + Sync> {
     let ui_store = use_context::<UiStore>().expect("Must set UiStore before");
     let app_store = use_context::<AppStore>().expect("Must set AppStore before");
     let sender = use_context::<CommandSender>().expect("Must set CommandSender before");
@@ -34,8 +37,10 @@ pub fn use_action() -> UseActionReturn {
         }
     });
 
+    let do_dispatch = { move |action: Box<dyn UiAction>| dispatch.run(action) };
+
     UseActionReturn {
-        dispatch,
+        dispatch: do_dispatch,
         _immutable: (),
     }
 }
@@ -105,7 +110,7 @@ mod tests {
             let UseActionReturn { dispatch, .. } = use_action();
 
             // Act
-            dispatch.run(Box::new(NoOpAction));
+            dispatch(Box::new(NoOpAction));
             any_spawner::Executor::tick().await;
 
             // Assert
@@ -122,7 +127,7 @@ mod tests {
             let UseActionReturn { dispatch, .. } = use_action();
 
             // Act
-            dispatch.run(Box::new(SendCommandAction));
+            dispatch(Box::new(SendCommandAction));
             any_spawner::Executor::tick().await;
 
             // Assert
@@ -151,7 +156,7 @@ mod tests {
             }
 
             // Act
-            dispatch.run(Box::new(SetPerspectiveAction));
+            dispatch(Box::new(SetPerspectiveAction));
             any_spawner::Executor::tick().await;
 
             // Assert

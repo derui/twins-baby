@@ -24,7 +24,7 @@ pub fn use_perspective() -> UsePerspective {
     let UseActionReturn { dispatch, .. } = use_action();
 
     let set_perspective = Callback::new(move |v| {
-        dispatch.run(Box::new(PerspectiveChangedAction { next: v }));
+        dispatch(Box::new(PerspectiveChangedAction { next: v }));
     });
 
     UsePerspective {

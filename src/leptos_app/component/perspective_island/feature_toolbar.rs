@@ -14,7 +14,7 @@ pub fn FeatureToolbar() -> impl IntoView {
     let UseActionReturn { dispatch, .. } = use_action();
 
     let on_click_body = move |_ev: leptos::web_sys::MouseEvent| {
-        dispatch.run(Box::new(BodyCreatedAction {
+        dispatch(Box::new(BodyCreatedAction {
             name: "Body".to_string(),
         }))
     };
@@ -23,11 +23,7 @@ pub fn FeatureToolbar() -> impl IntoView {
 
     view! {
         <div class="flex flex-row gap-2 p-2">
-            <ToolButton
-                icon=IconType::Cube(IconSize::Medium)
-                label="Body"
-                on:click=on_click_body
-            />
+            <ToolButton icon=IconType::Cube(IconSize::Medium) label="Body" on:click=on_click_body />
             <ToolButton
                 icon=IconType::Sketch(IconSize::Medium)
                 label="Sketch"
