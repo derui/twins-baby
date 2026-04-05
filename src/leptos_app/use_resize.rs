@@ -3,7 +3,7 @@ use leptos::prelude::*;
 use crate::leptos_app::resize_nob::NOB_AREA;
 
 #[derive(Debug, Clone)]
-pub struct UseResize {
+pub struct UseResizeReturn {
     /// Sizes of areas
     pub sizes: (Signal<u32>, Signal<u32>, Signal<u32>),
     pub first_movement: WriteSignal<Option<i32>>,
@@ -17,7 +17,7 @@ fn apply_movement(current: u32, movement: i32, range: (u32, u32)) -> u32 {
 
 /// Resizing 3-column/row view. This hook is specialized for
 /// central place size is not strict.
-pub fn use_resize(initial: (u32, u32), window_size: Signal<u32>) -> UseResize {
+pub fn use_resize(initial: (u32, u32), window_size: Signal<u32>) -> UseResizeReturn {
     let (first_movement, set_first_movement) = signal(None);
     let (third_movement, set_third_movement) = signal::<Option<i32>>(None);
     let (first_size, set_first_size) = signal(initial.0);
@@ -61,7 +61,7 @@ pub fn use_resize(initial: (u32, u32), window_size: Signal<u32>) -> UseResize {
         }
     });
 
-    UseResize {
+    UseResizeReturn {
         sizes: (first_size.into(), second_size, third_size.into()),
         first_movement: set_first_movement,
         third_movement: set_third_movement,
