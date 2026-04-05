@@ -172,13 +172,7 @@ async fn test_my_component() {
 All commit must follow these styles:
 
 - Follow conventional commit
-  - We use `feat` , `refactor`, `fix`, `test` , `style`, `perf`, `chore` 
+  - We use `feat` , `refactor`, `fix`, `test` , `style`, `perf`, `chore`
 - Should add scope with Rust crate name when possible
-  
-## Working with `jj`
-This repository's operation relies on `jj` now. Use it unless the user forces to use Git in prompt.
+  - e.g. feat(lib/solver): allow user multipling with matrix
 
-Working with `jj`, followng these guidelines:
-
-- **Keep same format of git** : We need same commit format between `git` and `jj`.
-- **Add Co-Authered-By to all message generated** : It needs to detect Claude Code-generated commit.
