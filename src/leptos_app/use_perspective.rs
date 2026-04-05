@@ -1,4 +1,4 @@
-use leptos::prelude::{Callable as _, Callback, ReadSignal, Signal, use_context};
+use leptos::prelude::{Signal, use_context};
 use ui_event::PerspectiveKind;
 
 use crate::leptos_app::{
