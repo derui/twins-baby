@@ -167,6 +167,54 @@ async fn test_my_component() {
 }
 ```
 
+## Hook implementation
+Hook is the term defined by:
+
+- The logic abstruction layer for component/leptos
+
+
+Hook has two types. 
+
+- A single value manageable hook
+- value with operation hook 
+
+
+### single value hook
+A single value hook is similar:
+
+```rust
+/// Only return a signal
+fn use_a() -> Signal<u32>
+
+/// Return writable signal for update value as-is.
+fn use_a() -> (Signal<u32>, WriteSignal<u32>)
+```
+
+This type of hook will use for some value of element via internal function, or calculate via it. Do not use this for complex operation.
+
+### Value with operation hook
+A complex hook should follow this pattern: 
+
+```rust
+/// define struct. This struct must not be able to mutate out of the module
+struct UseAReturn<AFn> where 
+  AFn: Fn(u32, u32) + Clone 
+  {
+    pub value: Signal<u32>,
+    pub a: AFn,
+    
+    _immutable: ()
+  }
+  
+fn use_a() -> UseAReturn<impl Fn(u32, u32) + Clone> {
+ ...
+}
+```
+
+When multiple operations need, you must think before that. Hooks should have only 1 responsibility, multiple functions in the hook is signal of violation of the rule.
+
+If the function is just like writable signal, it should be named by `set_xxx` . This type can be contained multiple instance, but must keep preventing internal logic leakage.
+
 # Commit convention
 
 All commit must follow these styles:
