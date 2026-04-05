@@ -48,7 +48,7 @@ pub struct UiStore {
 #[derive(Debug, Clone, PartialEq)]
 pub struct UiState {
     /// Current selected perspective, this is only for UI view.
-    pub perspective: ReadSignal<PerspectiveKind>,
+    pub perspective: Signal<PerspectiveKind>,
 
     /// Bodies in the application
     pub bodies: Signal<Vec<BodyUI>>,
@@ -72,7 +72,7 @@ impl UiStore {
         UiStore {
             perspective: set_perspective,
             ui: UiState {
-                perspective,
+                perspective: perspective.into(),
                 bodies: body_list,
                 _immutable: (),
             },

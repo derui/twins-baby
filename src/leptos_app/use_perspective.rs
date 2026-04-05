@@ -1,4 +1,4 @@
-use leptos::prelude::{Callable as _, Callback, ReadSignal, use_context};
+use leptos::prelude::{Callable as _, Callback, ReadSignal, Signal, use_context};
 use ui_event::PerspectiveKind;
 
 use crate::leptos_app::{
@@ -8,9 +8,14 @@ use crate::leptos_app::{
 };
 
 /// This module provides a hook to manage global **perspective** of the app.
-pub struct UsePerspective {
-    pub perspective: ReadSignal<PerspectiveKind>,
-    pub set_perspective: Callback<PerspectiveKind>,
+pub struct UsePerspective<ChangeFn>
+where
+    ChangeFn: Fn(PerspectiveKind) + Clone,
+{
+    pub perspective: Signal<PerspectiveKind>,
+
+    /// change current perspective via kind
+    pub change: ChangeFn,
 }
 
 /// Get a hook of perspective. The hook can:
@@ -19,17 +24,17 @@ pub struct UsePerspective {
 /// - set a perspective in global, including beby
 ///
 /// This hook requires wrapping with `Provider` with [PerspectiveKind] value.
-pub fn use_perspective() -> UsePerspective {
+pub fn use_perspective() -> UsePerspective<impl Fn(PerspectiveKind) + Clone + Send + Sync> {
     let context = use_context::<UiStore>().expect("Should be provided");
     let UseActionReturn { dispatch, .. } = use_action();
 
-    let set_perspective = Callback::new(move |v| {
+    let change = move |v| {
         dispatch(Box::new(PerspectiveChangedAction { next: v }));
-    });
+    };
 
     UsePerspective {
         perspective: context.ui.perspective,
-        set_perspective,
+        change,
     }
 }
 
@@ -82,7 +87,7 @@ mod tests {
             any_spawner::Executor::tick().await;
 
             // Act
-            hook.set_perspective.run(PerspectiveKind::Sketch);
+            (hook.change)(PerspectiveKind::Sketch);
             any_spawner::Executor::tick().await;
 
             // Assert
@@ -100,7 +105,7 @@ mod tests {
             any_spawner::Executor::tick().await;
 
             // Act
-            hook.set_perspective.run(PerspectiveKind::Feature);
+            (hook.change)(PerspectiveKind::Feature);
             any_spawner::Executor::tick().await;
 
             // Assert
@@ -118,11 +123,11 @@ mod tests {
             any_spawner::Executor::tick().await;
 
             // Act - multiple updates
-            hook.set_perspective.run(PerspectiveKind::Sketch);
+            (hook.change)(PerspectiveKind::Sketch);
             any_spawner::Executor::tick().await;
-            hook.set_perspective.run(PerspectiveKind::Feature);
+            (hook.change)(PerspectiveKind::Feature);
             any_spawner::Executor::tick().await;
-            hook.set_perspective.run(PerspectiveKind::Sketch);
+            (hook.change)(PerspectiveKind::Sketch);
             any_spawner::Executor::tick().await;
 
             // Assert
