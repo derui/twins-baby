@@ -1,88 +1,34 @@
 mod body;
 
-use std::{any::TypeId, collections::HashMap};
+use bevy::ecs::{error::BevyError, message::MessageReader};
+use bevy::prelude::{App, Commands as BevyCommands, Update};
+use ui_event::command::Commands;
 
-use bevy::ecs::{
-    error::BevyError,
-    message::{MessageReader, MessageWriter},
-    resource::Resource,
-    system::{Res, ResMut},
-};
-use cad_base::CadEngine;
-use eyre::{Result, eyre};
-use ui_event::{
-    command::{Command, Commands, CreateBodyCommand},
-    notification::Notifications,
-};
+use body::on_create_body;
 
-use crate::bevy_app::{command::body::CreateBodyCommandHandler, resource::EngineState};
-
-pub trait Handler {
-    /// Handle the command with mutable engine.
-    ///
-    /// # Summary
-    /// All handler handles a command, mutate engine or send notification for the command or not.
-    fn handle(
-        &self,
-        command: &Commands,
-        engine: &mut CadEngine,
-        writer: &mut MessageWriter<Notifications>,
-    ) -> Result<(), BevyError>;
+pub trait CommandAppExt {
+    fn register_commands(&mut self) -> &mut Self;
 }
 
-/// Resources of the command handler.
-#[derive(Resource)]
-pub struct HandlerRegistrar {
-    /// handlers for the command. Each handler must be tightly coupled a enum in [Commands]
-    handlers: HashMap<TypeId, Box<dyn Handler + Send + Sync>>,
-}
-
-impl HandlerRegistrar {
-    /// Make a new [HandlerRegistrar]
-    pub fn new() -> Self {
-        Self {
-            handlers: HashMap::new(),
-        }
-    }
-
-    /// Register a handler for the command. Do not avoid to register for [Commands]. It will not dispatch ever.
-    pub fn register<T: Command + 'static>(&mut self, handler: Box<dyn Handler + Send + Sync>) {
-        self.handlers.insert(TypeId::of::<T>(), handler);
-    }
-
-    /// Dispatch the command to the handler. If no handler is found, return an error.
-    #[tracing::instrument(skip(self, engine, writer))]
-    fn dispatch(
-        &self,
-        command: &Commands,
-        engine: &mut CadEngine,
-        writer: &mut MessageWriter<Notifications>,
-    ) -> Result<(), BevyError> {
-        let type_id = command.raw_type_id();
-
-        if let Some(handler) = self.handlers.get(&type_id) {
-            handler.handle(command, engine, writer)
-        } else {
-            Err(eyre!("No handler found for the command: {:?}", command).into())
-        }
+impl CommandAppExt for App {
+    fn register_commands(&mut self) -> &mut Self {
+        self.add_systems(Update, dispatch_commands)
+            .add_observer(on_create_body)
     }
 }
 
-/// System to setup command handlers. This system should be run once at the startup of the app.
-pub fn setup_command_handlers(mut registrar: ResMut<HandlerRegistrar>) {
-    registrar.register::<CreateBodyCommand>(Box::new(CreateBodyCommandHandler));
-}
-
-/// System to handle the command.
-pub fn command_system(
-    registrar: Res<HandlerRegistrar>,
-    mut engine: ResMut<EngineState>,
-    mut writer: MessageWriter<Notifications>,
-    mut commands: MessageReader<Commands>,
+fn dispatch_commands(
+    mut reader: MessageReader<Commands>,
+    mut commands: BevyCommands,
 ) -> Result<(), BevyError> {
-    for command in commands.read() {
-        registrar.dispatch(command, &mut engine.0, &mut writer)?
+    for cmd in reader.read() {
+        match cmd {
+            Commands::InitiateSketchCreation(c) => commands.trigger(c.clone()),
+            Commands::SelectSketchPlane(c) => commands.trigger(c.clone()),
+            Commands::CancelSketchCreation(c) => commands.trigger(c.clone()),
+            Commands::ConfirmSketchCreation(c) => commands.trigger(c.clone()),
+            Commands::CreateBody(c) => commands.trigger(c.clone()),
+        }
     }
-
     Ok(())
 }

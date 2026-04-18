@@ -1,119 +1,81 @@
-use bevy::ecs::{error::BevyError, message::MessageWriter};
-use cad_base::{CadEngine, body::BodyPerspective};
+use bevy::ecs::{error::BevyError, message::MessageWriter, observer::On};
+use bevy::prelude::ResMut;
+use cad_base::body::BodyPerspective;
 use ui_event::{
-    command::{Command, Commands, CreateBodyCommand},
+    command::CreateBodyCommand,
     notification::{BodyCreatedNotification, Notifications},
 };
 
-use crate::bevy_app::command::Handler;
+use crate::bevy_app::resource::EngineState;
 
-#[derive(Debug)]
-pub struct CreateBodyCommandHandler;
+pub(super) fn on_create_body(
+    trigger: On<CreateBodyCommand>,
+    mut engine: ResMut<EngineState>,
+    mut writer: MessageWriter<Notifications>,
+) -> Result<(), BevyError> {
+    let command = trigger.event();
+    let mut transaction = engine.0.begin();
 
-impl Handler for CreateBodyCommandHandler {
-    /// Handle the command `CreateBodyCommand`. This will create the new body, with fallback count.
-    fn handle(
-        &self,
-        command: &Commands,
-        engine: &mut CadEngine,
-        writer: &mut MessageWriter<Notifications>,
-    ) -> eyre::Result<(), BevyError> {
-        let Some(command) = command.select_ref::<CreateBodyCommand>() else {
-            return Ok(());
-        };
+    let Some(body) = transaction.modify::<BodyPerspective>() else {
+        return Err(color_eyre::eyre::eyre!("Can not get body perspective").into());
+    };
 
-        let mut transaction = engine.begin();
-
-        {
-            let Some(body) = transaction.modify::<BodyPerspective>() else {
-                return Err(color_eyre::eyre::eyre!("Can not get body perspective").into());
-            };
-
-            let body_id = body.add_body();
-            let mut name = (*command.name).clone();
-            if body.rename_body(&body_id, &name).is_err() {
-                let count = body.bodies().count();
-                name = format!("{}{:03}", &name, count + 1);
-                body.rename_body(&body_id, &name)?;
-            }
-
-            writer.write(
-                BodyCreatedNotification {
-                    correlation_id: command.id.clone(),
-                    body_id: body_id.into(),
-                    name: name.into(),
-                }
-                .into(),
-            );
-            transaction.commit();
-        }
-
-        Ok(())
+    let body_id = body.add_body();
+    let mut name = (*command.name).clone();
+    if body.rename_body(&body_id, &name).is_err() {
+        let count = body.bodies().count();
+        name = format!("{}{:03}", &name, count + 1);
+        body.rename_body(&body_id, &name)?;
     }
+
+    writer.write(
+        BodyCreatedNotification {
+            correlation_id: command.id.clone(),
+            body_id: body_id.into(),
+            name: name.into(),
+        }
+        .into(),
+    );
+    transaction.commit();
+
+    Ok(())
 }
 
 #[cfg(test)]
 mod tests {
-    use bevy::ecs::{message::Messages, system::RunSystemOnce, world::World};
-    use cad_base::id::BodyId;
-    use cad_base::{CadEngine, body::BodyPerspective};
+    use bevy::ecs::{message::Messages, world::World};
+    use cad_base::body::BodyPerspective;
     use eyre::Result;
     use pretty_assertions::assert_eq;
     use ui_event::{
         CommandId,
-        command::{Commands, CreateBodyCommand, InitiateSketchCreationCommand},
+        command::CreateBodyCommand,
         notification::{BodyCreatedNotification, Notification, Notifications},
     };
+
+    use crate::bevy_app::resource::EngineState;
 
     use super::*;
 
     fn make_world() -> World {
         let mut world = World::new();
         world.init_resource::<Messages<Notifications>>();
+        world.init_resource::<EngineState>();
+        world.add_observer(on_create_body);
         world
-    }
-
-    #[test]
-    fn returns_ok_without_notification_for_non_matching_command() {
-        // Arrange
-        let handler = CreateBodyCommandHandler;
-        let mut engine = CadEngine::new();
-        let command = Commands::InitiateSketchCreation(InitiateSketchCreationCommand {
-            id: CommandId::new(1).into(),
-            body: BodyId::new(1).into(),
-        });
-        let mut world = make_world();
-
-        // Act
-        let _ = world.run_system_once(move |mut writer: MessageWriter<Notifications>| {
-            handler
-                .handle(&command, &mut engine, &mut writer)
-                .expect("should be OK")
-        });
-
-        // Assert
-        let messages = world.resource::<Messages<Notifications>>();
-        let mut cursor = messages.get_cursor();
-        assert_eq!(cursor.read(messages).count(), 0);
     }
 
     #[test]
     fn writes_notification_with_given_name_for_unique_name() {
         // Arrange
-        let handler = CreateBodyCommandHandler;
-        let mut engine = CadEngine::new();
-        let command = Commands::CreateBody(CreateBodyCommand {
-            id: CommandId::new(1).into(),
-            name: "body1".to_string().into(),
-        });
         let mut world = make_world();
 
         // Act
-        let _ = world.run_system_once(move |mut writer: MessageWriter<Notifications>| {
-            handler
-                .handle(&command, &mut engine, &mut writer)
-                .expect("should be OK")
+        world.trigger(CreateBodyCommand {
+            id: CommandId::new(1).into(),
+            name: "body1".to_string().into(),
         });
+        world.flush();
 
         // Assert
         let messages = world.resource::<Messages<Notifications>>();
@@ -129,27 +91,22 @@ mod tests {
     #[test]
     fn writes_notification_with_fallback_name_when_name_already_exists() -> Result<()> {
         // Arrange
-        let handler = CreateBodyCommandHandler;
-        let mut engine = CadEngine::new();
+        let mut world = make_world();
         {
-            let mut tx = engine.begin();
+            let mut engine = world.resource_mut::<EngineState>();
+            let mut tx = engine.0.begin();
             let bodies = tx.modify::<BodyPerspective>().unwrap();
             let id = bodies.add_body();
             bodies.rename_body(&id, "body1").unwrap();
             tx.commit();
         }
-        let command = Commands::CreateBody(CreateBodyCommand {
+
+        // Act
+        world.trigger(CreateBodyCommand {
             id: CommandId::new(1).into(),
             name: "body1".to_string().into(),
         });
-        let mut world = make_world();
-
-        // Act
-        let _ = world.run_system_once(move |mut writer: MessageWriter<Notifications>| {
-            handler
-                .handle(&command, &mut engine, &mut writer)
-                .expect("should be OK")
-        });
+        world.flush();
 
         // Assert
         let messages = world.resource::<Messages<Notifications>>();
