@@ -44,6 +44,11 @@ impl BodyPerspective {
         id
     }
 
+    /// Get the current size of bodies
+    pub fn bodies(&self) -> impl Iterator<Item = &Body> {
+        self.bodies.values()
+    }
+
     /// Get a reference to a body by id
     pub fn get(&self, id: &BodyId) -> Option<&Body> {
         self.bodies.get(id)

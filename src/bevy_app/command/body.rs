@@ -11,6 +11,7 @@ use crate::bevy_app::command::Handler;
 pub struct CreateBodyCommandHandler;
 
 impl Handler for CreateBodyCommandHandler {
+    /// Handle the command `CreateBodyCommand`. This will create the new body, with fallback count.
     fn handle(
         &self,
         command: &Commands,
@@ -31,7 +32,8 @@ impl Handler for CreateBodyCommandHandler {
             let body_id = body.add_body();
             let mut name = (*command.name).clone();
             if body.rename_body(&body_id, &name).is_err() {
-                name = format!("{}{}", &name, "_new");
+                let count = body.bodies().count();
+                name = format!("{}{:03}", &name, count + 1);
                 body.rename_body(&body_id, &name)?;
             }
 
@@ -156,7 +158,7 @@ mod tests {
         let notif = notifications[0]
             .select_ref::<BodyCreatedNotification>()
             .unwrap();
-        assert_eq!(*notif.name, "body1_new");
+        assert_eq!(*notif.name, "body1003");
         Ok(())
     }
 }
