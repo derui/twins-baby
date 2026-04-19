@@ -3,7 +3,7 @@ use ui_headless::accordion::use_accordion;
 
 #[component]
 pub fn TreeAccordion(
-    #[prop(into)] trigger: ViewFn,
+    #[prop(into)] node: ViewFn,
     children: Children,
     #[prop(optional)] initial_open: Option<bool>,
 ) -> impl IntoView {
@@ -15,27 +15,27 @@ pub fn TreeAccordion(
 
     view! {
         <div class="flex flex-col w-full">
-            <button
-                role=move || *attrs.get().role
-                on:click=move |_| toggle.run(())
-                class="flex flex-row items-center gap-2 w-full rounded-md border border-white/10 transition-colors text-left"
-            >
-                <img
-                    src="/assets/icons/chevron-right.svg"
-                    class="w-4 h-4 transition-transform duration-200 opacity-60"
-                    class:rotate-90=is_open
-                />
-               {trigger.run()}
-            </button>
+            <div class="flex flex-row items-center gap-2 w-full">
+                <button
+                    role=move || *attrs.get().role
+                    on:click=move |_| toggle.run(())
+                    class="flex items-center justify-center rounded-md border border-white/10 transition-colors"
+                >
+                    <img
+                        src="/assets/icons/chevron-right.svg"
+                        class="w-4 h-4 transition-transform duration-200 opacity-60"
+                        class:rotate-90=is_open
+                    />
+                </button>
+                {node.run()}
+            </div>
             <div class=move || {
                 if is_open() {
                     "flex flex-col pl-4 border-l border-white/10 mt-1"
                 } else {
                     "hidden"
                 }
-            }>
-                {children()}
-            </div>
+            }>{children()}</div>
         </div>
     }
 }
@@ -52,7 +52,7 @@ mod tests {
         with_leptos_owner(async {
             // Arrange
             let view = view! {
-                <TreeAccordion trigger=|| view! { "Section" }>
+                <TreeAccordion node=|| view! { "Section" }>
                     <div>"Content"</div>
                 </TreeAccordion>
             };
@@ -68,7 +68,7 @@ mod tests {
         with_leptos_owner(async {
             // Arrange
             let view = view! {
-                <TreeAccordion trigger=|| view! { "Section" } initial_open=true>
+                <TreeAccordion node=|| view! { "Section" } initial_open=true>
                     <div>"Content"</div>
                 </TreeAccordion>
             };
@@ -84,8 +84,8 @@ mod tests {
         with_leptos_owner(async {
             // Arrange
             let view = view! {
-                <TreeAccordion trigger=|| view! { "Parent" } initial_open=true>
-                    <TreeAccordion trigger=|| view! { "Child" }>
+                <TreeAccordion node=|| view! { "Parent" } initial_open=true>
+                    <TreeAccordion node=|| view! { "Child" }>
                         <div>"Nested content"</div>
                     </TreeAccordion>
                 </TreeAccordion>

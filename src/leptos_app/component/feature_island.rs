@@ -21,7 +21,7 @@ pub fn FeatureIsland() -> impl IntoView {
             </h3>
             <For each=move || bodies.get() key=|body| *body.id let:body>
                 <TreeAccordion
-                    trigger={
+                    node={
                         let dispatch = dispatch.clone();
                         move || {
                             let name = body.name.clone();
