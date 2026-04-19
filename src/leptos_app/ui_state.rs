@@ -13,19 +13,31 @@ pub struct BodyUI {
     pub id: Im<BodyId>,
     pub name: Im<String>,
     pub order: Im<usize>,
+    pub active: Im<bool>,
 
     _immutable: (),
 }
 
 impl BodyUI {
     /// Make new [BodyUI]
-    pub fn new(id: BodyId, name: &str, order: usize) -> BodyUI {
+    pub fn new(id: BodyId, name: &str, order: usize, active: bool) -> BodyUI {
         BodyUI {
             id: id.into(),
             name: name.to_string().into(),
             order: order.into(),
+            active: active.into(),
             _immutable: (),
         }
+    }
+
+    /// Make active the body
+    pub fn active(&mut self) {
+        self.active = true.into()
+    }
+
+    /// Make inactive the body
+    pub fn inactive(&mut self) {
+        self.active = false.into()
     }
 }
 

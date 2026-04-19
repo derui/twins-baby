@@ -110,11 +110,22 @@ pub fn App() -> impl IntoView {
                 Notifications::BodyCreated(n) => {
                     store.bodies.update(|bodies| {
                         let order = bodies.len();
-                        bodies.insert(*n.body_id, BodyUI::new(*n.body_id, &n.name, order));
+                        bodies.insert(*n.body_id, BodyUI::new(*n.body_id, &n.name, order, false));
                     });
                 }
                 Notifications::SketchCreated(_) => {}
-                Notifications::BodyActivated(_) => {}
+                Notifications::BodyActivated(n) => store.bodies.update(|bodies| {
+                    if !bodies.contains_key(&n.body_id) {
+                        return;
+                    }
+                    for body in bodies.values_mut() {
+                        body.inactive();
+                    }
+
+                    if let Some(body) = bodies.get_mut(&n.body_id) {
+                        body.active();
+                    }
+                }),
             }
         }
     });
