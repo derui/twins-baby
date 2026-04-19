@@ -1,7 +1,8 @@
+use cad_base::id::BodyId;
 use leptos::prelude::Set;
 use ui_event::{
     CommandId, PerspectiveKind,
-    command::{Commands, CreateBodyCommand},
+    command::{Commands, CreateBodyCommand, SwitchActiveBodyCommand},
 };
 
 use crate::leptos_app::use_action::{ActionContext, UiAction};
@@ -37,5 +38,22 @@ impl UiAction for BodyCreatedAction {
             }
             .into(),
         )
+    }
+}
+
+/// An evetn to activate the body
+#[derive(Debug, Clone)]
+pub struct BodyActivatedAction {
+    /// The body id to activate
+    pub body_id: BodyId,
+}
+
+impl UiAction for BodyActivatedAction {
+    fn apply(&self, id: CommandId, _context: &ActionContext) -> Option<Commands> {
+        Some(Commands::SwitchActiveBody(SwitchActiveBodyCommand {
+            id: id.into(),
+
+            body_id: self.body_id.into(),
+        }))
     }
 }
