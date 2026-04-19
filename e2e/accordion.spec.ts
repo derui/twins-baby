@@ -6,12 +6,12 @@ test.beforeEach(async ({ page }) => {
 
 test("open and close the accordion", async ({ page }) => {
   const fixture = page.locator('[data-fixture="accordion-default"]');
-  const trigger = fixture.getByText("Default Section");
+  const toggle = fixture.locator("button").first();
   const content = fixture.getByText(/Content inside default accordion/);
 
   await expect(content).not.toBeVisible();
 
-  await trigger.click();
+  await toggle.click();
 
   await expect(content).toBeVisible();
 });
