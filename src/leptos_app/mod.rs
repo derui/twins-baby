@@ -11,7 +11,6 @@ mod use_resize;
 
 use leptos::{context::Provider, prelude::*};
 use leptos_bevy_canvas::prelude::*;
-use reactive_stores::Store;
 use ui_event::{
     PerspectiveKind,
     command::Commands,
@@ -26,7 +25,7 @@ use crate::{
         command_sender::CommandSender,
         component::{FeatureIsland, InfoIsland, PerspectiveIsland, SupportIsland},
         resize_nob::NOB_AREA,
-        ui_state::{BodyUI, UiStore},
+        ui_state::UiStore,
         use_action::CommandIdGen,
     },
 };

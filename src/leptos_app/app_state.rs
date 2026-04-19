@@ -1,6 +1,6 @@
 use cad_base::id::BodyId;
 use immutable::Im;
-use leptos::prelude::{Get as _, Read as _, Signal};
+use leptos::prelude::Signal;
 use reactive_stores::Store;
 
 use crate::leptos_app::ui_state::BodyUI;
