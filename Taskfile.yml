@@ -5,6 +5,11 @@ tasks:
     cmds:
       - task --list
 
+  up:
+    desc: serve the application
+    cmds:
+      - trunk serve
+
   lint:
     desc: lint and format code
     cmds:
