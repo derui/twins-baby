@@ -1,27 +1,42 @@
 use leptos::{IntoView, component, prelude::*, view};
 use ui_component::accordion::TreeAccordion;
 
-use crate::leptos_app::ui_state::UiStore;
+use crate::leptos_app::{
+    ui_action::BodyActivatedAction,
+    ui_state::UiStore,
+    use_action::{UseActionReturn, use_action},
+};
 
 /// A component for feature island that displays the feature tree.
 #[component]
 pub fn FeatureIsland() -> impl IntoView {
     let ui_store = use_context::<UiStore>().expect("UiStore should be provided");
     let bodies = ui_store.ui.bodies;
+    let UseActionReturn { dispatch, .. } = use_action();
 
     view! {
         <div class="flex flex-col h-full w-full rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 p-2 overflow-y-auto">
             <h3 class="text-xs font-semibold text-white/70 uppercase tracking-wider mb-2 px-1">
                 "Features"
             </h3>
-            <For each=move || bodies.get() key=|body| *body.id  let:body>
+            <For each=move || bodies.get() key=|body| *body.id let:body>
                 <TreeAccordion
-                    trigger=move || {
-                        let name = body.name.clone();
-                        view! {
-                            <span class="text-sm text-white/90 font-medium py-1 px-1 hover:text-white transition-colors cursor-pointer truncate">
-                                {(*name).clone()}
-                            </span>
+                    trigger={
+                        let dispatch = dispatch.clone();
+                        move || {
+                            let name = body.name.clone();
+                            let body_id = *body.id;
+                            let dispatch = dispatch.clone();
+                            view! {
+                                <span
+                                    class="text-sm text-white/90 font-medium py-1 px-1 hover:text-white transition-colors cursor-pointer truncate"
+                                    on:dblclick=move |_| {
+                                        dispatch(Box::new(BodyActivatedAction { body_id }))
+                                    }
+                                >
+                                    {(*name).clone()}
+                                </span>
+                            }
                         }
                     }
                     initial_open=true
