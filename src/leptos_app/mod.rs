@@ -110,25 +110,24 @@ pub fn App() -> impl IntoView {
         if let Some(notification) = leptos_notification_receiver.get() {
             match notification {
                 Notifications::BodyCreated(n) => {
-                    let bodies = store.bodies().read();
-                    let order = bodies.len();
-                    store
-                        .bodies()
-                        .write()
-                        .push(BodyUI::new(*n.body_id, &n.name, order));
+                    store.bodies().update(|bodies| {
+                        let order = bodies.len();
+                        bodies.push(BodyUI::new(*n.body_id, &n.name, order));
+                    });
                 }
                 Notifications::SketchCreated(_) => {}
                 Notifications::BodyActivated(n) => {
-                    let bodies = store.bodies().read();
-                    let Some(index) = bodies.iter().position(|v| *v.id == *n.body_id) else {
-                        return;
-                    };
+                    store.bodies().update(|bodies| {
+                        let Some(index) = bodies.iter().position(|v| *v.id == *n.body_id) else {
+                            return;
+                        };
 
-                    for body in store.bodies().write().iter_mut() {
-                        body.inactive();
-                    }
+                        for body in bodies.iter_mut() {
+                            body.inactive();
+                        }
 
-                    store.bodies().write()[index].active();
+                        bodies[index].active();
+                    });
                 }
             }
         }
