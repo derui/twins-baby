@@ -7,6 +7,6 @@ pub struct EngineState(pub CadEngine);
 
 #[derive(Resource, Default)]
 pub struct EngineAppState {
-    /// An active body
+    /// An active body. This is the source of some operations.
     pub active_body: Option<BodyId>,
 }
