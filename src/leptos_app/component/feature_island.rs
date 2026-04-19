@@ -21,8 +21,6 @@ fn BodyFeature(id: BodyId) -> impl IntoView {
         <TreeAccordion
             node=move || {
                 let body = BodyUI::from_store(app_store, id);
-                let name = move || body.name.get();
-                let body_id = move || body.id.get();
                 let dispatch = dispatch.clone();
                 let class = move || {
                     if body.active.get() {
@@ -39,12 +37,12 @@ fn BodyFeature(id: BodyId) -> impl IntoView {
                             e.prevent_default();
                             dispatch(
                                 Box::new(BodyActivatedAction {
-                                    body_id: body_id(),
+                                    body_id: body.id.get(),
                                 }),
                             )
                         }
                     >
-                        {name}
+                        {body.name.get()}
                     </span>
                 }
             }
