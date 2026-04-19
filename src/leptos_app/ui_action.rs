@@ -30,9 +30,12 @@ pub struct BodyCreatedAction {
 
 impl UiAction for BodyCreatedAction {
     fn apply(&self, id: CommandId, _context: &ActionContext) -> Option<Commands> {
-        Some(Commands::CreateBody(CreateBodyCommand {
-            id: id.into(),
-            name: format!("Body{}", id).into(),
-        }))
+        Some(
+            CreateBodyCommand {
+                id: id.into(),
+                name: format!("Body{}", id).into(),
+            }
+            .into(),
+        )
     }
 }

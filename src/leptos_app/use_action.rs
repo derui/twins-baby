@@ -92,10 +92,13 @@ mod tests {
 
     impl UiAction for SendCommandAction {
         fn apply(&self, id: CommandId, _context: &ActionContext) -> Option<Commands> {
-            Some(Commands::CreateBody(CreateBodyCommand {
-                id: id.into(),
-                name: "test".to_string().into(),
-            }))
+            Some(
+                CreateBodyCommand {
+                    id: id.into(),
+                    name: "test".to_string().into(),
+                }
+                .into(),
+            )
         }
     }
 
