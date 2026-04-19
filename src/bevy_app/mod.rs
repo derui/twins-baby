@@ -7,7 +7,7 @@ mod setup;
 mod ui;
 
 // This initializes a normal Bevy app
-use bevy::{asset::AssetMetaCheck, prelude::*};
+use bevy::{asset::AssetMetaCheck, ecs::system::command::init_resource, prelude::*};
 use leptos_bevy_canvas::prelude::{BevyMessageReceiver, BevyMessageSender, LeptosBevyApp};
 use ui_event::{command::Commands, intent::Intents, notification::Notifications};
 
@@ -19,7 +19,7 @@ use crate::bevy_app::{
     command::CommandAppExt,
     pan_orbit::{pan_orbit_camera, setup_pan_orbit},
     resize::WindowResizePlugin,
-    resource::EngineState,
+    resource::{EngineAppState, EngineState},
     setup::setup_scene,
     ui::{
         AxesGizmoGroup, draw_gizmos, insert_render_layer, setup_gizmos, setup_navigation_texture,
@@ -60,6 +60,7 @@ pub fn init_bevy_app(setting: BevyAppSettings) -> App {
     .init_resource::<LastWindowSize>()
     .insert_resource(ClearColor(Color::srgb(0.7, 0.7, 0.7)))
     .init_resource::<EngineState>()
+    .init_resource::<EngineAppState>()
     .import_message_from_leptos(setting.intent)
     .import_message_from_leptos(setting.command)
     .export_message_to_leptos(setting.notification)

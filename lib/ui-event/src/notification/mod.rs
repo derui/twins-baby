@@ -22,6 +22,7 @@ pub trait Notification {
 pub enum Notifications {
     SketchCreated(SketchCreatedNotification),
     BodyCreated(BodyCreatedNotification),
+    BodyActivated(BodyActivatedNotification),
 }
 
 /// Response of [ConfimSketchCreationCommand]
@@ -43,4 +44,14 @@ pub struct BodyCreatedNotification {
     pub body_id: Im<BodyId>,
     /// name of body created
     pub name: Im<String>,
+}
+
+/// Response of [SwitchActiveBodyCommand] .
+#[derive(Debug, Clone, Notification)]
+pub struct BodyActivatedNotification {
+    /// Original Id from the command
+    pub correlation_id: Im<CommandId>,
+
+    /// Activated body id
+    pub body_id: Im<BodyId>,
 }

@@ -13,6 +13,7 @@ pub enum Commands {
     CancelSketchCreation(CancelSketchCreationCommand),
     ConfirmSketchCreation(ConfirmSketchCreationCommand),
     CreateBody(CreateBodyCommand),
+    SwitchActiveBody(SwitchActiveBodyCommand),
 }
 
 /// Command series for creating sketch. This command must be sequential to send system.
@@ -50,4 +51,14 @@ pub struct CreateBodyCommand {
 
     /// Name of the body
     pub name: Im<String>,
+}
+
+/// A command to switch active body
+#[derive(Event, Debug, Clone, Command)]
+pub struct SwitchActiveBodyCommand {
+    /// Id of command
+    pub id: Im<CommandId>,
+
+    /// Id of body to switch
+    pub body_id: Im<BodyId>,
 }

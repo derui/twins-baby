@@ -114,6 +114,7 @@ pub fn App() -> impl IntoView {
                     });
                 }
                 Notifications::SketchCreated(_) => {}
+                Notifications::BodyActivated(_) => {}
             }
         }
     });
