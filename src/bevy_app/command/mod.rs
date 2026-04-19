@@ -7,6 +7,7 @@ use ui_event::command::Commands;
 use body::on_create_body;
 
 pub trait CommandAppExt {
+    /// Register all commands to the App
     fn register_commands(&mut self) -> &mut Self;
 }
 
