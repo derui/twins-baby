@@ -19,14 +19,15 @@ pub fn FeatureIsland() -> impl IntoView {
             <h3 class="text-xs font-semibold text-white/70 uppercase tracking-wider mb-2 px-1">
                 "Features"
             </h3>
-            <For each=move || bodies.get() key=|body| *body.id let:body>
+
+            <For each=move || bodies.get() key=|body| body.id.get() let:body>
                 <TreeAccordion
                     node={
                         let dispatch = dispatch.clone();
                         move || {
-                            let name = body.name.clone();
-                            let body_id = *body.id;
-                            let active = *body.active;
+                            let name = body.name;
+                            let body_id = body.id.get();
+                            let active = body.active.get();
                             let dispatch = dispatch.clone();
                             let class = if active {
                                 "text-sm font-medium py-1 px-2 cursor-pointer truncate rounded border border-white/60 bg-white/90 text-gray-900 transition-colors"
@@ -42,7 +43,7 @@ pub fn FeatureIsland() -> impl IntoView {
                                         dispatch(Box::new(BodyActivatedAction { body_id }))
                                     }
                                 >
-                                    {(*name).clone()}
+                                    {name.get()}
                                 </span>
                             }
                         }

@@ -1,7 +1,6 @@
 use std::sync::{Arc, atomic::AtomicU64};
 
 use cad_base::id::BodyId;
-use immutable::Im;
 use leptos::prelude::*;
 use reactive_stores::Store;
 use ui_event::PerspectiveKind;
@@ -12,34 +11,37 @@ use crate::leptos_app::app_state::AppStoreStoreFields;
 /// Immutable UI DTO for Body.
 #[derive(Debug, Clone)]
 pub struct BodyUI {
-    pub id: Im<BodyId>,
-    pub name: Im<String>,
-    pub order: Im<usize>,
-    pub active: Im<bool>,
+    pub id: ReadSignal<BodyId>,
+    pub name: ReadSignal<String>,
+    pub order: ReadSignal<usize>,
+    pub active: ReadSignal<bool>,
 
-    _immutable: (),
+    set_active: WriteSignal<bool>,
 }
 
 impl BodyUI {
     /// Make new [BodyUI]
     pub fn new(id: BodyId, name: &str, order: usize) -> BodyUI {
+        let (active, set_active) = signal(false);
+
         BodyUI {
-            id: id.into(),
-            name: name.to_string().into(),
-            order: order.into(),
-            active: false.into(),
-            _immutable: (),
+            id: signal(id).0,
+            name: signal(name.to_string()).0,
+            order: signal(order).0,
+            active,
+
+            set_active,
         }
     }
 
-    /// Make active the body
+    /// Marks the body as active.
     pub fn active(&mut self) {
-        self.active = true.into()
+        self.set_active.set(true)
     }
 
-    /// Make inactive the body
+    /// Marks the body as inactive.
     pub fn inactive(&mut self) {
-        self.active = false.into()
+        self.set_active.set(false)
     }
 }
 
@@ -78,7 +80,7 @@ impl UiStore {
         let bodies = app_store.bodies();
         let body_list = Signal::derive(move || {
             let mut bodies = bodies.read().iter().cloned().collect::<Vec<_>>();
-            bodies.sort_by_key(|v| *v.order);
+            bodies.sort_by_key(|v| v.order.get_untracked());
 
             bodies
         });

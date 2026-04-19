@@ -118,7 +118,10 @@ pub fn App() -> impl IntoView {
                 Notifications::SketchCreated(_) => {}
                 Notifications::BodyActivated(n) => {
                     store.bodies().update(|bodies| {
-                        let Some(index) = bodies.iter().position(|v| *v.id == *n.body_id) else {
+                        let Some(index) = bodies
+                            .iter()
+                            .position(|v| v.id.get_untracked() == *n.body_id)
+                        else {
                             return;
                         };
 
