@@ -11,6 +11,7 @@ mod use_resize;
 
 use leptos::{context::Provider, prelude::*};
 use leptos_bevy_canvas::prelude::*;
+use reactive_stores::Store;
 use ui_event::{
     PerspectiveKind,
     command::Commands,
@@ -21,7 +22,7 @@ use ui_event::{
 use crate::{
     bevy_app::{BevyAppSettings, init_bevy_app},
     leptos_app::{
-        app_state::{AppStore, AppStoreStoreFields as _},
+        app_state::{AppStore, AppStoreStoreFields as _, BodyState},
         command_sender::CommandSender,
         component::{FeatureIsland, InfoIsland, PerspectiveIsland, SupportIsland},
         resize_nob::NOB_AREA,
@@ -65,7 +66,7 @@ pub fn App() -> impl IntoView {
     let store = AppStore::new();
     provide_context(CommandSender::new(command_sender));
     provide_context(store);
-    provide_context(UiStore::new(&store));
+    provide_context(UiStore::new(store));
     provide_context(CommandIdGen::new());
 
     let initial_width = window()
@@ -112,24 +113,21 @@ pub fn App() -> impl IntoView {
                 Notifications::BodyCreated(n) => {
                     store.bodies().update(|bodies| {
                         let order = bodies.len();
-                        bodies.push(BodyUI::new(*n.body_id, &n.name, order));
+                        bodies.push(BodyState::new(*n.body_id, &n.name, order));
                     });
                 }
                 Notifications::SketchCreated(_) => {}
                 Notifications::BodyActivated(n) => {
                     store.bodies().update(|bodies| {
-                        let Some(index) = bodies
-                            .iter()
-                            .position(|v| v.id.get_untracked() == *n.body_id)
-                        else {
+                        let Some(index) = bodies.iter().position(|v| *v.id == *n.body_id) else {
                             return;
                         };
 
                         for body in bodies.iter_mut() {
-                            body.inactive();
+                            body.deactivate();
                         }
 
-                        bodies[index].active();
+                        bodies[index].activate();
                     });
                 }
             }

@@ -92,7 +92,7 @@ mod tests {
 
     fn setup_context() -> (UiStore, BevyMessageReceiver<Commands>) {
         let app_store = AppStore::new();
-        let ui_store = UiStore::new(&app_store);
+        let ui_store = UiStore::new(app_store);
         let (sender, receiver) = message_l2b::<Commands>();
         provide_context(app_store);
         provide_context(ui_store.clone());

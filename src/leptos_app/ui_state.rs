@@ -8,40 +8,50 @@ use ui_event::PerspectiveKind;
 use crate::leptos_app::app_state::AppStore;
 use crate::leptos_app::app_state::AppStoreStoreFields;
 
-/// Immutable UI DTO for Body.
-#[derive(Debug, Clone)]
-pub struct BodyUI {
-    pub id: ReadSignal<BodyId>,
-    pub name: ReadSignal<String>,
-    pub order: ReadSignal<usize>,
-    pub active: ReadSignal<bool>,
+macro_rules! derive_field {
+    ($app:expr, $id:expr, $field:ident : $ty:ty) => {{
+        Memo::new(move |_| -> $ty {
+            $app.bodies()
+                .read()
+                .iter()
+                .find(|b| *b.id == $id)
+                .map(|b| (*b.$field).clone())
+                .expect(&format!("should be found id: {:?}", $id))
+        })
+        .into()
+    }};
+    // Copyな型用
+    ($app:expr, $id:expr, $field:ident : copy $ty:ty) => {{
+        Memo::new(move |_| -> $ty {
+            $app.bodies()
+                .read()
+                .iter()
+                .find(|b| *b.id == $id)
+                .map(|b| *b.$field)
+                .expect(&format!("should be found id: {:?}", $id))
+        })
+        .into()
+    }};
+}
 
-    set_active: WriteSignal<bool>,
+/// Immutable UI DTO for Body.
+#[derive(Debug, Clone, PartialEq)]
+pub struct BodyUI {
+    pub id: Signal<BodyId>,
+    pub name: Signal<String>,
+    pub order: Signal<usize>,
+    pub active: Signal<bool>,
 }
 
 impl BodyUI {
-    /// Make new [BodyUI]
-    pub fn new(id: BodyId, name: &str, order: usize) -> BodyUI {
-        let (active, set_active) = signal(false);
-
+    /// Conversion method of body.
+    pub fn from_store(store: Store<AppStore>, id: BodyId) -> BodyUI {
         BodyUI {
-            id: signal(id).0,
-            name: signal(name.to_string()).0,
-            order: signal(order).0,
-            active,
-
-            set_active,
+            id: derive_field!(store, id, id: copy BodyId),
+            name: derive_field!(store, id, name: String),
+            order: derive_field!(store, id, order: copy usize),
+            active: derive_field!(store, id, active: copy bool),
         }
-    }
-
-    /// Marks the body as active.
-    pub fn active(&mut self) {
-        self.set_active.set(true)
-    }
-
-    /// Marks the body as inactive.
-    pub fn inactive(&mut self) {
-        self.set_active.set(false)
     }
 }
 
@@ -67,29 +77,30 @@ pub struct UiState {
     pub perspective: Signal<PerspectiveKind>,
 
     /// Bodies in the application
-    pub bodies: Signal<Vec<BodyUI>>,
+    pub bodies: Signal<Vec<BodyId>>,
 
     _immutable: (),
 }
 
 impl UiStore {
-    /// New UI state.
-    pub fn new(app_store: &Store<AppStore>) -> Self {
+    /// Create new UI state
+    pub fn new(store: Store<AppStore>) -> Self {
         let (perspective, set_perspective) = signal(PerspectiveKind::default());
 
-        let bodies = app_store.bodies();
-        let body_list = Signal::derive(move || {
-            let mut bodies = bodies.read().iter().cloned().collect::<Vec<_>>();
-            bodies.sort_by_key(|v| v.order.get_untracked());
+        let body_list: Memo<Vec<_>> = Memo::new(move |_| {
+            store.bodies().with(|bodies| {
+                let mut bodies = bodies.clone();
+                bodies.sort_by_key(|v| *v.order);
 
-            bodies
+                bodies.iter().map(|it| *it.id).collect::<Vec<_>>()
+            })
         });
 
         UiStore {
             perspective: set_perspective,
             ui: UiState {
                 perspective: perspective.into(),
-                bodies: body_list,
+                bodies: body_list.into(),
                 _immutable: (),
             },
             id_gen: Arc::new(AtomicU64::new(1)),
