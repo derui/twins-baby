@@ -99,7 +99,9 @@
               pkgs.xf86-video-amdgpu  # notice this line might not match your needs or desires
               
               # for tailwindcss
-              pkgs.nodejs_22
+              pkgs.nodejs_24
+              # package management
+              pkgs.pnpm_10
 
               # for trunk
               pkgs.bzip2
