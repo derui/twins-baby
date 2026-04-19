@@ -48,6 +48,7 @@ mod tests {
 
     use crate::leptos_app::{
         app_state::AppStore, command_sender::CommandSender, ui_state::UiStore,
+        use_action::CommandIdGen,
     };
 
     use super::*;
@@ -59,6 +60,7 @@ mod tests {
         provide_context(app_store);
         provide_context(state.clone());
         provide_context(CommandSender::new(sender));
+        provide_context(CommandIdGen::new());
         state
     }
 

@@ -7,7 +7,7 @@ mod setup;
 mod ui;
 
 // This initializes a normal Bevy app
-use bevy::{asset::AssetMetaCheck, ecs::system::command::init_resource, prelude::*};
+use bevy::{asset::AssetMetaCheck, prelude::*};
 use leptos_bevy_canvas::prelude::{BevyMessageReceiver, BevyMessageSender, LeptosBevyApp};
 use ui_event::{command::Commands, intent::Intents, notification::Notifications};
 

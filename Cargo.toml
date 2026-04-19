@@ -50,6 +50,8 @@ eyre = "0.6.12"
 immutable = { version = "0.1.0", path = "lib/immutable" }
 leptos.workspace = true
 leptos-bevy-canvas = "0.5.0"
+reactive_stores = "0.4.3"
+reactive_stores_macro = "0.4.2"
 tracing.workspace = true
 ui-component = { version = "0.1.0", path = "lib/ui-component" }
 ui-event = { version = "0.1.0", path = "lib/ui-event" }

@@ -19,7 +19,7 @@ pub fn TreeAccordion(
                 <button
                     role=move || *attrs.get().role
                     on:click=move |_| toggle.run(())
-                    class="flex items-center justify-center rounded-md border border-white/10 transition-colors"
+                    class="flex items-center justify-center rounded-md border border-white/10 bg-white/10 hover:bg-white/20 transition-colors"
                 >
                     <img
                         src="/assets/icons/chevron-right.svg"

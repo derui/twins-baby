@@ -3,9 +3,11 @@ use std::sync::{Arc, atomic::AtomicU64};
 use cad_base::id::BodyId;
 use immutable::Im;
 use leptos::prelude::*;
+use reactive_stores::Store;
 use ui_event::PerspectiveKind;
 
 use crate::leptos_app::app_state::AppStore;
+use crate::leptos_app::app_state::AppStoreStoreFields;
 
 /// Immutable UI DTO for Body.
 #[derive(Debug, Clone)]
@@ -20,12 +22,12 @@ pub struct BodyUI {
 
 impl BodyUI {
     /// Make new [BodyUI]
-    pub fn new(id: BodyId, name: &str, order: usize, active: bool) -> BodyUI {
+    pub fn new(id: BodyId, name: &str, order: usize) -> BodyUI {
         BodyUI {
             id: id.into(),
             name: name.to_string().into(),
             order: order.into(),
-            active: active.into(),
+            active: false.into(),
             _immutable: (),
         }
     }
@@ -70,12 +72,12 @@ pub struct UiState {
 
 impl UiStore {
     /// New UI state.
-    pub fn new(app_store: &AppStore) -> Self {
+    pub fn new(app_store: &Store<AppStore>) -> Self {
         let (perspective, set_perspective) = signal(PerspectiveKind::default());
 
-        let bodies = app_store.state.bodies;
+        let bodies = app_store.bodies();
         let body_list = Signal::derive(move || {
-            let mut bodies = bodies.read().values().cloned().collect::<Vec<_>>();
+            let mut bodies = bodies.read().iter().cloned().collect::<Vec<_>>();
             bodies.sort_by_key(|v| *v.order);
 
             bodies

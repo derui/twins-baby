@@ -1,7 +1,12 @@
+use std::sync::{
+    Arc,
+    atomic::{AtomicU64, Ordering},
+};
+
 use leptos::prelude::{Callable, Callback, use_context};
 use ui_event::{CommandId, command::Commands};
 
-use crate::leptos_app::{app_state::AppStore, command_sender::CommandSender, ui_state::UiStore};
+use crate::leptos_app::{command_sender::CommandSender, ui_state::UiStore};
 
 pub struct UseActionReturn<DispatchFn>
 where
@@ -16,21 +21,36 @@ where
 #[derive(Debug, Clone)]
 pub struct ActionContext {
     pub ui_store: UiStore,
-    pub app_store: AppStore,
+}
+
+/// A generator for command id
+#[derive(Debug, Clone)]
+pub struct CommandIdGen {
+    id_gen: Arc<AtomicU64>,
+}
+
+impl CommandIdGen {
+    pub fn new() -> Self {
+        CommandIdGen {
+            id_gen: Arc::new(AtomicU64::new(1)),
+        }
+    }
+
+    fn gen_id(&self) -> CommandId {
+        let id = self.id_gen.fetch_add(1, Ordering::Relaxed);
+        id.into()
+    }
 }
 
 pub fn use_action() -> UseActionReturn<impl Fn(Box<dyn UiAction>) + Clone + Send + Sync> {
     let ui_store = use_context::<UiStore>().expect("Must set UiStore before");
-    let app_store = use_context::<AppStore>().expect("Must set AppStore before");
     let sender = use_context::<CommandSender>().expect("Must set CommandSender before");
+    let id_gen = use_context::<CommandIdGen>().expect("Must set CommandIdGen before");
 
-    let context = ActionContext {
-        ui_store,
-        app_store,
-    };
+    let context = ActionContext { ui_store };
 
     let dispatch = Callback::new(move |action: Box<dyn UiAction>| {
-        let id = app_store.gen_id.run(());
+        let id = id_gen.gen_id();
 
         if let Some(command) = action.apply(id, &context) {
             sender.send(command);
@@ -54,7 +74,7 @@ pub trait UiAction {
 
 #[cfg(test)]
 mod tests {
-    use leptos::prelude::{Callable as _, provide_context};
+    use leptos::prelude::provide_context;
     use leptos_bevy_canvas::prelude::{BevyMessageReceiver, message_l2b};
     use leptos_bevy_canvas::traits::HasReceiver;
     use leptos_test::with_leptos_owner;
@@ -77,6 +97,7 @@ mod tests {
         provide_context(app_store);
         provide_context(ui_store.clone());
         provide_context(CommandSender::new(sender));
+        provide_context(CommandIdGen::new());
         (ui_store, receiver)
     }
 

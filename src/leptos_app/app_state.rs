@@ -1,14 +1,8 @@
-use std::{
-    collections::HashMap,
-    sync::{
-        Arc,
-        atomic::{AtomicU64, Ordering},
-    },
-};
+use std::collections::HashMap;
 
 use cad_base::id::BodyId;
 use leptos::prelude::*;
-use ui_event::CommandId;
+use reactive_stores::Store;
 
 use crate::leptos_app::ui_state::BodyUI;
 
@@ -23,40 +17,21 @@ pub struct AppState {
 
 /// The centralized state of application state. This state is the single source of truth of
 /// Application state of **frontend** . This is not the state of beby's 3D engine and CAD data.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Store)]
 pub struct AppStore {
-    pub gen_id: Callback<(), CommandId>,
-
     /// Bodies in this application
-    pub bodies: WriteSignal<HashMap<BodyId, BodyUI>>,
-
-    /// Single state of store
-    pub state: AppState,
+    pub bodies: Vec<BodyUI>,
 
     _immutable: (),
 }
 
 impl AppStore {
     /// New [AppStore]
-    pub fn new() -> Self {
-        let (bodies, set_bodies) = signal(HashMap::<BodyId, BodyUI>::new());
-        let id_gen = Arc::new(AtomicU64::new(0));
-
-        let gen_id = Callback::new(move |_| {
-            let id = id_gen.fetch_add(1, Ordering::Relaxed);
-
-            id.into()
-        });
-
-        AppStore {
-            bodies: set_bodies,
-            gen_id,
-            state: AppState {
-                bodies,
-                _immutable: (),
-            },
+    pub fn new() -> Store<AppStore> {
+        Store::new(AppStore {
+            bodies: Vec::new(),
 
             _immutable: (),
-        }
+        })
     }
 }

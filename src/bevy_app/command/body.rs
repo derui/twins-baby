@@ -1,4 +1,3 @@
-use bevy::ecs::system::Res;
 use bevy::ecs::{error::BevyError, message::MessageWriter, observer::On};
 use bevy::prelude::ResMut;
 use cad_base::body::BodyPerspective;
@@ -57,7 +56,7 @@ pub(super) fn on_switch_active_body(
         return Err(color_eyre::eyre::eyre!("Can not get body perspective").into());
     };
 
-    if let Some(_) = body.get(&(command.body_id)) {
+    if body.get(&(command.body_id)).is_some() {
         app_state.active_body = Some(*command.body_id.clone());
 
         writer.write(

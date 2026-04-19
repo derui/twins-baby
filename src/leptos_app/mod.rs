@@ -21,11 +21,12 @@ use ui_event::{
 use crate::{
     bevy_app::{BevyAppSettings, init_bevy_app},
     leptos_app::{
-        app_state::AppStore,
+        app_state::{AppStore, AppStoreStoreFields as _},
         command_sender::CommandSender,
         component::{FeatureIsland, InfoIsland, PerspectiveIsland, SupportIsland},
         resize_nob::NOB_AREA,
         ui_state::{BodyUI, UiStore},
+        use_action::CommandIdGen,
     },
 };
 use resize_nob::{ResizeXNob, ResizeYNob};
@@ -65,6 +66,7 @@ pub fn App() -> impl IntoView {
     provide_context(CommandSender::new(command_sender));
     provide_context(store);
     provide_context(UiStore::new(&store));
+    provide_context(CommandIdGen::new());
 
     let initial_width = window()
         .inner_width()
@@ -108,24 +110,26 @@ pub fn App() -> impl IntoView {
         if let Some(notification) = leptos_notification_receiver.get() {
             match notification {
                 Notifications::BodyCreated(n) => {
-                    store.bodies.update(|bodies| {
-                        let order = bodies.len();
-                        bodies.insert(*n.body_id, BodyUI::new(*n.body_id, &n.name, order, false));
-                    });
+                    let bodies = store.bodies().read();
+                    let order = bodies.len();
+                    store
+                        .bodies()
+                        .write()
+                        .push(BodyUI::new(*n.body_id, &n.name, order));
                 }
                 Notifications::SketchCreated(_) => {}
-                Notifications::BodyActivated(n) => store.bodies.update(|bodies| {
-                    if !bodies.contains_key(&n.body_id) {
+                Notifications::BodyActivated(n) => {
+                    let bodies = store.bodies().read();
+                    let Some(index) = bodies.iter().position(|v| *v.id == *n.body_id) else {
                         return;
-                    }
-                    for body in bodies.values_mut() {
+                    };
+
+                    for body in store.bodies().write().iter_mut() {
                         body.inactive();
                     }
 
-                    if let Some(body) = bodies.get_mut(&n.body_id) {
-                        body.active();
-                    }
-                }),
+                    store.bodies().write()[index].active();
+                }
             }
         }
     });

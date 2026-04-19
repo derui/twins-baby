@@ -36,7 +36,9 @@ pub fn FeatureIsland() -> impl IntoView {
                             view! {
                                 <span
                                     class=class
-                                    on:dblclick=move |_| {
+                                    on:click=move |e| {
+                                        e.stop_propagation();
+                                        e.prevent_default();
                                         dispatch(Box::new(BodyActivatedAction { body_id }))
                                     }
                                 >

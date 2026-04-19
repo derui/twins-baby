@@ -2,4 +2,4 @@
 source: lib/ui-component/src/select.rs
 expression: html
 ---
-<div tabindex="-1" class="relative inline-block outline-none"><button class="flex items-center justify-between w-full"><!--bo-TypeId(0x32aae01dc45228803306f708f420ed3d)--><span>Banana</span><!--bc-TypeId(0x32aae01dc45228803306f708f420ed3d)--></button><!--bo-1--><!--bo-TypeId(0x41223169ff28813ba79b7268a2a968d9)--><!><!--<() />--><!--bc-TypeId(0x41223169ff28813ba79b7268a2a968d9)--><!--bc-1--></div>
+<div tabindex="-1" class="relative inline-block outline-none"><button class="flex items-center justify-between w-full"><!--bo-TypeId(0x498dbc49b10e79fa7101aa0d80511638)--><span>Banana</span><!--bc-TypeId(0x498dbc49b10e79fa7101aa0d80511638)--></button><!--bo-1--><!--bo-TypeId(0x41223169ff28813ba79b7268a2a968d9)--><!><!--<() />--><!--bc-TypeId(0x41223169ff28813ba79b7268a2a968d9)--><!--bc-1--></div>

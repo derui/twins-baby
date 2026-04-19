@@ -5059,9 +5059,9 @@ checksum = "20675572f6f24e9e76ef639bc5552774ed45f1c30e2951e1e99c59888861c539"
 
 [[package]]
 name = "reactive_graph"
-version = "0.2.13"
+version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "35774620b3da884a07341e9e36612e1509b1eb0553ef3bb76f1547dd1b797417"
+checksum = "00c5a025366836190c7030e883cc2bcd9e384ff555336e3c7954741ca411b177"
 dependencies = [
  "any_spawner",
  "async-lock",
@@ -5093,7 +5093,24 @@ dependencies = [
  "or_poisoned",
  "paste",
  "reactive_graph",
- "reactive_stores_macro",
+ "reactive_stores_macro 0.2.6",
+ "rustc-hash 2.1.1",
+ "send_wrapper",
+]
+
+[[package]]
+name = "reactive_stores"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c30fd35b7d299c591293bb69fed47a703eb2703b1cff0493e78b16ed007e5382"
+dependencies = [
+ "guardian",
+ "indexmap",
+ "itertools 0.14.0",
+ "or_poisoned",
+ "paste",
+ "reactive_graph",
+ "reactive_stores_macro 0.4.2",
  "rustc-hash 2.1.1",
  "send_wrapper",
 ]
@@ -5105,6 +5122,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4fa40919eb2975100283b2a70e68eafce1e8bcf81f0622ff168e4c2b3f8d46bb"
 dependencies = [
  "convert_case 0.8.0",
+ "proc-macro-error2",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "reactive_stores_macro"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e5d8e790a5ae5ddf9b7fa380c728375b06858e0cca7d063a73b3408320c523e1"
+dependencies = [
+ "convert_case 0.11.0",
  "proc-macro-error2",
  "proc-macro2",
  "quote",
@@ -5799,7 +5829,7 @@ dependencies = [
  "or_poisoned",
  "paste",
  "reactive_graph",
- "reactive_stores",
+ "reactive_stores 0.3.1",
  "rustc-hash 2.1.1",
  "rustc_version",
  "send_wrapper",
@@ -6190,6 +6220,8 @@ dependencies = [
  "leptos-bevy-canvas",
  "leptos-test",
  "pretty_assertions",
+ "reactive_stores 0.4.3",
+ "reactive_stores_macro 0.4.2",
  "rstest",
  "smol_str",
  "tokio",
