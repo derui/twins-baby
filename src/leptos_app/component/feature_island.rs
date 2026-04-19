@@ -26,10 +26,16 @@ pub fn FeatureIsland() -> impl IntoView {
                         move || {
                             let name = body.name.clone();
                             let body_id = *body.id;
+                            let active = *body.active;
                             let dispatch = dispatch.clone();
+                            let class = if active {
+                                "text-sm font-medium py-1 px-2 cursor-pointer truncate rounded border border-white/60 bg-white/90 text-gray-900 transition-colors"
+                            } else {
+                                "text-sm font-medium py-1 px-2 cursor-pointer truncate rounded border border-transparent text-white/90 hover:text-white transition-colors"
+                            };
                             view! {
                                 <span
-                                    class="text-sm text-white/90 font-medium py-1 px-1 hover:text-white transition-colors cursor-pointer truncate"
+                                    class=class
                                     on:dblclick=move |_| {
                                         dispatch(Box::new(BodyActivatedAction { body_id }))
                                     }
