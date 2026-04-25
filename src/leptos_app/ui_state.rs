@@ -1,5 +1,3 @@
-use std::sync::{Arc, atomic::AtomicU64};
-
 use cad_base::id::BodyId;
 use leptos::prelude::*;
 use reactive_stores::Store;
@@ -65,8 +63,6 @@ pub struct UiStore {
     /// centralized UI state. see this
     pub ui: UiState,
 
-    id_gen: Arc<AtomicU64>,
-
     _immutable: (),
 }
 
@@ -103,7 +99,6 @@ impl UiStore {
                 bodies: body_list.into(),
                 _immutable: (),
             },
-            id_gen: Arc::new(AtomicU64::new(1)),
             _immutable: (),
         }
     }
