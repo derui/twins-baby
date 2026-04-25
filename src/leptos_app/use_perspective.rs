@@ -55,7 +55,7 @@ mod tests {
 
     fn setup_context() -> UiStore {
         let app_store = AppStore::new();
-        let state = UiStore::new(&app_store);
+        let state = UiStore::new(app_store);
         let (sender, _receiver) = message_l2b::<Commands>();
         provide_context(app_store);
         provide_context(state.clone());
