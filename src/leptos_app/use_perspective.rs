@@ -40,7 +40,7 @@ pub fn use_perspective() -> UsePerspective<impl Fn(PerspectiveKind) + Clone + Se
 
 #[cfg(test)]
 mod tests {
-    use leptos::prelude::{Callable as _, Get as _, provide_context};
+    use leptos::prelude::{Get as _, provide_context};
     use leptos_bevy_canvas::prelude::message_l2b;
     use leptos_test::with_leptos_owner;
     use pretty_assertions::assert_eq;
