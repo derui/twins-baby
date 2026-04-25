@@ -1,7 +1,6 @@
 mod app_state;
 mod command_sender;
 mod component;
-mod message_hub;
 mod resize_nob;
 mod ui_action;
 mod ui_state;
