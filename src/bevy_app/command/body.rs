@@ -266,7 +266,7 @@ mod tests {
         let app_state = world.resource::<EngineAppState>();
         assert_eq!(
             app_state.body_planes_map.get(&body_id).map(|v| v.len()),
-            Some(3)
+            Some(6)
         );
     }
 
@@ -302,7 +302,7 @@ mod tests {
         let app_state = world.resource::<EngineAppState>();
         assert_eq!(
             app_state.body_planes_map.get(&body_id).map(|v| v.len()),
-            Some(3)
+            Some(6)
         );
         Ok(())
     }
@@ -343,7 +343,10 @@ mod tests {
             axes,
             vec![
                 BodyBasePlane(BodyBasePlaneAxis::XY),
+                BodyBasePlane(BodyBasePlaneAxis::XY),
                 BodyBasePlane(BodyBasePlaneAxis::YZ),
+                BodyBasePlane(BodyBasePlaneAxis::YZ),
+                BodyBasePlane(BodyBasePlaneAxis::ZX),
                 BodyBasePlane(BodyBasePlaneAxis::ZX),
             ]
         );
