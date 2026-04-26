@@ -4,7 +4,8 @@ use bevy::color::palettes::tailwind::CYAN_500;
 use bevy::color::{Alpha, Color};
 use bevy::ecs::component::Component;
 use bevy::ecs::entity::Entity;
-use bevy::ecs::system::Commands;
+use bevy::ecs::query::With;
+use bevy::ecs::system::{Commands, Query, Res};
 use bevy::ecs::{error::BevyError, message::MessageWriter, observer::On};
 use bevy::math::primitives::Plane3d;
 use bevy::math::{Vec2, Vec3};
@@ -24,8 +25,26 @@ use crate::bevy_app::resource::{EngineAppState, EngineState};
 
 // components
 
-/// A Component of axis for basement plane of a body
+/// A marker compoment
 #[derive(Debug, Component, PartialEq, Eq, Clone, Copy)]
+pub struct BodyBasePlane(pub BodyBasePlaneAxis);
+
+impl BodyBasePlane {
+    pub fn xy() -> Self {
+        BodyBasePlane(BodyBasePlaneAxis::XY)
+    }
+
+    pub fn yz() -> Self {
+        BodyBasePlane(BodyBasePlaneAxis::YZ)
+    }
+
+    pub fn zx() -> Self {
+        BodyBasePlane(BodyBasePlaneAxis::ZX)
+    }
+}
+
+/// A Component of axis for basement plane of a body
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum BodyBasePlaneAxis {
     /// XY-plane. normal vector should point +Z
     XY,
@@ -56,8 +75,8 @@ fn register_body_base_planes(
         MeshMaterial3d(materials.add(Color::from(CYAN_500).with_alpha(0.3))),
         Transform::from_xyz(0., 0., 0.0),
         RenderLayers::layer(CAMERA_3D_LAYER),
-        BodyBasePlaneAxis::XY,
         Visibility::Hidden,
+        BodyBasePlane::xy(),
     ));
     entities.push(entity.id());
 
@@ -66,8 +85,8 @@ fn register_body_base_planes(
         MeshMaterial3d(materials.add(Color::from(CYAN_500).with_alpha(0.3))),
         Transform::from_xyz(0., 0., 0.0),
         RenderLayers::layer(CAMERA_3D_LAYER),
-        BodyBasePlaneAxis::YZ,
         Visibility::Hidden,
+        BodyBasePlane::yz(),
     ));
     entities.push(entity.id());
 
@@ -76,8 +95,8 @@ fn register_body_base_planes(
         MeshMaterial3d(materials.add(Color::from(CYAN_500).with_alpha(0.3))),
         Transform::from_xyz(0., 0., 0.0),
         RenderLayers::layer(CAMERA_3D_LAYER),
-        BodyBasePlaneAxis::ZX,
         Visibility::Hidden,
+        BodyBasePlane::zx(),
     ));
     entities.push(entity.id());
 
@@ -156,6 +175,31 @@ pub(super) fn on_switch_active_body(
     }
 
     Ok(())
+}
+
+/// Update all plane visibilities of the app
+pub(super) fn update_plane_visibilities(
+    mut commands: Commands,
+    app_state: Res<EngineAppState>,
+    q_planes: Query<Entity, With<BodyBasePlane>>,
+) {
+    // Make all entities hidden
+    for plane in q_planes {
+        commands.entity(plane).insert(Visibility::Hidden);
+    }
+
+    // When app has active body, active the planes
+    let Some(body_id) = app_state.active_body else {
+        return;
+    };
+
+    for plane in app_state
+        .body_planes_map
+        .get(&body_id)
+        .unwrap_or(&Vec::<Entity>::new())
+    {
+        commands.entity(*plane).remove::<Visibility>();
+    }
 }
 
 #[cfg(test)]
@@ -285,16 +329,16 @@ mod tests {
             .get(&body_id)
             .unwrap()
             .clone();
-        let axes: Vec<BodyBasePlaneAxis> = entities
+        let axes: Vec<BodyBasePlane> = entities
             .iter()
-            .map(|&e| *world.entity(e).get::<BodyBasePlaneAxis>().unwrap())
+            .map(|&e| *world.entity(e).get::<BodyBasePlane>().unwrap())
             .collect();
         assert_eq!(
             axes,
             vec![
-                BodyBasePlaneAxis::XY,
-                BodyBasePlaneAxis::YZ,
-                BodyBasePlaneAxis::ZX
+                BodyBasePlane(BodyBasePlaneAxis::XY),
+                BodyBasePlane(BodyBasePlaneAxis::YZ),
+                BodyBasePlane(BodyBasePlaneAxis::ZX),
             ]
         );
     }
