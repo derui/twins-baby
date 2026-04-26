@@ -2,14 +2,12 @@ use bevy::camera::visibility::RenderLayers;
 use bevy::prelude::*;
 use bevy::{
     asset::Assets,
-    color::{Color, palettes::tailwind::RED_500},
+    color::Color,
     ecs::{
         error::BevyError,
         system::{Commands, ResMut},
     },
-    math::{Vec3, primitives::Cuboid},
-    pbr::{MeshMaterial3d, StandardMaterial},
-    transform::components::Transform,
+    pbr::StandardMaterial,
 };
 
 use crate::bevy_app::camera::CAMERA_3D_LAYER;
@@ -19,8 +17,8 @@ const COBE_SCALE: f32 = 3.0;
 /// Setup the scene
 pub fn setup_scene(
     mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
+    _meshes: ResMut<Assets<Mesh>>,
+    _materials: ResMut<Assets<StandardMaterial>>,
 ) -> Result<(), BevyError> {
     // Light
     commands.spawn((

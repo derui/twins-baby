@@ -29,7 +29,7 @@ impl Ord for Operator {
         match (self, other) {
             (Operator::Add, Operator::Add) => Ordering::Equal,
             (Operator::Add, Operator::Subtract) => Ordering::Equal,
-            (Operator::Add, Operator::Multiply) => (Ordering::Less),
+            (Operator::Add, Operator::Multiply) => Ordering::Less,
             (Operator::Add, Operator::Divide) => Ordering::Less,
             (Operator::Subtract, Operator::Add) => Ordering::Equal,
             (Operator::Subtract, Operator::Subtract) => Ordering::Equal,
