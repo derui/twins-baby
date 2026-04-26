@@ -22,16 +22,6 @@ pub fn setup_scene(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) -> Result<(), BevyError> {
-    // Cube
-    let cube = meshes.add(Cuboid::default());
-
-    commands.spawn((
-        Mesh3d(cube.clone()),
-        MeshMaterial3d(materials.add(Color::from(RED_500))),
-        Transform::from_xyz(0., 0., 0.0).with_scale(Vec3::splat(COBE_SCALE)),
-        RenderLayers::layer(CAMERA_3D_LAYER),
-    ));
-
     // Light
     commands.spawn((
         AmbientLight {
