@@ -7,9 +7,9 @@ use bevy::ecs::entity::Entity;
 use bevy::ecs::query::With;
 use bevy::ecs::system::{Commands, Query, Res};
 use bevy::ecs::{error::BevyError, message::MessageWriter, observer::On};
+use bevy::math::Dir3;
 use bevy::math::primitives::Plane3d;
-use bevy::math::{Vec2, Vec3};
-use bevy::mesh::{Mesh, Mesh3d};
+use bevy::mesh::{Mesh, Mesh3d, Meshable};
 use bevy::pbr::{MeshMaterial3d, StandardMaterial};
 use bevy::prelude::ResMut;
 use bevy::transform::components::Transform;
@@ -64,16 +64,16 @@ fn register_body_base_planes(
     materials: &mut ResMut<Assets<StandardMaterial>>,
 ) -> eyre::Result<Vec<Entity>> {
     // all sizes are 1 = 1m
-    let xy_plane = meshes.add(Plane3d::new(Vec3::Z, Vec2::new(1.0, 1.0)));
-    let yz_plane = meshes.add(Plane3d::new(Vec3::X, Vec2::new(1.0, 1.0)));
-    let zx_plane = meshes.add(Plane3d::new(Vec3::Y, Vec2::new(1.0, 1.0)));
+    let xy_plane = meshes.add(Plane3d::default().mesh().size(10.0, 10.0).normal(Dir3::Z));
+    let yz_plane = meshes.add(Plane3d::default().mesh().size(10.0, 10.0).normal(Dir3::X));
+    let zx_plane = meshes.add(Plane3d::default().mesh().size(10.0, 10.0).normal(Dir3::Y));
 
     let mut entities = Vec::new();
 
     let entity = commands.spawn((
         Mesh3d(xy_plane),
         MeshMaterial3d(materials.add(Color::from(CYAN_500).with_alpha(0.3))),
-        Transform::from_xyz(0., 0., 0.0),
+        Transform::from_xyz(0., 0., 0.),
         RenderLayers::layer(CAMERA_3D_LAYER),
         Visibility::Hidden,
         BodyBasePlane::xy(),
@@ -83,7 +83,7 @@ fn register_body_base_planes(
     let entity = commands.spawn((
         Mesh3d(yz_plane),
         MeshMaterial3d(materials.add(Color::from(CYAN_500).with_alpha(0.3))),
-        Transform::from_xyz(0., 0., 0.0),
+        Transform::from_xyz(0., 0., 0.),
         RenderLayers::layer(CAMERA_3D_LAYER),
         Visibility::Hidden,
         BodyBasePlane::yz(),
@@ -93,7 +93,7 @@ fn register_body_base_planes(
     let entity = commands.spawn((
         Mesh3d(zx_plane),
         MeshMaterial3d(materials.add(Color::from(CYAN_500).with_alpha(0.3))),
-        Transform::from_xyz(0., 0., 0.0),
+        Transform::from_xyz(0., 0., 0.),
         RenderLayers::layer(CAMERA_3D_LAYER),
         Visibility::Hidden,
         BodyBasePlane::zx(),
@@ -193,12 +193,12 @@ pub(super) fn update_plane_visibilities(
         return;
     };
 
-    for plane in app_state
+    for &plane in app_state
         .body_planes_map
         .get(&body_id)
         .unwrap_or(&Vec::<Entity>::new())
     {
-        commands.entity(*plane).remove::<Visibility>();
+        commands.entity(plane).insert(Visibility::Visible);
     }
 }
 
@@ -471,7 +471,10 @@ mod tests {
 
         // Assert
         for &e in &body1_entities {
-            assert!(world.entity(e).get::<Visibility>().is_none());
+            assert_eq!(
+                world.entity(e).get::<Visibility>().copied(),
+                Some(Visibility::Visible)
+            );
         }
         for &e in &body2_entities {
             assert_eq!(
@@ -502,7 +505,10 @@ mod tests {
             );
         }
         for &e in &body2_entities {
-            assert!(world.entity(e).get::<Visibility>().is_none());
+            assert_eq!(
+                world.entity(e).get::<Visibility>().copied(),
+                Some(Visibility::Visible)
+            );
         }
     }
 
