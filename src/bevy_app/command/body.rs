@@ -1,5 +1,17 @@
+use bevy::asset::Assets;
+use bevy::camera::visibility::RenderLayers;
+use bevy::color::palettes::tailwind::CYAN_500;
+use bevy::color::{Alpha, Color};
+use bevy::ecs::component::Component;
+use bevy::ecs::entity::Entity;
+use bevy::ecs::system::Commands;
 use bevy::ecs::{error::BevyError, message::MessageWriter, observer::On};
+use bevy::math::primitives::Plane3d;
+use bevy::math::{Vec2, Vec3};
+use bevy::mesh::{Mesh, Mesh3d};
+use bevy::pbr::{MeshMaterial3d, StandardMaterial};
 use bevy::prelude::ResMut;
+use bevy::transform::components::Transform;
 use cad_base::body::BodyPerspective;
 use ui_event::command::SwitchActiveBodyCommand;
 use ui_event::{
@@ -7,12 +19,76 @@ use ui_event::{
     notification::{BodyActivatedNotification, BodyCreatedNotification, Notifications},
 };
 
+use crate::bevy_app::camera::CAMERA_3D_LAYER;
 use crate::bevy_app::resource::{EngineAppState, EngineState};
+
+// components
+
+/// A Component of axis for basement plane of a body
+#[derive(Debug, Component, PartialEq, Eq, Clone, Copy)]
+pub enum BodyBasePlaneAxis {
+    /// XY-plane. normal vector should point +Z
+    XY,
+    /// YZ-plane. normal vector should point +X
+    YZ,
+    /// ZX-plane. normal vector should point +Y
+    ZX,
+}
+
+/// Register 3 planes for the body.
+///
+/// # Return
+/// The entities of planes. The order is XY, YZ, ZX plane.
+fn register_body_base_planes(
+    commands: &mut Commands,
+    meshes: &mut ResMut<Assets<Mesh>>,
+    materials: &mut ResMut<Assets<StandardMaterial>>,
+) -> eyre::Result<Vec<Entity>> {
+    // all sizes are 1 = 1m
+    let xy_plane = meshes.add(Plane3d::new(Vec3::Z, Vec2::new(1.0, 1.0)));
+    let yz_plane = meshes.add(Plane3d::new(Vec3::X, Vec2::new(1.0, 1.0)));
+    let zx_plane = meshes.add(Plane3d::new(Vec3::Y, Vec2::new(1.0, 1.0)));
+
+    let mut entities = Vec::new();
+
+    let entity = commands.spawn((
+        Mesh3d(xy_plane),
+        MeshMaterial3d(materials.add(Color::from(CYAN_500).with_alpha(0.3))),
+        Transform::from_xyz(0., 0., 0.0),
+        RenderLayers::layer(CAMERA_3D_LAYER),
+        BodyBasePlaneAxis::XY,
+    ));
+    entities.push(entity.id());
+
+    let entity = commands.spawn((
+        Mesh3d(yz_plane),
+        MeshMaterial3d(materials.add(Color::from(CYAN_500).with_alpha(0.3))),
+        Transform::from_xyz(0., 0., 0.0),
+        RenderLayers::layer(CAMERA_3D_LAYER),
+        BodyBasePlaneAxis::YZ,
+    ));
+    entities.push(entity.id());
+
+    let entity = commands.spawn((
+        Mesh3d(zx_plane),
+        MeshMaterial3d(materials.add(Color::from(CYAN_500).with_alpha(0.3))),
+        Transform::from_xyz(0., 0., 0.0),
+        RenderLayers::layer(CAMERA_3D_LAYER),
+        BodyBasePlaneAxis::ZX,
+    ));
+    entities.push(entity.id());
+
+    Ok(entities)
+}
 
 pub(super) fn on_create_body(
     trigger: On<CreateBodyCommand>,
     mut engine: ResMut<EngineState>,
+    mut app_state: ResMut<EngineAppState>,
     mut writer: MessageWriter<Notifications>,
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
 ) -> Result<(), BevyError> {
     let command = trigger.event();
     let mut transaction = engine.0.begin();
@@ -26,6 +102,7 @@ pub(super) fn on_create_body(
     if body.rename_body(&body_id, &name).is_err() {
         let count = body.bodies().count();
         name = format!("{}{:03}", &name, count + 1);
+        // TODO should fallback notification when get error.
         body.rename_body(&body_id, &name)?;
     }
 
@@ -37,6 +114,11 @@ pub(super) fn on_create_body(
         }
         .into(),
     );
+
+    if let Ok(entities) = register_body_base_planes(&mut commands, &mut meshes, &mut materials) {
+        app_state.body_planes_map.insert(body_id, entities);
+    }
+
     transaction.commit();
 
     Ok(())
@@ -75,7 +157,10 @@ pub(super) fn on_switch_active_body(
 
 #[cfg(test)]
 mod tests {
+    use bevy::asset::Assets;
     use bevy::ecs::{message::Messages, world::World};
+    use bevy::mesh::Mesh;
+    use bevy::pbr::StandardMaterial;
     use cad_base::body::BodyPerspective;
     use eyre::Result;
     use pretty_assertions::assert_eq;
@@ -96,6 +181,8 @@ mod tests {
         world.init_resource::<Messages<Notifications>>();
         world.init_resource::<EngineState>();
         world.init_resource::<EngineAppState>();
+        world.init_resource::<Assets<Mesh>>();
+        world.init_resource::<Assets<StandardMaterial>>();
         world.add_observer(on_create_body);
         world.add_observer(on_switch_active_body);
         world
@@ -122,6 +209,12 @@ mod tests {
             .select_ref::<BodyCreatedNotification>()
             .unwrap();
         assert_eq!(*notif.name, "body1");
+        let body_id = *notif.body_id;
+        let app_state = world.resource::<EngineAppState>();
+        assert_eq!(
+            app_state.body_planes_map.get(&body_id).map(|v| v.len()),
+            Some(3)
+        );
     }
 
     #[test]
@@ -152,6 +245,12 @@ mod tests {
             .select_ref::<BodyCreatedNotification>()
             .unwrap();
         assert_eq!(*notif.name, "body1003");
+        let body_id = *notif.body_id;
+        let app_state = world.resource::<EngineAppState>();
+        assert_eq!(
+            app_state.body_planes_map.get(&body_id).map(|v| v.len()),
+            Some(3)
+        );
         Ok(())
     }
 
