@@ -64,41 +64,47 @@ fn register_body_base_planes(
     materials: &mut ResMut<Assets<StandardMaterial>>,
 ) -> eyre::Result<Vec<Entity>> {
     // all sizes are 1 = 1m
-    let xy_plane = meshes.add(Plane3d::default().mesh().size(10.0, 10.0).normal(Dir3::Z));
-    let yz_plane = meshes.add(Plane3d::default().mesh().size(10.0, 10.0).normal(Dir3::X));
-    let zx_plane = meshes.add(Plane3d::default().mesh().size(10.0, 10.0).normal(Dir3::Y));
-
     let mut entities = Vec::new();
 
-    let entity = commands.spawn((
-        Mesh3d(xy_plane),
-        MeshMaterial3d(materials.add(Color::from(CYAN_500).with_alpha(0.3))),
-        Transform::from_xyz(0., 0., 0.),
-        RenderLayers::layer(CAMERA_3D_LAYER),
-        Visibility::Hidden,
-        BodyBasePlane::xy(),
-    ));
-    entities.push(entity.id());
+    // normal vector will use for culling, this simple fix to avoid disappearing of planes
+    for dir in [Dir3::Z, Dir3::NEG_Z] {
+        let plane = meshes.add(Plane3d::default().mesh().size(10.0, 10.0).normal(dir));
+        let entity = commands.spawn((
+            Mesh3d(plane),
+            MeshMaterial3d(materials.add(Color::from(CYAN_500).with_alpha(0.3))),
+            Transform::from_xyz(0., 0., 0.),
+            RenderLayers::layer(CAMERA_3D_LAYER),
+            Visibility::Hidden,
+            BodyBasePlane::xy(),
+        ));
+        entities.push(entity.id());
+    }
 
-    let entity = commands.spawn((
-        Mesh3d(yz_plane),
-        MeshMaterial3d(materials.add(Color::from(CYAN_500).with_alpha(0.3))),
-        Transform::from_xyz(0., 0., 0.),
-        RenderLayers::layer(CAMERA_3D_LAYER),
-        Visibility::Hidden,
-        BodyBasePlane::yz(),
-    ));
-    entities.push(entity.id());
+    for dir in [Dir3::X, Dir3::NEG_X] {
+        let plane = meshes.add(Plane3d::default().mesh().size(10.0, 10.0).normal(dir));
+        let entity = commands.spawn((
+            Mesh3d(plane),
+            MeshMaterial3d(materials.add(Color::from(CYAN_500).with_alpha(0.3))),
+            Transform::from_xyz(0., 0., 0.),
+            RenderLayers::layer(CAMERA_3D_LAYER),
+            Visibility::Hidden,
+            BodyBasePlane::yz(),
+        ));
+        entities.push(entity.id());
+    }
 
-    let entity = commands.spawn((
-        Mesh3d(zx_plane),
-        MeshMaterial3d(materials.add(Color::from(CYAN_500).with_alpha(0.3))),
-        Transform::from_xyz(0., 0., 0.),
-        RenderLayers::layer(CAMERA_3D_LAYER),
-        Visibility::Hidden,
-        BodyBasePlane::zx(),
-    ));
-    entities.push(entity.id());
+    for dir in [Dir3::Y, Dir3::NEG_Y] {
+        let plane = meshes.add(Plane3d::default().mesh().size(10.0, 10.0).normal(dir));
+        let entity = commands.spawn((
+            Mesh3d(plane),
+            MeshMaterial3d(materials.add(Color::from(CYAN_500).with_alpha(0.3))),
+            Transform::from_xyz(0., 0., 0.),
+            RenderLayers::layer(CAMERA_3D_LAYER),
+            Visibility::Hidden,
+            BodyBasePlane::zx(),
+        ));
+        entities.push(entity.id());
+    }
 
     Ok(entities)
 }
