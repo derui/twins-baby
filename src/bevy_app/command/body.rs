@@ -205,7 +205,7 @@ pub(super) fn update_plane_visibilities(
 #[cfg(test)]
 mod tests {
     use bevy::asset::Assets;
-    use bevy::ecs::{message::Messages, world::World};
+    use bevy::ecs::{message::Messages, system::RunSystemOnce, world::World};
     use bevy::mesh::Mesh;
     use bevy::pbr::StandardMaterial;
     use cad_base::body::BodyPerspective;
@@ -408,6 +408,101 @@ mod tests {
         for &e in &entities {
             let visibility = *world.entity(e).get::<Visibility>().unwrap();
             assert_eq!(visibility, Visibility::Hidden);
+        }
+    }
+
+    fn create_body_and_get_plane_entities(
+        world: &mut World,
+        name: &str,
+    ) -> (cad_base::id::BodyId, Vec<Entity>) {
+        world.trigger(CreateBodyCommand {
+            id: CommandId::new(1).into(),
+            name: name.to_string().into(),
+        });
+        world.flush();
+        let body_id = {
+            let messages = world.resource::<Messages<Notifications>>();
+            let mut cursor = messages.get_cursor();
+            let notifications: Vec<_> = cursor.read(messages).collect();
+            *notifications
+                .iter()
+                .filter_map(|n| n.select_ref::<BodyCreatedNotification>())
+                .last()
+                .unwrap()
+                .body_id
+        };
+        let entities = world
+            .resource::<EngineAppState>()
+            .body_planes_map
+            .get(&body_id)
+            .unwrap()
+            .clone();
+        (body_id, entities)
+    }
+
+    #[test]
+    fn update_plane_visibilities_keeps_all_planes_hidden_when_no_active_body() {
+        // Arrange
+        let mut world = make_world();
+        let (_, entities) = create_body_and_get_plane_entities(&mut world, "body1");
+
+        // Act
+        world.run_system_once(update_plane_visibilities).unwrap();
+
+        // Assert
+        for &e in &entities {
+            assert_eq!(
+                world.entity(e).get::<Visibility>().copied(),
+                Some(Visibility::Hidden)
+            );
+        }
+    }
+
+    #[test]
+    fn update_plane_visibilities_shows_active_body_planes_and_hides_others() {
+        // Arrange
+        let mut world = make_world();
+        let (body1_id, body1_entities) = create_body_and_get_plane_entities(&mut world, "body1");
+        let (_, body2_entities) = create_body_and_get_plane_entities(&mut world, "body2");
+        world.resource_mut::<EngineAppState>().active_body = Some(body1_id);
+
+        // Act
+        world.run_system_once(update_plane_visibilities).unwrap();
+
+        // Assert
+        for &e in &body1_entities {
+            assert!(world.entity(e).get::<Visibility>().is_none());
+        }
+        for &e in &body2_entities {
+            assert_eq!(
+                world.entity(e).get::<Visibility>().copied(),
+                Some(Visibility::Hidden)
+            );
+        }
+    }
+
+    #[test]
+    fn update_plane_visibilities_switches_visibility_when_active_body_changes() {
+        // Arrange
+        let mut world = make_world();
+        let (body1_id, body1_entities) = create_body_and_get_plane_entities(&mut world, "body1");
+        let (body2_id, body2_entities) = create_body_and_get_plane_entities(&mut world, "body2");
+        world.resource_mut::<EngineAppState>().active_body = Some(body1_id);
+        world.run_system_once(update_plane_visibilities).unwrap();
+
+        // Act
+        world.resource_mut::<EngineAppState>().active_body = Some(body2_id);
+        world.run_system_once(update_plane_visibilities).unwrap();
+
+        // Assert
+        for &e in &body1_entities {
+            assert_eq!(
+                world.entity(e).get::<Visibility>().copied(),
+                Some(Visibility::Hidden)
+            );
+        }
+        for &e in &body2_entities {
+            assert!(world.entity(e).get::<Visibility>().is_none());
         }
     }
 
