@@ -1,5 +1,5 @@
 use bevy::asset::Assets;
-use bevy::camera::visibility::RenderLayers;
+use bevy::camera::visibility::{RenderLayers, Visibility};
 use bevy::color::palettes::tailwind::CYAN_500;
 use bevy::color::{Alpha, Color};
 use bevy::ecs::component::Component;
@@ -57,6 +57,7 @@ fn register_body_base_planes(
         Transform::from_xyz(0., 0., 0.0),
         RenderLayers::layer(CAMERA_3D_LAYER),
         BodyBasePlaneAxis::XY,
+        Visibility::Hidden,
     ));
     entities.push(entity.id());
 
@@ -66,6 +67,7 @@ fn register_body_base_planes(
         Transform::from_xyz(0., 0., 0.0),
         RenderLayers::layer(CAMERA_3D_LAYER),
         BodyBasePlaneAxis::YZ,
+        Visibility::Hidden,
     ));
     entities.push(entity.id());
 
@@ -75,6 +77,7 @@ fn register_body_base_planes(
         Transform::from_xyz(0., 0., 0.0),
         RenderLayers::layer(CAMERA_3D_LAYER),
         BodyBasePlaneAxis::ZX,
+        Visibility::Hidden,
     ));
     entities.push(entity.id());
 
@@ -252,6 +255,116 @@ mod tests {
             Some(3)
         );
         Ok(())
+    }
+
+    #[test]
+    fn registered_planes_have_xy_yz_zx_axes_in_order() {
+        // Arrange
+        let mut world = make_world();
+
+        // Act
+        world.trigger(CreateBodyCommand {
+            id: CommandId::new(1).into(),
+            name: "body1".to_string().into(),
+        });
+        world.flush();
+
+        // Assert
+        let body_id = {
+            let messages = world.resource::<Messages<Notifications>>();
+            let mut cursor = messages.get_cursor();
+            let notifications: Vec<_> = cursor.read(messages).collect();
+            *notifications[0]
+                .select_ref::<BodyCreatedNotification>()
+                .unwrap()
+                .body_id
+        };
+        let entities = world
+            .resource::<EngineAppState>()
+            .body_planes_map
+            .get(&body_id)
+            .unwrap()
+            .clone();
+        let axes: Vec<BodyBasePlaneAxis> = entities
+            .iter()
+            .map(|&e| *world.entity(e).get::<BodyBasePlaneAxis>().unwrap())
+            .collect();
+        assert_eq!(
+            axes,
+            vec![
+                BodyBasePlaneAxis::XY,
+                BodyBasePlaneAxis::YZ,
+                BodyBasePlaneAxis::ZX
+            ]
+        );
+    }
+
+    #[test]
+    fn registered_planes_are_placed_at_origin() {
+        // Arrange
+        let mut world = make_world();
+
+        // Act
+        world.trigger(CreateBodyCommand {
+            id: CommandId::new(1).into(),
+            name: "body1".to_string().into(),
+        });
+        world.flush();
+
+        // Assert
+        let body_id = {
+            let messages = world.resource::<Messages<Notifications>>();
+            let mut cursor = messages.get_cursor();
+            let notifications: Vec<_> = cursor.read(messages).collect();
+            *notifications[0]
+                .select_ref::<BodyCreatedNotification>()
+                .unwrap()
+                .body_id
+        };
+        let entities = world
+            .resource::<EngineAppState>()
+            .body_planes_map
+            .get(&body_id)
+            .unwrap()
+            .clone();
+        for &e in &entities {
+            let transform = *world.entity(e).get::<Transform>().unwrap();
+            assert_eq!(transform.translation, bevy::math::Vec3::ZERO);
+        }
+    }
+
+    #[test]
+    fn registered_planes_are_hidden_on_creation() {
+        // Arrange
+        let mut world = make_world();
+
+        // Act
+        world.trigger(CreateBodyCommand {
+            id: CommandId::new(1).into(),
+            name: "body1".to_string().into(),
+        });
+        world.flush();
+
+        // Assert
+        let body_id = {
+            let messages = world.resource::<Messages<Notifications>>();
+            let mut cursor = messages.get_cursor();
+            let notifications: Vec<_> = cursor.read(messages).collect();
+            *notifications[0]
+                .select_ref::<BodyCreatedNotification>()
+                .unwrap()
+                .body_id
+        };
+        let entities = world
+            .resource::<EngineAppState>()
+            .body_planes_map
+            .get(&body_id)
+            .unwrap()
+            .clone();
+        for &e in &entities {
+            let visibility = *world.entity(e).get::<Visibility>().unwrap();
+            assert_eq!(visibility, Visibility::Hidden);
+        }
     }
 
     #[test]
