@@ -20,30 +20,30 @@ pub(crate) enum Operator {
 
 impl PartialOrd for Operator {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        match (self, other) {
-            (Operator::Add, Operator::Add) => Some(Ordering::Equal),
-            (Operator::Add, Operator::Subtract) => Some(Ordering::Equal),
-            (Operator::Add, Operator::Multiply) => Some(Ordering::Less),
-            (Operator::Add, Operator::Divide) => Some(Ordering::Less),
-            (Operator::Subtract, Operator::Add) => Some(Ordering::Equal),
-            (Operator::Subtract, Operator::Subtract) => Some(Ordering::Equal),
-            (Operator::Subtract, Operator::Multiply) => Some(Ordering::Less),
-            (Operator::Subtract, Operator::Divide) => Some(Ordering::Less),
-            (Operator::Multiply, Operator::Add) => Some(Ordering::Greater),
-            (Operator::Multiply, Operator::Subtract) => Some(Ordering::Greater),
-            (Operator::Multiply, Operator::Multiply) => Some(Ordering::Equal),
-            (Operator::Multiply, Operator::Divide) => Some(Ordering::Equal),
-            (Operator::Divide, Operator::Add) => Some(Ordering::Greater),
-            (Operator::Divide, Operator::Subtract) => Some(Ordering::Greater),
-            (Operator::Divide, Operator::Multiply) => Some(Ordering::Equal),
-            (Operator::Divide, Operator::Divide) => Some(Ordering::Equal),
-        }
+        Some(self.cmp(other))
     }
 }
 
 impl Ord for Operator {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.partial_cmp(other).expect("should be success")
+        match (self, other) {
+            (Operator::Add, Operator::Add) => (Ordering::Equal),
+            (Operator::Add, Operator::Subtract) => (Ordering::Equal),
+            (Operator::Add, Operator::Multiply) => (Ordering::Less),
+            (Operator::Add, Operator::Divide) => (Ordering::Less),
+            (Operator::Subtract, Operator::Add) => (Ordering::Equal),
+            (Operator::Subtract, Operator::Subtract) => (Ordering::Equal),
+            (Operator::Subtract, Operator::Multiply) => (Ordering::Less),
+            (Operator::Subtract, Operator::Divide) => (Ordering::Less),
+            (Operator::Multiply, Operator::Add) => (Ordering::Greater),
+            (Operator::Multiply, Operator::Subtract) => (Ordering::Greater),
+            (Operator::Multiply, Operator::Multiply) => (Ordering::Equal),
+            (Operator::Multiply, Operator::Divide) => (Ordering::Equal),
+            (Operator::Divide, Operator::Add) => (Ordering::Greater),
+            (Operator::Divide, Operator::Subtract) => (Ordering::Greater),
+            (Operator::Divide, Operator::Multiply) => (Ordering::Equal),
+            (Operator::Divide, Operator::Divide) => (Ordering::Equal),
+        }
     }
 }
 
