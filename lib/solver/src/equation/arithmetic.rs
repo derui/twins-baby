@@ -27,22 +27,22 @@ impl PartialOrd for Operator {
 impl Ord for Operator {
     fn cmp(&self, other: &Self) -> Ordering {
         match (self, other) {
-            (Operator::Add, Operator::Add) => (Ordering::Equal),
-            (Operator::Add, Operator::Subtract) => (Ordering::Equal),
+            (Operator::Add, Operator::Add) => Ordering::Equal,
+            (Operator::Add, Operator::Subtract) => Ordering::Equal,
             (Operator::Add, Operator::Multiply) => (Ordering::Less),
-            (Operator::Add, Operator::Divide) => (Ordering::Less),
-            (Operator::Subtract, Operator::Add) => (Ordering::Equal),
-            (Operator::Subtract, Operator::Subtract) => (Ordering::Equal),
-            (Operator::Subtract, Operator::Multiply) => (Ordering::Less),
-            (Operator::Subtract, Operator::Divide) => (Ordering::Less),
-            (Operator::Multiply, Operator::Add) => (Ordering::Greater),
-            (Operator::Multiply, Operator::Subtract) => (Ordering::Greater),
-            (Operator::Multiply, Operator::Multiply) => (Ordering::Equal),
-            (Operator::Multiply, Operator::Divide) => (Ordering::Equal),
-            (Operator::Divide, Operator::Add) => (Ordering::Greater),
-            (Operator::Divide, Operator::Subtract) => (Ordering::Greater),
-            (Operator::Divide, Operator::Multiply) => (Ordering::Equal),
-            (Operator::Divide, Operator::Divide) => (Ordering::Equal),
+            (Operator::Add, Operator::Divide) => Ordering::Less,
+            (Operator::Subtract, Operator::Add) => Ordering::Equal,
+            (Operator::Subtract, Operator::Subtract) => Ordering::Equal,
+            (Operator::Subtract, Operator::Multiply) => Ordering::Less,
+            (Operator::Subtract, Operator::Divide) => Ordering::Less,
+            (Operator::Multiply, Operator::Add) => Ordering::Greater,
+            (Operator::Multiply, Operator::Subtract) => Ordering::Greater,
+            (Operator::Multiply, Operator::Multiply) => Ordering::Equal,
+            (Operator::Multiply, Operator::Divide) => Ordering::Equal,
+            (Operator::Divide, Operator::Add) => Ordering::Greater,
+            (Operator::Divide, Operator::Subtract) => Ordering::Greater,
+            (Operator::Divide, Operator::Multiply) => Ordering::Equal,
+            (Operator::Divide, Operator::Divide) => Ordering::Equal,
         }
     }
 }
