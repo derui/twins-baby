@@ -190,12 +190,13 @@ pub(super) fn on_switch_active_body(
     mut engine: ResMut<EngineState>,
     mut app_state: ResMut<EngineAppState>,
     mut writer: MessageWriter<Notifications>,
-) -> Result<(), BevyError> {
+) {
     let command = trigger.event();
     let transaction = engine.0.begin();
 
     let Some(body) = transaction.read::<BodyPerspective>() else {
-        return Err(color_eyre::eyre::eyre!("Can not get body perspective").into());
+        tracing::info!("Can not get body perspective");
+        return;
     };
 
     if body.get(&(command.body_id)).is_some() {
@@ -211,8 +212,6 @@ pub(super) fn on_switch_active_body(
     } else {
         // This case occurs sometimes. Do not do anything in this
     }
-
-    Ok(())
 }
 
 /// Update all plane visibilities of the app
