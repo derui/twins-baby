@@ -17,6 +17,7 @@ use bevy::prelude::ResMut;
 use bevy::transform::components::Transform;
 use cad_base::body::{BodyPerspective, PlaneRef};
 use cad_base::id::BodyId;
+use leptos::server_fn::codec::IntoRes;
 use ui_event::command::SwitchActiveBodyCommand;
 use ui_event::{
     command::CreateBodyCommand,
@@ -188,7 +189,12 @@ pub(super) fn on_switch_active_body(
         return;
     };
 
-    if body.get(&(command.body_id)).is_some() {
+    if let Some(body) = body.get(&(command.body_id)) {
+        // Do not show planes when the body already have any features
+        if body.has_feature() {
+            return;
+        }
+
         app_state.active_body = Some(*command.body_id.clone());
 
         writer.write(

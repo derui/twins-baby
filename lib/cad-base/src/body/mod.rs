@@ -148,4 +148,9 @@ impl Body {
             sketches: Vec::new(),
         }
     }
+
+    /// Check if the body has any features (sketches) attached to it
+    pub fn has_feature(&self) -> bool {
+        self.sketches.len() > 0
+    }
 }
