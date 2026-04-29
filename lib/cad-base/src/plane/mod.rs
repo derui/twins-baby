@@ -56,6 +56,12 @@ impl<E: Epsilon> PlanePerspective<E> {
     }
 }
 
+impl<E: Epsilon> Default for PlanePerspective<E> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// Simple plane definition.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Plane<E: Epsilon = DefaultEpsilon> {

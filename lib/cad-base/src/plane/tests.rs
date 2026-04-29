@@ -567,3 +567,135 @@ mod is_on_plane {
         assert!(!result);
     }
 }
+
+mod plane_perspective {
+    use super::*;
+
+    type Perspective = PlanePerspective<DefaultEpsilon>;
+
+    #[test]
+    fn add_plane_returns_retrievable_id() {
+        // Arrange
+        let mut perspective = Perspective::new();
+        let plane = Plane::new_xy();
+
+        // Act
+        let id = perspective.add_plane(plane);
+
+        // Assert
+        assert!(perspective.get(&id).is_some());
+    }
+
+    #[test]
+    fn get_returns_none_for_unknown_id() {
+        // Arrange
+        let mut perspective = Perspective::new();
+        let plane = Plane::new_xy();
+        let id = perspective.add_plane(plane);
+
+        // Act
+        perspective.remove(&id);
+        let result = perspective.get(&id);
+
+        // Assert
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn get_returns_the_added_plane() {
+        // Arrange
+        let mut perspective = Perspective::new();
+        let plane = Plane::new_xy();
+        let expected_normal = *plane.normal;
+
+        // Act
+        let id = perspective.add_plane(plane);
+
+        // Assert
+        let retrieved = perspective.get(&id).expect("plane should exist");
+        assert_relative_eq!(retrieved.normal.x, expected_normal.x, epsilon = 1e-5);
+        assert_relative_eq!(retrieved.normal.y, expected_normal.y, epsilon = 1e-5);
+        assert_relative_eq!(retrieved.normal.z, expected_normal.z, epsilon = 1e-5);
+    }
+
+    #[test]
+    fn get_mut_allows_normal_update() {
+        // Arrange
+        let mut perspective = Perspective::new();
+        let plane = Plane::new_xy();
+        let id = perspective.add_plane(plane);
+
+        // Act
+        let retrieved = perspective.get_mut(&id).expect("plane should exist");
+        *retrieved = Plane::new_yz();
+
+        // Assert
+        let updated = perspective.get(&id).expect("plane should still exist");
+        assert_relative_eq!(updated.normal.x, 1.0, epsilon = 1e-5);
+        assert_relative_eq!(updated.normal.y, 0.0, epsilon = 1e-5);
+        assert_relative_eq!(updated.normal.z, 0.0, epsilon = 1e-5);
+    }
+
+    #[test]
+    fn remove_returns_none_for_already_removed_id() {
+        // Arrange
+        let mut perspective = Perspective::new();
+        let id = perspective.add_plane(Plane::new_xy());
+        perspective.remove(&id);
+
+        // Act
+        let result = perspective.remove(&id);
+
+        // Assert
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn remove_returns_the_plane() {
+        // Arrange
+        let mut perspective = Perspective::new();
+        let plane = Plane::new_xy();
+        let expected_normal = *plane.normal;
+        let id = perspective.add_plane(plane);
+
+        // Act
+        let removed = perspective.remove(&id);
+
+        // Assert
+        let removed = removed.expect("should return the removed plane");
+        assert_relative_eq!(removed.normal.x, expected_normal.x, epsilon = 1e-5);
+        assert_relative_eq!(removed.normal.y, expected_normal.y, epsilon = 1e-5);
+        assert_relative_eq!(removed.normal.z, expected_normal.z, epsilon = 1e-5);
+    }
+
+    #[test]
+    fn multiple_planes_have_distinct_ids() {
+        // Arrange
+        let mut perspective = Perspective::new();
+
+        // Act
+        let id1 = perspective.add_plane(Plane::new_xy());
+        let id2 = perspective.add_plane(Plane::new_xz());
+        let id3 = perspective.add_plane(Plane::new_yz());
+
+        // Assert
+        assert_ne!(id1, id2);
+        assert_ne!(id2, id3);
+        assert_ne!(id1, id3);
+    }
+
+    #[test]
+    fn each_id_retrieves_its_own_plane() {
+        // Arrange
+        let mut perspective = Perspective::new();
+        let id1 = perspective.add_plane(Plane::new_xy());
+        let id2 = perspective.add_plane(Plane::new_yz());
+
+        // Act & Assert
+        let plane1 = perspective.get(&id1).expect("plane1 should exist");
+        assert_relative_eq!(plane1.normal.z, 1.0, epsilon = 1e-5);
+
+        let plane2 = perspective.get(&id2).expect("plane2 should exist");
+        assert_relative_eq!(plane2.normal.x, 1.0, epsilon = 1e-5);
+    }
+}
