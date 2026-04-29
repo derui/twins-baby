@@ -1,9 +1,10 @@
-use bevy::asset::Assets;
+use bevy::asset::{Assets, Handle};
 use bevy::camera::visibility::{RenderLayers, Visibility};
 use bevy::color::palettes::tailwind::CYAN_500;
 use bevy::color::{Alpha, Color};
 use bevy::ecs::component::Component;
 use bevy::ecs::entity::Entity;
+use bevy::ecs::event::EntityEvent as _;
 use bevy::ecs::query::With;
 use bevy::ecs::system::{Commands, Query, Res};
 use bevy::ecs::{error::BevyError, message::MessageWriter, observer::On};
@@ -11,6 +12,7 @@ use bevy::math::Dir3;
 use bevy::math::primitives::Plane3d;
 use bevy::mesh::{Mesh, Mesh3d, Meshable};
 use bevy::pbr::{MeshMaterial3d, StandardMaterial};
+use bevy::picking::events::{Out, Over, Pointer};
 use bevy::prelude::ResMut;
 use bevy::transform::components::Transform;
 use cad_base::body::BodyPerspective;
@@ -54,6 +56,28 @@ pub enum BodyBasePlaneAxis {
     ZX,
 }
 
+/// Return a obverver for [Pointer<Over>] event to update plane material to `material_over`
+fn update_plane_over(
+    material_over: Handle<StandardMaterial>,
+) -> impl Fn(On<Pointer<Over>>, Query<&mut MeshMaterial3d<StandardMaterial>>) {
+    move |event, mut query| {
+        if let Ok(mut material) = query.get_mut(event.event_target()) {
+            material.0 = material_over.clone()
+        }
+    }
+}
+
+/// Return a obverver for [Pointer<Out>] event to update plane material to `material_normal`
+fn update_plane_out(
+    material_normal: Handle<StandardMaterial>,
+) -> impl Fn(On<Pointer<Out>>, Query<&mut MeshMaterial3d<StandardMaterial>>) {
+    move |event, mut query| {
+        if let Ok(mut material) = query.get_mut(event.event_target()) {
+            material.0 = material_normal.clone()
+        }
+    }
+}
+
 /// Register 3 planes for the body.
 ///
 /// # Return
@@ -65,44 +89,52 @@ fn register_body_base_planes(
 ) -> eyre::Result<Vec<Entity>> {
     // all sizes are 1 = 1m
     let mut entities = Vec::new();
+    let mat_normal = materials.add(Color::from(CYAN_500).with_alpha(0.3));
+    let mat_over = materials.add(Color::from(CYAN_500).with_alpha(0.5));
 
     // normal vector will use for culling, this simple fix to avoid disappearing of planes
     for dir in [Dir3::Z, Dir3::NEG_Z] {
         let plane = meshes.add(Plane3d::default().mesh().size(10.0, 10.0).normal(dir));
-        let entity = commands.spawn((
+        let mut entity = commands.spawn((
             Mesh3d(plane),
-            MeshMaterial3d(materials.add(Color::from(CYAN_500).with_alpha(0.3))),
+            MeshMaterial3d(mat_normal.clone()),
             Transform::from_xyz(0., 0., 0.),
             RenderLayers::layer(CAMERA_3D_LAYER),
             Visibility::Hidden,
             BodyBasePlane::xy(),
         ));
+        entity.observe(update_plane_over(mat_over.clone()));
+        entity.observe(update_plane_out(mat_normal.clone()));
         entities.push(entity.id());
     }
 
     for dir in [Dir3::X, Dir3::NEG_X] {
         let plane = meshes.add(Plane3d::default().mesh().size(10.0, 10.0).normal(dir));
-        let entity = commands.spawn((
+        let mut entity = commands.spawn((
             Mesh3d(plane),
-            MeshMaterial3d(materials.add(Color::from(CYAN_500).with_alpha(0.3))),
+            MeshMaterial3d(mat_normal.clone()),
             Transform::from_xyz(0., 0., 0.),
             RenderLayers::layer(CAMERA_3D_LAYER),
             Visibility::Hidden,
             BodyBasePlane::yz(),
         ));
+        entity.observe(update_plane_over(mat_over.clone()));
+        entity.observe(update_plane_out(mat_normal.clone()));
         entities.push(entity.id());
     }
 
     for dir in [Dir3::Y, Dir3::NEG_Y] {
         let plane = meshes.add(Plane3d::default().mesh().size(10.0, 10.0).normal(dir));
-        let entity = commands.spawn((
+        let mut entity = commands.spawn((
             Mesh3d(plane),
-            MeshMaterial3d(materials.add(Color::from(CYAN_500).with_alpha(0.3))),
+            MeshMaterial3d(mat_normal.clone()),
             Transform::from_xyz(0., 0., 0.),
             RenderLayers::layer(CAMERA_3D_LAYER),
             Visibility::Hidden,
             BodyBasePlane::zx(),
         ));
+        entity.observe(update_plane_over(mat_over.clone()));
+        entity.observe(update_plane_out(mat_normal.clone()));
         entities.push(entity.id());
     }
 

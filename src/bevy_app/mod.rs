@@ -7,7 +7,7 @@ mod setup;
 mod ui;
 
 // This initializes a normal Bevy app
-use bevy::{asset::AssetMetaCheck, prelude::*};
+use bevy::{asset::AssetMetaCheck, picking::input::PointerInputSettings, prelude::*};
 use leptos_bevy_canvas::prelude::{BevyMessageReceiver, BevyMessageSender, LeptosBevyApp};
 use ui_event::{command::Commands, intent::Intents, notification::Notifications};
 
@@ -58,6 +58,10 @@ pub fn init_bevy_app(setting: BevyAppSettings) -> App {
     ))
     .init_gizmo_group::<AxesGizmoGroup>()
     .init_resource::<LastWindowSize>()
+    .insert_resource(PointerInputSettings {
+        is_touch_enabled: true,
+        is_mouse_enabled: true,
+    })
     .insert_resource(ClearColor(Color::srgb(0.7, 0.7, 0.7)))
     .init_resource::<EngineState>()
     .init_resource::<EngineAppState>()
