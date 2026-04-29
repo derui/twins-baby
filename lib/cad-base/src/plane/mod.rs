@@ -1,11 +1,57 @@
-use std::marker::PhantomData;
+use std::{collections::HashMap, marker::PhantomData};
 
 use color_eyre::eyre::Result;
 use epsilon::{DefaultEpsilon, Epsilon, approx_zero};
 use immutable::Im;
 use tracing::instrument;
 
-use crate::{point::Point, sketch::Point2, vector3::Vector3};
+use crate::{
+    id::{IdStore, PlaneId},
+    point::Point,
+    sketch::Point2,
+    vector3::Vector3,
+};
+
+/// A perspective for Plane. This has planes in Bodies, but can get by id
+pub struct PlanePerspective<E: Epsilon = DefaultEpsilon> {
+    /// All planes in application
+    planes: HashMap<PlaneId, Plane<E>>,
+
+    /// Id generator for store
+    id_gen: IdStore<PlaneId>,
+}
+
+impl<E: Epsilon> PlanePerspective<E> {
+    /// Create a new perspective
+    pub fn new() -> Self {
+        PlanePerspective {
+            planes: HashMap::new(),
+            id_gen: IdStore::of(),
+        }
+    }
+
+    /// Add a plane to perspective and get the id
+    pub fn add_plane(&mut self, plane: Plane<E>) -> PlaneId {
+        let id = self.id_gen.generate();
+        self.planes.insert(id, plane);
+        id
+    }
+
+    /// Get a reference to a plane by id
+    pub fn get(&self, id: &PlaneId) -> Option<&Plane<E>> {
+        self.planes.get(id)
+    }
+
+    /// Get a mutable reference to a plane by id
+    pub fn get_mut(&mut self, id: &PlaneId) -> Option<&mut Plane<E>> {
+        self.planes.get_mut(id)
+    }
+
+    /// Remove the plane
+    pub fn remove(&mut self, id: &PlaneId) -> Option<Plane<E>> {
+        self.planes.remove(id)
+    }
+}
 
 /// Simple plane definition.
 #[derive(Debug, Clone, PartialEq)]
