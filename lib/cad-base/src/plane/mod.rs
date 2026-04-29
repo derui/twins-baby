@@ -1,56 +1,14 @@
 #[cfg(test)]
 mod tests;
 
-use std::{collections::HashMap, marker::PhantomData};
+use std::marker::PhantomData;
 
 use color_eyre::eyre::Result;
 use epsilon::{DefaultEpsilon, Epsilon, approx_zero};
 use immutable::Im;
 use tracing::instrument;
 
-use crate::{body::PlaneRef, point::Point, sketch::Point2, vector3::Vector3};
-
-/// A perspective for Plane. This has planes in Bodies, but can get by id
-#[derive(Clone)]
-pub struct PlanePerspective<E: Epsilon = DefaultEpsilon> {
-    /// All planes in application
-    planes: HashMap<PlaneRef, Plane<E>>,
-}
-
-impl<E: Epsilon> PlanePerspective<E> {
-    /// Create a new perspective
-    pub fn new() -> Self {
-        PlanePerspective {
-            planes: HashMap::new(),
-        }
-    }
-
-    /// Add a plane to perspective associated with the given PlaneRef
-    pub fn add_plane(&mut self, plane_ref: PlaneRef, plane: Plane<E>) {
-        self.planes.insert(plane_ref, plane);
-    }
-
-    /// Get a reference to a plane by PlaneRef
-    pub fn get(&self, id: &PlaneRef) -> Option<&Plane<E>> {
-        self.planes.get(id)
-    }
-
-    /// Get a mutable reference to a plane by PlaneRef
-    pub fn get_mut(&mut self, id: &PlaneRef) -> Option<&mut Plane<E>> {
-        self.planes.get_mut(id)
-    }
-
-    /// Remove the plane
-    pub fn remove(&mut self, id: &PlaneRef) -> Option<Plane<E>> {
-        self.planes.remove(id)
-    }
-}
-
-impl<E: Epsilon> Default for PlanePerspective<E> {
-    fn default() -> Self {
-        Self::new()
-    }
-}
+use crate::{point::Point, sketch::Point2, vector3::Vector3};
 
 /// Simple plane definition.
 #[derive(Debug, Clone, PartialEq)]
