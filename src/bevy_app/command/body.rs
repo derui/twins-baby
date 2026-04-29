@@ -15,7 +15,8 @@ use bevy::pbr::{MeshMaterial3d, StandardMaterial};
 use bevy::picking::events::{Out, Over, Pointer};
 use bevy::prelude::ResMut;
 use bevy::transform::components::Transform;
-use cad_base::body::BodyPerspective;
+use cad_base::body::{BodyPerspective, PlaneRef};
+use cad_base::id::BodyId;
 use ui_event::command::SwitchActiveBodyCommand;
 use ui_event::{
     command::CreateBodyCommand,
@@ -29,32 +30,7 @@ use crate::bevy_app::resource::{EngineAppState, EngineState};
 
 /// A marker compoment
 #[derive(Debug, Component, PartialEq, Eq, Clone, Copy)]
-pub struct BodyBasePlane(pub BodyBasePlaneAxis);
-
-impl BodyBasePlane {
-    pub fn xy() -> Self {
-        BodyBasePlane(BodyBasePlaneAxis::XY)
-    }
-
-    pub fn yz() -> Self {
-        BodyBasePlane(BodyBasePlaneAxis::YZ)
-    }
-
-    pub fn zx() -> Self {
-        BodyBasePlane(BodyBasePlaneAxis::ZX)
-    }
-}
-
-/// A Component of axis for basement plane of a body
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum BodyBasePlaneAxis {
-    /// XY-plane. normal vector should point +Z
-    XY,
-    /// YZ-plane. normal vector should point +X
-    YZ,
-    /// ZX-plane. normal vector should point +Y
-    ZX,
-}
+pub struct BodyBasePlane(pub PlaneRef);
 
 /// Return a obverver for [Pointer<Over>] event to update plane material to `material_over`
 fn update_plane_over(
@@ -83,6 +59,8 @@ fn update_plane_out(
 /// # Return
 /// The entities of planes. The order is XY, YZ, ZX plane.
 fn register_body_base_planes(
+    bodies: &BodyPerspective,
+    body_id: &BodyId,
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
@@ -91,6 +69,15 @@ fn register_body_base_planes(
     let mut entities = Vec::new();
     let mat_normal = materials.add(Color::from(CYAN_500).with_alpha(0.3));
     let mat_over = materials.add(Color::from(CYAN_500).with_alpha(0.5));
+    let ref_x = bodies
+        .as_x_plane_ref(body_id)
+        .ok_or(color_eyre::eyre::eyre!("Should get X ref"))?;
+    let ref_y = bodies
+        .as_y_plane_ref(body_id)
+        .ok_or(color_eyre::eyre::eyre!("Should get Y ref"))?;
+    let ref_z = bodies
+        .as_z_plane_ref(body_id)
+        .ok_or(color_eyre::eyre::eyre!("Should get Z ref"))?;
 
     // normal vector will use for culling, this simple fix to avoid disappearing of planes
     for dir in [Dir3::Z, Dir3::NEG_Z] {
@@ -101,7 +88,7 @@ fn register_body_base_planes(
             Transform::from_xyz(0., 0., 0.),
             RenderLayers::layer(CAMERA_3D_LAYER),
             Visibility::Hidden,
-            BodyBasePlane::xy(),
+            BodyBasePlane(ref_z),
         ));
         entity.observe(update_plane_over(mat_over.clone()));
         entity.observe(update_plane_out(mat_normal.clone()));
@@ -116,7 +103,7 @@ fn register_body_base_planes(
             Transform::from_xyz(0., 0., 0.),
             RenderLayers::layer(CAMERA_3D_LAYER),
             Visibility::Hidden,
-            BodyBasePlane::yz(),
+            BodyBasePlane(ref_x),
         ));
         entity.observe(update_plane_over(mat_over.clone()));
         entity.observe(update_plane_out(mat_normal.clone()));
@@ -131,7 +118,7 @@ fn register_body_base_planes(
             Transform::from_xyz(0., 0., 0.),
             RenderLayers::layer(CAMERA_3D_LAYER),
             Visibility::Hidden,
-            BodyBasePlane::zx(),
+            BodyBasePlane(ref_y),
         ));
         entity.observe(update_plane_over(mat_over.clone()));
         entity.observe(update_plane_out(mat_normal.clone()));
@@ -175,7 +162,9 @@ pub(super) fn on_create_body(
         .into(),
     );
 
-    if let Ok(entities) = register_body_base_planes(&mut commands, &mut meshes, &mut materials) {
+    if let Ok(entities) =
+        register_body_base_planes(body, &body_id, &mut commands, &mut meshes, &mut materials)
+    {
         app_state.body_planes_map.insert(body_id, entities);
     }
 
@@ -366,6 +355,16 @@ mod tests {
             .get(&body_id)
             .unwrap()
             .clone();
+        let (ref_x, ref_y, ref_z) = {
+            let mut engine = world.resource_mut::<EngineState>();
+            let tx = engine.0.begin();
+            let bodies = tx.read::<BodyPerspective>().unwrap();
+            (
+                bodies.as_x_plane_ref(&body_id).unwrap(),
+                bodies.as_y_plane_ref(&body_id).unwrap(),
+                bodies.as_z_plane_ref(&body_id).unwrap(),
+            )
+        };
         let axes: Vec<BodyBasePlane> = entities
             .iter()
             .map(|&e| *world.entity(e).get::<BodyBasePlane>().unwrap())
@@ -373,12 +372,12 @@ mod tests {
         assert_eq!(
             axes,
             vec![
-                BodyBasePlane(BodyBasePlaneAxis::XY),
-                BodyBasePlane(BodyBasePlaneAxis::XY),
-                BodyBasePlane(BodyBasePlaneAxis::YZ),
-                BodyBasePlane(BodyBasePlaneAxis::YZ),
-                BodyBasePlane(BodyBasePlaneAxis::ZX),
-                BodyBasePlane(BodyBasePlaneAxis::ZX),
+                BodyBasePlane(ref_z),
+                BodyBasePlane(ref_z),
+                BodyBasePlane(ref_x),
+                BodyBasePlane(ref_x),
+                BodyBasePlane(ref_y),
+                BodyBasePlane(ref_y),
             ]
         );
     }
