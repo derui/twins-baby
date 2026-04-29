@@ -1,6 +1,7 @@
 use bevy::ecs::message::Message;
 use bevy::prelude::Event;
-use cad_base::id::{BodyId, PlaneId};
+use cad_base::body::PlaneRef;
+use cad_base::id::BodyId;
 use immutable::Im;
 use ui_event_macros::Command;
 
@@ -27,7 +28,7 @@ pub struct InitiateSketchCreationCommand {
 #[derive(Event, Debug, Clone, Command)]
 pub struct SelectSketchPlaneCommand {
     pub id: Im<CommandId>,
-    pub plane: Im<PlaneId>,
+    pub plane: Im<PlaneRef>,
 }
 
 /// The command to select plane on the body. This command must be after [InitiateSketchCreationCommand]

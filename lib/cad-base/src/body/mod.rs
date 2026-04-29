@@ -12,6 +12,18 @@ use crate::{
 #[cfg(test)]
 mod tests;
 
+/// A internal reference of BodyPlane.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+enum BodyPlane {
+    X,
+    Y,
+    Z,
+}
+
+/// A id-like reference of the plane. Plane is tightly coupled on the body.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct PlaneRef(BodyId, BodyPlane);
+
 #[derive(Clone)]
 pub struct BodyPerspective {
     /// All bodies in application
@@ -88,6 +100,21 @@ impl BodyPerspective {
         } else {
             Err(color_eyre::eyre::eyre!("The name duplicated : {}", name))
         }
+    }
+
+    /// Get X-plane reference for the body
+    pub fn as_x_plane_ref(&self, id: &BodyId) -> Option<PlaneRef> {
+        self.bodies.get(id).map(|_| PlaneRef(*id, BodyPlane::X))
+    }
+
+    /// Get Y-plane reference for the body
+    pub fn as_y_plane_ref(&self, id: &BodyId) -> Option<PlaneRef> {
+        self.bodies.get(id).map(|_| PlaneRef(*id, BodyPlane::Y))
+    }
+
+    /// Get Z-plane reference for the body
+    pub fn as_z_plane_ref(&self, id: &BodyId) -> Option<PlaneRef> {
+        self.bodies.get(id).map(|_| PlaneRef(*id, BodyPlane::Z))
     }
 }
 

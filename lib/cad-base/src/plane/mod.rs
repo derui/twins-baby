@@ -8,20 +8,13 @@ use epsilon::{DefaultEpsilon, Epsilon, approx_zero};
 use immutable::Im;
 use tracing::instrument;
 
-use crate::{
-    id::{IdStore, PlaneId},
-    point::Point,
-    sketch::Point2,
-    vector3::Vector3,
-};
+use crate::{body::PlaneRef, point::Point, sketch::Point2, vector3::Vector3};
 
 /// A perspective for Plane. This has planes in Bodies, but can get by id
+#[derive(Clone)]
 pub struct PlanePerspective<E: Epsilon = DefaultEpsilon> {
     /// All planes in application
-    planes: HashMap<PlaneId, Plane<E>>,
-
-    /// Id generator for store
-    id_gen: IdStore<PlaneId>,
+    planes: HashMap<PlaneRef, Plane<E>>,
 }
 
 impl<E: Epsilon> PlanePerspective<E> {
@@ -29,29 +22,26 @@ impl<E: Epsilon> PlanePerspective<E> {
     pub fn new() -> Self {
         PlanePerspective {
             planes: HashMap::new(),
-            id_gen: IdStore::of(),
         }
     }
 
-    /// Add a plane to perspective and get the id
-    pub fn add_plane(&mut self, plane: Plane<E>) -> PlaneId {
-        let id = self.id_gen.generate();
-        self.planes.insert(id, plane);
-        id
+    /// Add a plane to perspective associated with the given PlaneRef
+    pub fn add_plane(&mut self, plane_ref: PlaneRef, plane: Plane<E>) {
+        self.planes.insert(plane_ref, plane);
     }
 
-    /// Get a reference to a plane by id
-    pub fn get(&self, id: &PlaneId) -> Option<&Plane<E>> {
+    /// Get a reference to a plane by PlaneRef
+    pub fn get(&self, id: &PlaneRef) -> Option<&Plane<E>> {
         self.planes.get(id)
     }
 
-    /// Get a mutable reference to a plane by id
-    pub fn get_mut(&mut self, id: &PlaneId) -> Option<&mut Plane<E>> {
+    /// Get a mutable reference to a plane by PlaneRef
+    pub fn get_mut(&mut self, id: &PlaneRef) -> Option<&mut Plane<E>> {
         self.planes.get_mut(id)
     }
 
     /// Remove the plane
-    pub fn remove(&mut self, id: &PlaneId) -> Option<Plane<E>> {
+    pub fn remove(&mut self, id: &PlaneRef) -> Option<Plane<E>> {
         self.planes.remove(id)
     }
 }

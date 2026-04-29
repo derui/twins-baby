@@ -1,4 +1,5 @@
 use super::*;
+use crate::body::BodyPerspective;
 use approx::assert_relative_eq;
 
 fn p(x: f32, y: f32, z: f32) -> Point {
@@ -573,29 +574,39 @@ mod plane_perspective {
 
     type Perspective = PlanePerspective<DefaultEpsilon>;
 
-    #[test]
-    fn add_plane_returns_retrievable_id() {
-        // Arrange
-        let mut perspective = Perspective::new();
-        let plane = Plane::new_xy();
-
-        // Act
-        let id = perspective.add_plane(plane);
-
-        // Assert
-        assert!(perspective.get(&id).is_some());
+    fn make_bodies_and_refs() -> (BodyPerspective, [crate::body::PlaneRef; 3]) {
+        let mut bodies = BodyPerspective::new();
+        let body_id = bodies.add_body();
+        let x = bodies.as_x_plane_ref(&body_id).unwrap();
+        let y = bodies.as_y_plane_ref(&body_id).unwrap();
+        let z = bodies.as_z_plane_ref(&body_id).unwrap();
+        (bodies, [x, y, z])
     }
 
     #[test]
-    fn get_returns_none_for_unknown_id() {
+    fn add_plane_is_retrievable() {
         // Arrange
+        let (_bodies, [x_ref, _, _]) = make_bodies_and_refs();
         let mut perspective = Perspective::new();
         let plane = Plane::new_xy();
-        let id = perspective.add_plane(plane);
 
         // Act
-        perspective.remove(&id);
-        let result = perspective.get(&id);
+        perspective.add_plane(x_ref, plane);
+
+        // Assert
+        assert!(perspective.get(&x_ref).is_some());
+    }
+
+    #[test]
+    fn get_returns_none_for_unknown_ref() {
+        // Arrange
+        let (_bodies, [x_ref, _, _]) = make_bodies_and_refs();
+        let mut perspective = Perspective::new();
+        perspective.add_plane(x_ref, Plane::new_xy());
+
+        // Act
+        perspective.remove(&x_ref);
+        let result = perspective.get(&x_ref);
 
         // Assert
         assert!(result.is_none());
@@ -604,15 +615,16 @@ mod plane_perspective {
     #[test]
     fn get_returns_the_added_plane() {
         // Arrange
+        let (_bodies, [x_ref, _, _]) = make_bodies_and_refs();
         let mut perspective = Perspective::new();
         let plane = Plane::new_xy();
         let expected_normal = *plane.normal;
 
         // Act
-        let id = perspective.add_plane(plane);
+        perspective.add_plane(x_ref, plane);
 
         // Assert
-        let retrieved = perspective.get(&id).expect("plane should exist");
+        let retrieved = perspective.get(&x_ref).expect("plane should exist");
         assert_relative_eq!(retrieved.normal.x, expected_normal.x, epsilon = 1e-5);
         assert_relative_eq!(retrieved.normal.y, expected_normal.y, epsilon = 1e-5);
         assert_relative_eq!(retrieved.normal.z, expected_normal.z, epsilon = 1e-5);
@@ -621,30 +633,31 @@ mod plane_perspective {
     #[test]
     fn get_mut_allows_normal_update() {
         // Arrange
+        let (_bodies, [x_ref, _, _]) = make_bodies_and_refs();
         let mut perspective = Perspective::new();
-        let plane = Plane::new_xy();
-        let id = perspective.add_plane(plane);
+        perspective.add_plane(x_ref, Plane::new_xy());
 
         // Act
-        let retrieved = perspective.get_mut(&id).expect("plane should exist");
+        let retrieved = perspective.get_mut(&x_ref).expect("plane should exist");
         *retrieved = Plane::new_yz();
 
         // Assert
-        let updated = perspective.get(&id).expect("plane should still exist");
+        let updated = perspective.get(&x_ref).expect("plane should still exist");
         assert_relative_eq!(updated.normal.x, 1.0, epsilon = 1e-5);
         assert_relative_eq!(updated.normal.y, 0.0, epsilon = 1e-5);
         assert_relative_eq!(updated.normal.z, 0.0, epsilon = 1e-5);
     }
 
     #[test]
-    fn remove_returns_none_for_already_removed_id() {
+    fn remove_returns_none_for_already_removed_ref() {
         // Arrange
+        let (_bodies, [x_ref, _, _]) = make_bodies_and_refs();
         let mut perspective = Perspective::new();
-        let id = perspective.add_plane(Plane::new_xy());
-        perspective.remove(&id);
+        perspective.add_plane(x_ref, Plane::new_xy());
+        perspective.remove(&x_ref);
 
         // Act
-        let result = perspective.remove(&id);
+        let result = perspective.remove(&x_ref);
 
         // Assert
         assert!(result.is_none());
@@ -653,13 +666,14 @@ mod plane_perspective {
     #[test]
     fn remove_returns_the_plane() {
         // Arrange
+        let (_bodies, [x_ref, _, _]) = make_bodies_and_refs();
         let mut perspective = Perspective::new();
         let plane = Plane::new_xy();
         let expected_normal = *plane.normal;
-        let id = perspective.add_plane(plane);
+        perspective.add_plane(x_ref, plane);
 
         // Act
-        let removed = perspective.remove(&id);
+        let removed = perspective.remove(&x_ref);
 
         // Assert
         let removed = removed.expect("should return the removed plane");
@@ -669,33 +683,35 @@ mod plane_perspective {
     }
 
     #[test]
-    fn multiple_planes_have_distinct_ids() {
+    fn distinct_plane_refs_store_independently() {
         // Arrange
+        let (_bodies, [x_ref, y_ref, z_ref]) = make_bodies_and_refs();
         let mut perspective = Perspective::new();
 
         // Act
-        let id1 = perspective.add_plane(Plane::new_xy());
-        let id2 = perspective.add_plane(Plane::new_xz());
-        let id3 = perspective.add_plane(Plane::new_yz());
+        perspective.add_plane(x_ref, Plane::new_xy());
+        perspective.add_plane(y_ref, Plane::new_xz());
+        perspective.add_plane(z_ref, Plane::new_yz());
 
         // Assert
-        assert_ne!(id1, id2);
-        assert_ne!(id2, id3);
-        assert_ne!(id1, id3);
+        assert!(perspective.get(&x_ref).is_some());
+        assert!(perspective.get(&y_ref).is_some());
+        assert!(perspective.get(&z_ref).is_some());
     }
 
     #[test]
-    fn each_id_retrieves_its_own_plane() {
+    fn each_ref_retrieves_its_own_plane() {
         // Arrange
+        let (_bodies, [x_ref, y_ref, _]) = make_bodies_and_refs();
         let mut perspective = Perspective::new();
-        let id1 = perspective.add_plane(Plane::new_xy());
-        let id2 = perspective.add_plane(Plane::new_yz());
+        perspective.add_plane(x_ref, Plane::new_xy());
+        perspective.add_plane(y_ref, Plane::new_yz());
 
         // Act & Assert
-        let plane1 = perspective.get(&id1).expect("plane1 should exist");
+        let plane1 = perspective.get(&x_ref).expect("plane1 should exist");
         assert_relative_eq!(plane1.normal.z, 1.0, epsilon = 1e-5);
 
-        let plane2 = perspective.get(&id2).expect("plane2 should exist");
+        let plane2 = perspective.get(&y_ref).expect("plane2 should exist");
         assert_relative_eq!(plane2.normal.x, 1.0, epsilon = 1e-5);
     }
 }

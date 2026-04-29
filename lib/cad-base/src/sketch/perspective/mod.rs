@@ -4,7 +4,8 @@ mod tests;
 use std::collections::HashMap;
 
 use crate::{
-    id::{IdStore, PlaneId, SketchId},
+    body::PlaneRef,
+    id::{IdStore, SketchId},
     sketch::{AttachableTarget, Sketch},
 };
 
@@ -44,7 +45,7 @@ impl SketchPerspective {
     }
 
     /// Add a new sketch to the perpective
-    pub fn add_sketch(&mut self, plane: &PlaneId) -> SketchId {
+    pub fn add_sketch(&mut self, plane: &PlaneRef) -> SketchId {
         let id = self.sketch_id_gen.generate();
         let sketch = Sketch::new(&id.to_string(), &AttachableTarget::Plane(*plane));
 

@@ -1,6 +1,7 @@
 use cad_base::{
+    body::BodyPerspective,
     feature::AttachedTarget,
-    id::{FaceId, PlaneId},
+    id::FaceId,
     plane::Plane,
     sketch::{AttachableTarget, Geometry, LineSegment, Point2, Sketch},
 };
@@ -9,7 +10,10 @@ use epsilon::DefaultEpsilon;
 use super::{Sketcher, SketcherError};
 
 fn plane_sketch() -> Sketch {
-    let target = AttachableTarget::Plane(PlaneId::from(1));
+    let mut bodies = BodyPerspective::new();
+    let body_id = bodies.add_body();
+    let plane_ref = bodies.as_x_plane_ref(&body_id).unwrap();
+    let target = AttachableTarget::Plane(plane_ref);
     Sketch::new("test", &target)
 }
 

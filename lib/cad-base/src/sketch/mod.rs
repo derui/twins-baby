@@ -17,7 +17,8 @@ use tracing::instrument;
 use std::collections::HashMap;
 
 use crate::{
-    id::{FaceId, GeometryId, IdStore, PlaneId, VariableId},
+    body::PlaneRef,
+    id::{FaceId, GeometryId, IdStore, VariableId},
     sketch::{
         edge::SketchEdge,
         scope::{ConstraintScope, VariableScope},
@@ -31,7 +32,7 @@ use immutable::Im;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AttachableTarget {
     /// attaching to a plane. such as base plane of the body
-    Plane(PlaneId),
+    Plane(PlaneRef),
     /// atthching to a face, in some solid.
     Face(FaceId),
 }

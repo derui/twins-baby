@@ -1,9 +1,10 @@
 use cad_base::{
+    body::BodyPerspective,
     feature::{
         AttachedTarget, Evaluate, EvaluateError, Feature, FeatureContext,
         operation::{Operation, Pad, PadDirection},
     },
-    id::{PlaneId, SketchId},
+    id::SketchId,
     plane::Plane,
     sketch::{AttachableTarget, Geometry, LineSegment, Point2, Sketch},
 };
@@ -13,10 +14,17 @@ use solver::equation::Equation;
 
 use super::PadKernel;
 
+fn make_plane_attach_target() -> AttachableTarget {
+    let mut bodies = BodyPerspective::new();
+    let body_id = bodies.add_body();
+    let plane_ref = bodies.as_x_plane_ref(&body_id).unwrap();
+    AttachableTarget::Plane(plane_ref)
+}
+
 /// Create a pentagon sketch (5 edges, closed).
 /// Pentagon produces a JordanCurve with 5 points and 5 edges,
 fn make_pentagon_sketch() -> Sketch {
-    let target = AttachableTarget::Plane(PlaneId::from(1));
+    let target = make_plane_attach_target();
     let mut sketch = Sketch::new("pentagon", &target);
     for (s, e) in [
         ((0.0_f32, 0.0_f32), (2.0_f32, 0.0_f32)),
@@ -38,7 +46,7 @@ fn make_pentagon_sketch() -> Sketch {
 
 /// Create a sketch with an open path (not a closed Jordan curve).
 fn make_open_sketch() -> Sketch {
-    let target = AttachableTarget::Plane(PlaneId::from(1));
+    let target = make_plane_attach_target();
     let mut sketch = Sketch::new("open", &target);
     sketch.add_geometry(|vars| {
         Geometry::LineSegment(LineSegment::from_points(
