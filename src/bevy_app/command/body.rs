@@ -219,6 +219,11 @@ pub(super) fn update_plane_visibilities(
         return;
     };
 
+    // No need to show planes when face already selected
+    if app_state.active_face.is_some() {
+        return;
+    }
+
     for &plane in app_state
         .body_planes_map
         .get(&body_id)
