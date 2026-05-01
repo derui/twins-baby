@@ -320,6 +320,29 @@ fn update_plane_visibilities_switches_visibility_when_active_body_changes() {
 }
 
 #[test]
+fn update_plane_visibilities_keeps_planes_hidden_when_active_face_is_set() {
+    // Arrange
+    let mut world = make_world();
+    let (body1_id, body1_entities) = create_body_and_get_plane_entities(&mut world, "body1");
+    {
+        let mut app_state = world.resource_mut::<EngineAppState>();
+        app_state.active_body = Some(body1_id);
+        app_state.active_face = Some(cad_base::id::FaceId::from(1));
+    }
+
+    // Act
+    world.run_system_once(update_plane_visibilities).unwrap();
+
+    // Assert
+    for &e in &body1_entities {
+        assert_eq!(
+            world.entity(e).get::<Visibility>().copied(),
+            Some(Visibility::Hidden)
+        );
+    }
+}
+
+#[test]
 fn switch_active_body_writes_notification_and_updates_app_state() -> Result<()> {
     // Arrange
     let mut world = make_world();
