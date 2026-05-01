@@ -274,7 +274,7 @@ pub(super) fn update_plane_visibilities(
 }
 
 /// Update all plane visibilities of the app
-pub(super) fn on_body_plane_cilck(
+pub(super) fn on_change_active_plane(
     event: On<InternalChangeActivePlane>,
     mut app_state: ResMut<EngineAppState>,
 ) {

@@ -15,6 +15,7 @@ use ui_event::{
     },
 };
 
+use crate::bevy_app::command::body::event::InternalChangeActivePlane;
 use crate::bevy_app::resource::{EngineAppState, EngineState};
 
 use super::*;
@@ -28,6 +29,7 @@ fn make_world() -> World {
     world.init_resource::<Assets<StandardMaterial>>();
     world.add_observer(on_create_body);
     world.add_observer(on_switch_active_body);
+    world.add_observer(on_change_active_plane);
     world
 }
 
@@ -428,4 +430,101 @@ fn switch_active_body_returns_error_when_body_not_found() {
     assert_eq!(notifications.len(), 0);
     let app_state = world.resource::<EngineAppState>();
     assert_eq!(app_state.active_body, None);
+}
+
+fn get_x_plane_ref(world: &mut World, body_id: &cad_base::id::BodyId) -> PlaneRef {
+    let mut engine = world.resource_mut::<EngineState>();
+    let tx = engine.0.begin();
+    let bodies = tx.read::<BodyPerspective>().unwrap();
+    bodies.as_x_plane_ref(body_id).unwrap()
+}
+
+#[test]
+fn on_change_active_plane_sets_plane_when_no_active_body() {
+    // Arrange
+    let mut world = make_world();
+    let (body1_id, _) = create_body_and_get_plane_entities(&mut world, "body1");
+    let plane_ref = get_x_plane_ref(&mut world, &body1_id);
+
+    // Act
+    world.trigger(InternalChangeActivePlane {
+        plane_ref: plane_ref.clone(),
+    });
+    world.flush();
+
+    // Assert
+    let app_state = world.resource::<EngineAppState>();
+    assert_eq!(
+        app_state.active_attachable_target,
+        Some(AttachableTarget::Plane(plane_ref))
+    );
+}
+
+#[test]
+fn on_change_active_plane_does_not_change_when_active_body_is_set() {
+    // Arrange
+    let mut world = make_world();
+    let (body1_id, _) = create_body_and_get_plane_entities(&mut world, "body1");
+    let plane_ref = get_x_plane_ref(&mut world, &body1_id);
+    world.resource_mut::<EngineAppState>().active_body = Some(body1_id);
+
+    // Act
+    world.trigger(InternalChangeActivePlane { plane_ref });
+    world.flush();
+
+    // Assert
+    let app_state = world.resource::<EngineAppState>();
+    assert_eq!(app_state.active_attachable_target, None);
+}
+
+#[test]
+fn on_change_active_plane_does_not_change_when_face_is_active_target() {
+    // Arrange
+    let mut world = make_world();
+    let (body1_id, _) = create_body_and_get_plane_entities(&mut world, "body1");
+    let plane_ref = get_x_plane_ref(&mut world, &body1_id);
+    let face_target = AttachableTarget::Face(FaceId::from(1));
+    world
+        .resource_mut::<EngineAppState>()
+        .active_attachable_target = Some(face_target.clone());
+
+    // Act
+    world.trigger(InternalChangeActivePlane { plane_ref });
+    world.flush();
+
+    // Assert
+    let app_state = world.resource::<EngineAppState>();
+    assert_eq!(app_state.active_attachable_target, Some(face_target));
+}
+
+#[test]
+fn on_change_active_plane_updates_plane_ref_when_plane_already_active() {
+    // Arrange
+    let mut world = make_world();
+    let (body1_id, _) = create_body_and_get_plane_entities(&mut world, "body1");
+    let (x_plane_ref, y_plane_ref) = {
+        let mut engine = world.resource_mut::<EngineState>();
+        let tx = engine.0.begin();
+        let bodies = tx.read::<BodyPerspective>().unwrap();
+        (
+            bodies.as_x_plane_ref(&body1_id).unwrap(),
+            bodies.as_y_plane_ref(&body1_id).unwrap(),
+        )
+    };
+    world
+        .resource_mut::<EngineAppState>()
+        .active_attachable_target = Some(AttachableTarget::Plane(x_plane_ref));
+
+    // Act
+    world.trigger(InternalChangeActivePlane {
+        plane_ref: y_plane_ref.clone(),
+    });
+    world.flush();
+
+    // Assert
+    let app_state = world.resource::<EngineAppState>();
+    assert_eq!(
+        app_state.active_attachable_target,
+        Some(AttachableTarget::Plane(y_plane_ref))
+    );
 }

@@ -8,7 +8,7 @@ use ui_event::command::Commands;
 use body::on_create_body;
 
 use crate::bevy_app::command::body::{
-    on_body_plane_cilck, on_switch_active_body, update_plane_visibilities,
+    on_change_active_plane, on_switch_active_body, update_plane_visibilities,
 };
 use crate::bevy_app::command::sketch::on_create_sketch_on_plane;
 
@@ -24,7 +24,7 @@ impl CommandAppExt for App {
             .add_observer(on_create_body)
             .add_observer(on_switch_active_body)
             .add_observer(on_create_sketch_on_plane)
-            .add_observer(on_body_plane_cilck)
+            .add_observer(on_change_active_plane)
     }
 }
 
