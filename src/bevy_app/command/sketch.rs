@@ -1,0 +1,63 @@
+use bevy::prelude::*;
+use cad_base::{
+    body::BodyPerspective,
+    id::SketchId,
+    sketch::{AttachableTarget, SketchPerspective},
+};
+use ui_event::{
+    command::CreateSketchOnPlaneCommand,
+    notification::{Notifications, SketchCreatedNotification},
+};
+
+use crate::bevy_app::resource::{EngineAppState, EngineState};
+
+/// A command to create sketch on the plane.
+pub(super) fn on_create_sketch_on_plane(
+    trigger: On<CreateSketchOnPlaneCommand>,
+    mut engine: ResMut<EngineState>,
+    app_state: ResMut<EngineAppState>,
+    mut writer: MessageWriter<Notifications>,
+) -> Result<(), BevyError> {
+    let command = trigger.event();
+
+    let Some(active_body) = app_state.active_body else {
+        return Ok(());
+    };
+
+    let mut transaction = engine.0.begin();
+
+    let created_sketch: SketchId;
+
+    {
+        let Some(sketch_p) = transaction.modify::<SketchPerspective>() else {
+            return Err(color_eyre::eyre::eyre!("Can not get sketch perspective").into());
+        };
+
+        created_sketch = sketch_p.add_sketch(&AttachableTarget::Plane(*command.plane));
+    }
+
+    {
+        let Some(body_p) = transaction.modify::<BodyPerspective>() else {
+            return Err(color_eyre::eyre::eyre!("Can not get sketch perspective").into());
+        };
+
+        let Some(body) = body_p.get_mut(&active_body) else {
+            return Ok(());
+        };
+
+        body.add_sketch(&created_sketch);
+    }
+
+    writer.write(
+        SketchCreatedNotification {
+            correlation_id: command.id.clone(),
+            sketch_id: created_sketch.into(),
+            name: format!("Sketch{:?}", created_sketch).into(),
+        }
+        .into(),
+    );
+
+    transaction.commit();
+
+    Ok(())
+}
