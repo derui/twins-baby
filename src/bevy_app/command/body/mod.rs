@@ -17,6 +17,7 @@ use bevy::prelude::ResMut;
 use bevy::transform::components::Transform;
 use cad_base::body::{BodyPerspective, PlaneRef};
 use cad_base::id::BodyId;
+use cad_base::sketch::AttachableTarget;
 use ui_event::command::SwitchActiveBodyCommand;
 use ui_event::{
     command::CreateBodyCommand,
@@ -223,7 +224,9 @@ pub(super) fn update_plane_visibilities(
     };
 
     // No need to show planes when face already selected
-    if app_state.active_attachable_target.is_some() {
+    if let Some(ref v) = app_state.active_attachable_target
+        && v.to_face().is_some()
+    {
         return;
     }
 

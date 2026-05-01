@@ -37,6 +37,24 @@ pub enum AttachableTarget {
     Face(FaceId),
 }
 
+impl AttachableTarget {
+    /// Get plane ref if this target is plane.
+    pub fn to_plane(&self) -> Option<PlaneRef> {
+        match self {
+            AttachableTarget::Plane(plane_ref) => Some(plane_ref.clone()),
+            _ => None,
+        }
+    }
+
+    /// Get face id if this target is face.
+    pub fn to_face(&self) -> Option<FaceId> {
+        match self {
+            AttachableTarget::Face(id) => Some(*id),
+            _ => None,
+        }
+    }
+}
+
 /// The sketch of base of modeling.
 ///
 /// [Sketch] has these values:
