@@ -36,19 +36,14 @@ pub(super) fn on_create_sketch_on_plane(
             .expect("Should be found");
     }
 
+    if let Some(body_p) = transaction.modify::<BodyPerspective>()
+        && let Some(body) = body_p.get_mut(&command.plane.body_id())
     {
-        let Some(body_p) = transaction.modify::<BodyPerspective>() else {
-            tracing::warn!("Can not get body perspective");
-            return;
-        };
-
-        let Some(body) = body_p.get_mut(&command.plane.body_id()) else {
-            tracing::debug!("Not found target");
-            return;
-        };
-
         body.add_sketch(&created_sketch);
-    }
+    } else {
+        tracing::warn!("Can not get body");
+        return;
+    };
 
     writer.write(
         SketchCreatedNotification {
