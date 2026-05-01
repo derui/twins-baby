@@ -27,6 +27,7 @@ pub(super) fn on_create_sketch_on_plane(
     let mut transaction = engine.0.begin();
 
     let created_sketch: SketchId;
+    let sketch_name: String;
 
     {
         let Some(sketch_p) = transaction.modify::<SketchPerspective>() else {
@@ -34,6 +35,10 @@ pub(super) fn on_create_sketch_on_plane(
         };
 
         created_sketch = sketch_p.add_sketch(&AttachableTarget::Plane(*command.plane));
+        sketch_name = sketch_p
+            .get(&created_sketch)
+            .map(|v| (*v.name).clone())
+            .expect("Should be found");
     }
 
     {
@@ -52,7 +57,7 @@ pub(super) fn on_create_sketch_on_plane(
         SketchCreatedNotification {
             correlation_id: command.id.clone(),
             sketch_id: created_sketch.into(),
-            name: format!("Sketch{:?}", created_sketch).into(),
+            name: sketch_name.into(),
         }
         .into(),
     );
