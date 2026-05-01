@@ -9,13 +9,12 @@ use ui_event::{
     notification::{Notifications, SketchCreatedNotification},
 };
 
-use crate::bevy_app::resource::{EngineAppState, EngineState};
+use crate::bevy_app::resource::EngineState;
 
 /// A command to create sketch on the plane.
 pub(super) fn on_create_sketch_on_plane(
     trigger: On<CreateSketchOnPlaneCommand>,
     mut engine: ResMut<EngineState>,
-    app_state: ResMut<EngineAppState>,
     mut writer: MessageWriter<Notifications>,
 ) -> Result<(), BevyError> {
     let command = trigger.event();
@@ -41,7 +40,7 @@ pub(super) fn on_create_sketch_on_plane(
             return Err(color_eyre::eyre::eyre!("Can not get sketch perspective").into());
         };
 
-        let Some(body) = body_p.get_mut(&active_body) else {
+        let Some(body) = body_p.get_mut(&command.plane.body_id()) else {
             return Ok(());
         };
 

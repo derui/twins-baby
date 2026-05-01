@@ -24,6 +24,18 @@ enum BodyPlane {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PlaneRef(BodyId, BodyPlane);
 
+impl PlaneRef {
+    /// Get the body id of the plane reference.
+    pub fn body_id(&self) -> BodyId {
+        self.0
+    }
+
+    /// Get the plane of the plane reference.
+    pub fn plane(&self) -> BodyPlane {
+        self.1
+    }
+}
+
 #[derive(Clone)]
 pub struct BodyPerspective {
     /// All bodies in application
