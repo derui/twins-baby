@@ -3,6 +3,8 @@ use bevy::ecs::{message::Messages, system::RunSystemOnce, world::World};
 use bevy::mesh::Mesh;
 use bevy::pbr::StandardMaterial;
 use cad_base::body::BodyPerspective;
+use cad_base::id::FaceId;
+use cad_base::sketch::AttachableTarget;
 use eyre::Result;
 use pretty_assertions::assert_eq;
 use ui_event::{
@@ -327,7 +329,7 @@ fn update_plane_visibilities_keeps_planes_hidden_when_active_face_is_set() {
     {
         let mut app_state = world.resource_mut::<EngineAppState>();
         app_state.active_body = Some(body1_id);
-        app_state.active_face = Some(cad_base::id::FaceId::from(1));
+        app_state.active_attachable_target = Some(AttachableTarget::Face(FaceId::from(1)));
     }
 
     // Act

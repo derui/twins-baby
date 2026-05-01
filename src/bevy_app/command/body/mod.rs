@@ -223,7 +223,7 @@ pub(super) fn update_plane_visibilities(
     };
 
     // No need to show planes when face already selected
-    if app_state.active_face.is_some() {
+    if app_state.active_attachable_target.is_some() {
         return;
     }
 
