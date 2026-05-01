@@ -41,7 +41,7 @@ impl AttachableTarget {
     /// Get plane ref if this target is plane.
     pub fn to_plane(&self) -> Option<PlaneRef> {
         match self {
-            AttachableTarget::Plane(plane_ref) => Some(plane_ref.clone()),
+            AttachableTarget::Plane(plane_ref) => Some(*plane_ref),
             _ => None,
         }
     }

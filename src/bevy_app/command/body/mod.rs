@@ -12,7 +12,7 @@ use bevy::math::Dir3;
 use bevy::math::primitives::Plane3d;
 use bevy::mesh::{Mesh, Mesh3d, Meshable};
 use bevy::pbr::{MeshMaterial3d, StandardMaterial};
-use bevy::picking::events::{Out, Over, Pointer};
+use bevy::picking::events::{Click, Out, Over, Pointer, Release};
 use bevy::prelude::ResMut;
 use bevy::transform::components::Transform;
 use cad_base::body::{BodyPerspective, PlaneRef};
@@ -25,10 +25,13 @@ use ui_event::{
 };
 
 use crate::bevy_app::camera::CAMERA_3D_LAYER;
+use crate::bevy_app::command::body::event::InternalChangeActivePlane;
 use crate::bevy_app::resource::{EngineAppState, EngineState};
 
 #[cfg(test)]
 mod tests;
+
+mod event;
 
 // components
 
@@ -58,6 +61,30 @@ fn update_plane_out(
     }
 }
 
+/// Return a obverver for [Pointer<Out>] event to update plane material to `material_normal`
+fn update_plane_selection(
+    material_normal: Handle<StandardMaterial>,
+) -> impl Fn(On<Pointer<Click>>, Query<&mut MeshMaterial3d<StandardMaterial>>) {
+    move |event, mut query| {
+        if let Ok(mut material) = query.get_mut(event.event_target()) {
+            material.0 = material_normal.clone()
+        }
+    }
+}
+
+/// Return a obverver for [Pointer<Out>] event to update plane material to `material_normal`
+fn update_plane_click(
+    event: On<Pointer<Click>>,
+    query: Query<&BodyBasePlane>,
+    mut commands: Commands,
+) {
+    if let Ok(plane) = query.get(event.event_target()) {
+        commands.trigger(InternalChangeActivePlane {
+            plane_ref: plane.0.clone(),
+        });
+    }
+}
+
 /// Register 3 planes for the body.
 ///
 /// # Return
@@ -73,6 +100,7 @@ fn register_body_base_planes(
     let mut entities = Vec::new();
     let mat_normal = materials.add(Color::from(CYAN_500).with_alpha(0.3));
     let mat_over = materials.add(Color::from(CYAN_500).with_alpha(0.5));
+    let mat_select = materials.add(Color::from(CYAN_500).with_alpha(0.8));
     let ref_x = bodies
         .as_x_plane_ref(body_id)
         .ok_or(color_eyre::eyre::eyre!("Should get X ref"))?;
@@ -96,6 +124,8 @@ fn register_body_base_planes(
         ));
         entity.observe(update_plane_over(mat_over.clone()));
         entity.observe(update_plane_out(mat_normal.clone()));
+        entity.observe(update_plane_selection(mat_select.clone()));
+        entity.observe(update_plane_click);
         entities.push(entity.id());
     }
 
@@ -111,6 +141,8 @@ fn register_body_base_planes(
         ));
         entity.observe(update_plane_over(mat_over.clone()));
         entity.observe(update_plane_out(mat_normal.clone()));
+        entity.observe(update_plane_selection(mat_select.clone()));
+        entity.observe(update_plane_click);
         entities.push(entity.id());
     }
 
@@ -126,6 +158,8 @@ fn register_body_base_planes(
         ));
         entity.observe(update_plane_over(mat_over.clone()));
         entity.observe(update_plane_out(mat_normal.clone()));
+        entity.observe(update_plane_selection(mat_select.clone()));
+        entity.observe(update_plane_click);
         entities.push(entity.id());
     }
 
@@ -237,4 +271,24 @@ pub(super) fn update_plane_visibilities(
     {
         commands.entity(plane).insert(Visibility::Visible);
     }
+}
+
+/// Update all plane visibilities of the app
+pub(super) fn on_body_plane_cilck(
+    event: On<InternalChangeActivePlane>,
+    mut app_state: ResMut<EngineAppState>,
+) {
+    // When app has active body, active the planes
+    if app_state.active_body.is_some() {
+        return;
+    };
+
+    // No need to show planes when face already selected
+    if let Some(ref v) = app_state.active_attachable_target
+        && v.to_face().is_some()
+    {
+        return;
+    }
+
+    app_state.active_attachable_target = Some(AttachableTarget::Plane(event.plane_ref.clone()));
 }
