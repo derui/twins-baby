@@ -149,6 +149,34 @@ impl Body {
         }
     }
 
+    /// Add a sketch to the body if it is not already attached
+    ///
+    /// # Arguments
+    /// * `sketch` - The ID of the sketch to be added to the body
+    pub fn add_sketch(&mut self, sketch: SketchId) {
+        if self.sketches.iter().any(|id| *id == sketch) {
+            return;
+        }
+
+        self.sketches.push(sketch);
+    }
+
+    /// Remove a sketch from the body if it is attached, returning the removed sketch ID if successful
+    ///
+    /// # Arguments
+    /// * `sketch` - The ID of the sketch to be removed from the body
+    ///
+    /// # Returns
+    /// * `Some(SketchId)` - The ID of the removed sketch if it was attached to the body
+    pub fn remove_sketch(&mut self, sketch: SketchId) -> Option<SketchId> {
+        if let Some(position) = self.sketches.iter().position(|id| *id == sketch) {
+            let id = self.sketches.remove(position);
+            Some(id)
+        } else {
+            None
+        }
+    }
+
     /// Check if the body has any features (sketches) attached to it
     pub fn has_feature(&self) -> bool {
         self.sketches.len() > 0

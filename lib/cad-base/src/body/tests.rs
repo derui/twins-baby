@@ -3,6 +3,7 @@ use super::*;
 mod body {
     use pretty_assertions::assert_eq;
 
+    use crate::id::SketchId;
     use crate::plane::Plane;
     use crate::vector3::Vector3;
 
@@ -35,6 +36,85 @@ mod body {
 
         // Assert
         assert_eq!(*body.position, Vector3::new(0.0, 0.0, 0.0));
+    }
+
+    #[test]
+    fn has_feature_returns_false_when_no_sketches() {
+        // Arrange
+        let body = Body::new("TestBody".to_string());
+
+        // Act
+        let result = body.has_feature();
+
+        // Assert
+        assert!(!result);
+    }
+
+    #[test]
+    fn has_feature_returns_true_after_sketch_added() {
+        // Arrange
+        let mut body = Body::new("TestBody".to_string());
+
+        // Act
+        body.add_sketch(SketchId::new(1));
+
+        // Assert
+        assert!(body.has_feature());
+    }
+
+    #[test]
+    fn add_sketch_ignores_duplicate_sketch() {
+        // Arrange
+        let mut body = Body::new("TestBody".to_string());
+        let sketch_id = SketchId::new(1);
+        body.add_sketch(sketch_id);
+
+        // Act
+        body.add_sketch(sketch_id);
+
+        // Assert — only one sketch should be present
+        assert_eq!(body.remove_sketch(sketch_id), Some(sketch_id));
+        assert!(!body.has_feature());
+    }
+
+    #[test]
+    fn remove_sketch_returns_some_for_existing_sketch() {
+        // Arrange
+        let mut body = Body::new("TestBody".to_string());
+        let sketch_id = SketchId::new(42);
+        body.add_sketch(sketch_id);
+
+        // Act
+        let result = body.remove_sketch(sketch_id);
+
+        // Assert
+        assert_eq!(result, Some(sketch_id));
+    }
+
+    #[test]
+    fn remove_sketch_returns_none_for_absent_sketch() {
+        // Arrange
+        let mut body = Body::new("TestBody".to_string());
+
+        // Act
+        let result = body.remove_sketch(SketchId::new(99));
+
+        // Assert
+        assert_eq!(result, None);
+    }
+
+    #[test]
+    fn remove_sketch_clears_feature_when_last_sketch_removed() {
+        // Arrange
+        let mut body = Body::new("TestBody".to_string());
+        let sketch_id = SketchId::new(1);
+        body.add_sketch(sketch_id);
+
+        // Act
+        body.remove_sketch(sketch_id);
+
+        // Assert
+        assert!(!body.has_feature());
     }
 }
 
@@ -242,5 +322,125 @@ mod body_perspective {
 
         // Assert
         assert!(result.is_ok());
+    }
+
+    #[test]
+    fn bodies_returns_empty_iterator_for_new_perspective() {
+        // Arrange
+        let perspective = BodyPerspective::new();
+
+        // Act
+        let count = perspective.bodies().count();
+
+        // Assert
+        assert_eq!(count, 0);
+    }
+
+    #[test]
+    fn bodies_returns_all_added_bodies() {
+        // Arrange
+        let mut perspective = BodyPerspective::new();
+        perspective.add_body();
+        perspective.add_body();
+        perspective.add_body();
+
+        // Act
+        let count = perspective.bodies().count();
+
+        // Assert
+        assert_eq!(count, 3);
+    }
+
+    #[test]
+    fn bodies_excludes_removed_body() {
+        // Arrange
+        let mut perspective = BodyPerspective::new();
+        let id = perspective.add_body();
+        perspective.add_body();
+        perspective.remove_body(&id);
+
+        // Act
+        let count = perspective.bodies().count();
+
+        // Assert
+        assert_eq!(count, 1);
+    }
+
+    #[test]
+    fn as_x_plane_ref_returns_some_for_existing_body() {
+        // Arrange
+        let mut perspective = BodyPerspective::new();
+        let id = perspective.add_body();
+
+        // Act
+        let result = perspective.as_x_plane_ref(&id);
+
+        // Assert
+        assert_eq!(result, Some(PlaneRef(id, BodyPlane::X)));
+    }
+
+    #[test]
+    fn as_x_plane_ref_returns_none_for_unknown_id() {
+        // Arrange
+        let perspective = BodyPerspective::new();
+        let unknown_id = BodyId::new(999);
+
+        // Act
+        let result = perspective.as_x_plane_ref(&unknown_id);
+
+        // Assert
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn as_y_plane_ref_returns_some_for_existing_body() {
+        // Arrange
+        let mut perspective = BodyPerspective::new();
+        let id = perspective.add_body();
+
+        // Act
+        let result = perspective.as_y_plane_ref(&id);
+
+        // Assert
+        assert_eq!(result, Some(PlaneRef(id, BodyPlane::Y)));
+    }
+
+    #[test]
+    fn as_y_plane_ref_returns_none_for_unknown_id() {
+        // Arrange
+        let perspective = BodyPerspective::new();
+        let unknown_id = BodyId::new(999);
+
+        // Act
+        let result = perspective.as_y_plane_ref(&unknown_id);
+
+        // Assert
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn as_z_plane_ref_returns_some_for_existing_body() {
+        // Arrange
+        let mut perspective = BodyPerspective::new();
+        let id = perspective.add_body();
+
+        // Act
+        let result = perspective.as_z_plane_ref(&id);
+
+        // Assert
+        assert_eq!(result, Some(PlaneRef(id, BodyPlane::Z)));
+    }
+
+    #[test]
+    fn as_z_plane_ref_returns_none_for_unknown_id() {
+        // Arrange
+        let perspective = BodyPerspective::new();
+        let unknown_id = BodyId::new(999);
+
+        // Act
+        let result = perspective.as_z_plane_ref(&unknown_id);
+
+        // Assert
+        assert!(result.is_none());
     }
 }
