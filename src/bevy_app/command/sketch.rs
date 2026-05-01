@@ -19,11 +19,6 @@ pub(super) fn on_create_sketch_on_plane(
     mut writer: MessageWriter<Notifications>,
 ) -> Result<(), BevyError> {
     let command = trigger.event();
-
-    let Some(active_body) = app_state.active_body else {
-        return Ok(());
-    };
-
     let mut transaction = engine.0.begin();
 
     let created_sketch: SketchId;
