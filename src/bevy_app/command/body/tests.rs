@@ -345,6 +345,35 @@ fn update_plane_visibilities_keeps_planes_hidden_when_active_face_is_set() {
 }
 
 #[test]
+fn update_plane_visibilities_shows_planes_when_active_plane_ref_is_set() {
+    // Arrange
+    let mut world = make_world();
+    let (body1_id, body1_entities) = create_body_and_get_plane_entities(&mut world, "body1");
+    let plane_ref = {
+        let mut engine = world.resource_mut::<EngineState>();
+        let tx = engine.0.begin();
+        let bodies = tx.read::<BodyPerspective>().unwrap();
+        bodies.as_x_plane_ref(&body1_id).unwrap()
+    };
+    {
+        let mut app_state = world.resource_mut::<EngineAppState>();
+        app_state.active_body = Some(body1_id);
+        app_state.active_attachable_target = Some(AttachableTarget::Plane(plane_ref));
+    }
+
+    // Act
+    world.run_system_once(update_plane_visibilities).unwrap();
+
+    // Assert
+    for &e in &body1_entities {
+        assert_eq!(
+            world.entity(e).get::<Visibility>().copied(),
+            Some(Visibility::Visible)
+        );
+    }
+}
+
+#[test]
 fn switch_active_body_writes_notification_and_updates_app_state() -> Result<()> {
     // Arrange
     let mut world = make_world();
