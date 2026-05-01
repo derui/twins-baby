@@ -16,7 +16,7 @@ pub(super) fn on_create_sketch_on_plane(
     trigger: On<CreateSketchOnPlaneCommand>,
     mut engine: ResMut<EngineState>,
     mut writer: MessageWriter<Notifications>,
-) -> Result<(), BevyError> {
+) {
     let command = trigger.event();
     let mut transaction = engine.0.begin();
 
@@ -25,7 +25,8 @@ pub(super) fn on_create_sketch_on_plane(
 
     {
         let Some(sketch_p) = transaction.modify::<SketchPerspective>() else {
-            return Err(color_eyre::eyre::eyre!("Can not get sketch perspective").into());
+            tracing::warn!("Can not get sketch perspective");
+            return;
         };
 
         created_sketch = sketch_p.add_sketch(&AttachableTarget::Plane(*command.plane));
@@ -37,11 +38,13 @@ pub(super) fn on_create_sketch_on_plane(
 
     {
         let Some(body_p) = transaction.modify::<BodyPerspective>() else {
-            return Err(color_eyre::eyre::eyre!("Can not get sketch perspective").into());
+            tracing::warn!("Can not get body perspective");
+            return;
         };
 
         let Some(body) = body_p.get_mut(&command.plane.body_id()) else {
-            return Ok(());
+            tracing::debug!("Not found target");
+            return;
         };
 
         body.add_sketch(&created_sketch);
@@ -57,6 +60,4 @@ pub(super) fn on_create_sketch_on_plane(
     );
 
     transaction.commit();
-
-    Ok(())
 }
