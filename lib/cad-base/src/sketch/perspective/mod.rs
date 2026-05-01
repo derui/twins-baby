@@ -46,7 +46,7 @@ impl SketchPerspective {
     /// Add a new sketch to the perpective
     pub fn add_sketch(&mut self, target: &AttachableTarget) -> SketchId {
         let id = self.sketch_id_gen.generate();
-        let sketch = Sketch::new(&format!("Sketch{}", id.to_string()), target);
+        let sketch = Sketch::new(&format!("Sketch{}", id), target);
 
         self.sketches.insert(id, sketch);
         id
