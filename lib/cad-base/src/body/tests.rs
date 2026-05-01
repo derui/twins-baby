@@ -56,7 +56,7 @@ mod body {
         let mut body = Body::new("TestBody".to_string());
 
         // Act
-        body.add_sketch(SketchId::new(1));
+        body.add_sketch(&SketchId::new(1));
 
         // Assert
         assert!(body.has_feature());
@@ -67,10 +67,10 @@ mod body {
         // Arrange
         let mut body = Body::new("TestBody".to_string());
         let sketch_id = SketchId::new(1);
-        body.add_sketch(sketch_id);
+        body.add_sketch(&sketch_id);
 
         // Act
-        body.add_sketch(sketch_id);
+        body.add_sketch(&sketch_id);
 
         // Assert — only one sketch should be present
         assert_eq!(body.remove_sketch(sketch_id), Some(sketch_id));
@@ -82,7 +82,7 @@ mod body {
         // Arrange
         let mut body = Body::new("TestBody".to_string());
         let sketch_id = SketchId::new(42);
-        body.add_sketch(sketch_id);
+        body.add_sketch(&sketch_id);
 
         // Act
         let result = body.remove_sketch(sketch_id);
@@ -108,7 +108,7 @@ mod body {
         // Arrange
         let mut body = Body::new("TestBody".to_string());
         let sketch_id = SketchId::new(1);
-        body.add_sketch(sketch_id);
+        body.add_sketch(&sketch_id);
 
         // Act
         body.remove_sketch(sketch_id);

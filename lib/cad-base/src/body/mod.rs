@@ -153,12 +153,12 @@ impl Body {
     ///
     /// # Arguments
     /// * `sketch` - The ID of the sketch to be added to the body
-    pub fn add_sketch(&mut self, sketch: SketchId) {
-        if self.sketches.iter().any(|id| *id == sketch) {
+    pub fn add_sketch(&mut self, sketch: &SketchId) {
+        if self.sketches.contains(sketch) {
             return;
         }
 
-        self.sketches.push(sketch);
+        self.sketches.push(*sketch);
     }
 
     /// Remove a sketch from the body if it is attached, returning the removed sketch ID if successful
@@ -179,6 +179,6 @@ impl Body {
 
     /// Check if the body has any features (sketches) attached to it
     pub fn has_feature(&self) -> bool {
-        self.sketches.len() > 0
+        !self.sketches.is_empty()
     }
 }

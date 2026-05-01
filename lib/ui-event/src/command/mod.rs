@@ -9,39 +9,16 @@ use crate::CommandId;
 
 #[derive(Message, Debug, Clone)]
 pub enum Commands {
-    InitiateSketchCreation(InitiateSketchCreationCommand),
-    SelectSketchPlane(SelectSketchPlaneCommand),
-    CancelSketchCreation(CancelSketchCreationCommand),
-    ConfirmSketchCreation(ConfirmSketchCreationCommand),
+    CreateSketchOnPlane(CreateSketchOnPlaneCommand),
     CreateBody(CreateBodyCommand),
     SwitchActiveBody(SwitchActiveBodyCommand),
 }
 
-/// Command series for creating sketch. This command must be sequential to send system.
+/// A command to create a sketch to the plane.
 #[derive(Event, Debug, Clone, Command)]
-pub struct InitiateSketchCreationCommand {
-    pub id: Im<CommandId>,
-    pub body: Im<BodyId>,
-}
-
-/// The command to select plane on the body. This command must be after [InitiateSketchCreationCommand]
-#[derive(Event, Debug, Clone, Command)]
-pub struct SelectSketchPlaneCommand {
+pub struct CreateSketchOnPlaneCommand {
     pub id: Im<CommandId>,
     pub plane: Im<PlaneRef>,
-}
-
-/// The command to select plane on the body. This command must be after [InitiateSketchCreationCommand]
-#[derive(Event, Debug, Clone, Command)]
-pub struct ConfirmSketchCreationCommand {
-    pub id: Im<CommandId>,
-}
-
-/// Cancellation of creating sketch. This will ignore if the system already created, or
-/// already canceled
-#[derive(Event, Debug, Clone, Command)]
-pub struct CancelSketchCreationCommand {
-    pub id: Im<CommandId>,
 }
 
 /// A command to create body

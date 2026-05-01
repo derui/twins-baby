@@ -33,7 +33,7 @@ mod sketch_perspective {
             // Arrange
             let mut perspective = SketchPerspective::new();
             let (_bodies, plane_ref) = make_plane_ref();
-            let sketch_id = perspective.add_sketch(&plane_ref);
+            let sketch_id = perspective.add_sketch(&AttachableTarget::Plane(plane_ref));
 
             // Act
             let result = perspective.get(&sketch_id);
@@ -60,7 +60,7 @@ mod sketch_perspective {
             // Arrange
             let mut perspective = SketchPerspective::new();
             let (_bodies, plane_ref) = make_plane_ref();
-            let sketch_id = perspective.add_sketch(&plane_ref);
+            let sketch_id = perspective.add_sketch(&AttachableTarget::Plane(plane_ref));
 
             // Act
             let result = perspective.get_mut(&sketch_id);
@@ -94,7 +94,7 @@ mod sketch_perspective {
             let (_bodies, plane_ref) = make_plane_ref();
 
             // Act
-            let sketch_id = perspective.add_sketch(&plane_ref);
+            let sketch_id = perspective.add_sketch(&AttachableTarget::Plane(plane_ref));
 
             // Assert
             assert!(perspective.get(&sketch_id).is_some());
@@ -107,8 +107,8 @@ mod sketch_perspective {
             let (_bodies, plane_ref) = make_plane_ref();
 
             // Act
-            let sketch_id1 = perspective.add_sketch(&plane_ref);
-            let sketch_id2 = perspective.add_sketch(&plane_ref);
+            let sketch_id1 = perspective.add_sketch(&AttachableTarget::Plane(plane_ref));
+            let sketch_id2 = perspective.add_sketch(&AttachableTarget::Plane(plane_ref));
 
             // Assert
             assert_ne!(sketch_id1, sketch_id2);
@@ -121,7 +121,7 @@ mod sketch_perspective {
             let (_bodies, plane_ref) = make_plane_ref();
 
             // Act
-            let sketch_id = perspective.add_sketch(&plane_ref);
+            let sketch_id = perspective.add_sketch(&AttachableTarget::Plane(plane_ref));
 
             // Assert
             let sketch = perspective.get(&sketch_id).unwrap();
@@ -137,7 +137,7 @@ mod sketch_perspective {
             // Arrange
             let mut perspective = SketchPerspective::new();
             let (_bodies, plane_ref) = make_plane_ref();
-            let sketch_id = perspective.add_sketch(&plane_ref);
+            let sketch_id = perspective.add_sketch(&AttachableTarget::Plane(plane_ref));
 
             // Act
             let result = perspective.remove_sketch(&sketch_id);
@@ -165,9 +165,9 @@ mod sketch_perspective {
             // Arrange
             let mut perspective = SketchPerspective::new();
             let (_bodies, plane_ref) = make_plane_ref();
-            let sketch_id1 = perspective.add_sketch(&plane_ref);
-            let sketch_id2 = perspective.add_sketch(&plane_ref);
-            let sketch_id3 = perspective.add_sketch(&plane_ref);
+            let sketch_id1 = perspective.add_sketch(&AttachableTarget::Plane(plane_ref));
+            let sketch_id2 = perspective.add_sketch(&AttachableTarget::Plane(plane_ref));
+            let sketch_id3 = perspective.add_sketch(&AttachableTarget::Plane(plane_ref));
 
             // Act
             perspective.remove_sketch(&sketch_id2);
@@ -188,7 +188,7 @@ mod sketch_perspective {
             // Arrange
             let mut perspective = SketchPerspective::new();
             let (_bodies, plane_ref) = make_plane_ref();
-            let sketch_id = perspective.add_sketch(&plane_ref);
+            let sketch_id = perspective.add_sketch(&AttachableTarget::Plane(plane_ref));
             let new_name = "NewSketchName";
 
             // Act
@@ -205,7 +205,7 @@ mod sketch_perspective {
             // Arrange
             let mut perspective = SketchPerspective::new();
             let (_bodies, plane_ref) = make_plane_ref();
-            let sketch_id = perspective.add_sketch(&plane_ref);
+            let sketch_id = perspective.add_sketch(&AttachableTarget::Plane(plane_ref));
 
             // Act
             let result = perspective.remane_sketch(&sketch_id, "");
@@ -220,7 +220,7 @@ mod sketch_perspective {
             // Arrange
             let mut perspective = SketchPerspective::new();
             let (_bodies, plane_ref) = make_plane_ref();
-            let sketch_id = perspective.add_sketch(&plane_ref);
+            let sketch_id = perspective.add_sketch(&AttachableTarget::Plane(plane_ref));
 
             // Act
             let result = perspective.remane_sketch(&sketch_id, "   ");
@@ -235,8 +235,8 @@ mod sketch_perspective {
             // Arrange
             let mut perspective = SketchPerspective::new();
             let (_bodies, plane_ref) = make_plane_ref();
-            let sketch_id1 = perspective.add_sketch(&plane_ref);
-            let sketch_id2 = perspective.add_sketch(&plane_ref);
+            let sketch_id1 = perspective.add_sketch(&AttachableTarget::Plane(plane_ref));
+            let sketch_id2 = perspective.add_sketch(&AttachableTarget::Plane(plane_ref));
             let duplicate_name = "DuplicateName";
             perspective
                 .remane_sketch(&sketch_id1, duplicate_name)
