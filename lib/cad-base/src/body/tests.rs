@@ -373,7 +373,7 @@ mod body_perspective {
         let id = perspective.add_body();
 
         // Act
-        let result = perspective.as_x_plane_ref(&id);
+        let result = perspective.to_x_plane_ref(&id);
 
         // Assert
         assert_eq!(result, Some(PlaneRef(id, BodyPlane::X)));
@@ -386,7 +386,7 @@ mod body_perspective {
         let unknown_id = BodyId::new(999);
 
         // Act
-        let result = perspective.as_x_plane_ref(&unknown_id);
+        let result = perspective.to_x_plane_ref(&unknown_id);
 
         // Assert
         assert!(result.is_none());
@@ -399,7 +399,7 @@ mod body_perspective {
         let id = perspective.add_body();
 
         // Act
-        let result = perspective.as_y_plane_ref(&id);
+        let result = perspective.to_y_plane_ref(&id);
 
         // Assert
         assert_eq!(result, Some(PlaneRef(id, BodyPlane::Y)));
@@ -412,7 +412,7 @@ mod body_perspective {
         let unknown_id = BodyId::new(999);
 
         // Act
-        let result = perspective.as_y_plane_ref(&unknown_id);
+        let result = perspective.to_y_plane_ref(&unknown_id);
 
         // Assert
         assert!(result.is_none());
@@ -425,7 +425,7 @@ mod body_perspective {
         let id = perspective.add_body();
 
         // Act
-        let result = perspective.as_z_plane_ref(&id);
+        let result = perspective.to_z_plane_ref(&id);
 
         // Assert
         assert_eq!(result, Some(PlaneRef(id, BodyPlane::Z)));
@@ -438,7 +438,7 @@ mod body_perspective {
         let unknown_id = BodyId::new(999);
 
         // Act
-        let result = perspective.as_z_plane_ref(&unknown_id);
+        let result = perspective.to_z_plane_ref(&unknown_id);
 
         // Assert
         assert!(result.is_none());

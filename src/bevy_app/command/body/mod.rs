@@ -99,13 +99,13 @@ fn register_body_base_planes(
     let mat_over = materials.add(Color::from(CYAN_500).with_alpha(0.5));
     let mat_select = materials.add(Color::from(CYAN_500).with_alpha(0.8));
     let ref_x = bodies
-        .as_x_plane_ref(body_id)
+        .to_x_plane_ref(body_id)
         .ok_or(color_eyre::eyre::eyre!("Should get X ref"))?;
     let ref_y = bodies
-        .as_y_plane_ref(body_id)
+        .to_y_plane_ref(body_id)
         .ok_or(color_eyre::eyre::eyre!("Should get Y ref"))?;
     let ref_z = bodies
-        .as_z_plane_ref(body_id)
+        .to_z_plane_ref(body_id)
         .ok_or(color_eyre::eyre::eyre!("Should get Z ref"))?;
 
     // normal vector will use for culling, this simple fix to avoid disappearing of planes

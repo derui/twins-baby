@@ -136,9 +136,9 @@ fn registered_planes_have_xy_yz_zx_axes_in_order() {
         let tx = engine.0.begin();
         let bodies = tx.read::<BodyPerspective>().unwrap();
         (
-            bodies.as_x_plane_ref(&body_id).unwrap(),
-            bodies.as_y_plane_ref(&body_id).unwrap(),
-            bodies.as_z_plane_ref(&body_id).unwrap(),
+            bodies.to_x_plane_ref(&body_id).unwrap(),
+            bodies.to_y_plane_ref(&body_id).unwrap(),
+            bodies.to_z_plane_ref(&body_id).unwrap(),
         )
     };
     let axes: Vec<BodyBasePlane> = entities

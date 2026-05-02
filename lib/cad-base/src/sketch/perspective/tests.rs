@@ -5,7 +5,7 @@ use crate::sketch::AttachableTarget;
 fn make_plane_ref() -> (BodyPerspective, crate::body::PlaneRef) {
     let mut bodies = BodyPerspective::new();
     let body_id = bodies.add_body();
-    let plane_ref = bodies.as_x_plane_ref(&body_id).unwrap();
+    let plane_ref = bodies.to_x_plane_ref(&body_id).unwrap();
     (bodies, plane_ref)
 }
 

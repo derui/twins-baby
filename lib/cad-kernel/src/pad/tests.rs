@@ -17,7 +17,7 @@ use super::PadKernel;
 fn make_plane_attach_target() -> AttachableTarget {
     let mut bodies = BodyPerspective::new();
     let body_id = bodies.add_body();
-    let plane_ref = bodies.as_x_plane_ref(&body_id).unwrap();
+    let plane_ref = bodies.to_x_plane_ref(&body_id).unwrap();
     AttachableTarget::Plane(plane_ref)
 }
 
