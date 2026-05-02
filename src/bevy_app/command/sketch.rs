@@ -5,19 +5,35 @@ use cad_base::{
     sketch::{AttachableTarget, SketchPerspective},
 };
 use ui_event::{
-    command::CreateSketchOnPlaneCommand,
-    notification::{Notifications, SketchCreatedNotification},
+    ObjectType, SketchCreationFailure,
+    command::CreateSketchOnSelectedCommand,
+    notification::{Notifications, SketchCreatedNotification, SketchCreationFailedNotification},
 };
 
 use crate::bevy_app::resource::EngineState;
 
 /// A command to create sketch on the plane.
 pub(super) fn on_create_sketch_on_plane(
-    trigger: On<CreateSketchOnPlaneCommand>,
+    trigger: On<CreateSketchOnSelectedCommand>,
     mut engine: ResMut<EngineState>,
     mut writer: MessageWriter<Notifications>,
 ) {
     let command = trigger.event();
+
+    let Some(plane_ref) = (match &*command.selected {
+        ObjectType::Plane(plane_ref) => Some(*plane_ref),
+        _ => None,
+    }) else {
+        writer.write(
+            SketchCreationFailedNotification {
+                correlation_id: command.id.clone(),
+                reason: SketchCreationFailure::TargetIsNotValid.into(),
+            }
+            .into(),
+        );
+        return;
+    };
+
     let mut transaction = engine.0.begin();
 
     let created_sketch: SketchId;
@@ -29,7 +45,7 @@ pub(super) fn on_create_sketch_on_plane(
             return;
         };
 
-        created_sketch = sketch_p.add_sketch(&AttachableTarget::Plane(*command.plane));
+        created_sketch = sketch_p.add_sketch(&AttachableTarget::Plane(plane_ref));
         sketch_name = sketch_p
             .get(&created_sketch)
             .map(|v| (*v.name).clone())
@@ -37,7 +53,7 @@ pub(super) fn on_create_sketch_on_plane(
     }
 
     if let Some(body_p) = transaction.modify::<BodyPerspective>()
-        && let Some(body) = body_p.get_mut(&command.plane.body_id())
+        && let Some(body) = body_p.get_mut(&plane_ref.body_id())
     {
         body.add_sketch(&created_sketch);
     } else {
@@ -55,4 +71,92 @@ pub(super) fn on_create_sketch_on_plane(
     );
 
     transaction.commit();
+}
+
+#[cfg(test)]
+mod tests {
+    use bevy::ecs::{message::Messages, world::World};
+    use cad_base::body::BodyPerspective;
+    use eyre::Result;
+    use pretty_assertions::assert_eq;
+    use ui_event::{
+        CommandId, ObjectType, SketchCreationFailure,
+        command::CreateSketchOnSelectedCommand,
+        notification::{
+            Notification, Notifications, SketchCreatedNotification,
+            SketchCreationFailedNotification,
+        },
+    };
+
+    use crate::bevy_app::resource::EngineState;
+
+    use super::*;
+
+    fn make_world() -> World {
+        let mut world = World::new();
+        world.init_resource::<Messages<Notifications>>();
+        world.init_resource::<EngineState>();
+        world.add_observer(on_create_sketch_on_plane);
+        world
+    }
+
+    fn create_body_with_plane(world: &mut World) -> cad_base::body::PlaneRef {
+        let mut engine = world.resource_mut::<EngineState>();
+        let mut tx = engine.0.begin();
+        let bodies = tx.modify::<BodyPerspective>().unwrap();
+        let body_id = bodies.add_body();
+        let plane_ref = bodies.to_x_plane_ref(&body_id).unwrap();
+        tx.commit();
+        plane_ref
+    }
+
+    #[test]
+    fn writes_sketch_created_notification_when_plane_selected() -> Result<()> {
+        // Arrange
+        let mut world = make_world();
+        let plane_ref = create_body_with_plane(&mut world);
+
+        // Act
+        world.trigger(CreateSketchOnSelectedCommand {
+            id: CommandId::new(1).into(),
+            selected: ObjectType::Plane(plane_ref).into(),
+        });
+        world.flush();
+
+        // Assert
+        let messages = world.resource::<Messages<Notifications>>();
+        let mut cursor = messages.get_cursor();
+        let notifications: Vec<_> = cursor.read(messages).collect();
+        assert_eq!(notifications.len(), 1);
+        let notif = notifications[0]
+            .select_ref::<SketchCreatedNotification>()
+            .unwrap();
+        assert_eq!(*notif.correlation_id, CommandId::new(1));
+        assert!(!notif.name.is_empty());
+        Ok(())
+    }
+
+    #[test]
+    fn writes_failure_notification_when_non_plane_selected() -> Result<()> {
+        // Arrange
+        let mut world = make_world();
+
+        // Act
+        world.trigger(CreateSketchOnSelectedCommand {
+            id: CommandId::new(1).into(),
+            selected: ObjectType::Point.into(),
+        });
+        world.flush();
+
+        // Assert
+        let messages = world.resource::<Messages<Notifications>>();
+        let mut cursor = messages.get_cursor();
+        let notifications: Vec<_> = cursor.read(messages).collect();
+        assert_eq!(notifications.len(), 1);
+        let notif = notifications[0]
+            .select_ref::<SketchCreationFailedNotification>()
+            .unwrap();
+        assert_eq!(*notif.reason, SketchCreationFailure::TargetIsNotValid);
+        Ok(())
+    }
 }
