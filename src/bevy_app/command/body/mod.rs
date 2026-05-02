@@ -15,7 +15,6 @@ use bevy::math::primitives::Plane3d;
 use bevy::mesh::{Mesh, Mesh3d, Meshable};
 use bevy::pbr::{MeshMaterial3d, StandardMaterial};
 use bevy::prelude::ResMut;
-use bevy::render::alpha::AlphaMode;
 use bevy::transform::components::Transform;
 use cad_base::body::BodyPerspective;
 use cad_base::id::BodyId;
@@ -71,8 +70,8 @@ fn register_body_base_planes(
 
     let defs = [
         (Dir3::Z, ref_z, Color::from(BLUE_500)),
-        (Dir3::X, ref_x, Color::from(GREEN_500)),
-        (Dir3::Y, ref_y, Color::from(RED_500)),
+        (Dir3::X, ref_x, Color::from(RED_500)),
+        (Dir3::Y, ref_y, Color::from(GREEN_500)),
     ];
 
     for (dir, plane_ref, color) in defs {
