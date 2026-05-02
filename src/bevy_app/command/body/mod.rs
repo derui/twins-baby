@@ -20,13 +20,14 @@ use cad_base::body::BodyPerspective;
 use cad_base::id::BodyId;
 use ui_event::command::SwitchActiveBodyCommand;
 use ui_event::{
+    ObjectType,
     command::CreateBodyCommand,
     notification::{BodyActivatedNotification, BodyCreatedNotification, Notifications},
 };
 
 use crate::bevy_app::camera::CAMERA_3D_LAYER;
 use crate::bevy_app::command::body::component::BodyBasePlane;
-use crate::bevy_app::component::ObjectType;
+use crate::bevy_app::component::BodyPartType;
 use crate::bevy_app::picking::{
     PickingMaterials, update_pointer_click, update_pointer_out, update_pointer_over,
 };
@@ -87,7 +88,7 @@ fn register_body_base_planes(
                 RenderLayers::layer(CAMERA_3D_LAYER),
                 Visibility::Hidden,
                 BodyBasePlane(plane_ref),
-                ObjectType::Plane(plane_ref),
+                BodyPartType(ObjectType::Plane(plane_ref)),
                 mat,
             ));
             entity.observe(update_pointer_over);

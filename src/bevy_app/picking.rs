@@ -1,7 +1,8 @@
 use bevy::prelude::*;
 use immutable::Im;
+use ui_event::server::ServerIntents;
 
-use crate::bevy_app::{component::ObjectType, resource::EngineAppState};
+use crate::bevy_app::{component::BodyPartType, resource::EngineAppState};
 
 /// Component to handle materials pickable object.
 ///
@@ -29,7 +30,7 @@ pub struct SelectObject {
 pub fn update_pointer_over(
     event: On<Pointer<Over>>,
     mut m_query: Query<&mut MeshMaterial3d<StandardMaterial>>,
-    p_query: Query<&PickingMaterials, With<ObjectType>>,
+    p_query: Query<&PickingMaterials, With<BodyPartType>>,
 ) {
     if let Ok(mut material) = m_query.get_mut(event.event_target())
         && let Ok(picking) = p_query.get(event.event_target())
@@ -42,7 +43,7 @@ pub fn update_pointer_over(
 pub fn update_pointer_out(
     event: On<Pointer<Out>>,
     mut m_query: Query<&mut MeshMaterial3d<StandardMaterial>>,
-    p_query: Query<&PickingMaterials, With<ObjectType>>,
+    p_query: Query<&PickingMaterials, With<BodyPartType>>,
 ) {
     if let Ok(mut material) = m_query.get_mut(event.event_target())
         && let Ok(picking) = p_query.get(event.event_target())
@@ -62,7 +63,8 @@ pub fn update_pointer_click(event: On<Pointer<Click>>, mut commands: MessageWrit
 pub fn update_toggling_selection(
     mut reader: MessageReader<SelectObject>,
     mut app_state: ResMut<EngineAppState>,
-    query: Query<&ObjectType>,
+    query: Query<&BodyPartType>,
+    mut writer: MessageWriter<ServerIntents>,
 ) {
     for event in reader.read() {
         if let Some(p) = app_state
@@ -90,15 +92,18 @@ mod tests {
         system::RunSystemOnce,
         world::World,
     };
+    use cad_base::id::EdgeId;
     use pretty_assertions::assert_eq;
+    use ui_event::{ObjectType, server::ServerIntents};
 
-    use crate::bevy_app::{component::ObjectType, resource::EngineAppState};
+    use crate::bevy_app::{component::BodyPartType, resource::EngineAppState};
 
     use super::*;
 
     fn make_world() -> World {
         let mut world = World::new();
         world.init_resource::<Messages<SelectObject>>();
+        world.init_resource::<Messages<ServerIntents>>();
         world.init_resource::<EngineAppState>();
         world
     }
@@ -114,29 +119,37 @@ mod tests {
         world.run_system_once(update_toggling_selection).unwrap();
     }
 
+    fn point_type() -> BodyPartType {
+        BodyPartType(ObjectType::Point)
+    }
+
+    fn edge_type() -> BodyPartType {
+        BodyPartType(ObjectType::Edge(EdgeId::new(1)))
+    }
+
     #[test]
     fn toggling_selection_adds_entity_with_object_type_when_not_selected() {
         // Arrange
         let mut world = make_world();
-        let entity = world.spawn(ObjectType::Point).id();
+        let entity = world.spawn(point_type()).id();
 
         // Act
         send_select_entity(&mut world, entity);
 
         // Assert
         let app_state = world.resource::<EngineAppState>();
-        assert_eq!(app_state.selections, vec![(entity, ObjectType::Point)]);
+        assert_eq!(app_state.selections, vec![(entity, point_type())]);
     }
 
     #[test]
     fn toggling_selection_removes_entity_when_already_selected() {
         // Arrange
         let mut world = make_world();
-        let entity = world.spawn(ObjectType::Point).id();
+        let entity = world.spawn(point_type()).id();
         world
             .resource_mut::<EngineAppState>()
             .selections
-            .push((entity, ObjectType::Point));
+            .push((entity, point_type()));
 
         // Act
         send_select_entity(&mut world, entity);
@@ -164,8 +177,8 @@ mod tests {
     fn toggling_selection_accumulates_multiple_distinct_entities() {
         // Arrange
         let mut world = make_world();
-        let entity1 = world.spawn(ObjectType::Point).id();
-        let entity2 = world.spawn(ObjectType::SketchPoint).id();
+        let entity1 = world.spawn(point_type()).id();
+        let entity2 = world.spawn(edge_type()).id();
 
         // Act — write both messages in one batch so a single reader cursor covers them
         world
@@ -183,26 +196,20 @@ mod tests {
         // Assert
         let app_state = world.resource::<EngineAppState>();
         assert_eq!(app_state.selections.len(), 2);
-        assert!(app_state.selections.contains(&(entity1, ObjectType::Point)));
-        assert!(
-            app_state
-                .selections
-                .contains(&(entity2, ObjectType::SketchPoint))
-        );
+        assert!(app_state.selections.contains(&(entity1, point_type())));
+        assert!(app_state.selections.contains(&(entity2, edge_type())));
     }
 
     #[test]
     fn toggling_selection_removes_only_the_deselected_entity() {
         // Arrange
         let mut world = make_world();
-        let entity1 = world.spawn(ObjectType::Point).id();
-        let entity2 = world.spawn(ObjectType::SketchPoint).id();
+        let entity1 = world.spawn(point_type()).id();
+        let entity2 = world.spawn(edge_type()).id();
         {
             let mut app_state = world.resource_mut::<EngineAppState>();
-            app_state.selections.push((entity1, ObjectType::Point));
-            app_state
-                .selections
-                .push((entity2, ObjectType::SketchPoint));
+            app_state.selections.push((entity1, point_type()));
+            app_state.selections.push((entity2, edge_type()));
         }
 
         // Act
@@ -210,9 +217,6 @@ mod tests {
 
         // Assert
         let app_state = world.resource::<EngineAppState>();
-        assert_eq!(
-            app_state.selections,
-            vec![(entity2, ObjectType::SketchPoint)]
-        );
+        assert_eq!(app_state.selections, vec![(entity2, edge_type())]);
     }
 }
