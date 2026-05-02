@@ -21,10 +21,10 @@ impl CommandAppExt for App {
     fn register_commands(&mut self) -> &mut Self {
         self.add_systems(Update, dispatch_commands)
             .add_systems(Update, update_plane_visibilities)
+            .add_systems(Update, on_change_active_plane)
             .add_observer(on_create_body)
             .add_observer(on_switch_active_body)
             .add_observer(on_create_sketch_on_plane)
-            .add_observer(on_change_active_plane)
     }
 }
 

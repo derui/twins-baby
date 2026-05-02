@@ -5,6 +5,7 @@ use bevy::color::{Alpha, Color};
 use bevy::ecs::component::Component;
 use bevy::ecs::entity::Entity;
 use bevy::ecs::event::EntityEvent as _;
+use bevy::ecs::message::MessageReader;
 use bevy::ecs::query::With;
 use bevy::ecs::system::{Commands, Query, Res};
 use bevy::ecs::{error::BevyError, message::MessageWriter, observer::On};
@@ -76,10 +77,10 @@ fn update_plane_selection(
 fn update_plane_click(
     event: On<Pointer<Click>>,
     query: Query<&BodyBasePlane>,
-    mut commands: Commands,
+    mut commands: MessageWriter<InternalChangeActivePlane>,
 ) {
     if let Ok(plane) = query.get(event.event_target()) {
-        commands.trigger(InternalChangeActivePlane {
+        commands.write(InternalChangeActivePlane {
             plane_ref: plane.0.clone(),
         });
     }
@@ -275,20 +276,10 @@ pub(super) fn update_plane_visibilities(
 
 /// Update all plane visibilities of the app
 pub(super) fn on_change_active_plane(
-    event: On<InternalChangeActivePlane>,
+    mut reader: MessageReader<InternalChangeActivePlane>,
     mut app_state: ResMut<EngineAppState>,
 ) {
-    // When app has active body, active the planes
-    if app_state.active_body.is_some() {
-        return;
-    };
-
-    // No need to show planes when face already selected
-    if let Some(ref v) = app_state.active_attachable_target
-        && v.to_face().is_some()
-    {
-        return;
+    for event in reader.read() {
+        app_state.active_attachable_target = Some(AttachableTarget::Plane(event.plane_ref.clone()));
     }
-
-    app_state.active_attachable_target = Some(AttachableTarget::Plane(event.plane_ref.clone()));
 }
