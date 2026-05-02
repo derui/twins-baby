@@ -1,6 +1,6 @@
 use leptos::prelude::*;
 
-use ui_component::button::{Indicator, ToolButton};
+use ui_component::button::{IndicatorState, ToolButton};
 use ui_component::icon::{IconSize, IconType};
 
 #[component]
@@ -26,7 +26,7 @@ pub fn ButtonFixtures() -> impl IntoView {
             <ToolButton
                 icon=IconType::Axis(IconSize::Medium)
                 label="Axis"
-                indicator=Indicator::Disabled
+                indicator=IndicatorState::Disabled
             />
         </div>
 
@@ -34,7 +34,7 @@ pub fn ButtonFixtures() -> impl IntoView {
             <ToolButton
                 icon=IconType::Axis(IconSize::Medium)
                 label="Axis"
-                indicator=Indicator::Off
+                indicator=IndicatorState::Off
             />
         </div>
 

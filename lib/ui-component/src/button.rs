@@ -5,25 +5,28 @@ use crate::icon::IconType;
 
 /// A indicator
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Indicator {
+pub enum IndicatorState {
     On,
     Off,
     Disabled,
 }
 
 #[component]
-fn Indicator(#[prop(into)] indicator: Signal<Indicator>) -> impl IntoView {
+fn Indicator(#[prop(into)] indicator: Signal<IndicatorState>) -> impl IntoView {
     view! {
         <span
             class="flex rounded-full w-full h-1 shadow-2xl absolute bottom-0"
             class=(
                 ["bg-green-500", "shadow-green-500/50"],
-                move || indicator.get() == Indicator::On,
+                move || indicator.get() == IndicatorState::On,
             )
-            class=(["bg-red-500", "shadow-red-500/50"], move || indicator.get() == Indicator::Off)
+            class=(
+                ["bg-red-500", "shadow-red-500/50"],
+                move || indicator.get() == IndicatorState::Off,
+            )
             class=(
                 ["bg-gray-500", "shadow-gray-500/50"],
-                move || indicator.get() == Indicator::Disabled,
+                move || indicator.get() == IndicatorState::Disabled,
             )
         ></span>
     }
@@ -41,12 +44,33 @@ fn Indicator(#[prop(into)] indicator: Signal<Indicator>) -> impl IntoView {
 pub fn ToolButton(
     icon: IconType,
     #[prop(into)] label: String,
-    #[prop(optional)] indicator: Option<Indicator>,
+    #[prop(optional, into)] indicator: MaybeProp<IndicatorState>,
     #[prop(optional)] tabindex: Option<i32>,
     #[prop(optional)] on_click: Option<Callback<MouseEvent>>,
 ) -> impl IntoView {
-    let UseButtonReturn { attrs, .. } =
-        use_button(indicator.map(|v| v == Indicator::Disabled).unwrap_or(false));
+    let UseButtonReturn {
+        disable,
+        enable,
+        attrs,
+        ..
+    } = use_button(
+        indicator
+            .get_untracked()
+            .map(|v| v == IndicatorState::Disabled)
+            .unwrap_or(false),
+    );
+
+    Effect::new(move |_| {
+        if indicator
+            .get()
+            .map(|v| v == IndicatorState::Disabled)
+            .unwrap_or(false)
+        {
+            (*disable).run(());
+        } else {
+            (*enable).run(());
+        }
+    });
 
     // need clone to avoid warning
     let a1 = attrs.clone();
@@ -72,7 +96,9 @@ pub fn ToolButton(
             class=("hover:bg-black/70", move || !*a1.get().disabled)
         >
             <span class=format!("{} bg-white", icon_class) style=mask_style />
-            <Indicator indicator=indicator.unwrap_or(Indicator::On) />
+            <Indicator indicator=Signal::derive(move || {
+                indicator.get().unwrap_or(IndicatorState::On)
+            }) />
         </button>
     }
 }
@@ -82,12 +108,9 @@ mod tests {
     use leptos::prelude::*;
     use leptos_test::{assert_view_snapshot, with_leptos_owner};
 
-    use crate::{
-        button::Indicator,
-        icon::{IconSize, IconType},
-    };
+    use crate::icon::{IconSize, IconType};
 
-    use super::ToolButton;
+    use super::{Indicator, IndicatorState, ToolButton};
 
     #[tokio::test]
     async fn test_tool_button_default() {
@@ -109,7 +132,7 @@ mod tests {
                 <ToolButton
                     icon=IconType::Cube(IconSize::Medium)
                     label="Cube"
-                    indicator=Indicator::Disabled
+                    indicator=IndicatorState::Disabled
                 />
             };
 
@@ -147,7 +170,13 @@ mod tests {
     async fn test_tool_button_indicator_off() {
         with_leptos_owner(async {
             // Arrange
-            let view = view! { <ToolButton icon=IconType::Cube(IconSize::Medium) label="Cube" indicator=Indicator::Off /> };
+            let view = view! {
+                <ToolButton
+                    icon=IconType::Cube(IconSize::Medium)
+                    label="Cube"
+                    indicator=IndicatorState::Off
+                />
+            };
 
             // Act & Assert
             assert_view_snapshot!("tool_button_indicator_off", view);
@@ -159,14 +188,47 @@ mod tests {
     async fn test_indicator_changes_on_signal_update() {
         with_leptos_owner(async {
             // Arrange
-            let (indicator, set_indicator) = signal(Indicator::On);
-            let view = view! { <Indicator indicator=Signal::derive(move || indicator.get()) /> };
+            let (indicator, set_indicator) = signal(IndicatorState::On);
+            let view_on = view! { <Indicator indicator=Signal::derive(move || indicator.get()) /> };
+            assert_view_snapshot!("indicator_signal_on", view_on);
 
             // Act
-            set_indicator.set(Indicator::Off);
+            set_indicator.set(IndicatorState::Off);
 
             // Assert
-            assert_view_snapshot!("indicator_signal_off", view);
+            let view_off =
+                view! { <Indicator indicator=Signal::derive(move || indicator.get()) /> };
+            assert_view_snapshot!("indicator_signal_off", view_off);
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn test_tool_button_indicator_changes_through_prop() {
+        with_leptos_owner(async {
+            // Arrange
+            let indicator = RwSignal::new(IndicatorState::On);
+            let view_on = view! {
+                <ToolButton
+                    icon=IconType::Cube(IconSize::Medium)
+                    label="Cube"
+                    indicator=Signal::derive(move || indicator.get())
+                />
+            };
+            assert_view_snapshot!("tool_button_indicator_prop_on", view_on);
+
+            // Act
+            indicator.set(IndicatorState::Off);
+
+            // Assert
+            let view_off = view! {
+                <ToolButton
+                    icon=IconType::Cube(IconSize::Medium)
+                    label="Cube"
+                    indicator=Signal::derive(move || indicator.get())
+                />
+            };
+            assert_view_snapshot!("tool_button_indicator_prop_off", view_off);
         })
         .await;
     }
