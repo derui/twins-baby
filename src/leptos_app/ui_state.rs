@@ -1,4 +1,5 @@
 use cad_base::id::BodyId;
+use immutable::Im;
 use leptos::prelude::*;
 use reactive_stores::Store;
 use ui_event::PerspectiveKind;
@@ -53,6 +54,14 @@ impl BodyUI {
     }
 }
 
+/// States of body perspective
+#[derive(Debug, Clone, PartialEq)]
+pub struct BodyPerspectiveState {
+    pub can_create_sketch: Im<Signal<bool>>,
+
+    _immutable: (),
+}
+
 /// The centralized state of UI. This state is the single source of truth in UI,
 /// but some states which bevy has are do not inclued this, exclude ID or metadata.
 #[derive(Debug, Clone)]
@@ -66,7 +75,7 @@ pub struct UiStore {
     _immutable: (),
 }
 
-/// Global single signal store.
+/// Global single signal state. This can't edit, all properties must be derived.
 #[derive(Debug, Clone, PartialEq)]
 pub struct UiState {
     /// Current selected perspective, this is only for UI view.
@@ -74,6 +83,8 @@ pub struct UiState {
 
     /// Bodies in the application
     pub bodies: Signal<Vec<BodyId>>,
+
+    pub body_perspective: Im<BodyPerspectiveState>,
 
     _immutable: (),
 }
@@ -92,11 +103,17 @@ impl UiStore {
             })
         });
 
+        let body_perspective = BodyPerspectiveState {
+            can_create_sketch: Signal::derive(move || store.selections().get().len() == 1).into(),
+            _immutable: (),
+        };
+
         UiStore {
             perspective: set_perspective,
             ui: UiState {
                 perspective: perspective.into(),
                 bodies: body_list.into(),
+                body_perspective: body_perspective.into(),
                 _immutable: (),
             },
             _immutable: (),
