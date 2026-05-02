@@ -1,3 +1,5 @@
+use std::ops::Neg;
+
 use bevy::asset::Assets;
 use bevy::camera::visibility::{RenderLayers, Visibility};
 use bevy::color::palettes::tailwind::BLUE_500;
@@ -13,6 +15,7 @@ use bevy::math::primitives::Plane3d;
 use bevy::mesh::{Mesh, Mesh3d, Meshable};
 use bevy::pbr::{MeshMaterial3d, StandardMaterial};
 use bevy::prelude::ResMut;
+use bevy::render::alpha::AlphaMode;
 use bevy::transform::components::Transform;
 use cad_base::body::BodyPerspective;
 use cad_base::id::BodyId;
@@ -40,18 +43,8 @@ fn make_picking_materials(
     materials: &mut ResMut<Assets<StandardMaterial>>,
     color: Color,
 ) -> PickingMaterials {
-    let mat_normal = materials.add(StandardMaterial {
-        base_color: color.with_alpha(0.3),
-        double_sided: true,
-        cull_mode: None,
-        ..Default::default()
-    });
-    let mat_over = materials.add(StandardMaterial {
-        base_color: color.with_alpha(0.5),
-        double_sided: true,
-        cull_mode: None,
-        ..Default::default()
-    });
+    let mat_normal = materials.add(color.with_alpha(0.3));
+    let mat_over = materials.add(color.with_alpha(0.5));
 
     PickingMaterials {
         normal: mat_normal,
@@ -77,28 +70,32 @@ fn register_body_base_planes(
     let ref_z = bodies.to_z_plane_ref(body_id).expect("Should get Z ref");
 
     let defs = [
-        (Dir3::Z, ref_z, Color::from(RED_500)),
+        (Dir3::Z, ref_z, Color::from(BLUE_500)),
         (Dir3::X, ref_x, Color::from(GREEN_500)),
-        (Dir3::Y, ref_y, Color::from(BLUE_500)),
+        (Dir3::Y, ref_y, Color::from(RED_500)),
     ];
 
     for (dir, plane_ref, color) in defs {
         let mat = make_picking_materials(materials, color);
-        let plane = meshes.add(Plane3d::default().mesh().size(10.0, 10.0).normal(dir));
-        let mut entity = commands.spawn((
-            Mesh3d(plane),
-            MeshMaterial3d(mat.normal.clone()),
-            Transform::from_xyz(0., 0., 0.),
-            RenderLayers::layer(CAMERA_3D_LAYER),
-            Visibility::Hidden,
-            BodyBasePlane(plane_ref),
-            ObjectType::Plane(plane_ref),
-            mat,
-        ));
-        entity.observe(update_pointer_over);
-        entity.observe(update_pointer_out);
-        entity.observe(update_pointer_click);
-        entities.push(entity.id());
+
+        for dir in [dir, dir.neg()] {
+            let mat = mat.clone();
+            let plane = meshes.add(Plane3d::default().mesh().size(10.0, 10.0).normal(dir));
+            let mut entity = commands.spawn((
+                Mesh3d(plane),
+                MeshMaterial3d(mat.normal.clone()),
+                Transform::from_xyz(0., 0., 0.),
+                RenderLayers::layer(CAMERA_3D_LAYER),
+                Visibility::Hidden,
+                BodyBasePlane(plane_ref),
+                ObjectType::Plane(plane_ref),
+                mat,
+            ));
+            entity.observe(update_pointer_over);
+            entity.observe(update_pointer_out);
+            entity.observe(update_pointer_click);
+            entities.push(entity.id());
+        }
     }
 
     Ok(entities)
