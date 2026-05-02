@@ -36,7 +36,7 @@ pub(crate) fn use_server_intent(
 #[cfg(test)]
 mod tests {
     use any_spawner::Executor;
-    use cad_base::id::FaceId;
+
     use crossbeam_channel::bounded;
     use leptos::prelude::*;
     use leptos_bevy_canvas::prelude::LeptosMessageReceiver;
@@ -48,7 +48,7 @@ mod tests {
         server::{ObjectSelectionChangeServerIntent, ServerIntents},
     };
 
-    use crate::leptos_app::app_state::{AppStore, AppStoreStoreFields as _};
+    use crate::leptos_app::app_state::AppStore;
 
     use super::*;
 
