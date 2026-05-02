@@ -118,6 +118,7 @@ fn register_body_base_planes(
             RenderLayers::layer(CAMERA_3D_LAYER),
             Visibility::Hidden,
             BodyBasePlane(ref_z),
+            ObjectType::Plane(ref_z),
         ));
         entity.observe(update_plane_over(mat_over.clone()));
         entity.observe(update_plane_out(mat_normal.clone()));
@@ -135,6 +136,7 @@ fn register_body_base_planes(
             RenderLayers::layer(CAMERA_3D_LAYER),
             Visibility::Hidden,
             BodyBasePlane(ref_x),
+            ObjectType::Plane(ref_x),
         ));
         entity.observe(update_plane_over(mat_over.clone()));
         entity.observe(update_plane_out(mat_normal.clone()));
@@ -152,6 +154,7 @@ fn register_body_base_planes(
             RenderLayers::layer(CAMERA_3D_LAYER),
             Visibility::Hidden,
             BodyBasePlane(ref_y),
+            ObjectType::Plane(ref_y),
         ));
         entity.observe(update_plane_over(mat_over.clone()));
         entity.observe(update_plane_out(mat_normal.clone()));
