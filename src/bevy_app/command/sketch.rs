@@ -74,6 +74,7 @@ pub(super) fn on_create_sketch_on_plane(
             correlation_id: command.id.clone(),
             sketch_id: created_sketch.into(),
             name: sketch_name.into(),
+            body_id: target.body_id().into(),
         }
         .into(),
     );
@@ -141,6 +142,7 @@ mod tests {
             .unwrap();
         assert_eq!(*notif.correlation_id, CommandId::new(1));
         assert!(!notif.name.is_empty());
+        assert_eq!(*notif.body_id, plane_ref.body_id());
         Ok(())
     }
 

@@ -35,6 +35,8 @@ pub struct SketchCreatedNotification {
     pub sketch_id: Im<SketchId>,
     /// name of sketch created
     pub name: Im<String>,
+    /// id of the body that new sketch belongs to
+    pub body_id: Im<BodyId>,
 }
 
 /// Response of [ConfimSketchCreationCommand]
