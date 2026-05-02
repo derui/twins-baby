@@ -26,7 +26,8 @@ use ui_event::{
 };
 
 use crate::bevy_app::camera::CAMERA_3D_LAYER;
-use crate::bevy_app::command::body::event::InternalChangeActivePlane;
+use crate::bevy_app::command::body::event::InternalSelectObject;
+use crate::bevy_app::component::ObjectType;
 use crate::bevy_app::resource::{EngineAppState, EngineState};
 
 #[cfg(test)]
@@ -77,10 +78,10 @@ fn update_plane_selection(
 fn update_plane_click(
     event: On<Pointer<Click>>,
     query: Query<&BodyBasePlane>,
-    mut commands: MessageWriter<InternalChangeActivePlane>,
+    mut commands: MessageWriter<InternalSelectObject>,
 ) {
     if let Ok(plane) = query.get(event.event_target()) {
-        commands.write(InternalChangeActivePlane { plane_ref: plane.0 });
+        commands.write(InternalSelectObject { plane_ref: plane.0 });
     }
 }
 
@@ -244,6 +245,7 @@ pub(super) fn on_switch_active_body(
 pub(super) fn update_plane_visibilities(
     mut commands: Commands,
     app_state: Res<EngineAppState>,
+    mut cad_state: ResMut<EngineState>,
     q_planes: Query<Entity, With<BodyBasePlane>>,
 ) {
     // Make all entities hidden
@@ -256,9 +258,12 @@ pub(super) fn update_plane_visibilities(
         return;
     };
 
-    // No need to show planes when face already selected
-    if let Some(ref v) = app_state.active_attachable_target
-        && v.to_face().is_some()
+    let transaction = cad_state.0.begin();
+
+    // No need to show planes when the body already have any feature/sketch
+    if let Some(v) = transaction.read::<BodyPerspective>()
+        && let Some(body) = v.get(&body_id)
+        && body.has_feature()
     {
         return;
     }
@@ -272,12 +277,27 @@ pub(super) fn update_plane_visibilities(
     }
 }
 
-/// Update all plane visibilities of the app
-pub(super) fn on_change_active_plane(
-    mut reader: MessageReader<InternalChangeActivePlane>,
+/// Update selections of something of body
+pub(super) fn update_toggling_selection(
+    mut reader: MessageReader<InternalSelectObject>,
     mut app_state: ResMut<EngineAppState>,
+    query: Query<&ObjectType>,
 ) {
     for event in reader.read() {
-        app_state.active_attachable_target = Some(AttachableTarget::Plane(event.plane_ref));
+        if let Some(p) = app_state
+            .selections
+            .iter()
+            .position(|(e, _)| *e == *event.entity)
+        {
+            app_state.selections.remove(p);
+        } else {
+            let Ok(object_type) = query.get(*event.entity) else {
+                tracing::warn!("Can not get object type from selectable entity");
+                continue;
+            };
+            app_state
+                .selections
+                .push((*event.entity, object_type.clone()));
+        }
     }
 }

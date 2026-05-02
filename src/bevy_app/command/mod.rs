@@ -8,7 +8,7 @@ use ui_event::command::Commands;
 use body::on_create_body;
 
 use crate::bevy_app::command::body::{
-    on_change_active_plane, on_switch_active_body, update_plane_visibilities,
+    on_switch_active_body, update_plane_visibilities, update_toggling_selection,
 };
 use crate::bevy_app::command::sketch::on_create_sketch_on_plane;
 
@@ -21,7 +21,7 @@ impl CommandAppExt for App {
     fn register_commands(&mut self) -> &mut Self {
         self.add_systems(Update, dispatch_commands)
             .add_systems(Update, update_plane_visibilities)
-            .add_systems(Update, on_change_active_plane)
+            .add_systems(Update, update_toggling_selection)
             .add_observer(on_create_body)
             .add_observer(on_switch_active_body)
             .add_observer(on_create_sketch_on_plane)
