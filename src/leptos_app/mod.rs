@@ -134,6 +134,9 @@ pub fn App() -> impl IntoView {
                         bodies[index].activate();
                     });
                 }
+                Notifications::SketchCreationFailed(n) => {
+                    tracing::warn!("Got error on sketch creation: {:?}", *n.reason)
+                }
             }
         }
     });

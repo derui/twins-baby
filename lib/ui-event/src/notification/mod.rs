@@ -4,7 +4,7 @@ use enum_dispatch::enum_dispatch;
 use immutable::Im;
 use ui_event_macros::Notification;
 
-use crate::CommandId;
+use crate::{CommandId, SketchCreationFailure};
 
 /// A notification marker trait.
 #[enum_dispatch(Notifications)]
@@ -21,6 +21,7 @@ pub trait Notification {
 #[derive(Message, Debug, Clone)]
 pub enum Notifications {
     SketchCreated(SketchCreatedNotification),
+    SketchCreationFailed(SketchCreationFailedNotification),
     BodyCreated(BodyCreatedNotification),
     BodyActivated(BodyActivatedNotification),
 }
@@ -34,6 +35,16 @@ pub struct SketchCreatedNotification {
     pub sketch_id: Im<SketchId>,
     /// name of sketch created
     pub name: Im<String>,
+}
+
+/// Response of [ConfimSketchCreationCommand]
+#[derive(Debug, Clone, Notification)]
+pub struct SketchCreationFailedNotification {
+    /// Original Id from the command
+    pub correlation_id: Im<CommandId>,
+
+    /// failure reason
+    pub reason: Im<SketchCreationFailure>,
 }
 
 /// Response of [CreateBodyCommand] .

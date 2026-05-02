@@ -1,25 +1,24 @@
 use bevy::ecs::message::Message;
 use bevy::prelude::Event;
-use cad_base::body::PlaneRef;
 use cad_base::id::BodyId;
 use immutable::Im;
 use ui_event_macros::Command;
 
-use crate::CommandId;
+use crate::{CommandId, ObjectType};
 
 /// Commands are UI -> Bevy command request
 #[derive(Message, Debug, Clone)]
 pub enum Commands {
-    CreateSketchOnPlane(CreateSketchOnPlaneCommand),
+    CreateSketchOnSelected(CreateSketchOnSelectedCommand),
     CreateBody(CreateBodyCommand),
     SwitchActiveBody(SwitchActiveBodyCommand),
 }
 
-/// A command to create a sketch to the plane.
+/// A command to create a sketch to the selected object.
 #[derive(Event, Debug, Clone, Command)]
-pub struct CreateSketchOnPlaneCommand {
+pub struct CreateSketchOnSelectedCommand {
     pub id: Im<CommandId>,
-    pub plane: Im<PlaneRef>,
+    pub selected: Im<ObjectType>,
 }
 
 /// A command to create body

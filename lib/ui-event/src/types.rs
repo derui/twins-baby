@@ -82,3 +82,13 @@ pub enum ObjectType {
     /// A point.
     Point,
 }
+
+/// Enum of failure when creating sketch. This is used to show error message in UI.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SketchCreationFailure {
+    /// Target is not valid selection
+    TargetIsNotValid,
+
+    /// Target is already deleted or others.
+    NotFound,
+}
