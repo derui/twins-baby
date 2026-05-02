@@ -1,21 +1,56 @@
 use leptos::{component, ev::MouseEvent, prelude::*};
-use ui_headless::button::use_button;
+use ui_headless::button::{UseButtonReturn, use_button};
 
 use crate::icon::IconType;
 
+/// A indicator
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Indicator {
+    On,
+    Off,
+    Disabled,
+}
+
+#[component]
+fn Indicator(#[prop(into)] indicator: Signal<Indicator>) -> impl IntoView {
+    view! {
+        <span
+            class="flex rounded-full w-full h-1 shadow-2xl absolute bottom-0"
+            class=(
+                ["bg-green-500", "shadow-green-500/50"],
+                move || indicator.get() == Indicator::On,
+            )
+            class=(["bg-red-500", "shadow-red-500/50"], move || indicator.get() == Indicator::Off)
+            class=(
+                ["bg-gray-500", "shadow-gray-500/50"],
+                move || indicator.get() == Indicator::Disabled,
+            )
+        ></span>
+    }
+}
+
 /// Create tool button. This button is icon-based with an aria-label for accessibility.
+///
+/// # Props
+/// - `icon`: The icon to display on the button.
+/// - `label`: The aria-label for the button, used for accessibility.
+/// - `indicator`: An optional indicator to show the state of the button (e.g., on/off/disabled).
+/// - `tabindex`: An optional tabindex for keyboard navigation.
+/// - `on_click`: An optional callback that is triggered when the button is clicked.
 #[component]
 pub fn ToolButton(
     icon: IconType,
     #[prop(into)] label: String,
-    #[prop(optional)] disabled: Option<bool>,
+    #[prop(optional)] indicator: Option<Indicator>,
     #[prop(optional)] tabindex: Option<i32>,
     #[prop(optional)] on_click: Option<Callback<MouseEvent>>,
 ) -> impl IntoView {
-    let state = use_button(disabled.unwrap_or(false));
+    let UseButtonReturn { attrs, .. } =
+        use_button(indicator.map(|v| v == Indicator::Disabled).unwrap_or(false));
 
-    let disabled = move || state.attrs.get().disabled;
-    let disabled = move || *disabled();
+    // need clone to avoid warning
+    let a1 = attrs.clone();
+    let _a2 = attrs.clone();
     let icon_url = icon.as_url();
     let icon_class = icon.as_size_class();
     let mask_style = format!(
@@ -24,7 +59,7 @@ pub fn ToolButton(
 
     view! {
         <button
-            disabled=disabled
+            disabled=move || *attrs.get().disabled
             tabindex=tabindex
             aria-label=label
             on:click=move |ev| {
@@ -33,9 +68,11 @@ pub fn ToolButton(
                 };
                 handler.run(ev)
             }
-            class="inline-flex flex-col items-center p-2 rounded-xl border border-white/10 bg-black/50 shadow-lg backdrop-blur-md hover:bg-black/70 transition-colors"
+            class="inline-flex flex-col items-center p-2 rounded-xl border border-white/10 bg-black/50 shadow-lg backdrop-blur-md transition-colors relative overflow-hidden"
+            class=("hover:bg-black/70", move || !*a1.get().disabled)
         >
             <span class=format!("{} bg-white", icon_class) style=mask_style />
+            <Indicator indicator=indicator.unwrap_or(Indicator::On) />
         </button>
     }
 }
@@ -45,7 +82,10 @@ mod tests {
     use leptos::prelude::*;
     use leptos_test::{assert_view_snapshot, with_leptos_owner};
 
-    use crate::icon::{IconSize, IconType};
+    use crate::{
+        button::Indicator,
+        icon::{IconSize, IconType},
+    };
 
     use super::ToolButton;
 
@@ -65,7 +105,13 @@ mod tests {
     async fn test_tool_button_disabled() {
         with_leptos_owner(async {
             // Arrange
-            let view = view! { <ToolButton icon=IconType::Cube(IconSize::Medium) label="Cube" disabled=true /> };
+            let view = view! {
+                <ToolButton
+                    icon=IconType::Cube(IconSize::Medium)
+                    label="Cube"
+                    indicator=Indicator::Disabled
+                />
+            };
 
             // Act & Assert
             assert_view_snapshot!("tool_button_disabled", view);

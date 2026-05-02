@@ -75,6 +75,7 @@ pub fn init_bevy_app(setting: BevyAppSettings) -> App {
     .import_message_from_leptos(setting.intent)
     .import_message_from_leptos(setting.command)
     .export_message_to_leptos(setting.notification)
+    .export_message_to_leptos(setting.server_intent)
     .register_commands()
     .add_systems(
         Startup,
