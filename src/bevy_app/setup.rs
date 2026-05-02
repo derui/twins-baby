@@ -12,8 +12,6 @@ use bevy::{
 
 use crate::bevy_app::camera::CAMERA_3D_LAYER;
 
-const COBE_SCALE: f32 = 3.0;
-
 /// Setup the scene
 pub fn setup_scene(
     mut commands: Commands,
