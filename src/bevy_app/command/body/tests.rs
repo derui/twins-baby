@@ -1,14 +1,8 @@
 use bevy::asset::Assets;
-use bevy::ecs::{
-    message::{MessageWriter, Messages},
-    system::RunSystemOnce,
-    world::World,
-};
+use bevy::ecs::{message::Messages, system::RunSystemOnce, world::World};
 use bevy::mesh::Mesh;
 use bevy::pbr::StandardMaterial;
 use cad_base::body::BodyPerspective;
-use cad_base::id::FaceId;
-use cad_base::sketch::AttachableTarget;
 use eyre::Result;
 use pretty_assertions::assert_eq;
 use ui_event::{
@@ -19,7 +13,7 @@ use ui_event::{
     },
 };
 
-use crate::bevy_app::command::body::event::InternalChangeActivePlane;
+use crate::bevy_app::command::body::event::InternalSelectObject;
 use crate::bevy_app::resource::{EngineAppState, EngineState};
 
 use super::*;
@@ -27,7 +21,7 @@ use super::*;
 fn make_world() -> World {
     let mut world = World::new();
     world.init_resource::<Messages<Notifications>>();
-    world.init_resource::<Messages<InternalChangeActivePlane>>();
+    world.init_resource::<Messages<InternalSelectObject>>();
     world.init_resource::<EngineState>();
     world.init_resource::<EngineAppState>();
     world.init_resource::<Assets<Mesh>>();
@@ -328,58 +322,6 @@ fn update_plane_visibilities_switches_visibility_when_active_body_changes() {
 }
 
 #[test]
-fn update_plane_visibilities_keeps_planes_hidden_when_active_face_is_set() {
-    // Arrange
-    let mut world = make_world();
-    let (body1_id, body1_entities) = create_body_and_get_plane_entities(&mut world, "body1");
-    {
-        let mut app_state = world.resource_mut::<EngineAppState>();
-        app_state.active_body = Some(body1_id);
-        app_state.active_attachable_target = Some(AttachableTarget::Face(FaceId::from(1)));
-    }
-
-    // Act
-    world.run_system_once(update_plane_visibilities).unwrap();
-
-    // Assert
-    for &e in &body1_entities {
-        assert_eq!(
-            world.entity(e).get::<Visibility>().copied(),
-            Some(Visibility::Hidden)
-        );
-    }
-}
-
-#[test]
-fn update_plane_visibilities_shows_planes_when_active_plane_ref_is_set() {
-    // Arrange
-    let mut world = make_world();
-    let (body1_id, body1_entities) = create_body_and_get_plane_entities(&mut world, "body1");
-    let plane_ref = {
-        let mut engine = world.resource_mut::<EngineState>();
-        let tx = engine.0.begin();
-        let bodies = tx.read::<BodyPerspective>().unwrap();
-        bodies.as_x_plane_ref(&body1_id).unwrap()
-    };
-    {
-        let mut app_state = world.resource_mut::<EngineAppState>();
-        app_state.active_body = Some(body1_id);
-        app_state.active_attachable_target = Some(AttachableTarget::Plane(plane_ref));
-    }
-
-    // Act
-    world.run_system_once(update_plane_visibilities).unwrap();
-
-    // Assert
-    for &e in &body1_entities {
-        assert_eq!(
-            world.entity(e).get::<Visibility>().copied(),
-            Some(Visibility::Visible)
-        );
-    }
-}
-
-#[test]
 fn switch_active_body_writes_notification_and_updates_app_state() -> Result<()> {
     // Arrange
     let mut world = make_world();
@@ -434,71 +376,4 @@ fn switch_active_body_returns_error_when_body_not_found() {
     assert_eq!(notifications.len(), 0);
     let app_state = world.resource::<EngineAppState>();
     assert_eq!(app_state.active_body, None);
-}
-
-fn get_x_plane_ref(world: &mut World, body_id: &cad_base::id::BodyId) -> PlaneRef {
-    let mut engine = world.resource_mut::<EngineState>();
-    let tx = engine.0.begin();
-    let bodies = tx.read::<BodyPerspective>().unwrap();
-    bodies.as_x_plane_ref(body_id).unwrap()
-}
-
-fn send_change_active_plane(world: &mut World, plane_ref: PlaneRef) {
-    world
-        .run_system_once(
-            move |mut writer: MessageWriter<InternalChangeActivePlane>| {
-                writer.write(InternalChangeActivePlane {
-                    plane_ref: plane_ref.clone(),
-                });
-            },
-        )
-        .unwrap();
-    world.run_system_once(on_change_active_plane).unwrap();
-}
-
-#[test]
-fn on_change_active_plane_sets_plane_when_no_active_body() {
-    // Arrange
-    let mut world = make_world();
-    let (body1_id, _) = create_body_and_get_plane_entities(&mut world, "body1");
-    let plane_ref = get_x_plane_ref(&mut world, &body1_id);
-
-    // Act
-    send_change_active_plane(&mut world, plane_ref.clone());
-
-    // Assert
-    let app_state = world.resource::<EngineAppState>();
-    assert_eq!(
-        app_state.active_attachable_target,
-        Some(AttachableTarget::Plane(plane_ref))
-    );
-}
-
-#[test]
-fn on_change_active_plane_updates_plane_ref_when_plane_already_active() {
-    // Arrange
-    let mut world = make_world();
-    let (body1_id, _) = create_body_and_get_plane_entities(&mut world, "body1");
-    let (x_plane_ref, y_plane_ref) = {
-        let mut engine = world.resource_mut::<EngineState>();
-        let tx = engine.0.begin();
-        let bodies = tx.read::<BodyPerspective>().unwrap();
-        (
-            bodies.as_x_plane_ref(&body1_id).unwrap(),
-            bodies.as_y_plane_ref(&body1_id).unwrap(),
-        )
-    };
-    world
-        .resource_mut::<EngineAppState>()
-        .active_attachable_target = Some(AttachableTarget::Plane(x_plane_ref));
-
-    // Act
-    send_change_active_plane(&mut world, y_plane_ref.clone());
-
-    // Assert
-    let app_state = world.resource::<EngineAppState>();
-    assert_eq!(
-        app_state.active_attachable_target,
-        Some(AttachableTarget::Plane(y_plane_ref))
-    );
 }

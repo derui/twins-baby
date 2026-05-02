@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use bevy::ecs::{entity::Entity, resource::Resource};
-use cad_base::{CadEngine, id::BodyId, sketch::AttachableTarget};
+use cad_base::{CadEngine, id::BodyId};
 
 use crate::bevy_app::component::ObjectType;
 

@@ -18,7 +18,6 @@ use bevy::prelude::ResMut;
 use bevy::transform::components::Transform;
 use cad_base::body::{BodyPerspective, PlaneRef};
 use cad_base::id::BodyId;
-use cad_base::sketch::AttachableTarget;
 use ui_event::command::SwitchActiveBodyCommand;
 use ui_event::{
     command::CreateBodyCommand,
@@ -74,15 +73,13 @@ fn update_plane_selection(
     }
 }
 
-/// Return a obverver for [Pointer<Out>] event to update plane material to `material_normal`
 fn update_plane_click(
     event: On<Pointer<Click>>,
-    query: Query<&BodyBasePlane>,
     mut commands: MessageWriter<InternalSelectObject>,
 ) {
-    if let Ok(plane) = query.get(event.event_target()) {
-        commands.write(InternalSelectObject { plane_ref: plane.0 });
-    }
+    commands.write(InternalSelectObject {
+        entity: event.event_target().into(),
+    });
 }
 
 /// Register 3 planes for the body.
