@@ -11,7 +11,9 @@ mod ui;
 // This initializes a normal Bevy app
 use bevy::{asset::AssetMetaCheck, picking::input::PointerInputSettings, prelude::*};
 use leptos_bevy_canvas::prelude::{BevyMessageReceiver, BevyMessageSender, LeptosBevyApp};
-use ui_event::{command::Commands, intent::Intents, notification::Notifications};
+use ui_event::{
+    command::Commands, intent::Intents, notification::Notifications, server::ServerIntents,
+};
 
 use crate::bevy_app::{
     camera::{
@@ -36,6 +38,7 @@ pub struct BevyAppSettings {
     pub intent: BevyMessageReceiver<Intents>,
     pub command: BevyMessageReceiver<Commands>,
     pub notification: BevyMessageSender<Notifications>,
+    pub server_intent: BevyMessageSender<ServerIntents>,
 }
 
 pub fn init_bevy_app(setting: BevyAppSettings) -> App {

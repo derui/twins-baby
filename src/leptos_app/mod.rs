@@ -15,6 +15,7 @@ use ui_event::{
     command::Commands,
     intent::{CanvasResizeIntent, Intents},
     notification::Notifications,
+    server::ServerIntents,
 };
 
 use crate::{
@@ -61,6 +62,8 @@ pub fn App() -> impl IntoView {
     let (intent_sender, intent_receiver) = message_l2b::<Intents>();
     let (command_sender, command_receiver) = message_l2b::<Commands>();
     let (leptos_notification_receiver, bevy_notification_sender) = message_b2l::<Notifications>();
+    let (_leptos_server_intent_receiver, bevy_server_intent_sender) =
+        message_b2l::<ServerIntents>();
     let store = AppStore::new();
     provide_context(CommandSender::new(command_sender));
     provide_context(store);
@@ -195,6 +198,7 @@ pub fn App() -> impl IntoView {
                     intent_receiver=intent_receiver
                     command_receiver=command_receiver
                     bevy_notification_sender=bevy_notification_sender
+                    bevy_server_intent_sender=bevy_server_intent_sender
                 />
 
                 // Row 4: Y nob between middle and bottom
@@ -217,6 +221,7 @@ pub fn CenterResizableRow(
     intent_receiver: BevyMessageReceiver<Intents>,
     command_receiver: BevyMessageReceiver<Commands>,
     bevy_notification_sender: BevyMessageSender<Notifications>,
+    bevy_server_intent_sender: BevyMessageSender<ServerIntents>,
 ) -> impl IntoView {
     view! {
         <FeatureIsland />
@@ -232,6 +237,7 @@ pub fn CenterResizableRow(
                         intent: intent_receiver,
                         command: command_receiver,
                         notification: bevy_notification_sender,
+                        server_intent: bevy_server_intent_sender,
                     })
                 }
                 {..}
