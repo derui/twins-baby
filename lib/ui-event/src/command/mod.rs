@@ -7,6 +7,7 @@ use ui_event_macros::Command;
 
 use crate::CommandId;
 
+/// Commands are UI -> Bevy command request
 #[derive(Message, Debug, Clone)]
 pub enum Commands {
     CreateSketchOnPlane(CreateSketchOnPlaneCommand),

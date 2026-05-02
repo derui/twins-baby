@@ -1,5 +1,9 @@
 use std::fmt::Display;
 
+use cad_base::{
+    body::PlaneRef,
+    id::{EdgeId, FaceId},
+};
 use cad_base_macros::MakeId;
 use color_eyre::eyre;
 
@@ -61,4 +65,20 @@ impl std::str::FromStr for PerspectiveKind {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Self::from_string(s)
     }
+}
+
+/// Enum of types of object in CAD's body perspective. This uses to pick, edit, and move.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ObjectType {
+    /// A plane. Plane is only on a body
+    Plane(PlaneRef),
+
+    /// A face. Face is in a feature
+    Face(FaceId),
+
+    /// An edge. Edge is in a feature
+    Edge(EdgeId),
+
+    /// A point.
+    Point,
 }
