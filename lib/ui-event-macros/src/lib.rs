@@ -7,7 +7,9 @@ extern crate proc_macro;
 use proc_macro::TokenStream;
 
 use crate::{
-    command::impl_command_macro, intent::impl_intent_macro, notification::impl_notification_macro,
+    command::impl_command_macro,
+    intent::{impl_intent_macro, impl_server_intent_macro},
+    notification::impl_notification_macro,
 };
 
 /// Derive [Intent] to make Intent
@@ -16,6 +18,14 @@ pub fn intent_derive(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).unwrap();
 
     impl_intent_macro(&ast)
+}
+
+/// Derive [Intent] to make Intent
+#[proc_macro_derive(ServerIntent)]
+pub fn intent_server_derive(input: TokenStream) -> TokenStream {
+    let ast = syn::parse(input).unwrap();
+
+    impl_server_intent_macro(&ast)
 }
 
 /// Derive [Command] to make Command
