@@ -1,11 +1,10 @@
-use bevy::asset::{Assets, Handle};
+use bevy::asset::Assets;
 use bevy::camera::visibility::{RenderLayers, Visibility};
-use bevy::color::palettes::tailwind::CYAN_500;
+use bevy::color::palettes::tailwind::BLUE_500;
+use bevy::color::palettes::tailwind::GREEN_500;
+use bevy::color::palettes::tailwind::RED_500;
 use bevy::color::{Alpha, Color};
-use bevy::ecs::component::Component;
 use bevy::ecs::entity::Entity;
-use bevy::ecs::event::EntityEvent as _;
-use bevy::ecs::message::MessageReader;
 use bevy::ecs::query::With;
 use bevy::ecs::system::{Commands, Query, Res};
 use bevy::ecs::{error::BevyError, message::MessageWriter, observer::On};
@@ -13,10 +12,9 @@ use bevy::math::Dir3;
 use bevy::math::primitives::Plane3d;
 use bevy::mesh::{Mesh, Mesh3d, Meshable};
 use bevy::pbr::{MeshMaterial3d, StandardMaterial};
-use bevy::picking::events::{Click, Out, Over, Pointer};
 use bevy::prelude::ResMut;
 use bevy::transform::components::Transform;
-use cad_base::body::{BodyPerspective, PlaneRef};
+use cad_base::body::BodyPerspective;
 use cad_base::id::BodyId;
 use ui_event::command::SwitchActiveBodyCommand;
 use ui_event::{
@@ -25,61 +23,40 @@ use ui_event::{
 };
 
 use crate::bevy_app::camera::CAMERA_3D_LAYER;
-use crate::bevy_app::command::body::event::InternalSelectObject;
+use crate::bevy_app::command::body::component::BodyBasePlane;
 use crate::bevy_app::component::ObjectType;
+use crate::bevy_app::picking::{
+    PickingMaterials, update_pointer_click, update_pointer_out, update_pointer_over,
+};
 use crate::bevy_app::resource::{EngineAppState, EngineState};
 
 #[cfg(test)]
 mod tests;
 
-mod event;
+mod component;
 
-// components
-
-/// A marker compoment
-#[derive(Debug, Component, PartialEq, Eq, Clone, Copy)]
-pub struct BodyBasePlane(pub PlaneRef);
-
-/// Return a obverver for [Pointer<Over>] event to update plane material to `material_over`
-fn update_plane_over(
-    material_over: Handle<StandardMaterial>,
-) -> impl Fn(On<Pointer<Over>>, Query<&mut MeshMaterial3d<StandardMaterial>>) {
-    move |event, mut query| {
-        if let Ok(mut material) = query.get_mut(event.event_target()) {
-            material.0 = material_over.clone()
-        }
-    }
-}
-
-/// Return a obverver for [Pointer<Out>] event to update plane material to `material_normal`
-fn update_plane_out(
-    material_normal: Handle<StandardMaterial>,
-) -> impl Fn(On<Pointer<Out>>, Query<&mut MeshMaterial3d<StandardMaterial>>) {
-    move |event, mut query| {
-        if let Ok(mut material) = query.get_mut(event.event_target()) {
-            material.0 = material_normal.clone()
-        }
-    }
-}
-
-/// Return a obverver for [Pointer<Out>] event to update plane material to `material_normal`
-fn update_plane_selection(
-    material_normal: Handle<StandardMaterial>,
-) -> impl Fn(On<Pointer<Click>>, Query<&mut MeshMaterial3d<StandardMaterial>>) {
-    move |event, mut query| {
-        if let Ok(mut material) = query.get_mut(event.event_target()) {
-            material.0 = material_normal.clone()
-        }
-    }
-}
-
-fn update_plane_click(
-    event: On<Pointer<Click>>,
-    mut commands: MessageWriter<InternalSelectObject>,
-) {
-    commands.write(InternalSelectObject {
-        entity: event.event_target().into(),
+/// make a [PickingMaterials] of plane with color
+fn make_picking_materials(
+    materials: &mut ResMut<Assets<StandardMaterial>>,
+    color: Color,
+) -> PickingMaterials {
+    let mat_normal = materials.add(StandardMaterial {
+        base_color: color.with_alpha(0.3),
+        double_sided: true,
+        cull_mode: None,
+        ..Default::default()
     });
+    let mat_over = materials.add(StandardMaterial {
+        base_color: color.with_alpha(0.5),
+        double_sided: true,
+        cull_mode: None,
+        ..Default::default()
+    });
+
+    PickingMaterials {
+        normal: mat_normal,
+        over: mat_over,
+    }
 }
 
 /// Register 3 planes for the body.
@@ -95,65 +72,32 @@ fn register_body_base_planes(
 ) -> eyre::Result<Vec<Entity>> {
     // all sizes are 1 = 1m
     let mut entities = Vec::new();
-    let mat_normal = materials.add(Color::from(CYAN_500).with_alpha(0.3));
-    let mat_over = materials.add(Color::from(CYAN_500).with_alpha(0.5));
-    let mat_select = materials.add(Color::from(CYAN_500).with_alpha(0.8));
     let ref_x = bodies.to_x_plane_ref(body_id).expect("Should get X ref");
     let ref_y = bodies.to_y_plane_ref(body_id).expect("Should get Y ref");
     let ref_z = bodies.to_z_plane_ref(body_id).expect("Should get Z ref");
 
-    // normal vector will use for culling, this simple fix to avoid disappearing of planes
-    for dir in [Dir3::Z, Dir3::NEG_Z] {
-        let plane = meshes.add(Plane3d::default().mesh().size(10.0, 10.0).normal(dir));
-        let mut entity = commands.spawn((
-            Mesh3d(plane),
-            MeshMaterial3d(mat_normal.clone()),
-            Transform::from_xyz(0., 0., 0.),
-            RenderLayers::layer(CAMERA_3D_LAYER),
-            Visibility::Hidden,
-            BodyBasePlane(ref_z),
-            ObjectType::Plane(ref_z),
-        ));
-        entity.observe(update_plane_over(mat_over.clone()));
-        entity.observe(update_plane_out(mat_normal.clone()));
-        entity.observe(update_plane_selection(mat_select.clone()));
-        entity.observe(update_plane_click);
-        entities.push(entity.id());
-    }
+    let defs = [
+        (Dir3::Z, ref_z, Color::from(RED_500)),
+        (Dir3::X, ref_x, Color::from(GREEN_500)),
+        (Dir3::Y, ref_y, Color::from(BLUE_500)),
+    ];
 
-    for dir in [Dir3::X, Dir3::NEG_X] {
+    for (dir, plane_ref, color) in defs {
+        let mat = make_picking_materials(materials, color);
         let plane = meshes.add(Plane3d::default().mesh().size(10.0, 10.0).normal(dir));
         let mut entity = commands.spawn((
             Mesh3d(plane),
-            MeshMaterial3d(mat_normal.clone()),
+            MeshMaterial3d(mat.normal.clone()),
             Transform::from_xyz(0., 0., 0.),
             RenderLayers::layer(CAMERA_3D_LAYER),
             Visibility::Hidden,
-            BodyBasePlane(ref_x),
-            ObjectType::Plane(ref_x),
+            BodyBasePlane(plane_ref),
+            ObjectType::Plane(plane_ref),
+            mat,
         ));
-        entity.observe(update_plane_over(mat_over.clone()));
-        entity.observe(update_plane_out(mat_normal.clone()));
-        entity.observe(update_plane_selection(mat_select.clone()));
-        entity.observe(update_plane_click);
-        entities.push(entity.id());
-    }
-
-    for dir in [Dir3::Y, Dir3::NEG_Y] {
-        let plane = meshes.add(Plane3d::default().mesh().size(10.0, 10.0).normal(dir));
-        let mut entity = commands.spawn((
-            Mesh3d(plane),
-            MeshMaterial3d(mat_normal.clone()),
-            Transform::from_xyz(0., 0., 0.),
-            RenderLayers::layer(CAMERA_3D_LAYER),
-            Visibility::Hidden,
-            BodyBasePlane(ref_y),
-            ObjectType::Plane(ref_y),
-        ));
-        entity.observe(update_plane_over(mat_over.clone()));
-        entity.observe(update_plane_out(mat_normal.clone()));
-        entity.observe(update_plane_selection(mat_select.clone()));
-        entity.observe(update_plane_click);
+        entity.observe(update_pointer_over);
+        entity.observe(update_pointer_out);
+        entity.observe(update_pointer_click);
         entities.push(entity.id());
     }
 
@@ -268,30 +212,5 @@ pub(super) fn update_plane_visibilities(
         .unwrap_or(&Vec::<Entity>::new())
     {
         commands.entity(plane).insert(Visibility::Visible);
-    }
-}
-
-/// Update selections of something of body
-pub(super) fn update_toggling_selection(
-    mut reader: MessageReader<InternalSelectObject>,
-    mut app_state: ResMut<EngineAppState>,
-    query: Query<&ObjectType>,
-) {
-    for event in reader.read() {
-        if let Some(p) = app_state
-            .selections
-            .iter()
-            .position(|(e, _)| *e == *event.entity)
-        {
-            app_state.selections.remove(p);
-        } else {
-            let Ok(object_type) = query.get(*event.entity) else {
-                tracing::warn!("Can not get object type from selectable entity");
-                continue;
-            };
-            app_state
-                .selections
-                .push((*event.entity, object_type.clone()));
-        }
     }
 }

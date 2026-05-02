@@ -2,6 +2,7 @@ mod camera;
 mod command;
 mod component;
 mod pan_orbit;
+mod picking;
 mod resize;
 mod resource;
 mod setup;
@@ -19,6 +20,7 @@ use crate::bevy_app::{
     },
     command::CommandAppExt,
     pan_orbit::{pan_orbit_camera, setup_pan_orbit},
+    picking::{SelectObject, update_toggling_selection},
     resize::WindowResizePlugin,
     resource::{EngineAppState, EngineState},
     setup::setup_scene,
@@ -63,6 +65,7 @@ pub fn init_bevy_app(setting: BevyAppSettings) -> App {
         is_touch_enabled: true,
         is_mouse_enabled: true,
     })
+    .init_resource::<Messages<SelectObject>>()
     .insert_resource(ClearColor(Color::srgb(0.7, 0.7, 0.7)))
     .init_resource::<EngineState>()
     .init_resource::<EngineAppState>()
@@ -93,7 +96,8 @@ pub fn init_bevy_app(setting: BevyAppSettings) -> App {
             )
                 .chain(),
         ),
-    );
+    )
+    .add_systems(Update, update_toggling_selection);
 
     app
 }
