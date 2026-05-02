@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use immutable::Im;
-use ui_event::server::ServerIntents;
+use ui_event::server::{ObjectSelectionChangeServerIntent, ServerIntents};
 
 use crate::bevy_app::{component::BodyPartType, resource::EngineAppState};
 
@@ -83,28 +83,57 @@ pub fn update_toggling_selection(
                 .push((*event.entity, object_type.clone()));
         }
     }
+
+    writer.write(
+        ObjectSelectionChangeServerIntent {
+            selections: app_state
+                .selections
+                .iter()
+                .cloned()
+                .map(|v| v.1.0)
+                .collect(),
+        }
+        .into(),
+    );
 }
 
 #[cfg(test)]
 mod tests {
     use bevy::ecs::{
-        message::{MessageWriter, Messages},
+        message::{MessageReader, MessageWriter, Messages},
         system::RunSystemOnce,
         world::World,
     };
     use cad_base::id::EdgeId;
     use pretty_assertions::assert_eq;
-    use ui_event::{ObjectType, server::ServerIntents};
+    use ui_event::{
+        ObjectType,
+        server::{ObjectSelectionChangeServerIntent, ServerIntent, ServerIntents},
+    };
 
     use crate::bevy_app::{component::BodyPartType, resource::EngineAppState};
 
     use super::*;
+
+    #[derive(bevy::ecs::resource::Resource, Default)]
+    struct IntentCapture(Vec<ServerIntents>);
+
+    fn capture_intents_system(
+        mut reader: MessageReader<ServerIntents>,
+        mut capture: ResMut<IntentCapture>,
+    ) {
+        capture.0.clear();
+        for intent in reader.read() {
+            capture.0.push(intent.clone());
+        }
+    }
 
     fn make_world() -> World {
         let mut world = World::new();
         world.init_resource::<Messages<SelectObject>>();
         world.init_resource::<Messages<ServerIntents>>();
         world.init_resource::<EngineAppState>();
+        world.init_resource::<IntentCapture>();
         world
     }
 
@@ -117,6 +146,7 @@ mod tests {
             })
             .unwrap();
         world.run_system_once(update_toggling_selection).unwrap();
+        world.run_system_once(capture_intents_system).unwrap();
     }
 
     fn point_type() -> BodyPartType {
@@ -125,6 +155,15 @@ mod tests {
 
     fn edge_type() -> BodyPartType {
         BodyPartType(ObjectType::Edge(EdgeId::new(1)))
+    }
+
+    fn captured_selection_intent(world: &World) -> Option<ObjectSelectionChangeServerIntent> {
+        world
+            .resource::<IntentCapture>()
+            .0
+            .iter()
+            .find_map(|i| i.select_ref::<ObjectSelectionChangeServerIntent>())
+            .cloned()
     }
 
     #[test]
@@ -218,5 +257,57 @@ mod tests {
         // Assert
         let app_state = world.resource::<EngineAppState>();
         assert_eq!(app_state.selections, vec![(entity2, edge_type())]);
+    }
+
+    #[test]
+    fn sends_intent_with_selected_object_types_when_entity_selected() {
+        // Arrange
+        let mut world = make_world();
+        let entity = world.spawn(point_type()).id();
+
+        // Act
+        send_select_entity(&mut world, entity);
+
+        // Assert
+        let intent = captured_selection_intent(&world).expect("intent should be sent");
+        assert_eq!(intent.selections, vec![ObjectType::Point]);
+    }
+
+    #[test]
+    fn sends_intent_with_empty_selections_when_entity_deselected() {
+        // Arrange
+        let mut world = make_world();
+        let entity = world.spawn(point_type()).id();
+        world
+            .resource_mut::<EngineAppState>()
+            .selections
+            .push((entity, point_type()));
+
+        // Act
+        send_select_entity(&mut world, entity);
+
+        // Assert
+        let intent = captured_selection_intent(&world).expect("intent should be sent");
+        assert_eq!(intent.selections, vec![]);
+    }
+
+    #[test]
+    fn sends_intent_with_remaining_selections_after_partial_deselection() {
+        // Arrange
+        let mut world = make_world();
+        let entity1 = world.spawn(point_type()).id();
+        let entity2 = world.spawn(edge_type()).id();
+        {
+            let mut app_state = world.resource_mut::<EngineAppState>();
+            app_state.selections.push((entity1, point_type()));
+            app_state.selections.push((entity2, edge_type()));
+        }
+
+        // Act
+        send_select_entity(&mut world, entity1);
+
+        // Assert
+        let intent = captured_selection_intent(&world).expect("intent should be sent");
+        assert_eq!(intent.selections, vec![ObjectType::Edge(EdgeId::new(1))]);
     }
 }
