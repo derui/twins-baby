@@ -21,6 +21,7 @@ color-eyre = "0.6.5"
 thiserror = "2.0.18"
 tracing = "0.1.44"
 
+crossbeam-channel = "0.5.15"
 insta = "1.43.1"
 smol_str = "0.2"
 leptos = { version = "0.8.16", features = ["csr"] }
@@ -57,6 +58,7 @@ ui-component = { version = "0.1.0", path = "lib/ui-component" }
 ui-event = { version = "0.1.0", path = "lib/ui-event" }
 
 [dev-dependencies]
+crossbeam-channel.workspace = true
 pretty_assertions.workspace = true
 rstest.workspace = true
 tokio.workspace = true

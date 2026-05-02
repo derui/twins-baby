@@ -6209,6 +6209,7 @@ dependencies = [
  "coarsetime",
  "color-eyre",
  "console_error_panic_hook",
+ "crossbeam-channel",
  "enum_dispatch",
  "eyre",
  "futures-lite",
