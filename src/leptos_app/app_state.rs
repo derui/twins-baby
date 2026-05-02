@@ -2,6 +2,7 @@ use cad_base::id::BodyId;
 use immutable::Im;
 use leptos::prelude::Signal;
 use reactive_stores::Store;
+use ui_event::ObjectType;
 
 use crate::leptos_app::ui_state::BodyUI;
 
@@ -51,15 +52,18 @@ impl From<BodyState> for BodyUI {
 
 /// The centralized state of application state. This state is the single source of truth of
 /// Application state of **frontend** . This is not the state of beby's 3D engine and CAD data.
-#[derive(Debug, Clone, Store)]
+#[derive(Debug, Clone, Store, Default)]
 pub struct AppStore {
     /// Bodies in this application
     bodies: Vec<BodyState>,
+
+    /// Selections in CAD
+    selections: Vec<ObjectType>,
 }
 
 impl AppStore {
     /// New [AppStore]
     pub fn new() -> Store<AppStore> {
-        Store::new(AppStore { bodies: Vec::new() })
+        Store::new(Default::default())
     }
 }

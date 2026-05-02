@@ -7,6 +7,7 @@ mod ui_state;
 mod use_action;
 mod use_perspective;
 mod use_resize;
+mod use_server_intent;
 
 use leptos::{context::Provider, prelude::*};
 use leptos_bevy_canvas::prelude::*;
@@ -27,6 +28,7 @@ use crate::{
         resize_nob::NOB_AREA,
         ui_state::UiStore,
         use_action::CommandIdGen,
+        use_server_intent::use_server_intent,
     },
 };
 use resize_nob::{ResizeXNob, ResizeYNob};
@@ -62,13 +64,14 @@ pub fn App() -> impl IntoView {
     let (intent_sender, intent_receiver) = message_l2b::<Intents>();
     let (command_sender, command_receiver) = message_l2b::<Commands>();
     let (leptos_notification_receiver, bevy_notification_sender) = message_b2l::<Notifications>();
-    let (_leptos_server_intent_receiver, bevy_server_intent_sender) =
-        message_b2l::<ServerIntents>();
+    let (leptos_server_intent_receiver, bevy_server_intent_sender) = message_b2l::<ServerIntents>();
     let store = AppStore::new();
     provide_context(CommandSender::new(command_sender));
     provide_context(store);
     provide_context(UiStore::new(store));
     provide_context(CommandIdGen::new());
+
+    let _ = use_server_intent(leptos_server_intent_receiver);
 
     let initial_width = window()
         .inner_width()
