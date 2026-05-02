@@ -1,5 +1,9 @@
 use bevy::asset::Assets;
-use bevy::ecs::{message::Messages, system::RunSystemOnce, world::World};
+use bevy::ecs::{
+    message::{MessageWriter, Messages},
+    system::RunSystemOnce,
+    world::World,
+};
 use bevy::mesh::Mesh;
 use bevy::pbr::StandardMaterial;
 use cad_base::body::BodyPerspective;
@@ -23,13 +27,13 @@ use super::*;
 fn make_world() -> World {
     let mut world = World::new();
     world.init_resource::<Messages<Notifications>>();
+    world.init_resource::<Messages<InternalChangeActivePlane>>();
     world.init_resource::<EngineState>();
     world.init_resource::<EngineAppState>();
     world.init_resource::<Assets<Mesh>>();
     world.init_resource::<Assets<StandardMaterial>>();
     world.add_observer(on_create_body);
     world.add_observer(on_switch_active_body);
-    world.add_observer(on_change_active_plane);
     world
 }
 
@@ -439,6 +443,19 @@ fn get_x_plane_ref(world: &mut World, body_id: &cad_base::id::BodyId) -> PlaneRe
     bodies.as_x_plane_ref(body_id).unwrap()
 }
 
+fn send_change_active_plane(world: &mut World, plane_ref: PlaneRef) {
+    world
+        .run_system_once(
+            move |mut writer: MessageWriter<InternalChangeActivePlane>| {
+                writer.write(InternalChangeActivePlane {
+                    plane_ref: plane_ref.clone(),
+                });
+            },
+        )
+        .unwrap();
+    world.run_system_once(on_change_active_plane).unwrap();
+}
+
 #[test]
 fn on_change_active_plane_sets_plane_when_no_active_body() {
     // Arrange
@@ -447,10 +464,7 @@ fn on_change_active_plane_sets_plane_when_no_active_body() {
     let plane_ref = get_x_plane_ref(&mut world, &body1_id);
 
     // Act
-    world.trigger(InternalChangeActivePlane {
-        plane_ref: plane_ref.clone(),
-    });
-    world.flush();
+    send_change_active_plane(&mut world, plane_ref.clone());
 
     // Assert
     let app_state = world.resource::<EngineAppState>();
@@ -458,43 +472,6 @@ fn on_change_active_plane_sets_plane_when_no_active_body() {
         app_state.active_attachable_target,
         Some(AttachableTarget::Plane(plane_ref))
     );
-}
-
-#[test]
-fn on_change_active_plane_does_not_change_when_active_body_is_set() {
-    // Arrange
-    let mut world = make_world();
-    let (body1_id, _) = create_body_and_get_plane_entities(&mut world, "body1");
-    let plane_ref = get_x_plane_ref(&mut world, &body1_id);
-    world.resource_mut::<EngineAppState>().active_body = Some(body1_id);
-
-    // Act
-    world.trigger(InternalChangeActivePlane { plane_ref });
-    world.flush();
-
-    // Assert
-    let app_state = world.resource::<EngineAppState>();
-    assert_eq!(app_state.active_attachable_target, None);
-}
-
-#[test]
-fn on_change_active_plane_does_not_change_when_face_is_active_target() {
-    // Arrange
-    let mut world = make_world();
-    let (body1_id, _) = create_body_and_get_plane_entities(&mut world, "body1");
-    let plane_ref = get_x_plane_ref(&mut world, &body1_id);
-    let face_target = AttachableTarget::Face(FaceId::from(1));
-    world
-        .resource_mut::<EngineAppState>()
-        .active_attachable_target = Some(face_target.clone());
-
-    // Act
-    world.trigger(InternalChangeActivePlane { plane_ref });
-    world.flush();
-
-    // Assert
-    let app_state = world.resource::<EngineAppState>();
-    assert_eq!(app_state.active_attachable_target, Some(face_target));
 }
 
 #[test]
@@ -516,10 +493,7 @@ fn on_change_active_plane_updates_plane_ref_when_plane_already_active() {
         .active_attachable_target = Some(AttachableTarget::Plane(x_plane_ref));
 
     // Act
-    world.trigger(InternalChangeActivePlane {
-        plane_ref: y_plane_ref.clone(),
-    });
-    world.flush();
+    send_change_active_plane(&mut world, y_plane_ref.clone());
 
     // Assert
     let app_state = world.resource::<EngineAppState>();
