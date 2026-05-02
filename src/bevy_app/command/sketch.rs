@@ -1,9 +1,10 @@
 use bevy::prelude::*;
 use cad_base::{
-    body::BodyPerspective,
+    body::{BodyPerspective, PlaneRef},
     id::SketchId,
     sketch::{AttachableTarget, SketchPerspective},
 };
+use immutable::Im;
 use ui_event::{
     ObjectType, SketchCreationFailure,
     command::CreateSketchOnSelectedCommand,
@@ -11,6 +12,16 @@ use ui_event::{
 };
 
 use crate::bevy_app::resource::EngineState;
+
+/// Convert selected object to attachable target. Only plane and face can be attachable target.
+fn to_attachable_target(selected: &Im<ObjectType>) -> Option<PlaneRef> {
+    match **selected {
+        ObjectType::Plane(plane_ref) => Some(plane_ref),
+        ObjectType::Face(_) => None,
+        ObjectType::Edge(_) => None,
+        ObjectType::Point => None,
+    }
+}
 
 /// A command to create sketch on the plane.
 pub(super) fn on_create_sketch_on_plane(
@@ -20,10 +31,7 @@ pub(super) fn on_create_sketch_on_plane(
 ) {
     let command = trigger.event();
 
-    let Some(plane_ref) = (match &*command.selected {
-        ObjectType::Plane(plane_ref) => Some(*plane_ref),
-        _ => None,
-    }) else {
+    let Some(target) = to_attachable_target(&command.selected) else {
         writer.write(
             SketchCreationFailedNotification {
                 correlation_id: command.id.clone(),
@@ -45,7 +53,7 @@ pub(super) fn on_create_sketch_on_plane(
             return;
         };
 
-        created_sketch = sketch_p.add_sketch(&AttachableTarget::Plane(plane_ref));
+        created_sketch = sketch_p.add_sketch(&AttachableTarget::Plane(target));
         sketch_name = sketch_p
             .get(&created_sketch)
             .map(|v| (*v.name).clone())
@@ -53,7 +61,7 @@ pub(super) fn on_create_sketch_on_plane(
     }
 
     if let Some(body_p) = transaction.modify::<BodyPerspective>()
-        && let Some(body) = body_p.get_mut(&plane_ref.body_id())
+        && let Some(body) = body_p.get_mut(&target.body_id())
     {
         body.add_sketch(&created_sketch);
     } else {
