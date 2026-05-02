@@ -18,6 +18,12 @@ tasks:
       - leptosfmt '**/*.rs$'
       - prettier --write '**/*.ts'
 
+  'ui-gallary':
+    desc: Open UI gallary of this app
+    dir: ./lib/ui-fixtures
+    cmds:
+      - trunk serve
+
   test:
     desc: Run test all workspace
     cmds:
