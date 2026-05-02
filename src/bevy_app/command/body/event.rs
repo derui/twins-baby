@@ -1,6 +1,6 @@
 // internal events
 
-use bevy::ecs::{event::Event, message::Message};
+use bevy::ecs::message::Message;
 use cad_base::body::PlaneRef;
 
 /// An internal event to change Active Plane

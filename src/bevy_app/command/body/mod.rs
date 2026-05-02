@@ -13,7 +13,7 @@ use bevy::math::Dir3;
 use bevy::math::primitives::Plane3d;
 use bevy::mesh::{Mesh, Mesh3d, Meshable};
 use bevy::pbr::{MeshMaterial3d, StandardMaterial};
-use bevy::picking::events::{Click, Out, Over, Pointer, Release};
+use bevy::picking::events::{Click, Out, Over, Pointer};
 use bevy::prelude::ResMut;
 use bevy::transform::components::Transform;
 use cad_base::body::{BodyPerspective, PlaneRef};
@@ -80,9 +80,7 @@ fn update_plane_click(
     mut commands: MessageWriter<InternalChangeActivePlane>,
 ) {
     if let Ok(plane) = query.get(event.event_target()) {
-        commands.write(InternalChangeActivePlane {
-            plane_ref: plane.0.clone(),
-        });
+        commands.write(InternalChangeActivePlane { plane_ref: plane.0 });
     }
 }
 
@@ -280,6 +278,6 @@ pub(super) fn on_change_active_plane(
     mut app_state: ResMut<EngineAppState>,
 ) {
     for event in reader.read() {
-        app_state.active_attachable_target = Some(AttachableTarget::Plane(event.plane_ref.clone()));
+        app_state.active_attachable_target = Some(AttachableTarget::Plane(event.plane_ref));
     }
 }
