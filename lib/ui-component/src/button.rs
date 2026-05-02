@@ -142,4 +142,32 @@ mod tests {
         })
         .await;
     }
+
+    #[tokio::test]
+    async fn test_tool_button_indicator_off() {
+        with_leptos_owner(async {
+            // Arrange
+            let view = view! { <ToolButton icon=IconType::Cube(IconSize::Medium) label="Cube" indicator=Indicator::Off /> };
+
+            // Act & Assert
+            assert_view_snapshot!("tool_button_indicator_off", view);
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn test_indicator_changes_on_signal_update() {
+        with_leptos_owner(async {
+            // Arrange
+            let (indicator, set_indicator) = signal(Indicator::On);
+            let view = view! { <Indicator indicator=Signal::derive(move || indicator.get()) /> };
+
+            // Act
+            set_indicator.set(Indicator::Off);
+
+            // Assert
+            assert_view_snapshot!("indicator_signal_off", view);
+        })
+        .await;
+    }
 }

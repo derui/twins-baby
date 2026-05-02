@@ -1,0 +1,5 @@
+---
+source: lib/ui-component/src/button.rs
+expression: html
+---
+<span class="flex rounded-full w-full h-1 shadow-2xl absolute bottom-0   bg-red-500 shadow-red-500/50"></span>
