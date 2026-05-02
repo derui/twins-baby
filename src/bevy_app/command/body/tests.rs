@@ -54,7 +54,7 @@ fn writes_notification_with_given_name_for_unique_name() {
     let app_state = world.resource::<EngineAppState>();
     assert_eq!(
         app_state.body_planes_map.get(&body_id).map(|v| v.len()),
-        Some(6)
+        Some(3)
     );
 }
 
@@ -90,7 +90,7 @@ fn writes_notification_with_fallback_name_when_name_already_exists() -> Result<(
     let app_state = world.resource::<EngineAppState>();
     assert_eq!(
         app_state.body_planes_map.get(&body_id).map(|v| v.len()),
-        Some(6)
+        Some(3)
     );
     Ok(())
 }
@@ -141,10 +141,7 @@ fn registered_planes_have_xy_yz_zx_axes_in_order() {
         axes,
         vec![
             BodyBasePlane(ref_z),
-            BodyBasePlane(ref_z),
             BodyBasePlane(ref_x),
-            BodyBasePlane(ref_x),
-            BodyBasePlane(ref_y),
             BodyBasePlane(ref_y),
         ]
     );
