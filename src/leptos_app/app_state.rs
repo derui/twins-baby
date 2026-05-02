@@ -1,10 +1,7 @@
 use cad_base::id::{BodyId, SketchId};
 use immutable::Im;
-use leptos::prelude::Signal;
 use reactive_stores::Store;
 use ui_event::{ObjectType, notification::SketchCreatedNotification};
-
-use crate::leptos_app::ui_state::BodyUI;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct BodyState {
@@ -36,17 +33,6 @@ impl BodyState {
     /// Marks the body as inactive.
     pub fn deactivate(&mut self) {
         self.active = false.into();
-    }
-}
-
-impl From<BodyState> for BodyUI {
-    fn from(state: BodyState) -> Self {
-        BodyUI {
-            id: Signal::derive(move || *state.id),
-            name: Signal::derive(move || (*state.name).clone()),
-            order: Signal::derive(move || *state.order),
-            active: Signal::derive(move || *state.active),
-        }
     }
 }
 

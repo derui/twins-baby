@@ -1,4 +1,7 @@
+use std::collections::HashMap;
+
 use cad_base::id::BodyId;
+use cad_base::id::SketchId;
 use immutable::Im;
 use leptos::prelude::*;
 use reactive_stores::Store;
@@ -33,6 +36,19 @@ macro_rules! derive_field {
     }};
 }
 
+/// Immutable UI DTO for sketch.
+#[derive(Debug, Clone, PartialEq)]
+pub struct SketchUI {
+    pub id: Im<SketchId>,
+    pub name: Im<String>,
+}
+
+/// Types of body childlen.
+#[derive(Debug, Clone, PartialEq)]
+pub enum BodyChildren {
+    Sketch(SketchUI),
+}
+
 /// Immutable UI DTO for Body.
 #[derive(Debug, Clone, PartialEq)]
 pub struct BodyUI {
@@ -40,16 +56,41 @@ pub struct BodyUI {
     pub name: Signal<String>,
     pub order: Signal<usize>,
     pub active: Signal<bool>,
+    pub children: Signal<Vec<BodyChildren>>,
 }
 
 impl BodyUI {
     /// Conversion method of body.
     pub fn from_store(store: Store<AppStore>, id: BodyId) -> BodyUI {
+        let sketch_hash = Memo::new(move |_| {
+            let mut hash: HashMap<BodyId, Vec<SketchUI>> = HashMap::new();
+            for item in store.sketches().read().iter() {
+                let new_item = SketchUI {
+                    id: item.id.clone(),
+                    name: item.name.clone(),
+                };
+                if let Some(v) = hash.get_mut(&*item.body_id) {
+                    v.push(new_item);
+                } else {
+                    hash.insert(*item.body_id, vec![new_item]);
+                }
+            }
+
+            hash
+        });
         BodyUI {
             id: derive_field!(store, id, id: copy BodyId),
             name: derive_field!(store, id, name: String),
             order: derive_field!(store, id, order: copy usize),
             active: derive_field!(store, id, active: copy bool),
+            children: Memo::new(move |_| {
+                sketch_hash
+                    .get()
+                    .get(&id)
+                    .map(|v| v.iter().cloned().map(BodyChildren::Sketch).collect())
+                    .unwrap_or(vec![])
+            })
+            .into(),
         }
     }
 }
