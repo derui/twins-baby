@@ -16,6 +16,20 @@ impl IconSize {
     }
 }
 
+use leptos::{IntoView, component, prelude::*, view};
+
+/// A simple icon component that renders an icon using CSS mask-image.
+#[component]
+pub fn Icon(icon: IconType) -> impl IntoView {
+    let icon_url = icon.as_url();
+    let size_class = icon.as_size_class();
+    let mask_style = format!(
+        "mask-image: url({icon_url}); mask-size: contain; mask-repeat: no-repeat; mask-position: center;"
+    );
+
+    view! { <span class=format!("{} bg-current", size_class) style=mask_style /> }
+}
+
 /// Definition of icons with their size
 #[derive(Debug, Clone, Copy)]
 pub enum IconType {
