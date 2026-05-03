@@ -4,22 +4,38 @@ use cad_base::{
     id::SketchId,
     sketch::{AttachableTarget, SketchPerspective},
 };
-use immutable::Im;
 use ui_event::{
     ObjectType, SketchCreationFailure,
     command::CreateSketchOnSelectedCommand,
     notification::{Notifications, SketchCreatedNotification, SketchCreationFailedNotification},
 };
 
-use crate::bevy_app::resource::EngineState;
+use crate::bevy_app::{
+    component::BodyPartType,
+    resource::{EngineAppState, EngineState},
+};
 
 /// Convert selected object to attachable target. Only plane and face can be attachable target.
-fn to_attachable_target(selected: &Im<ObjectType>) -> Option<PlaneRef> {
-    match **selected {
-        ObjectType::Plane(plane_ref) => Some(plane_ref),
-        ObjectType::Face(_) => None,
-        ObjectType::Edge(_) => None,
-        ObjectType::Point => None,
+fn to_attachable_target(engine: &EngineAppState) -> Option<PlaneRef> {
+    let Some(body_id) = engine.active_body else {
+        return None;
+    };
+
+    if engine.selections.len() != 1 {
+        return None;
+    }
+
+    match engine.selections[0] {
+        (_, BodyPartType(ObjectType::Plane(plane_ref))) => {
+            if plane_ref.body_id() == body_id {
+                Some(plane_ref)
+            } else {
+                None
+            }
+        }
+        (_, BodyPartType(ObjectType::Face(_))) => None,
+        (_, BodyPartType(ObjectType::Edge(_))) => None,
+        (_, BodyPartType(ObjectType::Point)) => None,
     }
 }
 
@@ -27,11 +43,12 @@ fn to_attachable_target(selected: &Im<ObjectType>) -> Option<PlaneRef> {
 pub(super) fn on_create_sketch_on_plane(
     trigger: On<CreateSketchOnSelectedCommand>,
     mut engine: ResMut<EngineState>,
+    app_state: Res<EngineAppState>,
     mut writer: MessageWriter<Notifications>,
 ) {
     let command = trigger.event();
 
-    let Some(target) = to_attachable_target(&command.selected) else {
+    let Some(target) = to_attachable_target(&app_state) else {
         writer.write(
             SketchCreationFailedNotification {
                 correlation_id: command.id.clone(),
@@ -97,7 +114,10 @@ mod tests {
         },
     };
 
-    use crate::bevy_app::resource::EngineState;
+    use crate::bevy_app::{
+        component::BodyPartType,
+        resource::{EngineAppState, EngineState},
+    };
 
     use super::*;
 
@@ -105,6 +125,7 @@ mod tests {
         let mut world = World::new();
         world.init_resource::<Messages<Notifications>>();
         world.init_resource::<EngineState>();
+        world.init_resource::<EngineAppState>();
         world.add_observer(on_create_sketch_on_plane);
         world
     }
@@ -124,11 +145,16 @@ mod tests {
         // Arrange
         let mut world = make_world();
         let plane_ref = create_body_with_plane(&mut world);
+        let entity = world.spawn(BodyPartType(ObjectType::Plane(plane_ref))).id();
+        {
+            let mut app_state = world.resource_mut::<EngineAppState>();
+            app_state.active_body = Some(plane_ref.body_id());
+            app_state.selections = vec![(entity, BodyPartType(ObjectType::Plane(plane_ref)))];
+        }
 
         // Act
         world.trigger(CreateSketchOnSelectedCommand {
             id: CommandId::new(1).into(),
-            selected: ObjectType::Plane(plane_ref).into(),
         });
         world.flush();
 
@@ -154,7 +180,6 @@ mod tests {
         // Act
         world.trigger(CreateSketchOnSelectedCommand {
             id: CommandId::new(1).into(),
-            selected: ObjectType::Point.into(),
         });
         world.flush();
 

@@ -6,7 +6,7 @@ use ui_component::{
     icon::{IconSize, IconType},
 };
 
-use crate::leptos_app::ui_action::BodyCreatedAction;
+use crate::leptos_app::ui_action::{BodyCreatedAction, SketchCreatedAction};
 use crate::leptos_app::ui_state::UiStore;
 use crate::leptos_app::use_action::{UseActionReturn, use_action};
 
@@ -16,13 +16,16 @@ pub fn FeatureToolbar() -> impl IntoView {
     let UseActionReturn { dispatch, .. } = use_action();
     let store = use_context::<UiStore>().expect("Should be defined before");
 
+    let dispatch_event = dispatch.clone();
     let on_click_body = move |_ev: leptos::web_sys::MouseEvent| {
-        dispatch(Box::new(BodyCreatedAction {
+        dispatch_event(Box::new(BodyCreatedAction {
             name: "Body".to_string(),
         }))
     };
 
-    let on_click_sketch = move |_ev: leptos::web_sys::MouseEvent| todo!();
+    let on_click_sketch =
+        move |_ev: leptos::web_sys::MouseEvent| dispatch(Box::new(SketchCreatedAction));
+
     let sketch_indicator = Signal::derive(move || {
         if store.ui.body_perspective.can_create_sketch.get() {
             IndicatorState::On

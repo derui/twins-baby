@@ -4,7 +4,7 @@ use cad_base::id::BodyId;
 use immutable::Im;
 use ui_event_macros::Command;
 
-use crate::{CommandId, ObjectType};
+use crate::CommandId;
 
 /// Commands are UI -> Bevy command request
 #[derive(Message, Debug, Clone)]
@@ -14,11 +14,12 @@ pub enum Commands {
     SwitchActiveBody(SwitchActiveBodyCommand),
 }
 
-/// A command to create a sketch to the selected object.
+/// A command to create a sketch to the selected object in CAD.
+///
+/// This command do not handle selection that is handled in CAD engine.
 #[derive(Event, Debug, Clone, Command)]
 pub struct CreateSketchOnSelectedCommand {
     pub id: Im<CommandId>,
-    pub selected: Im<ObjectType>,
 }
 
 /// A command to create body

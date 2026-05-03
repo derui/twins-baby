@@ -1,8 +1,10 @@
 use cad_base::id::BodyId;
-use leptos::prelude::Set;
+use leptos::prelude::{GetUntracked, Set};
 use ui_event::{
     CommandId, PerspectiveKind,
-    command::{Commands, CreateBodyCommand, SwitchActiveBodyCommand},
+    command::{
+        Commands, CreateBodyCommand, CreateSketchOnSelectedCommand, SwitchActiveBodyCommand,
+    },
 };
 
 use crate::leptos_app::use_action::{ActionContext, UiAction};
@@ -38,6 +40,22 @@ impl UiAction for BodyCreatedAction {
             }
             .into(),
         )
+    }
+}
+
+/// An event to request to create sketch.
+#[derive(Debug, Clone)]
+pub struct SketchCreatedAction;
+
+impl UiAction for SketchCreatedAction {
+    fn apply(&self, id: CommandId, context: &ActionContext) -> Option<Commands> {
+        context
+            .ui_store
+            .ui
+            .body_perspective
+            .can_create_sketch
+            .get_untracked()
+            .then(|| CreateSketchOnSelectedCommand { id: id.into() }.into())
     }
 }
 
