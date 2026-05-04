@@ -6,6 +6,7 @@ mod picking;
 mod resize;
 mod resource;
 mod setup;
+pub(crate) mod support;
 mod ui;
 
 // This initializes a normal Bevy app

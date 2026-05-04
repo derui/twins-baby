@@ -2,6 +2,8 @@ use bevy::prelude::*;
 use cad_base::{
     body::{BodyPerspective, PlaneRef},
     id::SketchId,
+    plane::Plane,
+    point::Point,
     sketch::{AttachableTarget, SketchPerspective},
 };
 use ui_event::{
@@ -11,8 +13,10 @@ use ui_event::{
 };
 
 use crate::bevy_app::{
+    camera::{CameraMoveDuration, CameraMoveOperation, CameraMoveRequest},
     component::BodyPartType,
     resource::{EngineAppState, EngineState},
+    support::Vec3Ext as _,
 };
 
 #[cfg(test)]
@@ -48,6 +52,7 @@ pub(super) fn on_create_sketch_on_plane(
     mut engine: ResMut<EngineState>,
     app_state: Res<EngineAppState>,
     mut writer: MessageWriter<Correlation<Notifications>>,
+    mut commands: Commands,
 ) {
     let command = trigger.event();
 
@@ -81,10 +86,12 @@ pub(super) fn on_create_sketch_on_plane(
             .expect("Should be found");
     }
 
+    let camera_target: Plane;
     if let Some(body_p) = transaction.modify::<BodyPerspective>()
         && let Some(body) = body_p.get_mut(&target.body_id())
     {
         body.add_sketch(&created_sketch);
+        camera_target = target.to_plane_from(body);
     } else {
         tracing::warn!("Can not get body");
         return;
@@ -102,4 +109,18 @@ pub(super) fn on_create_sketch_on_plane(
             .into(),
         ),
     );
+
+    {
+        let target = camera_target.r0.to_vec3();
+        let position = camera_target.normal.to_vec3() * 2.;
+        commands.spawn(CameraMoveRequest::new(
+            CameraMoveOperation::BySystem {
+                target: target,
+                position: target + position,
+                pitch: None,
+                yaw: None,
+            },
+            CameraMoveDuration::Duration(1.),
+        ));
+    }
 }
