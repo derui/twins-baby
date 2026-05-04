@@ -1,5 +1,5 @@
 use cad_base::id::BodyId;
-use leptos::prelude::{GetUntracked, Set};
+use leptos::prelude::{Get, GetUntracked, Read, Set};
 use ui_event::{
     CommandId, PerspectiveKind,
     command::{
@@ -7,7 +7,11 @@ use ui_event::{
     },
 };
 
-use crate::leptos_app::use_action::{ActionContext, UiAction};
+use crate::leptos_app::{
+    app_state::AppStoreStoreFields as _,
+    ui_state::BodyPerspectiveUI,
+    use_action::{ActionContext, UiAction},
+};
 
 /// An event to notice perpective change
 #[derive(Debug, Clone)]
@@ -18,7 +22,7 @@ pub struct PerspectiveChangedAction {
 
 impl UiAction for PerspectiveChangedAction {
     fn apply(&self, _id: CommandId, context: &ActionContext) -> Option<Commands> {
-        context.ui_store.perspective.set(self.next);
+        context.store.perspective().set(self.next);
 
         None
     }
@@ -49,10 +53,7 @@ pub struct SketchCreatedAction;
 
 impl UiAction for SketchCreatedAction {
     fn apply(&self, id: CommandId, context: &ActionContext) -> Option<Commands> {
-        context
-            .ui_store
-            .ui
-            .body_perspective
+        BodyPerspectiveUI::from_store(context.store)
             .can_create_sketch
             .get_untracked()
             .then(|| CreateSketchOnSelectedCommand { id: id.into() }.into())

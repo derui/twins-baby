@@ -22,7 +22,7 @@ use ui_event::{
 use crate::{
     bevy_app::{BevyAppSettings, init_bevy_app},
     leptos_app::{
-        app_state::{AppStore, AppStoreStoreFields as _, BodyState},
+        app_state::{AppStore, AppStoreStoreFields as _, BodyState, SketchState},
         command_sender::CommandSender,
         component::{FeatureIsland, InfoIsland, PerspectiveIsland, SupportIsland},
         resize_nob::NOB_AREA,
@@ -120,7 +120,17 @@ pub fn App() -> impl IntoView {
                         bodies.push(BodyState::new(*n.body_id, &n.name, order));
                     });
                 }
-                Notifications::SketchCreated(_) => {}
+                Notifications::SketchCreated(n) => {
+                    store.feature_trees().update(|trees| {
+                        let state: SketchState = n.into();
+                        let Some(tree) = trees.iter_mut().find(|t| *t.body_id == *state.body_id)
+                        else {
+                            return;
+                        };
+
+                        tree.add_sketch(&state)
+                    });
+                }
                 Notifications::BodyActivated(n) => {
                     store.bodies().update(|bodies| {
                         let Some(index) = bodies.iter().position(|v| *v.id == *n.body_id) else {

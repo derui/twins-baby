@@ -1,9 +1,10 @@
-use leptos::prelude::{Signal, use_context};
+use leptos::prelude::{Read, Signal, use_context};
+use reactive_stores::Store;
 use ui_event::PerspectiveKind;
 
 use crate::leptos_app::{
+    app_state::{AppStore, AppStoreStoreFields as _},
     ui_action::PerspectiveChangedAction,
-    ui_state::UiStore,
     use_action::{UseActionReturn, use_action},
 };
 
@@ -25,7 +26,7 @@ where
 ///
 /// This hook requires wrapping with `Provider` with [PerspectiveKind] value.
 pub fn use_perspective() -> UsePerspective<impl Fn(PerspectiveKind) + Clone + Send + Sync> {
-    let context = use_context::<UiStore>().expect("Should be provided");
+    let context = use_context::<Store<AppStore>>().expect("Should be provided");
     let UseActionReturn { dispatch, .. } = use_action();
 
     let change = move |v| {
@@ -33,7 +34,7 @@ pub fn use_perspective() -> UsePerspective<impl Fn(PerspectiveKind) + Clone + Se
     };
 
     UsePerspective {
-        perspective: context.ui.perspective,
+        perspective: context.perspective().into(),
         change,
     }
 }
@@ -44,24 +45,22 @@ mod tests {
     use leptos_bevy_canvas::prelude::message_l2b;
     use leptos_test::with_leptos_owner;
     use pretty_assertions::assert_eq;
+    use reactive_stores::Store;
     use ui_event::command::Commands;
 
     use crate::leptos_app::{
-        app_state::AppStore, command_sender::CommandSender, ui_state::UiStore,
-        use_action::CommandIdGen,
+        app_state::AppStore, command_sender::CommandSender, use_action::CommandIdGen,
     };
 
     use super::*;
 
-    fn setup_context() -> UiStore {
+    fn setup_context() -> Store<AppStore> {
         let app_store = AppStore::new();
-        let state = UiStore::new(app_store);
         let (sender, _receiver) = message_l2b::<Commands>();
         provide_context(app_store);
-        provide_context(state.clone());
         provide_context(CommandSender::new(sender));
         provide_context(CommandIdGen::new());
-        state
+        app_store
     }
 
     #[tokio::test]
@@ -124,7 +123,7 @@ mod tests {
             let hook = use_perspective();
             any_spawner::Executor::tick().await;
 
-            // Act - multiple updates
+            // Act
             (hook.change)(PerspectiveKind::Sketch);
             any_spawner::Executor::tick().await;
             (hook.change)(PerspectiveKind::Feature);

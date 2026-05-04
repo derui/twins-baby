@@ -36,19 +36,6 @@ macro_rules! derive_field {
     }};
 }
 
-/// Immutable UI DTO for sketch.
-#[derive(Debug, Clone, PartialEq)]
-pub struct SketchUI {
-    pub id: Im<SketchId>,
-    pub name: Im<String>,
-}
-
-/// Types of body childlen.
-#[derive(Debug, Clone, PartialEq)]
-pub enum BodyChildren {
-    Sketch(SketchUI),
-}
-
 /// Immutable UI DTO for Body.
 #[derive(Debug, Clone, PartialEq)]
 pub struct BodyUI {
@@ -56,107 +43,61 @@ pub struct BodyUI {
     pub name: Signal<String>,
     pub order: Signal<usize>,
     pub active: Signal<bool>,
-    pub children: Signal<Vec<BodyChildren>>,
 }
 
 impl BodyUI {
     /// Conversion method of body.
     pub fn from_store(store: Store<AppStore>, id: BodyId) -> BodyUI {
-        let sketch_hash = Memo::new(move |_| {
-            let mut hash: HashMap<BodyId, Vec<SketchUI>> = HashMap::new();
-            for item in store.sketches().read().iter() {
-                let new_item = SketchUI {
-                    id: item.id.clone(),
-                    name: item.name.clone(),
-                };
-                if let Some(v) = hash.get_mut(&*item.body_id) {
-                    v.push(new_item);
-                } else {
-                    hash.insert(*item.body_id, vec![new_item]);
-                }
-            }
-
-            hash
-        });
         BodyUI {
             id: derive_field!(store, id, id: copy BodyId),
             name: derive_field!(store, id, name: String),
             order: derive_field!(store, id, order: copy usize),
             active: derive_field!(store, id, active: copy bool),
-            children: Memo::new(move |_| {
-                sketch_hash
-                    .get()
-                    .get(&id)
-                    .map(|v| v.iter().cloned().map(BodyChildren::Sketch).collect())
-                    .unwrap_or(vec![])
-            })
-            .into(),
         }
     }
 }
 
 /// States of body perspective
 #[derive(Debug, Clone, PartialEq)]
-pub struct BodyPerspectiveState {
+pub struct BodyPerspectiveUI {
     pub can_create_sketch: Im<Signal<bool>>,
 
     _immutable: (),
 }
 
-/// The centralized state of UI. This state is the single source of truth in UI,
-/// but some states which bevy has are do not inclued this, exclude ID or metadata.
-#[derive(Debug, Clone)]
-pub struct UiStore {
-    /// Current selected perspective, this is only for UI view.
-    pub perspective: WriteSignal<PerspectiveKind>,
-
-    /// centralized UI state. see this
-    pub ui: UiState,
-
-    _immutable: (),
+impl BodyPerspectiveUI {
+    /// Create body perspective state
+    pub fn from_store(store: Store<AppStore>) -> Self {
+        Self {
+            can_create_sketch: Signal::derive(move || store.selections().read().len() == 1).into(),
+            _immutable: (),
+        }
+    }
 }
 
-/// Global single signal state. This can't edit, all properties must be derived.
+/// Signal for bodies
 #[derive(Debug, Clone, PartialEq)]
-pub struct UiState {
-    /// Current selected perspective, this is only for UI view.
-    pub perspective: Signal<PerspectiveKind>,
-
-    /// Bodies in the application
-    pub bodies: Signal<Vec<BodyId>>,
-
-    pub body_perspective: Im<BodyPerspectiveState>,
+pub struct BodiesUI {
+    pub bodies: Im<Signal<Vec<BodyId>>>,
 
     _immutable: (),
 }
 
-impl UiStore {
-    /// Create new UI state
-    pub fn new(store: Store<AppStore>) -> Self {
-        let (perspective, set_perspective) = signal(PerspectiveKind::default());
-
-        let body_list: Memo<Vec<_>> = Memo::new(move |_| {
+impl BodiesUI {
+    /// Create bodies signal
+    pub fn from_store(store: Store<AppStore>) -> Self {
+        let body_list: Signal<Vec<_>> = Memo::new(move |_| {
             store.bodies().with(|bodies| {
                 let mut bodies = bodies.clone();
                 bodies.sort_by_key(|v| *v.order);
 
                 bodies.iter().map(|it| *it.id).collect::<Vec<_>>()
             })
-        });
+        })
+        .into();
 
-        let body_perspective = BodyPerspectiveState {
-            can_create_sketch: Signal::derive(move || store.selections().get().len() == 1).into(),
-            _immutable: (),
-        };
-
-        UiStore {
-            perspective: set_perspective,
-            ui: UiState {
-                perspective: perspective.into(),
-                bodies: body_list.into(),
-                body_perspective: body_perspective.into(),
-                _immutable: (),
-            },
+        Self {
+            bodies: body_list.into(),
             _immutable: (),
         }
     }

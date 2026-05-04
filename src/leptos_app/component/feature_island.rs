@@ -7,9 +7,9 @@ use ui_component::{
 };
 
 use crate::leptos_app::{
-    app_state::AppStore,
+    app_state::{AppStore, AppStoreStoreFields as _},
     ui_action::BodyActivatedAction,
-    ui_state::{BodyChildren, BodyUI, UiStore},
+    ui_state::{BodiesUI, BodyUI, FeatureLeaf, UiStore},
     use_action::{UseActionReturn, use_action},
 };
 
@@ -79,7 +79,7 @@ fn BodyFeature(id: BodyId) -> impl IntoView {
                     children
                         .into_iter()
                         .map(|child| match child {
-                            BodyChildren::Sketch(sketch) => {
+                            FeatureLeaf::Sketch(sketch) => {
                                 view! { <SketchItem sketch=sketch /> }.into_any()
                             }
                         })
@@ -94,7 +94,9 @@ fn BodyFeature(id: BodyId) -> impl IntoView {
 /// A component for feature island that displays the feature tree.
 #[component]
 pub fn FeatureIsland() -> impl IntoView {
-    let ui_store = use_context::<UiStore>().expect("UiStore should be provided");
+    let store = use_context::<Store<AppStore>>().expect("UiStore should be provided");
+
+    let bodies = BodiesUI::from_store(store);
 
     view! {
         <div class="flex flex-col h-full w-full rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 p-2 overflow-y-auto">
@@ -103,7 +105,7 @@ pub fn FeatureIsland() -> impl IntoView {
             </h3>
 
             <For
-                each=move || ui_store.ui.bodies.get()
+                each=move || bodies.bodies.get()
                 key=|id| *id
                 children=move |id| view! { <BodyFeature id=id /> }
             ></For>
