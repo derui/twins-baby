@@ -6,7 +6,7 @@ use cad_base::body::BodyPerspective;
 use eyre::Result;
 use pretty_assertions::assert_eq;
 use ui_event::{
-    CommandId,
+    CommandId, Correlation,
     command::{CreateBodyCommand, SwitchActiveBodyCommand},
     notification::{
         BodyActivatedNotification, BodyCreatedNotification, Notification, Notifications,
@@ -19,7 +19,7 @@ use super::*;
 
 fn make_world() -> World {
     let mut world = World::new();
-    world.init_resource::<Messages<Notifications>>();
+    world.init_resource::<Messages<Correlation<Notifications>>>();
     world.init_resource::<EngineState>();
     world.init_resource::<EngineAppState>();
     world.init_resource::<Assets<Mesh>>();
@@ -35,21 +35,19 @@ fn writes_notification_with_given_name_for_unique_name() {
     let mut world = make_world();
 
     // Act
-    world.trigger(CreateBodyCommand {
-        id: CommandId::new(1).into(),
-        name: "body1".to_string().into(),
-    });
+    world.trigger(Correlation::new(CommandId::new(1), CreateBodyCommand {}));
     world.flush();
 
     // Assert
-    let messages = world.resource::<Messages<Notifications>>();
+    let messages = world.resource::<Messages<Correlation<Notifications>>>();
     let mut cursor = messages.get_cursor();
     let notifications: Vec<_> = cursor.read(messages).collect();
     assert_eq!(notifications.len(), 1);
     let notif = notifications[0]
+        .data
         .select_ref::<BodyCreatedNotification>()
         .unwrap();
-    assert_eq!(*notif.name, "body1");
+    assert!(!notif.name.is_empty());
     let body_id = *notif.body_id;
     let app_state = world.resource::<EngineAppState>();
     assert_eq!(
@@ -59,33 +57,23 @@ fn writes_notification_with_given_name_for_unique_name() {
 }
 
 #[test]
-fn writes_notification_with_fallback_name_when_name_already_exists() -> Result<()> {
+fn writes_notification_with_body_created() -> Result<()> {
     // Arrange
     let mut world = make_world();
-    {
-        let mut engine = world.resource_mut::<EngineState>();
-        let mut tx = engine.0.begin();
-        let bodies = tx.modify::<BodyPerspective>().unwrap();
-        let id = bodies.add_body();
-        bodies.rename_body(&id, "body1").unwrap();
-        tx.commit();
-    }
 
     // Act
-    world.trigger(CreateBodyCommand {
-        id: CommandId::new(1).into(),
-        name: "body1".to_string().into(),
-    });
+    world.trigger(Correlation::new(CommandId::new(1), CreateBodyCommand {}));
     world.flush();
 
     // Assert
-    let messages = world.resource::<Messages<Notifications>>();
+    let messages = world.resource::<Messages<Correlation<Notifications>>>();
     let mut cursor = messages.get_cursor();
     let notifications: Vec<_> = cursor.read(messages).collect();
     let notif = notifications[0]
+        .data
         .select_ref::<BodyCreatedNotification>()
         .unwrap();
-    assert_eq!(*notif.name, "body1003");
+    assert!(!notif.name.is_empty());
     let body_id = *notif.body_id;
     let app_state = world.resource::<EngineAppState>();
     assert_eq!(
@@ -101,18 +89,16 @@ fn registered_planes_have_xy_yz_zx_axes_in_order() {
     let mut world = make_world();
 
     // Act
-    world.trigger(CreateBodyCommand {
-        id: CommandId::new(1).into(),
-        name: "body1".to_string().into(),
-    });
+    world.trigger(Correlation::new(CommandId::new(1), CreateBodyCommand {}));
     world.flush();
 
     // Assert
     let body_id = {
-        let messages = world.resource::<Messages<Notifications>>();
+        let messages = world.resource::<Messages<Correlation<Notifications>>>();
         let mut cursor = messages.get_cursor();
         let notifications: Vec<_> = cursor.read(messages).collect();
         *notifications[0]
+            .data
             .select_ref::<BodyCreatedNotification>()
             .unwrap()
             .body_id
@@ -156,18 +142,16 @@ fn registered_planes_are_placed_at_origin() {
     let mut world = make_world();
 
     // Act
-    world.trigger(CreateBodyCommand {
-        id: CommandId::new(1).into(),
-        name: "body1".to_string().into(),
-    });
+    world.trigger(Correlation::new(CommandId::new(1), CreateBodyCommand {}));
     world.flush();
 
     // Assert
     let body_id = {
-        let messages = world.resource::<Messages<Notifications>>();
+        let messages = world.resource::<Messages<Correlation<Notifications>>>();
         let mut cursor = messages.get_cursor();
         let notifications: Vec<_> = cursor.read(messages).collect();
         *notifications[0]
+            .data
             .select_ref::<BodyCreatedNotification>()
             .unwrap()
             .body_id
@@ -190,18 +174,16 @@ fn registered_planes_are_hidden_on_creation() {
     let mut world = make_world();
 
     // Act
-    world.trigger(CreateBodyCommand {
-        id: CommandId::new(1).into(),
-        name: "body1".to_string().into(),
-    });
+    world.trigger(Correlation::new(CommandId::new(1), CreateBodyCommand {}));
     world.flush();
 
     // Assert
     let body_id = {
-        let messages = world.resource::<Messages<Notifications>>();
+        let messages = world.resource::<Messages<Correlation<Notifications>>>();
         let mut cursor = messages.get_cursor();
         let notifications: Vec<_> = cursor.read(messages).collect();
         *notifications[0]
+            .data
             .select_ref::<BodyCreatedNotification>()
             .unwrap()
             .body_id
@@ -218,22 +200,16 @@ fn registered_planes_are_hidden_on_creation() {
     }
 }
 
-fn create_body_and_get_plane_entities(
-    world: &mut World,
-    name: &str,
-) -> (cad_base::id::BodyId, Vec<Entity>) {
-    world.trigger(CreateBodyCommand {
-        id: CommandId::new(1).into(),
-        name: name.to_string().into(),
-    });
+fn create_body_and_get_plane_entities(world: &mut World) -> (cad_base::id::BodyId, Vec<Entity>) {
+    world.trigger(Correlation::new(CommandId::new(1), CreateBodyCommand {}));
     world.flush();
     let body_id = {
-        let messages = world.resource::<Messages<Notifications>>();
+        let messages = world.resource::<Messages<Correlation<Notifications>>>();
         let mut cursor = messages.get_cursor();
         let notifications: Vec<_> = cursor.read(messages).collect();
         *notifications
             .iter()
-            .filter_map(|n| n.select_ref::<BodyCreatedNotification>())
+            .filter_map(|n| n.data.select_ref::<BodyCreatedNotification>())
             .last()
             .unwrap()
             .body_id
@@ -251,7 +227,7 @@ fn create_body_and_get_plane_entities(
 fn update_plane_visibilities_keeps_all_planes_hidden_when_no_active_body() {
     // Arrange
     let mut world = make_world();
-    let (_, entities) = create_body_and_get_plane_entities(&mut world, "body1");
+    let (_, entities) = create_body_and_get_plane_entities(&mut world);
 
     // Act
     world.run_system_once(update_plane_visibilities).unwrap();
@@ -269,8 +245,8 @@ fn update_plane_visibilities_keeps_all_planes_hidden_when_no_active_body() {
 fn update_plane_visibilities_shows_active_body_planes_and_hides_others() {
     // Arrange
     let mut world = make_world();
-    let (body1_id, body1_entities) = create_body_and_get_plane_entities(&mut world, "body1");
-    let (_, body2_entities) = create_body_and_get_plane_entities(&mut world, "body2");
+    let (body1_id, body1_entities) = create_body_and_get_plane_entities(&mut world);
+    let (_, body2_entities) = create_body_and_get_plane_entities(&mut world);
     world.resource_mut::<EngineAppState>().active_body = Some(body1_id);
 
     // Act
@@ -295,8 +271,8 @@ fn update_plane_visibilities_shows_active_body_planes_and_hides_others() {
 fn update_plane_visibilities_switches_visibility_when_active_body_changes() {
     // Arrange
     let mut world = make_world();
-    let (body1_id, body1_entities) = create_body_and_get_plane_entities(&mut world, "body1");
-    let (body2_id, body2_entities) = create_body_and_get_plane_entities(&mut world, "body2");
+    let (body1_id, body1_entities) = create_body_and_get_plane_entities(&mut world);
+    let (body2_id, body2_entities) = create_body_and_get_plane_entities(&mut world);
     world.resource_mut::<EngineAppState>().active_body = Some(body1_id);
     world.run_system_once(update_plane_visibilities).unwrap();
 
@@ -334,18 +310,21 @@ fn switch_active_body_writes_notification_and_updates_app_state() -> Result<()> 
     };
 
     // Act
-    world.trigger(SwitchActiveBodyCommand {
-        id: CommandId::new(1).into(),
-        body_id: body_id.into(),
-    });
+    world.trigger(Correlation::new(
+        CommandId::new(1),
+        SwitchActiveBodyCommand {
+            body_id: body_id.into(),
+        },
+    ));
     world.flush();
 
     // Assert
-    let messages = world.resource::<Messages<Notifications>>();
+    let messages = world.resource::<Messages<Correlation<Notifications>>>();
     let mut cursor = messages.get_cursor();
     let notifications: Vec<_> = cursor.read(messages).collect();
     assert_eq!(notifications.len(), 1);
     let notif = notifications[0]
+        .data
         .select_ref::<BodyActivatedNotification>()
         .unwrap();
     assert_eq!(*notif.body_id, body_id);
@@ -361,14 +340,16 @@ fn switch_active_body_returns_error_when_body_not_found() {
     let nonexistent_body_id = cad_base::id::BodyId::from(9999);
 
     // Act
-    world.trigger(SwitchActiveBodyCommand {
-        id: CommandId::new(1).into(),
-        body_id: nonexistent_body_id.into(),
-    });
+    world.trigger(Correlation::new(
+        CommandId::new(1),
+        SwitchActiveBodyCommand {
+            body_id: nonexistent_body_id.into(),
+        },
+    ));
     world.flush();
 
     // Assert
-    let messages = world.resource::<Messages<Notifications>>();
+    let messages = world.resource::<Messages<Correlation<Notifications>>>();
     let mut cursor = messages.get_cursor();
     let notifications: Vec<_> = cursor.read(messages).collect();
     assert_eq!(notifications.len(), 0);

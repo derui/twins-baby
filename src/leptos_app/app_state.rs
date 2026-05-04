@@ -141,6 +141,9 @@ pub struct AppStore {
     /// Feature trees
     feature_trees: Vec<FeatureTree>,
 
+    /// state of sketches
+    sketches: Vec<SketchState>,
+
     /// Selections in CAD
     selections: Vec<ObjectType>,
 }

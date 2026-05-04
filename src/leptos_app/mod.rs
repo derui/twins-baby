@@ -110,7 +110,7 @@ pub fn App() -> impl IntoView {
 
     Effect::new(move || {
         if let Some(notification) = leptos_notification_receiver.get() {
-            match *notification.data {
+            match &*notification.data {
                 Notifications::BodyCreated(n) => {
                     store.bodies().update(|bodies| {
                         let order = bodies.len();
