@@ -281,7 +281,7 @@ pub fn move_camera_with_request(
     let mut removed: HashSet<Entity> = HashSet::new();
     if len > 1 {
         for (entity, _) in q_request.iter_mut().take(len - 1) {
-            commands.entity(entity).remove::<CameraMoveRequest>();
+            commands.entity(entity).despawn();
             removed.insert(entity);
         }
     }
