@@ -20,8 +20,8 @@ fn SketchItem(sketch: SketchUI) -> impl IntoView {
 
     view! {
         <div class="flex flex-row items-center gap-1 rounded-full px-2 py-0.5 min-w-0 overflow-hidden text-white/80 hover:text-white hover:bg-white/10 transition-colors">
-            <Icon icon=IconType::Sketch(IconSize::Small) />
-            <span class="text-xs truncate">{name}</span>
+            <Icon icon=IconType::Sketch(IconSize::ExtraSmall) />
+            <span class="text-xs truncate flex content-center">{name}</span>
         </div>
     }
 }
