@@ -108,6 +108,9 @@ rstest.workspace = true
 
 # Coding Preferences
 
+## General
+- No need to remove unused import yourself, do `task lint` instead of removing by places.
+
 ## Testing
 All test case must follow these styles:
 
