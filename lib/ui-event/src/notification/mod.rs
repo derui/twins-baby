@@ -4,7 +4,7 @@ use enum_dispatch::enum_dispatch;
 use immutable::Im;
 use ui_event_macros::Notification;
 
-use crate::{CommandId, SketchCreationFailure};
+use crate::SketchCreationFailure;
 
 /// A notification marker trait.
 #[enum_dispatch(Notifications)]

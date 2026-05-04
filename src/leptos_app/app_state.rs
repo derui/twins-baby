@@ -1,6 +1,5 @@
 use cad_base::id::{BodyId, SketchId};
 use immutable::Im;
-use leptos::prelude::Signal;
 use reactive_stores::Store;
 use ui_event::{ObjectType, PerspectiveKind, notification::SketchCreatedNotification};
 
@@ -105,14 +104,14 @@ pub struct FeatureTree {
 impl FeatureTree {
     pub fn new(body_id: &BodyId) -> FeatureTree {
         FeatureTree {
-            body_id: body_id.clone().into(),
-            nodes: Vec::new().into(),
+            body_id: (*body_id).into(),
+            nodes: Vec::new(),
         }
     }
 
     /// Add a sketch to tree
     pub fn add_sketch(&mut self, state: &SketchState) {
-        self.nodes.push(FeatureNode::Sketch(state.clone()).into());
+        self.nodes.push(FeatureNode::Sketch(state.clone()));
     }
 
     /// Remove a sketch from tree

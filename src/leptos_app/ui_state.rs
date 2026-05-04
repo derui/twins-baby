@@ -1,11 +1,8 @@
-use std::collections::HashMap;
-
 use cad_base::id::BodyId;
 use cad_base::id::SketchId;
 use immutable::Im;
 use leptos::prelude::*;
 use reactive_stores::Store;
-use ui_event::PerspectiveKind;
 
 use crate::leptos_app::app_state::AppStore;
 use crate::leptos_app::app_state::AppStoreStoreFields;

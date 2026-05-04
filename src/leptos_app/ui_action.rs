@@ -1,7 +1,7 @@
 use cad_base::id::BodyId;
-use leptos::prelude::{Get, GetUntracked, Read, Set};
+use leptos::prelude::{GetUntracked, Set};
 use ui_event::{
-    CommandId, PerspectiveKind,
+    PerspectiveKind,
     command::{
         Commands, CreateBodyCommand, CreateSketchOnSelectedCommand, SwitchActiveBodyCommand,
     },
@@ -67,7 +67,7 @@ pub struct BodyActivatedAction {
 }
 
 impl UiAction for BodyActivatedAction {
-    fn apply(&self, context: &ActionContext) -> Option<Commands> {
+    fn apply(&self, _context: &ActionContext) -> Option<Commands> {
         Some(Commands::SwitchActiveBody(SwitchActiveBodyCommand {
             body_id: self.body_id.into(),
         }))

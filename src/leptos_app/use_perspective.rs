@@ -1,4 +1,4 @@
-use leptos::prelude::{Read, Signal, use_context};
+use leptos::prelude::{Signal, use_context};
 use reactive_stores::Store;
 use ui_event::PerspectiveKind;
 

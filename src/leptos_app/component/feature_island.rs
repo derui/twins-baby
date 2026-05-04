@@ -9,14 +9,14 @@ use ui_component::{
 use crate::leptos_app::{
     app_state::{AppStore, AppStoreStoreFields as _},
     ui_action::BodyActivatedAction,
-    ui_state::{BodiesUI, BodyUI, FeatureLeaf, UiStore},
+    ui_state::{BodiesUI, BodyUI, FeatureTreeUI, FeatureUIType, SketchUI},
     use_action::{UseActionReturn, use_action},
 };
 
 /// A sketch item row in the feature tree.
 #[component]
-fn SketchItem(sketch: crate::leptos_app::ui_state::SketchUI) -> impl IntoView {
-    let name = (*sketch.name).clone();
+fn SketchItem(sketch: SketchUI) -> impl IntoView {
+    let name = (*sketch.name);
 
     view! {
         <div class="flex flex-row items-center gap-1 rounded-full px-2 py-0.5 min-w-0 overflow-hidden text-white/80 hover:text-white hover:bg-white/10 transition-colors">
@@ -33,6 +33,7 @@ fn BodyFeature(id: BodyId) -> impl IntoView {
 
     let UseActionReturn { dispatch, .. } = use_action();
     let body = BodyUI::from_store(app_store, id);
+    let feature_tree = FeatureTreeUI::from_store(app_store, id);
 
     view! {
         <TreeAccordion
@@ -69,17 +70,18 @@ fn BodyFeature(id: BodyId) -> impl IntoView {
             initial_open=true
         >
             {move || {
-                let children = body.children.get();
-                if children.is_empty() {
+                let features = feature_tree.features.get();
+                if features.is_empty() {
                     view! {
                         <span class="text-xs text-white/50 italic px-1 py-0.5">"No sketches"</span>
                     }
                         .into_any()
                 } else {
-                    children
+                    features
                         .into_iter()
-                        .map(|child| match child {
-                            FeatureLeaf::Sketch(sketch) => {
+                        .map(|feature| match feature {
+                            FeatureUIType::Sketch(sketch_id) => {
+                                let sketch = SketchUI::from_store(app_store, sketch_id);
                                 view! { <SketchItem sketch=sketch /> }.into_any()
                             }
                         })
