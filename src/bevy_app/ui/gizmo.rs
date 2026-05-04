@@ -2,7 +2,7 @@ use bevy::{
     camera::visibility::RenderLayers,
     color::{
         Color,
-        palettes::css::{BLUE, GREEN, RED},
+        palettes::css::{GREEN, RED},
     },
     ecs::{
         entity::Entity,
