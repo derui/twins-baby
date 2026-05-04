@@ -10,6 +10,7 @@ use ui_event::{
     Correlation, ObjectType, SketchCreationFailure,
     command::CreateSketchOnSelectedCommand,
     notification::{Notifications, SketchCreatedNotification, SketchCreationFailedNotification},
+    server::{ObjectSelectionChangeServerIntent, ServerIntent, ServerIntents},
 };
 
 use crate::bevy_app::{
@@ -52,6 +53,7 @@ pub(super) fn on_create_sketch_on_plane(
     mut engine: ResMut<EngineState>,
     app_state: Res<EngineAppState>,
     mut writer: MessageWriter<Correlation<Notifications>>,
+    mut intent: MessageWriter<ServerIntents>,
     mut commands: Commands,
 ) {
     let command = trigger.event();
@@ -108,6 +110,14 @@ pub(super) fn on_create_sketch_on_plane(
             }
             .into(),
         ),
+    );
+
+    // reset selection
+    intent.write(
+        ObjectSelectionChangeServerIntent {
+            selections: Vec::new(),
+        }
+        .into(),
     );
 
     {

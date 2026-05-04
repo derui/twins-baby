@@ -8,6 +8,7 @@ use ui_event::{
     notification::{
         Notification, Notifications, SketchCreatedNotification, SketchCreationFailedNotification,
     },
+    server::{ObjectSelectionChangeServerIntent, ServerIntents},
 };
 
 use crate::bevy_app::{
@@ -20,6 +21,7 @@ use super::*;
 fn make_world() -> World {
     let mut world = World::new();
     world.init_resource::<Messages<Correlation<Notifications>>>();
+    world.init_resource::<Messages<ServerIntents>>();
     world.init_resource::<EngineState>();
     world.init_resource::<EngineAppState>();
     world.add_observer(on_create_sketch_on_plane);
@@ -67,6 +69,57 @@ fn writes_sketch_created_notification_when_plane_selected() -> Result<()> {
     assert_eq!(*notifications[0].id, CommandId::new(1));
     assert!(!notif.name.is_empty());
     assert_eq!(*notif.body_id, plane_ref.body_id());
+    Ok(())
+}
+
+#[test]
+fn clears_selection_via_server_intent_after_sketch_creation() -> Result<()> {
+    // Arrange
+    let mut world = make_world();
+    let plane_ref = create_body_with_plane(&mut world);
+    let entity = world.spawn(BodyPartType(ObjectType::Plane(plane_ref))).id();
+    {
+        let mut app_state = world.resource_mut::<EngineAppState>();
+        app_state.active_body = Some(plane_ref.body_id());
+        app_state.selections = vec![(entity, BodyPartType(ObjectType::Plane(plane_ref)))];
+    }
+
+    // Act
+    world.trigger(Correlation::new(
+        CommandId::new(1),
+        CreateSketchOnSelectedCommand {},
+    ));
+    world.flush();
+
+    // Assert
+    let intents = world.resource::<Messages<ServerIntents>>();
+    let mut cursor = intents.get_cursor();
+    let received: Vec<_> = cursor.read(intents).collect();
+    assert_eq!(received.len(), 1);
+    let intent = received[0]
+        .select_ref::<ObjectSelectionChangeServerIntent>()
+        .unwrap();
+    assert_eq!(intent.selections, Vec::new());
+    Ok(())
+}
+
+#[test]
+fn does_not_send_server_intent_when_creation_fails() -> Result<()> {
+    // Arrange
+    let mut world = make_world();
+
+    // Act
+    world.trigger(Correlation::new(
+        CommandId::new(1),
+        CreateSketchOnSelectedCommand {},
+    ));
+    world.flush();
+
+    // Assert
+    let intents = world.resource::<Messages<ServerIntents>>();
+    let mut cursor = intents.get_cursor();
+    let received: Vec<_> = cursor.read(intents).collect();
+    assert_eq!(received.len(), 0);
     Ok(())
 }
 
