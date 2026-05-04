@@ -1,6 +1,7 @@
 /// Definition of icon sizes
 #[derive(Debug, Clone, Copy)]
 pub enum IconSize {
+    ExtraSmall,
     Small,
     Medium,
     Large,
@@ -9,6 +10,7 @@ pub enum IconSize {
 impl IconSize {
     pub(crate) fn as_class(&self) -> String {
         match self {
+            IconSize::ExtraSmall => "w-6 h-6".to_string(),
             IconSize::Small => "w-9 h-9".to_string(),
             IconSize::Medium => "w-12 h-12".to_string(),
             IconSize::Large => "w-16 h-16".to_string(),
