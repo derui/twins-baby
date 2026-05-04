@@ -13,3 +13,6 @@ pub struct NeedsRenderLayers(pub RenderLayers);
 /// marker component of AxesGizmo
 #[derive(Component)]
 pub struct AxesGizmo;
+
+#[derive(Component)]
+pub struct SketchBaseGizmo;

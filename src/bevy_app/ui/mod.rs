@@ -17,6 +17,7 @@ use crate::bevy_app::ui::components::{NavigationCube, NeedsRenderLayers, NeedsTe
 const NAVIGATION_CUBE_SCALE: f32 = 4.8; // 4.8 to 4.8unit = 48px on UI
 
 pub use gizmo::AxesGizmoGroup;
+pub use gizmo::SketchBaseGizmoGroup;
 pub use gizmo::draw_gizmos;
 pub use gizmo::setup_gizmos;
 pub use navigation_cube::setup_navigation_texture;

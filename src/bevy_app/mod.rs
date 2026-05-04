@@ -28,8 +28,8 @@ use crate::bevy_app::{
     resource::{EngineAppState, EngineState},
     setup::setup_scene,
     ui::{
-        AxesGizmoGroup, draw_gizmos, insert_render_layer, setup_gizmos, setup_navigation_texture,
-        setup_ui,
+        AxesGizmoGroup, SketchBaseGizmoGroup, draw_gizmos, insert_render_layer, setup_gizmos,
+        setup_navigation_texture, setup_ui,
     },
 };
 
@@ -64,6 +64,7 @@ pub fn init_bevy_app(setting: BevyAppSettings) -> App {
         WindowResizePlugin,
     ))
     .init_gizmo_group::<AxesGizmoGroup>()
+    .init_gizmo_group::<SketchBaseGizmoGroup>()
     .init_resource::<LastWindowSize>()
     .insert_resource(PointerInputSettings {
         is_touch_enabled: true,

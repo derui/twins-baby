@@ -208,7 +208,7 @@ pub fn setup_camera(mut commands: Commands, window: Query<&Window>) -> Result<()
     ));
 
     let bottom = window.resolution.physical_height() - 96;
-    // camera for gizmo
+    // camera for UI
     commands.spawn((
         Camera3d::default(),
         // use this camera as 2D
