@@ -23,7 +23,7 @@ use ui_event::{
 use crate::{
     bevy_app::{BevyAppSettings, init_bevy_app},
     leptos_app::{
-        app_state::{AppStore, AppStoreStoreFields as _, BodyState, SketchState},
+        app_state::AppStore,
         command_sender::CommandSender,
         component::{FeatureIsland, InfoIsland, PerspectiveIsland, SupportIsland},
         resize_nob::NOB_AREA,

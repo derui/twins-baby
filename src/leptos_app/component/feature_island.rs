@@ -16,7 +16,7 @@ use crate::leptos_app::{
 /// A sketch item row in the feature tree.
 #[component]
 fn SketchItem(sketch: SketchUI) -> impl IntoView {
-    let name = (*sketch.name);
+    let name = *sketch.name;
 
     view! {
         <div class="flex flex-row items-center gap-1 rounded-full px-2 py-0.5 min-w-0 overflow-hidden text-white/80 hover:text-white hover:bg-white/10 transition-colors">

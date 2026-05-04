@@ -3,11 +3,7 @@
 use leptos::prelude::*;
 use leptos_bevy_canvas::prelude::LeptosMessageReceiver;
 use reactive_stores::Store;
-use ui_event::{
-    Correlation,
-    notification::{Notification, Notifications},
-    server::ServerIntents,
-};
+use ui_event::{Correlation, notification::Notifications};
 
 use crate::leptos_app::app_state::{
     AppStore, AppStoreStoreFields as _, BodyState, FeatureTree, SketchState,
