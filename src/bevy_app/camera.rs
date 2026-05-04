@@ -278,7 +278,7 @@ pub fn move_camera_with_request(
     mut q_ui_transform: Query<&mut Transform, (With<UiCamera>, Without<MainCamera>)>,
 ) -> Result<(), BevyError> {
     let len = q_request.iter().len();
-    let mut removed = HashSet::<Entity>::new();
+    let mut removed: HashSet<Entity> = HashSet::new();
     if len > 1 {
         for (entity, _) in q_request.iter_mut().take(len - 1) {
             commands.entity(entity).remove::<CameraMoveRequest>();
