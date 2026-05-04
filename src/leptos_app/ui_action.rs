@@ -35,10 +35,7 @@ impl UiAction for PerspectiveChangedAction {
 
 /// An event to notice perpective change
 #[derive(Debug, Clone)]
-pub struct BodyCreatedAction {
-    /// The perspective changed
-    pub name: String,
-}
+pub struct BodyCreatedAction {}
 
 impl UiAction for BodyCreatedAction {
     fn apply(&self, _context: &ActionContext) -> Option<Commands> {

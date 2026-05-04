@@ -20,11 +20,8 @@ pub fn FeatureToolbar() -> impl IntoView {
 
     let dispatch_event = dispatch.clone();
     let ui = BodyPerspectiveUI::from_store(store);
-    let on_click_body = move |_ev: leptos::web_sys::MouseEvent| {
-        dispatch_event(Box::new(BodyCreatedAction {
-            name: "Body".to_string(),
-        }))
-    };
+    let on_click_body =
+        move |_ev: leptos::web_sys::MouseEvent| dispatch_event(Box::new(BodyCreatedAction {}));
 
     let on_click_sketch =
         move |_ev: leptos::web_sys::MouseEvent| dispatch(Box::new(SketchCreatedAction));
