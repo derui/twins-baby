@@ -30,9 +30,13 @@ impl PlaneRef {
         self.0
     }
 
-    /// Get the plane of the plane reference.
-    pub fn plane(&self) -> BodyPlane {
-        self.1
+    /// Get the plane entity from the body
+    pub fn to_plane_from(&self, body: &Body) -> Plane {
+        match self.1 {
+            BodyPlane::X => (*body.x_plane).clone(),
+            BodyPlane::Y => (*body.y_plane).clone(),
+            BodyPlane::Z => (*body.z_plane).clone(),
+        }
     }
 }
 
