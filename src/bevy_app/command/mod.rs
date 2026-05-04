@@ -32,9 +32,9 @@ fn dispatch_commands(
 ) -> Result<(), BevyError> {
     for cmd in reader.read() {
         match &*cmd.data {
-            Commands::CreateSketchOnSelected(c) => commands.trigger(c.clone()),
-            Commands::CreateBody(c) => commands.trigger(c.clone()),
-            Commands::SwitchActiveBody(c) => commands.trigger(c.clone()),
+            Commands::CreateSketchOnSelected(c) => commands.trigger(cmd.correlate(c.clone())),
+            Commands::CreateBody(c) => commands.trigger(cmd.correlate(c.clone())),
+            Commands::SwitchActiveBody(c) => commands.trigger(cmd.correlate(c.clone())),
         }
     }
     Ok(())

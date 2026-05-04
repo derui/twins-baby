@@ -98,6 +98,7 @@ pub enum FeatureNode {
 #[derive(Debug, Clone, PartialEq)]
 pub struct FeatureTree {
     pub body_id: Im<BodyId>,
+
     nodes: Vec<FeatureNode>,
 }
 

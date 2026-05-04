@@ -5,6 +5,7 @@ mod resize_nob;
 mod ui_action;
 mod ui_state;
 mod use_action;
+mod use_notification;
 mod use_perspective;
 mod use_resize;
 mod use_server_intent;
@@ -26,6 +27,7 @@ use crate::{
         command_sender::CommandSender,
         component::{FeatureIsland, InfoIsland, PerspectiveIsland, SupportIsland},
         resize_nob::NOB_AREA,
+        use_notification::use_notificarions,
         use_server_intent::use_server_intent,
     },
 };
@@ -69,6 +71,7 @@ pub fn App() -> impl IntoView {
     provide_context(store);
 
     let _ = use_server_intent(leptos_server_intent_receiver);
+    let _ = use_notificarions(leptos_notification_receiver);
 
     let initial_width = window()
         .inner_width()
@@ -106,46 +109,6 @@ pub fn App() -> impl IntoView {
             }
             .into(),
         );
-    });
-
-    Effect::new(move || {
-        if let Some(notification) = leptos_notification_receiver.get() {
-            match &*notification.data {
-                Notifications::BodyCreated(n) => {
-                    store.bodies().update(|bodies| {
-                        let order = bodies.len();
-                        bodies.push(BodyState::new(*n.body_id, &n.name, order));
-                    });
-                }
-                Notifications::SketchCreated(n) => {
-                    store.feature_trees().update(|trees| {
-                        let state: SketchState = n.into();
-                        let Some(tree) = trees.iter_mut().find(|t| *t.body_id == *state.body_id)
-                        else {
-                            return;
-                        };
-
-                        tree.add_sketch(&state)
-                    });
-                }
-                Notifications::BodyActivated(n) => {
-                    store.bodies().update(|bodies| {
-                        let Some(index) = bodies.iter().position(|v| *v.id == *n.body_id) else {
-                            return;
-                        };
-
-                        for body in bodies.iter_mut() {
-                            body.deactivate();
-                        }
-
-                        bodies[index].activate();
-                    });
-                }
-                Notifications::SketchCreationFailed(n) => {
-                    tracing::warn!("Got error on sketch creation: {:?}", *n.reason)
-                }
-            }
-        }
     });
 
     // Connect nob movements to resize hooks (convert i32 to Option<i32>)
