@@ -5,7 +5,7 @@ use cad_base::{
     sketch::{AttachableTarget, SketchPerspective},
 };
 use ui_event::{
-    ObjectType, SketchCreationFailure,
+    Correlation, ObjectType, SketchCreationFailure,
     command::CreateSketchOnSelectedCommand,
     notification::{Notifications, SketchCreatedNotification, SketchCreationFailedNotification},
 };
@@ -41,20 +41,21 @@ fn to_attachable_target(engine: &EngineAppState) -> Option<PlaneRef> {
 
 /// A command to create sketch on the plane.
 pub(super) fn on_create_sketch_on_plane(
-    trigger: On<CreateSketchOnSelectedCommand>,
+    trigger: On<Correlation<CreateSketchOnSelectedCommand>>,
     mut engine: ResMut<EngineState>,
     app_state: Res<EngineAppState>,
-    mut writer: MessageWriter<Notifications>,
+    mut writer: MessageWriter<Correlation<Notifications>>,
 ) {
     let command = trigger.event();
 
     let Some(target) = to_attachable_target(&app_state) else {
         writer.write(
-            SketchCreationFailedNotification {
-                correlation_id: command.id.clone(),
-                reason: SketchCreationFailure::TargetIsNotValid.into(),
-            }
-            .into(),
+            command.correlate(
+                SketchCreationFailedNotification {
+                    reason: SketchCreationFailure::TargetIsNotValid.into(),
+                }
+                .into(),
+            ),
         );
         return;
     };
@@ -87,13 +88,14 @@ pub(super) fn on_create_sketch_on_plane(
     };
 
     writer.write(
-        SketchCreatedNotification {
-            correlation_id: command.id.clone(),
-            sketch_id: created_sketch.into(),
-            name: sketch_name.into(),
-            body_id: target.body_id().into(),
-        }
-        .into(),
+        trigger.event().correlate(
+            SketchCreatedNotification {
+                sketch_id: created_sketch.into(),
+                name: sketch_name.into(),
+                body_id: target.body_id().into(),
+            }
+            .into(),
+        ),
     );
 
     transaction.commit();
@@ -106,7 +108,7 @@ mod tests {
     use eyre::Result;
     use pretty_assertions::assert_eq;
     use ui_event::{
-        CommandId, ObjectType, SketchCreationFailure,
+        CommandId, Correlation, ObjectType, SketchCreationFailure,
         command::CreateSketchOnSelectedCommand,
         notification::{
             Notification, Notifications, SketchCreatedNotification,
@@ -123,7 +125,7 @@ mod tests {
 
     fn make_world() -> World {
         let mut world = World::new();
-        world.init_resource::<Messages<Notifications>>();
+        world.init_resource::<Messages<Correlation<Notifications>>>();
         world.init_resource::<EngineState>();
         world.init_resource::<EngineAppState>();
         world.add_observer(on_create_sketch_on_plane);
@@ -153,18 +155,22 @@ mod tests {
         }
 
         // Act
-        world.trigger(CreateSketchOnSelectedCommand {});
+        world.trigger(Correlation::new(
+            CommandId::new(1),
+            CreateSketchOnSelectedCommand {},
+        ));
         world.flush();
 
         // Assert
-        let messages = world.resource::<Messages<Notifications>>();
+        let messages = world.resource::<Messages<Correlation<Notifications>>>();
         let mut cursor = messages.get_cursor();
         let notifications: Vec<_> = cursor.read(messages).collect();
         assert_eq!(notifications.len(), 1);
         let notif = notifications[0]
+            .data
             .select_ref::<SketchCreatedNotification>()
             .unwrap();
-        assert_eq!(*notif.correlation_id, CommandId::new(1));
+        assert_eq!(*notifications[0].id, CommandId::new(1));
         assert!(!notif.name.is_empty());
         assert_eq!(*notif.body_id, plane_ref.body_id());
         Ok(())
@@ -176,17 +182,19 @@ mod tests {
         let mut world = make_world();
 
         // Act
-        world.trigger(CreateSketchOnSelectedCommand {
-            id: CommandId::new(1).into(),
-        });
+        world.trigger(Correlation::new(
+            CommandId::new(1),
+            CreateSketchOnSelectedCommand {},
+        ));
         world.flush();
 
         // Assert
-        let messages = world.resource::<Messages<Notifications>>();
+        let messages = world.resource::<Messages<Correlation<Notifications>>>();
         let mut cursor = messages.get_cursor();
         let notifications: Vec<_> = cursor.read(messages).collect();
         assert_eq!(notifications.len(), 1);
         let notif = notifications[0]
+            .data
             .select_ref::<SketchCreationFailedNotification>()
             .unwrap();
         assert_eq!(*notif.reason, SketchCreationFailure::TargetIsNotValid);

@@ -12,7 +12,8 @@ mod ui;
 use bevy::{asset::AssetMetaCheck, picking::input::PointerInputSettings, prelude::*};
 use leptos_bevy_canvas::prelude::{BevyMessageReceiver, BevyMessageSender, LeptosBevyApp};
 use ui_event::{
-    command::Commands, intent::Intents, notification::Notifications, server::ServerIntents,
+    Correlation, command::Commands, intent::Intents, notification::Notifications,
+    server::ServerIntents,
 };
 
 use crate::bevy_app::{
@@ -36,8 +37,8 @@ use crate::bevy_app::{
 #[derive(Debug)]
 pub struct BevyAppSettings {
     pub intent: BevyMessageReceiver<Intents>,
-    pub command: BevyMessageReceiver<Commands>,
-    pub notification: BevyMessageSender<Notifications>,
+    pub command: BevyMessageReceiver<Correlation<Commands>>,
+    pub notification: BevyMessageSender<Correlation<Notifications>>,
     pub server_intent: BevyMessageSender<ServerIntents>,
 }
 

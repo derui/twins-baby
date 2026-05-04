@@ -12,7 +12,7 @@ mod use_server_intent;
 use leptos::{context::Provider, prelude::*};
 use leptos_bevy_canvas::prelude::*;
 use ui_event::{
-    PerspectiveKind,
+    Correlation, PerspectiveKind,
     command::Commands,
     intent::{CanvasResizeIntent, Intents},
     notification::Notifications,
@@ -60,8 +60,9 @@ fn build_grid_rows_css(first: Signal<u32>, third: Signal<u32>) -> Signal<String>
 pub fn App() -> impl IntoView {
     // Get initial window dimensions
     let (intent_sender, intent_receiver) = message_l2b::<Intents>();
-    let (command_sender, command_receiver) = message_l2b::<Commands>();
-    let (leptos_notification_receiver, bevy_notification_sender) = message_b2l::<Notifications>();
+    let (command_sender, command_receiver) = message_l2b::<Correlation<Commands>>();
+    let (leptos_notification_receiver, bevy_notification_sender) =
+        message_b2l::<Correlation<Notifications>>();
     let (leptos_server_intent_receiver, bevy_server_intent_sender) = message_b2l::<ServerIntents>();
     let store = AppStore::new();
     provide_context(CommandSender::new(command_sender));
@@ -109,7 +110,7 @@ pub fn App() -> impl IntoView {
 
     Effect::new(move || {
         if let Some(notification) = leptos_notification_receiver.get() {
-            match notification {
+            match *notification.data {
                 Notifications::BodyCreated(n) => {
                     store.bodies().update(|bodies| {
                         let order = bodies.len();
@@ -231,8 +232,8 @@ pub fn CenterResizableRow(
     set_col_first_move: WriteSignal<i32>,
     set_col_third_move: WriteSignal<i32>,
     intent_receiver: BevyMessageReceiver<Intents>,
-    command_receiver: BevyMessageReceiver<Commands>,
-    bevy_notification_sender: BevyMessageSender<Notifications>,
+    command_receiver: BevyMessageReceiver<Correlation<Commands>>,
+    bevy_notification_sender: BevyMessageSender<Correlation<Notifications>>,
     bevy_server_intent_sender: BevyMessageSender<ServerIntents>,
 ) -> impl IntoView {
     view! {

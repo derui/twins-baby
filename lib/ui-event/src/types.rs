@@ -1,6 +1,6 @@
-use std::fmt::Display;
+use std::{fmt::Display, ops::Deref};
 
-use bevy::ecs::message::Message;
+use bevy::ecs::{event::Event, message::Message};
 use cad_base::{
     body::PlaneRef,
     id::{EdgeId, FaceId},
@@ -96,7 +96,7 @@ pub enum SketchCreationFailure {
 }
 
 /// A correlation of between request and responce.
-#[derive(Debug, Clone, Message)]
+#[derive(Debug, Clone, Message, Event)]
 pub struct Correlation<T: Clone> {
     pub id: Im<CommandId>,
 
@@ -110,5 +110,22 @@ impl<T: Clone> Correlation<T> {
             id: command_id.into(),
             data: data.into(),
         }
+    }
+
+    /// Create a correlated value with new type of `data`
+    pub fn correlate<V: Clone>(&self, data: V) -> Correlation<V> {
+        Correlation {
+            id: self.id.clone(),
+            data: data.into(),
+        }
+    }
+}
+
+/// Support deref for convenience
+impl<T: Clone> Deref for Correlation<T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.data
     }
 }

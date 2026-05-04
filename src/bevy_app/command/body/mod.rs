@@ -18,6 +18,7 @@ use bevy::prelude::ResMut;
 use bevy::transform::components::Transform;
 use cad_base::body::BodyPerspective;
 use cad_base::id::BodyId;
+use ui_event::Correlation;
 use ui_event::command::SwitchActiveBodyCommand;
 use ui_event::{
     ObjectType,
@@ -102,10 +103,10 @@ fn register_body_base_planes(
 }
 
 pub(super) fn on_create_body(
-    _trigger: On<CreateBodyCommand>,
+    trigger: On<Correlation<CreateBodyCommand>>,
     mut engine: ResMut<EngineState>,
     mut app_state: ResMut<EngineAppState>,
-    mut writer: MessageWriter<Notifications>,
+    mut writer: MessageWriter<Correlation<Notifications>>,
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
@@ -126,11 +127,13 @@ pub(super) fn on_create_body(
     }
 
     writer.write(
-        BodyCreatedNotification {
-            body_id: body_id.into(),
-            name: name.into(),
-        }
-        .into(),
+        trigger.event().correlate(
+            BodyCreatedNotification {
+                body_id: body_id.into(),
+                name: name.into(),
+            }
+            .into(),
+        ),
     );
 
     if let Ok(entities) =
@@ -146,10 +149,10 @@ pub(super) fn on_create_body(
 
 /// A command handler of [SwitchActiveBodyCommand]
 pub(super) fn on_switch_active_body(
-    trigger: On<SwitchActiveBodyCommand>,
+    trigger: On<Correlation<SwitchActiveBodyCommand>>,
     mut engine: ResMut<EngineState>,
     mut app_state: ResMut<EngineAppState>,
-    mut writer: MessageWriter<Notifications>,
+    mut writer: MessageWriter<Correlation<Notifications>>,
 ) {
     let command = trigger.event();
     let transaction = engine.0.begin();
@@ -163,10 +166,12 @@ pub(super) fn on_switch_active_body(
         app_state.active_body = Some(*command.body_id.clone());
 
         writer.write(
-            BodyActivatedNotification {
-                body_id: command.body_id.clone(),
-            }
-            .into(),
+            trigger.event().correlate(
+                BodyActivatedNotification {
+                    body_id: command.body_id.clone(),
+                }
+                .into(),
+            ),
         );
     } else {
         // This case occurs sometimes. Do not do anything in this
