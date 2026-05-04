@@ -87,6 +87,8 @@ pub(super) fn on_create_sketch_on_plane(
         return;
     };
 
+    transaction.commit();
+
     writer.write(
         trigger.event().correlate(
             SketchCreatedNotification {
@@ -97,8 +99,6 @@ pub(super) fn on_create_sketch_on_plane(
             .into(),
         ),
     );
-
-    transaction.commit();
 }
 
 #[cfg(test)]

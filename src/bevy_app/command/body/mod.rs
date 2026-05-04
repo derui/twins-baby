@@ -9,7 +9,7 @@ use bevy::color::{Alpha, Color};
 use bevy::ecs::entity::Entity;
 use bevy::ecs::query::With;
 use bevy::ecs::system::{Commands, Query, Res};
-use bevy::ecs::{error::BevyError, message::MessageWriter, observer::On};
+use bevy::ecs::{message::MessageWriter, observer::On};
 use bevy::math::Dir3;
 use bevy::math::primitives::Plane3d;
 use bevy::mesh::{Mesh, Mesh3d, Meshable};
@@ -110,11 +110,12 @@ pub(super) fn on_create_body(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-) -> Result<(), BevyError> {
+) {
     let mut transaction = engine.0.begin();
 
     let Some(body) = transaction.modify::<BodyPerspective>() else {
-        return Err(color_eyre::eyre::eyre!("Can not get body perspective").into());
+        tracing::warn!("Can not get body perspective");
+        return;
     };
 
     let body_id = body.add_body();
@@ -122,9 +123,19 @@ pub(super) fn on_create_body(
     if body.rename_body(&body_id, &name).is_err() {
         let count = body.bodies().count();
         name = format!("{}{:03}", &name, count + 1);
-        // TODO should fallback notification when get error.
-        body.rename_body(&body_id, &name)?;
+        if let Err(e) = body.rename_body(&body_id, &name) {
+            tracing::warn!("Failed to rename body: {:?}", e);
+            return;
+        }
     }
+
+    if let Ok(entities) =
+        register_body_base_planes(body, &body_id, &mut commands, &mut meshes, &mut materials)
+    {
+        app_state.body_planes_map.insert(body_id, entities);
+    }
+
+    transaction.commit();
 
     writer.write(
         trigger.event().correlate(
@@ -135,16 +146,6 @@ pub(super) fn on_create_body(
             .into(),
         ),
     );
-
-    if let Ok(entities) =
-        register_body_base_planes(body, &body_id, &mut commands, &mut meshes, &mut materials)
-    {
-        app_state.body_planes_map.insert(body_id, entities);
-    }
-
-    transaction.commit();
-
-    Ok(())
 }
 
 /// A command handler of [SwitchActiveBodyCommand]
