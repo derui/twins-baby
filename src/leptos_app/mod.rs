@@ -26,8 +26,6 @@ use crate::{
         command_sender::CommandSender,
         component::{FeatureIsland, InfoIsland, PerspectiveIsland, SupportIsland},
         resize_nob::NOB_AREA,
-        ui_state::UiStore,
-        use_action::CommandIdGen,
         use_server_intent::use_server_intent,
     },
 };
@@ -68,8 +66,6 @@ pub fn App() -> impl IntoView {
     let store = AppStore::new();
     provide_context(CommandSender::new(command_sender));
     provide_context(store);
-    provide_context(UiStore::new(store));
-    provide_context(CommandIdGen::new());
 
     let _ = use_server_intent(leptos_server_intent_receiver);
 

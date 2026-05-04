@@ -18,26 +18,15 @@ pub enum Commands {
 ///
 /// This command do not handle selection that is handled in CAD engine.
 #[derive(Event, Debug, Clone, Command)]
-pub struct CreateSketchOnSelectedCommand {
-    pub id: Im<CommandId>,
-}
+pub struct CreateSketchOnSelectedCommand {}
 
 /// A command to create body
 #[derive(Event, Debug, Clone, Command)]
-pub struct CreateBodyCommand {
-    /// Id of command
-    pub id: Im<CommandId>,
-
-    /// Name of the body
-    pub name: Im<String>,
-}
+pub struct CreateBodyCommand {}
 
 /// A command to switch active body
 #[derive(Event, Debug, Clone, Command)]
 pub struct SwitchActiveBodyCommand {
-    /// Id of command
-    pub id: Im<CommandId>,
-
     /// Id of body to switch
     pub body_id: Im<BodyId>,
 }

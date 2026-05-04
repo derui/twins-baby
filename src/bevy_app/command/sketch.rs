@@ -153,9 +153,7 @@ mod tests {
         }
 
         // Act
-        world.trigger(CreateSketchOnSelectedCommand {
-            id: CommandId::new(1).into(),
-        });
+        world.trigger(CreateSketchOnSelectedCommand {});
         world.flush();
 
         // Assert

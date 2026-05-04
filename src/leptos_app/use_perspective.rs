@@ -46,20 +46,17 @@ mod tests {
     use leptos_test::with_leptos_owner;
     use pretty_assertions::assert_eq;
     use reactive_stores::Store;
-    use ui_event::command::Commands;
+    use ui_event::{Correlation, command::Commands};
 
-    use crate::leptos_app::{
-        app_state::AppStore, command_sender::CommandSender, use_action::CommandIdGen,
-    };
+    use crate::leptos_app::{app_state::AppStore, command_sender::CommandSender};
 
     use super::*;
 
     fn setup_context() -> Store<AppStore> {
         let app_store = AppStore::new();
-        let (sender, _receiver) = message_l2b::<Commands>();
+        let (sender, _receiver) = message_l2b::<Correlation<Commands>>();
         provide_context(app_store);
         provide_context(CommandSender::new(sender));
-        provide_context(CommandIdGen::new());
         app_store
     }
 

@@ -7,7 +7,7 @@ use leptos::prelude::{Callable, Callback, use_context};
 use reactive_stores::Store;
 use ui_event::{CommandId, command::Commands};
 
-use crate::leptos_app::{app_state::AppStore, command_sender::CommandSender};
+use crate::leptos_app::{app_state::AppStore, command_sender::CommandSender, ui_action::UiAction};
 
 pub struct UseActionReturn<DispatchFn>
 where
@@ -24,36 +24,14 @@ pub struct ActionContext {
     pub store: Store<AppStore>,
 }
 
-/// A generator for command id
-#[derive(Debug, Clone)]
-pub struct CommandIdGen {
-    id_gen: Arc<AtomicU64>,
-}
-
-impl CommandIdGen {
-    pub fn new() -> Self {
-        CommandIdGen {
-            id_gen: Arc::new(AtomicU64::new(1)),
-        }
-    }
-
-    fn gen_id(&self) -> CommandId {
-        let id = self.id_gen.fetch_add(1, Ordering::Relaxed);
-        id.into()
-    }
-}
-
 pub fn use_action() -> UseActionReturn<impl Fn(Box<dyn UiAction>) + Clone + Send + Sync> {
     let store = use_context::<Store<AppStore>>().expect("Must set UiStore before");
     let sender = use_context::<CommandSender>().expect("Must set CommandSender before");
-    let id_gen = use_context::<CommandIdGen>().expect("Must set CommandIdGen before");
 
     let context = ActionContext { store };
 
     let dispatch = Callback::new(move |action: Box<dyn UiAction>| {
-        let id = id_gen.gen_id();
-
-        if let Some(command) = action.apply(id, &context) {
+        if let Some(command) = action.apply(&context) {
             sender.send(command);
         }
     });
@@ -66,13 +44,6 @@ pub fn use_action() -> UseActionReturn<impl Fn(Box<dyn UiAction>) + Clone + Send
     }
 }
 
-pub trait UiAction {
-    /// Apply state change from the event.
-    ///
-    /// UiState can not mutate directly, allow only exposed write signal
-    fn apply(&self, id: CommandId, context: &ActionContext) -> Option<Commands>;
-}
-
 #[cfg(test)]
 mod tests {
     use leptos::prelude::provide_context;
@@ -82,7 +53,7 @@ mod tests {
     use pretty_assertions::assert_eq;
     use reactive_stores::Store;
     use ui_event::{
-        PerspectiveKind,
+        Correlation, PerspectiveKind,
         command::{Commands, CreateBodyCommand},
     };
 
@@ -93,19 +64,18 @@ mod tests {
 
     use super::*;
 
-    fn setup_context() -> (Store<AppStore>, BevyMessageReceiver<Commands>) {
+    fn setup_context() -> (Store<AppStore>, BevyMessageReceiver<Correlation<Commands>>) {
         let app_store = AppStore::new();
-        let (sender, receiver) = message_l2b::<Commands>();
+        let (sender, receiver) = message_l2b::<Correlation<Commands>>();
         provide_context(app_store);
         provide_context(CommandSender::new(sender));
-        provide_context(CommandIdGen::new());
         (app_store, receiver)
     }
 
     struct NoOpAction;
 
     impl UiAction for NoOpAction {
-        fn apply(&self, _id: CommandId, _context: &ActionContext) -> Option<Commands> {
+        fn apply(&self, _context: &ActionContext) -> Option<Commands> {
             None
         }
     }
@@ -113,14 +83,8 @@ mod tests {
     struct SendCommandAction;
 
     impl UiAction for SendCommandAction {
-        fn apply(&self, id: CommandId, _context: &ActionContext) -> Option<Commands> {
-            Some(
-                CreateBodyCommand {
-                    id: id.into(),
-                    name: "test".to_string().into(),
-                }
-                .into(),
-            )
+        fn apply(&self, _context: &ActionContext) -> Option<Commands> {
+            Some(CreateBodyCommand {}.into())
         }
     }
 
@@ -155,7 +119,7 @@ mod tests {
             // Assert
             let received = receiver.rx().try_recv();
             assert!(received.is_ok());
-            assert!(matches!(received.unwrap(), Commands::CreateBody(_)));
+            assert!(matches!(*received.unwrap().data, Commands::CreateBody(_)));
         })
         .await;
     }
@@ -171,7 +135,7 @@ mod tests {
 
             struct SetPerspectiveAction;
             impl UiAction for SetPerspectiveAction {
-                fn apply(&self, _id: CommandId, context: &ActionContext) -> Option<Commands> {
+                fn apply(&self, context: &ActionContext) -> Option<Commands> {
                     context.store.perspective().set(PerspectiveKind::Sketch);
                     None
                 }

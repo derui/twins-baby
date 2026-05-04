@@ -11,10 +11,6 @@ pub(crate) fn impl_notification_macro(ast: &syn::DeriveInput) -> TokenStream {
 
     let generated = quote! {
         impl crate::notification::Notification for #name {
-            fn correlation_id(&self) -> &CommandId {
-                &(*self.correlation_id)
-            }
-
             fn select_ref<T: Notification + 'static>(&self) -> Option<&T> {
                 let type_id = std::any::TypeId::of::<T>();
                 let current = std::any::TypeId::of::<#name>();

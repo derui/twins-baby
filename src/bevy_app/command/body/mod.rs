@@ -102,7 +102,7 @@ fn register_body_base_planes(
 }
 
 pub(super) fn on_create_body(
-    trigger: On<CreateBodyCommand>,
+    _trigger: On<CreateBodyCommand>,
     mut engine: ResMut<EngineState>,
     mut app_state: ResMut<EngineAppState>,
     mut writer: MessageWriter<Notifications>,
@@ -110,7 +110,6 @@ pub(super) fn on_create_body(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) -> Result<(), BevyError> {
-    let command = trigger.event();
     let mut transaction = engine.0.begin();
 
     let Some(body) = transaction.modify::<BodyPerspective>() else {
@@ -118,7 +117,7 @@ pub(super) fn on_create_body(
     };
 
     let body_id = body.add_body();
-    let mut name = (*command.name).clone();
+    let mut name = "Body".to_string();
     if body.rename_body(&body_id, &name).is_err() {
         let count = body.bodies().count();
         name = format!("{}{:03}", &name, count + 1);
@@ -128,7 +127,6 @@ pub(super) fn on_create_body(
 
     writer.write(
         BodyCreatedNotification {
-            correlation_id: command.id.clone(),
             body_id: body_id.into(),
             name: name.into(),
         }
@@ -166,7 +164,6 @@ pub(super) fn on_switch_active_body(
 
         writer.write(
             BodyActivatedNotification {
-                correlation_id: command.id.clone(),
                 body_id: command.body_id.clone(),
             }
             .into(),

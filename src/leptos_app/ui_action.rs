@@ -8,10 +8,15 @@ use ui_event::{
 };
 
 use crate::leptos_app::{
-    app_state::AppStoreStoreFields as _,
-    ui_state::BodyPerspectiveUI,
-    use_action::{ActionContext, UiAction},
+    app_state::AppStoreStoreFields as _, ui_state::BodyPerspectiveUI, use_action::ActionContext,
 };
+
+pub trait UiAction {
+    /// Apply state change from the event.
+    ///
+    /// UiState can not mutate directly, allow only exposed write signal
+    fn apply(&self, context: &ActionContext) -> Option<Commands>;
+}
 
 /// An event to notice perpective change
 #[derive(Debug, Clone)]
@@ -21,7 +26,7 @@ pub struct PerspectiveChangedAction {
 }
 
 impl UiAction for PerspectiveChangedAction {
-    fn apply(&self, _id: CommandId, context: &ActionContext) -> Option<Commands> {
+    fn apply(&self, context: &ActionContext) -> Option<Commands> {
         context.store.perspective().set(self.next);
 
         None
@@ -36,14 +41,8 @@ pub struct BodyCreatedAction {
 }
 
 impl UiAction for BodyCreatedAction {
-    fn apply(&self, id: CommandId, _context: &ActionContext) -> Option<Commands> {
-        Some(
-            CreateBodyCommand {
-                id: id.into(),
-                name: format!("Body{}", id).into(),
-            }
-            .into(),
-        )
+    fn apply(&self, _context: &ActionContext) -> Option<Commands> {
+        Some(CreateBodyCommand {}.into())
     }
 }
 
@@ -52,11 +51,11 @@ impl UiAction for BodyCreatedAction {
 pub struct SketchCreatedAction;
 
 impl UiAction for SketchCreatedAction {
-    fn apply(&self, id: CommandId, context: &ActionContext) -> Option<Commands> {
+    fn apply(&self, context: &ActionContext) -> Option<Commands> {
         BodyPerspectiveUI::from_store(context.store)
             .can_create_sketch
             .get_untracked()
-            .then(|| CreateSketchOnSelectedCommand { id: id.into() }.into())
+            .then(|| CreateSketchOnSelectedCommand {}.into())
     }
 }
 
@@ -68,10 +67,8 @@ pub struct BodyActivatedAction {
 }
 
 impl UiAction for BodyActivatedAction {
-    fn apply(&self, id: CommandId, _context: &ActionContext) -> Option<Commands> {
+    fn apply(&self, context: &ActionContext) -> Option<Commands> {
         Some(Commands::SwitchActiveBody(SwitchActiveBodyCommand {
-            id: id.into(),
-
             body_id: self.body_id.into(),
         }))
     }

@@ -9,9 +9,6 @@ use crate::{CommandId, SketchCreationFailure};
 /// A notification marker trait.
 #[enum_dispatch(Notifications)]
 pub trait Notification {
-    /// Get ID of the command.
-    fn correlation_id(&self) -> &CommandId;
-
     /// Get the ref when the type is for the specified <T>
     fn select_ref<T: Notification + 'static>(&self) -> Option<&T>;
 }
@@ -29,8 +26,6 @@ pub enum Notifications {
 /// Response of [ConfimSketchCreationCommand]
 #[derive(Debug, Clone, Notification)]
 pub struct SketchCreatedNotification {
-    /// Original Id from the command
-    pub correlation_id: Im<CommandId>,
     /// sketch id created.
     pub sketch_id: Im<SketchId>,
     /// name of sketch created
@@ -42,9 +37,6 @@ pub struct SketchCreatedNotification {
 /// Response of [ConfimSketchCreationCommand]
 #[derive(Debug, Clone, Notification)]
 pub struct SketchCreationFailedNotification {
-    /// Original Id from the command
-    pub correlation_id: Im<CommandId>,
-
     /// failure reason
     pub reason: Im<SketchCreationFailure>,
 }
@@ -52,8 +44,6 @@ pub struct SketchCreationFailedNotification {
 /// Response of [CreateBodyCommand] .
 #[derive(Debug, Clone, Notification)]
 pub struct BodyCreatedNotification {
-    /// Original Id from the command
-    pub correlation_id: Im<CommandId>,
     pub body_id: Im<BodyId>,
     /// name of body created
     pub name: Im<String>,
@@ -62,9 +52,6 @@ pub struct BodyCreatedNotification {
 /// Response of [SwitchActiveBodyCommand] .
 #[derive(Debug, Clone, Notification)]
 pub struct BodyActivatedNotification {
-    /// Original Id from the command
-    pub correlation_id: Im<CommandId>,
-
     /// Activated body id
     pub body_id: Im<BodyId>,
 }

@@ -1,11 +1,13 @@
 use std::fmt::Display;
 
+use bevy::ecs::message::Message;
 use cad_base::{
     body::PlaneRef,
     id::{EdgeId, FaceId},
 };
 use cad_base_macros::MakeId;
 use color_eyre::eyre;
+use immutable::Im;
 
 /// Identifier of the command.
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, MakeId)]
@@ -91,4 +93,22 @@ pub enum SketchCreationFailure {
 
     /// Target is already deleted or others.
     NotFound,
+}
+
+/// A correlation of between request and responce.
+#[derive(Debug, Clone, Message)]
+pub struct Correlation<T: Clone> {
+    pub id: Im<CommandId>,
+
+    pub data: Im<T>,
+}
+
+impl<T: Clone> Correlation<T> {
+    /// Create a new correlation
+    pub fn new(command_id: CommandId, data: T) -> Self {
+        Correlation {
+            id: command_id.into(),
+            data: data.into(),
+        }
+    }
 }
