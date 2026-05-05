@@ -8,7 +8,7 @@ use ui_event::{
     notification::{
         Notification, Notifications, SketchCreatedNotification, SketchCreationFailedNotification,
     },
-    server::{ObjectSelectionChangeServerIntent, ServerIntents},
+    server::{ObjectSelectionChangeServerIntent, ServerIntent as _, ServerIntents},
 };
 
 use crate::bevy_app::{

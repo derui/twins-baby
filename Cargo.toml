@@ -58,6 +58,7 @@ ui-component = { version = "0.1.0", path = "lib/ui-component" }
 ui-event = { version = "0.1.0", path = "lib/ui-event" }
 
 [dev-dependencies]
+approx.workspace = true
 crossbeam-channel.workspace = true
 pretty_assertions.workspace = true
 rstest.workspace = true

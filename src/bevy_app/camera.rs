@@ -305,12 +305,13 @@ pub fn move_camera_with_request(
         let expectation = if let Ok(expect) = q_expectation.get(entity) {
             expect.clone()
         } else {
-            let Ok(expect) = op.calculate_expectation(
-                q_main_transform
-                    .single()
-                    .expect("should main camere appear"),
-                q_ui_transform.single().expect("should ui camere appear"),
-            ) else {
+            let Ok(main_transform) = q_main_transform.single() else {
+                return;
+            };
+            let Ok(ui_transform) = q_ui_transform.single() else {
+                return;
+            };
+            let Ok(expect) = op.calculate_expectation(main_transform, ui_transform) else {
                 tracing::warn!("Must have Main and UI camera with request");
                 return;
             };
@@ -343,15 +344,16 @@ pub fn move_camera_with_request(
 
 #[cfg(test)]
 mod tests {
+    use approx::assert_relative_eq;
     use bevy::window::WindowResolution;
+    use pretty_assertions::assert_eq;
 
     use super::*;
 
     #[test]
-    fn did_setup_cameres() {
+    fn did_setup_cameras() {
         // arrange
         let mut app = App::new();
-
         app.world_mut().spawn(Window {
             resolution: WindowResolution::new(800, 600),
             ..default()
@@ -381,12 +383,8 @@ mod tests {
             .iter(app.world())
             .next()
             .unwrap();
-
         assert_eq!(camera.order, 1);
-        assert!(match camera.clear_color {
-            ClearColorConfig::None => true,
-            _ => false,
-        });
+        assert!(matches!(camera.clear_color, ClearColorConfig::None));
         assert!(matches!(
             camera.viewport,
             Some(Viewport {
@@ -409,54 +407,47 @@ mod tests {
             .id();
         let ui_camera = app.world_mut().spawn((UiCamera, Transform::default())).id();
 
-        let operation = CameraMoveOperation::ByOrbit(PanOrbitOperation {
-            center: Vec3::ZERO,
-            radius: 5.0,
-            upside_down: false,
-            pitch: 45_f32.to_radians(),
-            yaw: 0.0,
-            viewpoint: Vec2::ZERO,
-        });
-
-        app.world_mut().spawn(CameraMoveHandle::new(
-            operation,
-            CameraMoveDuration::Immediate,
+        app.world_mut().spawn((
+            CameraMoveHandle::default(),
+            CameraMoveOperation::ByOrbit(PanOrbitOperation {
+                center: Vec3::ZERO,
+                radius: 5.0,
+                upside_down: false,
+                pitch: 45_f32.to_radians(),
+                yaw: 0.0,
+                viewpoint: Vec2::ZERO,
+            }),
         ));
-
         app.add_systems(Update, move_camera_with_request);
 
         // act
         app.update();
 
         // assert
-        let main_transform = app.world().get::<Transform>(main_camera).unwrap();
         let expected_rotation = Quat::from_euler(EulerRot::YXZ, 0.0, 45_f32.to_radians(), 0.0);
 
-        assert!(
-            (main_transform.rotation.x - expected_rotation.x).abs() < 0.001,
-            "rotation.x mismatch: got {}, expected {}",
+        let main_transform = app.world().get::<Transform>(main_camera).unwrap();
+        assert_relative_eq!(
             main_transform.rotation.x,
-            expected_rotation.x
+            expected_rotation.x,
+            epsilon = 0.001
         );
-        assert!(
-            (main_transform.rotation.y - expected_rotation.y).abs() < 0.001,
-            "rotation.y mismatch: got {}, expected {}",
+        assert_relative_eq!(
             main_transform.rotation.y,
-            expected_rotation.y
+            expected_rotation.y,
+            epsilon = 0.001
         );
 
         let ui_transform = app.world().get::<Transform>(ui_camera).unwrap();
-        assert!(
-            (ui_transform.rotation.x - expected_rotation.x).abs() < 0.001,
-            "UI rotation.x mismatch: got {}, expected {}",
+        assert_relative_eq!(
             ui_transform.rotation.x,
-            expected_rotation.x
+            expected_rotation.x,
+            epsilon = 0.001
         );
-        assert!(
-            (ui_transform.rotation.y - expected_rotation.y).abs() < 0.001,
-            "UI rotation.y mismatch: got {}, expected {}",
+        assert_relative_eq!(
             ui_transform.rotation.y,
-            expected_rotation.y
+            expected_rotation.y,
+            epsilon = 0.001
         );
     }
 
@@ -510,7 +501,6 @@ mod tests {
         app.update();
 
         // assert
-        // Nav cube: top-right corner (1000 - 96 = 904, 0)
         let nav_cube_camera = app.world().get::<Camera>(nav_cube_entity).unwrap();
         assert!(matches!(
             nav_cube_camera.viewport,
@@ -521,7 +511,6 @@ mod tests {
             })
         ));
 
-        // Gizmo: bottom-right corner (1000 - 96 = 904, 800 - 96 = 704)
         let gizmo_camera = app.world().get::<Camera>(gizmo_entity).unwrap();
         assert!(matches!(
             gizmo_camera.viewport,
