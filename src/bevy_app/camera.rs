@@ -5,8 +5,7 @@ use bevy::{
 use eyre::Result;
 
 pub const CAMERA_3D_LAYER: usize = 0;
-pub const CAMERA_CUBE_LAYER: usize = 1;
-pub const CAMERA_GIZMO_LAYER: usize = 2;
+pub const CAMERA_UI_LAYER: usize = 1;
 
 /// This module provides 3D camera basic functionally in Bevy.
 #[derive(Component)]
@@ -73,26 +72,25 @@ impl CameraMoveOperation {
         &self,
         camera_transform: &Transform,
         ui_transform: &Transform,
-    ) -> Result<CameraMoveExpectation> {
+    ) -> Option<CameraMoveExpectation> {
         match self {
             CameraMoveOperation::ByOrbit(state) => {
                 // state must be transformed by pivot, so these calculation only apply camera rotation
                 let rotation = Quat::from_euler(EulerRot::YXZ, state.yaw, state.pitch, 0.0);
                 let expected_direction = (*camera_transform).with_rotation(rotation).back();
 
-                Ok(CameraMoveExpectation {
+                Some(CameraMoveExpectation {
                     camera_transform: *camera_transform,
                     ui_transform: *ui_transform,
-                    // minus would be immediately
-                    duration: -1.,
+                    duration: None,
                     translation: (state.center + (state.radius * expected_direction)),
-                    rotation: (rotation),
-                    ui_translation: (state.radius * expected_direction),
-                    ui_rotation: (rotation),
+                    rotation: rotation,
+                    ui_translation: state.radius * expected_direction,
+                    ui_rotation: rotation,
                 })
             }
             CameraMoveOperation::BySystem { .. } => todo!("not yet implementation"),
-            CameraMoveOperation::Noop => Err(color_eyre::eyre::eyre!("no-op")),
+            CameraMoveOperation::Noop => None,
         }
     }
 }
@@ -106,7 +104,7 @@ pub struct CameraMoveExpectation {
     ui_transform: Transform,
 
     /// Expected duration. when minus or less than the frame, apply transform immediately
-    duration: f32,
+    duration: Option<f32>,
     translation: Vec3,
     rotation: Quat,
     ui_translation: Vec3,
@@ -149,10 +147,11 @@ fn ease_in_out_cubic(t: f32) -> f32 {
 
 impl CameraMoveExpectation {
     fn to_slerp_time(&self, elapsed: f32) -> SlerpTime {
-        if self.duration <= 0.0 {
+        let duration = self.duration.unwrap_or(-1.0);
+        if duration <= 0.0 {
             SlerpTime::Immedietely
-        } else if elapsed < self.duration {
-            SlerpTime::InSlerp((elapsed / self.duration).min(1.0))
+        } else if elapsed < duration {
+            SlerpTime::InSlerp((elapsed / duration).min(1.0))
         } else {
             SlerpTime::Finished
         }
@@ -161,15 +160,27 @@ impl CameraMoveExpectation {
     fn apply_slerp(&self, transform: &mut Transform, time: &SlerpTime) {
         let lerped_time = time.to_lerped_time();
 
-        transform.rotation = transform.rotation.lerp(self.rotation, lerped_time);
-        transform.translation = transform.translation.lerp(self.translation, lerped_time);
+        transform.rotation = self
+            .camera_transform
+            .rotation
+            .lerp(self.rotation, lerped_time);
+        transform.translation = self
+            .camera_transform
+            .translation
+            .lerp(self.translation, lerped_time);
     }
 
     fn apply_slerp_to_ui(&self, transform: &mut Transform, time: &SlerpTime) {
         let lerped_time = time.to_lerped_time();
 
-        transform.rotation = transform.rotation.lerp(self.ui_rotation, lerped_time);
-        transform.translation = transform.translation.lerp(self.ui_translation, lerped_time);
+        transform.rotation = self
+            .ui_transform
+            .rotation
+            .lerp(self.ui_rotation, lerped_time);
+        transform.translation = self
+            .ui_transform
+            .translation
+            .lerp(self.ui_translation, lerped_time);
     }
 }
 
@@ -193,9 +204,9 @@ impl CameraMoveHandle {
 }
 
 /// Setup camera with pan-orbit controller
-pub fn setup_camera(mut commands: Commands, window: Query<&Window>) -> Result<(), BevyError> {
+pub fn setup_camera(mut commands: Commands, window: Query<&Window>) {
     // spawn move handle
-    commands.spawn(CameraMoveHandle::default());
+    commands.spawn((CameraMoveHandle::default(), CameraMoveOperation::Noop));
 
     commands.spawn((
         Camera3d::default(),
@@ -204,8 +215,8 @@ pub fn setup_camera(mut commands: Commands, window: Query<&Window>) -> Result<()
     ));
 
     let window = window.single().unwrap();
-    let right = window.resolution.physical_width() - 96;
 
+    // UI camera
     commands.spawn((
         Camera3d::default(),
         // use this camera as 2D
@@ -220,50 +231,22 @@ pub fn setup_camera(mut commands: Commands, window: Query<&Window>) -> Result<()
             clear_color: ClearColorConfig::None,
             order: 1,
             viewport: Some(Viewport {
-                physical_position: UVec2::new(right, 0),
-                physical_size: UVec2::new(96, 96),
+                physical_position: UVec2::new(0, 0),
+                physical_size: window.resolution.physical_size(),
                 ..default()
             }),
             ..default()
         },
-        RenderLayers::from_layers(&[CAMERA_CUBE_LAYER]),
+        RenderLayers::from_layers(&[CAMERA_UI_LAYER]),
         UiCamera,
     ));
-
-    let bottom = window.resolution.physical_height() - 96;
-    // camera for UI
-    commands.spawn((
-        Camera3d::default(),
-        // use this camera as 2D
-        Projection::Orthographic(OrthographicProjection {
-            scaling_mode: Default::default(),
-            // 1unit-10px
-            scale: 0.10,
-            ..OrthographicProjection::default_2d()
-        }),
-        Camera {
-            // clear color, use background
-            clear_color: ClearColorConfig::None,
-            order: 2,
-            viewport: Some(Viewport {
-                physical_position: UVec2::new(right, bottom),
-                physical_size: UVec2::new(96, 96),
-                ..default()
-            }),
-            ..default()
-        },
-        RenderLayers::from_layers(&[CAMERA_GIZMO_LAYER]),
-        UiCamera,
-    ));
-
-    Ok(())
 }
 
 /// Repositions navigation cube and gizmo camera viewports
 /// to their fixed screen corners when the window resolution changes.
 pub fn reposition_ui_cameras(
     window: Query<&Window>,
-    mut cameras: Query<(&mut Camera, &RenderLayers), With<UiCamera>>,
+    mut cameras: Query<&mut Camera, With<UiCamera>>,
     mut last_size: ResMut<LastWindowSize>,
 ) -> Result<(), BevyError> {
     let window = window.single()?;
@@ -276,16 +259,9 @@ pub fn reposition_ui_cameras(
     last_size.width = width;
     last_size.height = height;
 
-    let right = width - 96;
-    let bottom = height - 96;
-
-    for (mut camera, render_layers) in &mut cameras {
+    for mut camera in &mut cameras {
         if let Some(ref mut viewport) = camera.viewport {
-            if render_layers.intersects(&RenderLayers::layer(CAMERA_CUBE_LAYER)) {
-                viewport.physical_position = UVec2::new(right, 0);
-            } else if render_layers.intersects(&RenderLayers::layer(CAMERA_GIZMO_LAYER)) {
-                viewport.physical_position = UVec2::new(right, bottom);
-            }
+            viewport.physical_position = window.resolution.physical_size();
         }
     }
 
@@ -306,13 +282,14 @@ pub fn move_camera_with_request(
             expect.clone()
         } else {
             let Ok(main_transform) = q_main_transform.single() else {
+                tracing::warn!("No main camera yet");
                 return;
             };
             let Ok(ui_transform) = q_ui_transform.single() else {
+                tracing::warn!("No UI camera yet");
                 return;
             };
-            let Ok(expect) = op.calculate_expectation(main_transform, ui_transform) else {
-                tracing::warn!("Must have Main and UI camera with request");
+            let Some(expect) = op.calculate_expectation(main_transform, ui_transform) else {
                 return;
             };
 
@@ -338,7 +315,6 @@ pub fn move_camera_with_request(
             commands.entity(entity).remove::<CameraMoveExpectation>();
             commands.entity(entity).insert(CameraMoveOperation::Noop);
         }
-        tracing::info!("moving camera: {:?}", &handle);
     }
 }
 
@@ -473,7 +449,7 @@ mod tests {
                     }),
                     ..default()
                 },
-                RenderLayers::layer(CAMERA_CUBE_LAYER),
+                RenderLayers::layer(CAMERA_UI_LAYER),
                 UiCamera,
             ))
             .id();
@@ -489,7 +465,7 @@ mod tests {
                     }),
                     ..default()
                 },
-                RenderLayers::layer(CAMERA_GIZMO_LAYER),
+                RenderLayers::layer(CAMERA_UI_LAYER),
                 UiCamera,
             ))
             .id();

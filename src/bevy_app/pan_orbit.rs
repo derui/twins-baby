@@ -155,7 +155,7 @@ pub fn pan_orbit_camera(
         }
 
         let mut total_orbit = Vec2::ZERO;
-        if is_input_active(settings.rotation_input.clone()) {
+        if activated && !is_input_active(settings.pan_input.clone()) {
             total_orbit -= total_motion * settings.rotation_sensitivity;
         }
 
@@ -224,12 +224,17 @@ pub fn pan_orbit_camera(
             ) else {
                 return;
             };
+            tracing::info!(
+                "current center / pivot => {:?} / {:?}",
+                &state.center,
+                &pivot
+            );
 
             // rotate around the pivot, instead of center. Resulting of that is rotation is same, but
             // center and camera translate based of pivot.
-            let rotation = Quat::from_euler(EulerRot::YXZ, state.yaw, state.pitch, 0.0);
+            let rotation = Quat::from_euler(EulerRot::YXZ, total_orbit.x, total_orbit.y, 0.0);
             let center = state.center;
-            state.center += rotation * (center - pivot);
+            state.center = pivot + rotation * (center - pivot);
         }
 
         if total_pan != Vec2::ZERO {

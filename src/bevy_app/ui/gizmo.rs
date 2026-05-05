@@ -20,7 +20,7 @@ use bevy::{
 };
 
 use crate::bevy_app::{
-    camera::{CAMERA_3D_LAYER, CAMERA_GIZMO_LAYER},
+    camera::{CAMERA_3D_LAYER, CAMERA_UI_LAYER},
     ui::components::{AxesGizmo, SketchBaseGizmo},
 };
 
@@ -51,13 +51,13 @@ pub fn setup_gizmos(
     commands.spawn((
         Transform::from_scale(Vec3::splat(1.)),
         AxesGizmo,
-        RenderLayers::from_layers(&[CAMERA_GIZMO_LAYER]),
+        RenderLayers::from_layers(&[CAMERA_UI_LAYER]),
     ));
 
     {
         // Configure the gizmo group to render on the gizmo layer
         let (config, _) = config_store.config_mut::<AxesGizmoGroup>();
-        config.render_layers = RenderLayers::from_layers(&[CAMERA_GIZMO_LAYER]);
+        config.render_layers = RenderLayers::from_layers(&[CAMERA_UI_LAYER]);
         config.line.width = 2.0;
     }
 
