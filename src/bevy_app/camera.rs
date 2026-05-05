@@ -84,7 +84,7 @@ impl CameraMoveOperation {
                     ui_transform: *ui_transform,
                     duration: None,
                     translation: (state.center + (state.radius * expected_direction)),
-                    rotation: rotation,
+                    rotation,
                     ui_translation: state.radius * expected_direction,
                     ui_rotation: rotation,
                 })

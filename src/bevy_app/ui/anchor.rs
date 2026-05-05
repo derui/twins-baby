@@ -1,5 +1,3 @@
-use std::ops::Deref;
-
 use bevy::{prelude::*, window::PrimaryWindow};
 
 use crate::bevy_app::ui::components::{HudAnchor, HudRotation};
@@ -44,6 +42,6 @@ pub fn transform_ui_anchors(
         };
 
         transform.translation = translation;
-        transform.rotation = (*rotation).clone();
+        transform.rotation = *(*rotation);
     }
 }
