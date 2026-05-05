@@ -3,21 +3,18 @@ use cad_base::{
     body::{BodyPerspective, PlaneRef},
     id::SketchId,
     plane::Plane,
-    point::Point,
     sketch::{AttachableTarget, SketchPerspective},
 };
 use ui_event::{
     Correlation, ObjectType, SketchCreationFailure,
     command::CreateSketchOnSelectedCommand,
     notification::{Notifications, SketchCreatedNotification, SketchCreationFailedNotification},
-    server::{ObjectSelectionChangeServerIntent, ServerIntent, ServerIntents},
+    server::{ObjectSelectionChangeServerIntent, ServerIntents},
 };
 
 use crate::bevy_app::{
-    camera::{CameraMoveDuration, CameraMoveOperation, CameraMoveRequest},
     component::BodyPartType,
     resource::{EngineAppState, EngineState},
-    support::Vec3Ext as _,
 };
 
 #[cfg(test)]
@@ -51,10 +48,10 @@ fn to_attachable_target(engine: &EngineAppState) -> Option<PlaneRef> {
 pub(super) fn on_create_sketch_on_plane(
     trigger: On<Correlation<CreateSketchOnSelectedCommand>>,
     mut engine: ResMut<EngineState>,
-    app_state: Res<EngineAppState>,
+    mut app_state: ResMut<EngineAppState>,
     mut writer: MessageWriter<Correlation<Notifications>>,
     mut intent: MessageWriter<ServerIntents>,
-    mut commands: Commands,
+    _commands: Commands,
 ) {
     let command = trigger.event();
 
@@ -111,6 +108,7 @@ pub(super) fn on_create_sketch_on_plane(
             .into(),
         ),
     );
+    app_state.selections.clear();
 
     // reset selection
     intent.write(
@@ -119,18 +117,4 @@ pub(super) fn on_create_sketch_on_plane(
         }
         .into(),
     );
-
-    {
-        let target = camera_target.r0.to_vec3();
-        let position = camera_target.normal.to_vec3() * 2.;
-        commands.spawn(CameraMoveRequest::new(
-            CameraMoveOperation::BySystem {
-                target: target,
-                position: target + position,
-                pitch: None,
-                yaw: None,
-            },
-            CameraMoveDuration::Duration(1.),
-        ));
-    }
 }

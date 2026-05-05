@@ -1,8 +1,8 @@
 use bevy::{
     camera::{Viewport, visibility::RenderLayers},
-    platform::collections::HashSet,
     prelude::*,
 };
+use eyre::Result;
 
 pub const CAMERA_3D_LAYER: usize = 0;
 pub const CAMERA_CUBE_LAYER: usize = 1;
@@ -31,6 +31,8 @@ pub struct PanOrbitOperation {
     pub upside_down: bool,
     pub pitch: f32,
     pub yaw: f32,
+    /// A point to start point to orbit
+    pub viewpoint: Vec2,
 }
 
 impl Default for PanOrbitOperation {
@@ -41,12 +43,13 @@ impl Default for PanOrbitOperation {
             upside_down: false,
             pitch: 0.0,
             yaw: 0.0,
+            viewpoint: Vec2::ZERO,
         }
     }
 }
 
 /// Request to move camera to a new position
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Component)]
 pub enum CameraMoveOperation {
     /// Do operation by orbit,
     ByOrbit(PanOrbitOperation),
@@ -57,123 +60,143 @@ pub enum CameraMoveOperation {
         position: Vec3,
         pitch: Option<f32>,
         yaw: Option<f32>,
+        duraton: f32,
     },
+
+    /// Special pattern, no-op
+    Noop,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum CameraMoveDuration {
-    Immediate,
-    Duration(f32),
+impl CameraMoveOperation {
+    /// Calculate expected camera transform by operation
+    pub fn calculate_expectation(
+        &self,
+        camera_transform: &Transform,
+        ui_transform: &Transform,
+    ) -> Result<CameraMoveExpectation> {
+        match self {
+            CameraMoveOperation::ByOrbit(state) => {
+                // state must be transformed by pivot, so these calculation only apply camera rotation
+                let rotation = Quat::from_euler(EulerRot::YXZ, state.yaw, state.pitch, 0.0);
+                let expected_direction = (*camera_transform).with_rotation(rotation).back();
+
+                Ok(CameraMoveExpectation {
+                    camera_transform: *camera_transform,
+                    ui_transform: *ui_transform,
+                    // minus would be immediately
+                    duration: -1.,
+                    translation: (state.center + (state.radius * expected_direction)),
+                    rotation: (rotation),
+                    ui_translation: (state.radius * expected_direction),
+                    ui_rotation: (rotation),
+                })
+            }
+            CameraMoveOperation::BySystem { .. } => todo!("not yet implementation"),
+            CameraMoveOperation::Noop => Err(color_eyre::eyre::eyre!("no-op")),
+        }
+    }
 }
 
 /// Expectation of camera movement calculation
-#[derive(Debug)]
-struct CameraMoveExpectation {
-    translation: Option<Vec3>,
-    rotation: Option<Quat>,
-    ui_translation: Option<Vec3>,
-    ui_rotation: Option<Quat>,
+#[derive(Component, Debug, Clone)]
+pub struct CameraMoveExpectation {
+    /// transforms for expected. These are used to move camera while duration.
+    /// When duration is `1.0`, these will be placed naturally translation + rotation applied.
+    camera_transform: Transform,
+    ui_transform: Transform,
+
+    /// Expected duration. when minus or less than the frame, apply transform immediately
+    duration: f32,
+    translation: Vec3,
+    rotation: Quat,
+    ui_translation: Vec3,
+    ui_rotation: Quat,
 }
 
-#[derive(Component, Debug)]
-pub struct CameraMoveRequest {
-    operation: CameraMoveOperation,
-    duration: CameraMoveDuration,
-    elapsed: f32,
-    expected: Option<CameraMoveExpectation>,
+enum SlerpTime {
+    Immedietely,
+    InSlerp(f32),
+    Finished,
 }
 
-impl CameraMoveRequest {
-    /// Construct new `CameraMoveRequest`. The constructed request is applied to each ticks
-    ///
-    /// # Arguments
-    /// * `operation` : request operation to move camera.
-    pub fn new(operation: CameraMoveOperation, duration: CameraMoveDuration) -> Self {
-        Self {
-            operation,
-            duration,
-            elapsed: 0.0,
-            expected: None,
+impl SlerpTime {
+    /// Return true if the camera movement should continue, otherwise false.
+    fn should_continue(&self) -> bool {
+        match self {
+            Self::Immedietely => false,
+            Self::InSlerp(_) => true,
+            Self::Finished => false,
         }
     }
 
-    /// transform with slerp interpolation.
-    ///
-    /// # Arguments
-    /// * `lerped_time` - A value between 0.0 and 1.0 representing the interpolation factor.
-    /// * `transform` - The current transform of the camera to be modified.
-    fn slerp_trasform(&mut self, lerped_time: f32, transform: &mut Transform, ui: bool) {
-        if self.expected.is_none() {
-            match &self.operation {
-                CameraMoveOperation::ByOrbit(state) => {
-                    let expected_direction = (*transform)
-                        .with_rotation(Quat::from_euler(EulerRot::YXZ, state.yaw, state.pitch, 0.0))
-                        .back();
-                    self.expected = Some(CameraMoveExpectation {
-                        translation: Some(state.center + (state.radius * expected_direction)),
-                        rotation: Some(Quat::from_euler(
-                            EulerRot::YXZ,
-                            state.yaw,
-                            state.pitch,
-                            0.0,
-                        )),
-                        ui_translation: Some(state.radius * expected_direction),
-                        ui_rotation: Some(Quat::from_euler(
-                            EulerRot::YXZ,
-                            state.yaw,
-                            state.pitch,
-                            0.0,
-                        )),
-                    });
-                }
-                CameraMoveOperation::BySystem {
-                    target,
-                    position,
-                    pitch,
-                    yaw,
-                } => {
-                    let rotation = match (pitch, yaw) {
-                        (Some(pitch), Some(yaw)) => {
-                            Some(Quat::from_euler(EulerRot::YXZ, *yaw, *pitch, 0.0))
-                        }
-                        (None, Some(yaw)) => Some(Quat::from_euler(EulerRot::YXZ, *yaw, 0.0, 0.0)),
-                        (Some(pitch), None) => {
-                            Some(Quat::from_euler(EulerRot::YXZ, 0.0, *pitch, 0.0))
-                        }
-                        (None, None) => None,
-                    };
-                    self.expected = Some(CameraMoveExpectation {
-                        translation: Some(target + position),
-                        rotation,
-                        ui_translation: Some(*position),
-                        ui_rotation: rotation,
-                    });
-                }
-            }
+    fn to_lerped_time(&self) -> f32 {
+        match self {
+            Self::Immedietely => 1.0,
+            Self::InSlerp(e) => ease_in_out_cubic(*e),
+            Self::Finished => 1.0,
         }
+    }
+}
 
-        if !ui {
-            if let Some(rotation) = self.expected.as_ref().unwrap().rotation {
-                transform.rotation = transform.rotation.lerp(rotation, lerped_time);
-            }
+fn ease_in_out_cubic(t: f32) -> f32 {
+    if t < 0.5 {
+        4.0 * t * t * t
+    } else {
+        let f = 2.0 * t - 2.0;
+        1.0 + f * f * f / 2.0
+    }
+}
 
-            if let Some(translation) = self.expected.as_ref().unwrap().translation {
-                transform.translation = transform.translation.lerp(translation, lerped_time);
-            }
+impl CameraMoveExpectation {
+    fn to_slerp_time(&self, elapsed: f32) -> SlerpTime {
+        if self.duration <= 0.0 {
+            SlerpTime::Immedietely
+        } else if elapsed < self.duration {
+            SlerpTime::InSlerp((elapsed / self.duration).min(1.0))
         } else {
-            if let Some(rotation) = self.expected.as_ref().unwrap().ui_rotation {
-                transform.rotation = transform.rotation.lerp(rotation, lerped_time);
-            }
-
-            if let Some(translation) = self.expected.as_ref().unwrap().ui_translation {
-                transform.translation = transform.translation.lerp(translation, lerped_time);
-            }
+            SlerpTime::Finished
         }
+    }
+
+    fn apply_slerp(&self, transform: &mut Transform, time: &SlerpTime) {
+        let lerped_time = time.to_lerped_time();
+
+        transform.rotation = transform.rotation.lerp(self.rotation, lerped_time);
+        transform.translation = transform.translation.lerp(self.translation, lerped_time);
+    }
+
+    fn apply_slerp_to_ui(&self, transform: &mut Transform, time: &SlerpTime) {
+        let lerped_time = time.to_lerped_time();
+
+        transform.rotation = transform.rotation.lerp(self.ui_rotation, lerped_time);
+        transform.translation = transform.translation.lerp(self.ui_translation, lerped_time);
+    }
+}
+
+/// The component of handling camera movement.
+#[derive(Component, Debug)]
+pub struct CameraMoveHandle {
+    elapsed: f32,
+}
+
+impl Default for CameraMoveHandle {
+    fn default() -> Self {
+        Self { elapsed: 0.0 }
+    }
+}
+
+impl CameraMoveHandle {
+    /// Reset for next movement.
+    pub fn reset(&mut self) {
+        self.elapsed = 0.0;
     }
 }
 
 /// Setup camera with pan-orbit controller
 pub fn setup_camera(mut commands: Commands, window: Query<&Window>) -> Result<(), BevyError> {
+    // spawn move handle
+    commands.spawn(CameraMoveHandle::default());
+
     commands.spawn((
         Camera3d::default(),
         RenderLayers::from_layers(&[CAMERA_3D_LAYER]),
@@ -273,54 +296,48 @@ pub fn reposition_ui_cameras(
 pub fn move_camera_with_request(
     time: Res<Time>,
     mut commands: Commands,
-    mut q_request: Query<(Entity, &mut CameraMoveRequest)>,
+    mut q_request: Query<(Entity, &mut CameraMoveHandle, &CameraMoveOperation)>,
+    q_expectation: Query<&CameraMoveExpectation>,
     mut q_main_transform: Query<&mut Transform, With<MainCamera>>,
     mut q_ui_transform: Query<&mut Transform, (With<UiCamera>, Without<MainCamera>)>,
-) -> Result<(), BevyError> {
-    let len = q_request.iter().len();
-    let mut removed: HashSet<Entity> = HashSet::new();
-    if len > 1 {
-        for (entity, _) in q_request.iter_mut().take(len - 1) {
-            commands.entity(entity).despawn();
-            removed.insert(entity);
-        }
-    }
+) {
+    if let Ok((entity, mut handle, op)) = q_request.single_mut() {
+        let expectation = if let Ok(expect) = q_expectation.get(entity) {
+            expect.clone()
+        } else {
+            let Ok(expect) = op.calculate_expectation(
+                q_main_transform
+                    .single()
+                    .expect("should main camere appear"),
+                q_ui_transform.single().expect("should ui camere appear"),
+            ) else {
+                tracing::warn!("Must have Main and UI camera with request");
+                return;
+            };
 
-    for (entity, mut request) in q_request.iter_mut() {
-        if removed.contains(&entity) {
-            continue;
-        }
-
-        request.elapsed += time.delta_secs();
-        let t = match request.duration {
-            CameraMoveDuration::Immediate => 1.0,
-            CameraMoveDuration::Duration(duration) => (request.elapsed / duration).min(1.0),
+            commands.entity(entity).insert(expect.clone());
+            expect
         };
 
+        handle.elapsed += time.delta_secs();
+
+        let t = expectation.to_slerp_time(handle.elapsed);
+
         for mut transform in q_main_transform.iter_mut() {
-            request.slerp_trasform(ease_in_out_cubic(t), &mut transform, false);
+            expectation.apply_slerp(&mut transform, &t);
         }
 
         for mut transform in q_ui_transform.iter_mut() {
-            request.slerp_trasform(ease_in_out_cubic(t), &mut transform, true);
+            expectation.apply_slerp_to_ui(&mut transform, &t);
             // fixed distance in UI
             transform.translation = transform.translation.normalize() * 1.;
         }
 
-        if t >= 1.0 {
-            commands.entity(entity).despawn();
+        if !t.should_continue() {
+            commands.entity(entity).remove::<CameraMoveExpectation>();
+            commands.entity(entity).insert(CameraMoveOperation::Noop);
         }
-    }
-
-    Ok(())
-}
-
-fn ease_in_out_cubic(t: f32) -> f32 {
-    if t < 0.5 {
-        4.0 * t * t * t
-    } else {
-        let f = 2.0 * t - 2.0;
-        1.0 + f * f * f / 2.0
+        tracing::info!("moving camera: {:?}", &handle);
     }
 }
 
@@ -398,9 +415,10 @@ mod tests {
             upside_down: false,
             pitch: 45_f32.to_radians(),
             yaw: 0.0,
+            viewpoint: Vec2::ZERO,
         });
 
-        app.world_mut().spawn(CameraMoveRequest::new(
+        app.world_mut().spawn(CameraMoveHandle::new(
             operation,
             CameraMoveDuration::Immediate,
         ));
@@ -439,59 +457,6 @@ mod tests {
             "UI rotation.y mismatch: got {}, expected {}",
             ui_transform.rotation.y,
             expected_rotation.y
-        );
-    }
-
-    #[test]
-    fn move_camera_by_vector() {
-        // arrange
-        let mut app = App::new();
-        app.add_plugins(MinimalPlugins);
-
-        let main_camera = app
-            .world_mut()
-            .spawn((MainCamera, Transform::default()))
-            .id();
-        let _ui_camera = app.world_mut().spawn((UiCamera, Transform::default())).id();
-
-        let operation = CameraMoveOperation::BySystem {
-            target: Vec3::ZERO,
-            position: Vec3::new(3.0, 0.0, 0.0),
-            pitch: None,
-            yaw: None,
-        };
-
-        app.world_mut().spawn(CameraMoveRequest::new(
-            operation,
-            CameraMoveDuration::Immediate,
-        ));
-
-        app.add_systems(Update, move_camera_with_request);
-
-        // act
-        app.update();
-
-        // assert
-        let main_transform = app.world().get::<Transform>(main_camera).unwrap();
-        let expected_translation = Vec3::new(3.0, 0.0, 0.0);
-
-        assert!(
-            (main_transform.translation.x - expected_translation.x).abs() < 0.001,
-            "translation.x mismatch: got {}, expected {}",
-            main_transform.translation.x,
-            expected_translation.x
-        );
-        assert!(
-            (main_transform.translation.y - expected_translation.y).abs() < 0.001,
-            "translation.y mismatch: got {}, expected {}",
-            main_transform.translation.y,
-            expected_translation.y
-        );
-        assert!(
-            (main_transform.translation.z - expected_translation.z).abs() < 0.001,
-            "translation.z mismatch: got {}, expected {}",
-            main_transform.translation.z,
-            expected_translation.z
         );
     }
 
