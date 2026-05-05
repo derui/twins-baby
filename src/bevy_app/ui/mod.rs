@@ -1,5 +1,5 @@
 pub mod anchor;
-mod components;
+pub mod components;
 mod gizmo;
 mod navigation_cube;
 

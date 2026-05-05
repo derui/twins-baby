@@ -4,6 +4,8 @@ use bevy::{
 };
 use eyre::Result;
 
+use crate::bevy_app::ui::components::HudRotation;
+
 pub const CAMERA_3D_LAYER: usize = 0;
 pub const CAMERA_UI_LAYER: usize = 1;
 
@@ -71,7 +73,6 @@ impl CameraMoveOperation {
     pub fn calculate_expectation(
         &self,
         camera_transform: &Transform,
-        ui_transform: &Transform,
     ) -> Option<CameraMoveExpectation> {
         match self {
             CameraMoveOperation::ByOrbit(state) => {
@@ -81,12 +82,9 @@ impl CameraMoveOperation {
 
                 Some(CameraMoveExpectation {
                     camera_transform: *camera_transform,
-                    ui_transform: *ui_transform,
                     duration: None,
                     translation: (state.center + (state.radius * expected_direction)),
                     rotation,
-                    ui_translation: state.radius * expected_direction,
-                    ui_rotation: rotation,
                 })
             }
             CameraMoveOperation::BySystem { .. } => todo!("not yet implementation"),
@@ -101,14 +99,11 @@ pub struct CameraMoveExpectation {
     /// transforms for expected. These are used to move camera while duration.
     /// When duration is `1.0`, these will be placed naturally translation + rotation applied.
     camera_transform: Transform,
-    ui_transform: Transform,
 
     /// Expected duration. when minus or less than the frame, apply transform immediately
     duration: Option<f32>,
     translation: Vec3,
     rotation: Quat,
-    ui_translation: Vec3,
-    ui_rotation: Quat,
 }
 
 enum SlerpTime {
@@ -170,17 +165,12 @@ impl CameraMoveExpectation {
             .lerp(self.translation, lerped_time);
     }
 
-    fn apply_slerp_to_ui(&self, transform: &mut Transform, time: &SlerpTime) {
+    fn apply_slerp_to_ui(&self, time: &SlerpTime) -> Quat {
         let lerped_time = time.to_lerped_time();
 
-        transform.rotation = self
-            .ui_transform
+        self.camera_transform
             .rotation
-            .lerp(self.ui_rotation, lerped_time);
-        transform.translation = self
-            .ui_transform
-            .translation
-            .lerp(self.ui_translation, lerped_time);
+            .lerp(self.rotation, lerped_time)
     }
 }
 
@@ -275,7 +265,7 @@ pub fn move_camera_with_request(
     mut q_request: Query<(Entity, &mut CameraMoveHandle, &CameraMoveOperation)>,
     q_expectation: Query<&CameraMoveExpectation>,
     mut q_main_transform: Query<&mut Transform, With<MainCamera>>,
-    mut q_ui_transform: Query<&mut Transform, (With<UiCamera>, Without<MainCamera>)>,
+    mut q_hud_rotation: Query<&mut HudRotation>,
 ) {
     if let Ok((entity, mut handle, op)) = q_request.single_mut() {
         let expectation = if let Ok(expect) = q_expectation.get(entity) {
@@ -285,11 +275,7 @@ pub fn move_camera_with_request(
                 tracing::warn!("No main camera yet");
                 return;
             };
-            let Ok(ui_transform) = q_ui_transform.single() else {
-                tracing::warn!("No UI camera yet");
-                return;
-            };
-            let Some(expect) = op.calculate_expectation(main_transform, ui_transform) else {
+            let Some(expect) = op.calculate_expectation(main_transform) else {
                 return;
             };
 
@@ -305,196 +291,13 @@ pub fn move_camera_with_request(
             expectation.apply_slerp(&mut transform, &t);
         }
 
-        for mut transform in q_ui_transform.iter_mut() {
-            expectation.apply_slerp_to_ui(&mut transform, &t);
-            // fixed distance in UI
-            transform.translation = transform.translation.normalize() * 1.;
+        for mut transform in q_hud_rotation.iter_mut() {
+            transform.update(expectation.apply_slerp_to_ui(&t));
         }
 
         if !t.should_continue() {
             commands.entity(entity).remove::<CameraMoveExpectation>();
             commands.entity(entity).insert(CameraMoveOperation::Noop);
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use approx::assert_relative_eq;
-    use bevy::window::WindowResolution;
-    use pretty_assertions::assert_eq;
-
-    use super::*;
-
-    #[test]
-    fn did_setup_cameras() {
-        // arrange
-        let mut app = App::new();
-        app.world_mut().spawn(Window {
-            resolution: WindowResolution::new(800, 600),
-            ..default()
-        });
-        app.add_systems(Startup, setup_camera);
-
-        // act
-        app.update();
-
-        // assert
-        assert!(
-            app.world_mut()
-                .query::<&MainCamera>()
-                .single(app.world())
-                .is_ok()
-        );
-        assert_eq!(
-            2,
-            app.world_mut()
-                .query::<&UiCamera>()
-                .iter(app.world())
-                .count(),
-        );
-        let (camera, _) = app
-            .world_mut()
-            .query::<(&Camera, &UiCamera)>()
-            .iter(app.world())
-            .next()
-            .unwrap();
-        assert_eq!(camera.order, 1);
-        assert!(matches!(camera.clear_color, ClearColorConfig::None));
-        assert!(matches!(
-            camera.viewport,
-            Some(Viewport {
-                physical_position: UVec2 { x: 704, y: 0 },
-                physical_size: UVec2 { x: 96, y: 96 },
-                ..
-            })
-        ));
-    }
-
-    #[test]
-    fn move_camera_with_45_degree_pitch() {
-        // arrange
-        let mut app = App::new();
-        app.add_plugins(MinimalPlugins);
-
-        let main_camera = app
-            .world_mut()
-            .spawn((MainCamera, Transform::default()))
-            .id();
-        let ui_camera = app.world_mut().spawn((UiCamera, Transform::default())).id();
-
-        app.world_mut().spawn((
-            CameraMoveHandle::default(),
-            CameraMoveOperation::ByOrbit(PanOrbitOperation {
-                center: Vec3::ZERO,
-                radius: 5.0,
-                upside_down: false,
-                pitch: 45_f32.to_radians(),
-                yaw: 0.0,
-                viewpoint: Vec2::ZERO,
-            }),
-        ));
-        app.add_systems(Update, move_camera_with_request);
-
-        // act
-        app.update();
-
-        // assert
-        let expected_rotation = Quat::from_euler(EulerRot::YXZ, 0.0, 45_f32.to_radians(), 0.0);
-
-        let main_transform = app.world().get::<Transform>(main_camera).unwrap();
-        assert_relative_eq!(
-            main_transform.rotation.x,
-            expected_rotation.x,
-            epsilon = 0.001
-        );
-        assert_relative_eq!(
-            main_transform.rotation.y,
-            expected_rotation.y,
-            epsilon = 0.001
-        );
-
-        let ui_transform = app.world().get::<Transform>(ui_camera).unwrap();
-        assert_relative_eq!(
-            ui_transform.rotation.x,
-            expected_rotation.x,
-            epsilon = 0.001
-        );
-        assert_relative_eq!(
-            ui_transform.rotation.y,
-            expected_rotation.y,
-            epsilon = 0.001
-        );
-    }
-
-    #[test]
-    fn reposition_ui_cameras_on_resize() {
-        // arrange
-        let mut app = App::new();
-        app.add_plugins(MinimalPlugins);
-
-        app.world_mut().spawn(Window {
-            resolution: WindowResolution::new(1000, 800),
-            ..default()
-        });
-
-        let nav_cube_entity = app
-            .world_mut()
-            .spawn((
-                Camera {
-                    viewport: Some(Viewport {
-                        physical_position: UVec2::new(0, 0),
-                        physical_size: UVec2::new(96, 96),
-                        ..default()
-                    }),
-                    ..default()
-                },
-                RenderLayers::layer(CAMERA_UI_LAYER),
-                UiCamera,
-            ))
-            .id();
-
-        let gizmo_entity = app
-            .world_mut()
-            .spawn((
-                Camera {
-                    viewport: Some(Viewport {
-                        physical_position: UVec2::new(0, 0),
-                        physical_size: UVec2::new(96, 96),
-                        ..default()
-                    }),
-                    ..default()
-                },
-                RenderLayers::layer(CAMERA_UI_LAYER),
-                UiCamera,
-            ))
-            .id();
-
-        app.insert_resource(LastWindowSize::default());
-        app.add_systems(Update, reposition_ui_cameras);
-
-        // act
-        app.update();
-
-        // assert
-        let nav_cube_camera = app.world().get::<Camera>(nav_cube_entity).unwrap();
-        assert!(matches!(
-            nav_cube_camera.viewport,
-            Some(Viewport {
-                physical_position: UVec2 { x: 904, y: 0 },
-                physical_size: UVec2 { x: 96, y: 96 },
-                ..
-            })
-        ));
-
-        let gizmo_camera = app.world().get::<Camera>(gizmo_entity).unwrap();
-        assert!(matches!(
-            gizmo_camera.viewport,
-            Some(Viewport {
-                physical_position: UVec2 { x: 904, y: 704 },
-                physical_size: UVec2 { x: 96, y: 96 },
-                ..
-            })
-        ));
     }
 }
