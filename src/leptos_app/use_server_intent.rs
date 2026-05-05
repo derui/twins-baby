@@ -23,9 +23,7 @@ pub(crate) fn use_server_intent(
 
         match intent {
             ServerIntents::ObjectSelectionChange(intent) => {
-                store.selections().update(|obj| {
-                    obj.splice(0..obj.len(), intent.selections);
-                });
+                store.selections().set(intent.selections);
             }
         }
     });
