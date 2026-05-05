@@ -29,8 +29,8 @@ use crate::bevy_app::{
     resource::{EngineAppState, EngineState},
     setup::setup_scene,
     ui::{
-        AxesGizmoGroup, SketchBaseGizmoGroup, draw_gizmos, insert_render_layer, setup_gizmos,
-        setup_navigation_texture, setup_ui,
+        AxesGizmoGroup, SketchBaseGizmoGroup, anchor::transform_ui_anchors, draw_gizmos,
+        insert_render_layer, setup_gizmos, setup_navigation_texture, setup_ui,
     },
 };
 
@@ -99,6 +99,7 @@ pub fn init_bevy_app(setting: BevyAppSettings) -> App {
             (
                 pan_orbit_camera.run_if(any_with_component::<PanOrbitOperation>),
                 move_camera_with_request,
+                transform_ui_anchors,
                 draw_gizmos,
             )
                 .chain(),

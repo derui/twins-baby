@@ -261,7 +261,7 @@ pub fn reposition_ui_cameras(
 
     for mut camera in &mut cameras {
         if let Some(ref mut viewport) = camera.viewport {
-            viewport.physical_position = window.resolution.physical_size();
+            viewport.physical_size = window.resolution.physical_size();
         }
     }
 

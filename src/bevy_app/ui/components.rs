@@ -1,4 +1,6 @@
-use bevy::{camera::visibility::RenderLayers, ecs::component::Component};
+use std::ops::Deref;
+
+use bevy::{camera::visibility::RenderLayers, prelude::*};
 
 #[derive(Component)]
 pub struct NavigationCube;
@@ -16,3 +18,30 @@ pub struct AxesGizmo;
 
 #[derive(Component)]
 pub struct SketchBaseGizmo;
+
+/// A component of HUD Anchor point.
+#[derive(Debug, Clone, Component)]
+pub enum HudAnchor {
+    NavigationCube,
+    Axes,
+}
+
+/// A component to handle HUD. This is global entity
+#[derive(Debug, Component, Default)]
+pub struct HudRotation(Quat);
+
+impl HudRotation {
+    /// Update the transform
+    pub fn update(&mut self, transform: Quat) {
+        self.0 = transform;
+    }
+}
+
+/// Convenience deref
+impl Deref for HudRotation {
+    type Target = Quat;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
