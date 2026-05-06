@@ -29,8 +29,7 @@ use crate::bevy_app::{
     resource::AppResourceExt,
     setup::setup_scene,
     ui::{
-        AxesGizmoGroup, SketchBaseGizmoGroup, anchor::transform_ui_anchors, draw_gizmos,
-        insert_render_layer, setup_gizmos, setup_navigation_texture, setup_ui,
+        AppUiExt, AxesGizmoGroup, SketchBaseGizmoGroup, anchor::transform_ui_anchors, draw_gizmos,
     },
 };
 
@@ -79,21 +78,11 @@ pub fn init_bevy_app(setting: BevyAppSettings) -> App {
     .export_message_to_leptos(setting.notification)
     .export_message_to_leptos(setting.server_intent)
     .register_commands()
-    .add_systems(
-        Startup,
-        (
-            setup_scene,
-            setup_camera,
-            setup_ui,
-            setup_pan_orbit,
-            setup_gizmos,
-        ),
-    )
-    .add_systems(Update, setup_navigation_texture)
+    .init_ui()
+    .add_systems(Startup, (setup_scene, setup_camera, setup_pan_orbit))
     .add_systems(
         Update,
         (
-            insert_render_layer,
             reposition_ui_cameras,
             (
                 pan_orbit_camera.run_if(any_with_component::<PanOrbitOperation>),

@@ -1,8 +1,13 @@
-use bevy::prelude::*;
+//! internal module for navigation cube
 
-use crate::bevy_app::ui::components::NeedsTextureSetup;
+use bevy::{camera::visibility::RenderLayers, prelude::*};
 
-/// internal module for navigation cube
+use crate::bevy_app::{
+    camera::CAMERA_UI_LAYER,
+    ui::components::{HudAnchor, NavigationCube, NeedsRenderLayers, NeedsTextureSetup},
+};
+
+const NAVIGATION_CUBE_SCALE: f32 = 4.8; // 4.8 to 4.8unit = 48px on UI
 
 /// Texture type of the each mesh
 enum TextureType {
@@ -27,6 +32,28 @@ impl TextureType {
             _ => None,
         }
     }
+}
+
+/// Setup the twins-baby UI elements
+pub fn setup_navigation_cube(
+    mut commands: Commands,
+    asset: Res<AssetServer>,
+) -> Result<(), BevyError> {
+    // Navigation Cube
+    let cube = asset.load(GltfAssetLabel::Scene(0).from_asset("navigation-cube.gltf"));
+
+    commands.spawn((
+        SceneRoot(cube),
+        // current navigation cube model is located XY plane. so translate it a bit down to avoid z-fighting with grid.
+        Transform::from_scale(Vec3::splat(NAVIGATION_CUBE_SCALE))
+            .with_translation(Vec3::new(0.4, 0.4, 0.)),
+        Visibility::Hidden,
+        NavigationCube,
+        NeedsRenderLayers(RenderLayers::layer(CAMERA_UI_LAYER)),
+        HudAnchor::NavigationCube,
+    ));
+
+    Ok(())
 }
 
 /// Setup textures for navigation cube materials

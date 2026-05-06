@@ -3,44 +3,35 @@ pub mod components;
 mod gizmo;
 mod navigation_cube;
 
-use bevy::camera::visibility::RenderLayers;
+use bevy::ecs::{error::BevyError, system::Commands};
 use bevy::prelude::*;
 use bevy::scene::SceneInstance;
-use bevy::{
-    ecs::{error::BevyError, system::Commands},
-    math::Vec3,
-    transform::components::Transform,
-};
 
-use crate::bevy_app::camera::CAMERA_UI_LAYER;
 use crate::bevy_app::ui::components::{
-    HudAnchor, HudRotation, NavigationCube, NeedsRenderLayers, NeedsTextureSetup,
+    HudRotation, NavigationCube, NeedsRenderLayers, NeedsTextureSetup,
 };
-
-const NAVIGATION_CUBE_SCALE: f32 = 4.8; // 4.8 to 4.8unit = 48px on UI
+use crate::bevy_app::ui::gizmo::setup_gizmos;
+use crate::bevy_app::ui::navigation_cube::setup_navigation_cube;
 
 pub use gizmo::AxesGizmoGroup;
 pub use gizmo::SketchBaseGizmoGroup;
 pub use gizmo::draw_gizmos;
-pub use gizmo::setup_gizmos;
 pub use navigation_cube::setup_navigation_texture;
 
+pub trait AppUiExt {
+    /// Init UI resources
+    fn init_ui(&mut self) -> &mut Self;
+}
+
+impl AppUiExt for App {
+    fn init_ui(&mut self) -> &mut Self {
+        self.add_systems(Startup, (setup_ui, setup_navigation_cube, setup_gizmos))
+            .add_systems(Update, (setup_navigation_texture, insert_render_layer))
+    }
+}
+
 /// Setup the twins-baby UI elements
-pub fn setup_ui(mut commands: Commands, asset: Res<AssetServer>) -> Result<(), BevyError> {
-    // Navigation Cube
-    let cube = asset.load(GltfAssetLabel::Scene(0).from_asset("navigation-cube.gltf"));
-
-    commands.spawn((
-        SceneRoot(cube),
-        // current navigation cube model is located XY plane. so translate it a bit down to avoid z-fighting with grid.
-        Transform::from_scale(Vec3::splat(NAVIGATION_CUBE_SCALE))
-            .with_translation(Vec3::new(0.4, 0.4, 0.)),
-        Visibility::Hidden,
-        NavigationCube,
-        NeedsRenderLayers(RenderLayers::layer(CAMERA_UI_LAYER)),
-        HudAnchor::NavigationCube,
-    ));
-
+fn setup_ui(mut commands: Commands) -> Result<(), BevyError> {
     commands.insert_resource(GlobalAmbientLight {
         color: Color::WHITE,
         brightness: 600.,
