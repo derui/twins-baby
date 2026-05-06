@@ -14,23 +14,23 @@ use ui_event::{
 
 use crate::bevy_app::{
     component::BodyPartType,
-    resource::{EngineAppState, EngineState},
+    resource::{AppActiveBody, AppSelections, EngineState},
 };
 
 #[cfg(test)]
 mod tests;
 
 /// Convert selected object to attachable target. Only plane and face can be attachable target.
-fn to_attachable_target(engine: &EngineAppState) -> Option<PlaneRef> {
-    let Some(body_id) = engine.active_body else {
+fn to_attachable_target(engine: &AppActiveBody, selections: &AppSelections) -> Option<PlaneRef> {
+    let Some(body_id) = engine.0 else {
         return None;
     };
 
-    if engine.selections.len() != 1 {
+    if selections.len() != 1 {
         return None;
     }
 
-    match engine.selections[0] {
+    match selections[0] {
         (_, BodyPartType(ObjectType::Plane(plane_ref))) => {
             if plane_ref.body_id() == body_id {
                 Some(plane_ref)
@@ -48,14 +48,15 @@ fn to_attachable_target(engine: &EngineAppState) -> Option<PlaneRef> {
 pub(super) fn on_create_sketch_on_plane(
     trigger: On<Correlation<CreateSketchOnSelectedCommand>>,
     mut engine: ResMut<EngineState>,
-    mut app_state: ResMut<EngineAppState>,
+    active_body: Res<AppActiveBody>,
+    mut selections: ResMut<AppSelections>,
     mut writer: MessageWriter<Correlation<Notifications>>,
     mut intent: MessageWriter<ServerIntents>,
     _commands: Commands,
 ) {
     let command = trigger.event();
 
-    let Some(target) = to_attachable_target(&app_state) else {
+    let Some(target) = to_attachable_target(&active_body, &selections) else {
         writer.write(
             command.correlate(
                 SketchCreationFailedNotification {
@@ -108,7 +109,7 @@ pub(super) fn on_create_sketch_on_plane(
             .into(),
         ),
     );
-    app_state.selections.clear();
+    selections.clear();
 
     // reset selection
     intent.write(

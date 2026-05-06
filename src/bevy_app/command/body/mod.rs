@@ -32,7 +32,7 @@ use crate::bevy_app::component::BodyPartType;
 use crate::bevy_app::picking::{
     PickingMaterials, update_pointer_click, update_pointer_out, update_pointer_over,
 };
-use crate::bevy_app::resource::{EngineAppState, EngineState};
+use crate::bevy_app::resource::{AppActiveBody, EngineState};
 
 #[cfg(test)]
 mod tests;
@@ -143,7 +143,7 @@ pub(super) fn on_create_body(
 pub(super) fn on_switch_active_body(
     trigger: On<Correlation<SwitchActiveBodyCommand>>,
     mut engine: ResMut<EngineState>,
-    mut app_state: ResMut<EngineAppState>,
+    mut app_state: ResMut<AppActiveBody>,
     mut writer: MessageWriter<Correlation<Notifications>>,
 ) {
     let command = trigger.event();
@@ -155,7 +155,7 @@ pub(super) fn on_switch_active_body(
     };
 
     if body.get(&command.body_id).is_some() {
-        app_state.active_body = Some(*command.body_id.clone());
+        app_state.0 = Some(*command.body_id.clone());
 
         writer.write(
             trigger.event().correlate(
@@ -173,7 +173,7 @@ pub(super) fn on_switch_active_body(
 /// Update all plane visibilities of the app
 pub(super) fn update_plane_visibilities(
     mut commands: Commands,
-    app_state: Res<EngineAppState>,
+    app_state: Res<AppActiveBody>,
     mut cad_state: ResMut<EngineState>,
     q_planes: Query<(Entity, &BodyBasePlane)>,
 ) {
@@ -183,7 +183,7 @@ pub(super) fn update_plane_visibilities(
     }
 
     // When app has active body, active the planes
-    let Some(body_id) = app_state.active_body else {
+    let Some(body_id) = app_state.0 else {
         return;
     };
 

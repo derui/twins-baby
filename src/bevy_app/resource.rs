@@ -1,6 +1,8 @@
 //! Resource for global state of application whole.
 //! State for application working is added `App` prefix.
 
+use std::ops::Deref;
+
 use bevy::ecs::{entity::Entity, resource::Resource};
 use cad_base::{CadEngine, id::BodyId};
 
@@ -31,6 +33,15 @@ impl AppSelections {
     pub fn remove(&mut self, entity: Entity) {
         self.0.retain(|(e, _)| *e != entity);
     }
+
+    /// Clear all selections.
+    pub fn clear(&mut self) {
+        self.0.clear();
+    }
+
+    pub fn contains(&self, entity: Entity) -> bool {
+        self.0.iter().any(|(e, _)| *e == entity)
+    }
 }
 
 impl From<Vec<(Entity, BodyPartType)>> for AppSelections {
@@ -39,11 +50,10 @@ impl From<Vec<(Entity, BodyPartType)>> for AppSelections {
     }
 }
 
-#[derive(Resource, Default)]
-pub struct EngineAppState {
-    /// An active body. This is the source of some operations.
-    pub active_body: Option<BodyId>,
+impl Deref for AppSelections {
+    type Target = Vec<(Entity, BodyPartType)>;
 
-    /// Current selected objects
-    pub selections: Vec<(Entity, BodyPartType)>,
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }

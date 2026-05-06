@@ -13,7 +13,7 @@ use ui_event::{
     },
 };
 
-use crate::bevy_app::resource::{EngineAppState, EngineState};
+use crate::bevy_app::resource::{AppActiveBody, EngineState};
 
 use super::component::BodyBasePlane;
 use super::*;
@@ -22,7 +22,7 @@ fn make_world() -> World {
     let mut world = World::new();
     world.init_resource::<Messages<Correlation<Notifications>>>();
     world.init_resource::<EngineState>();
-    world.init_resource::<EngineAppState>();
+    world.init_resource::<AppActiveBody>();
     world.init_resource::<Assets<Mesh>>();
     world.init_resource::<Assets<StandardMaterial>>();
     world.add_observer(on_create_body);
@@ -235,7 +235,7 @@ fn update_plane_visibilities_shows_active_body_planes_and_hides_others() {
     let mut world = make_world();
     let (body1_id, body1_entities) = create_body_and_get_plane_entities(&mut world);
     let (_, body2_entities) = create_body_and_get_plane_entities(&mut world);
-    world.resource_mut::<EngineAppState>().active_body = Some(body1_id);
+    world.resource_mut::<AppActiveBody>().0 = Some(body1_id);
 
     // Act
     world.run_system_once(update_plane_visibilities).unwrap();
@@ -261,11 +261,11 @@ fn update_plane_visibilities_switches_visibility_when_active_body_changes() {
     let mut world = make_world();
     let (body1_id, body1_entities) = create_body_and_get_plane_entities(&mut world);
     let (body2_id, body2_entities) = create_body_and_get_plane_entities(&mut world);
-    world.resource_mut::<EngineAppState>().active_body = Some(body1_id);
+    world.resource_mut::<AppActiveBody>().0 = Some(body1_id);
     world.run_system_once(update_plane_visibilities).unwrap();
 
     // Act
-    world.resource_mut::<EngineAppState>().active_body = Some(body2_id);
+    world.resource_mut::<AppActiveBody>().0 = Some(body2_id);
     world.run_system_once(update_plane_visibilities).unwrap();
 
     // Assert
@@ -316,8 +316,8 @@ fn switch_active_body_writes_notification_and_updates_app_state() -> Result<()> 
         .select_ref::<BodyActivatedNotification>()
         .unwrap();
     assert_eq!(*notif.body_id, body_id);
-    let app_state = world.resource::<EngineAppState>();
-    assert_eq!(app_state.active_body, Some(body_id));
+    let app_active_body = world.resource::<AppActiveBody>();
+    assert_eq!(app_active_body.0, Some(body_id));
     Ok(())
 }
 
@@ -341,6 +341,6 @@ fn switch_active_body_returns_error_when_body_not_found() {
     let mut cursor = messages.get_cursor();
     let notifications: Vec<_> = cursor.read(messages).collect();
     assert_eq!(notifications.len(), 0);
-    let app_state = world.resource::<EngineAppState>();
-    assert_eq!(app_state.active_body, None);
+    let app_active_body = world.resource::<AppActiveBody>();
+    assert_eq!(app_active_body.0, None);
 }

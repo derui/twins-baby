@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use immutable::Im;
 use ui_event::server::{ObjectSelectionChangeServerIntent, ServerIntents};
 
-use crate::bevy_app::{component::BodyPartType, resource::EngineAppState};
+use crate::bevy_app::{component::BodyPartType, resource::AppSelections};
 
 /// Component to handle materials pickable object.
 ///
@@ -62,36 +62,25 @@ pub fn update_pointer_click(event: On<Pointer<Click>>, mut commands: MessageWrit
 /// Update selections of something of body
 pub fn update_toggling_selection(
     mut reader: MessageReader<SelectObject>,
-    mut app_state: ResMut<EngineAppState>,
+    mut selections: ResMut<AppSelections>,
     query: Query<&BodyPartType>,
     mut writer: MessageWriter<ServerIntents>,
 ) {
     for event in reader.read() {
-        if let Some(p) = app_state
-            .selections
-            .iter()
-            .position(|(e, _)| *e == *event.entity)
-        {
-            app_state.selections.remove(p);
+        if selections.contains(*event.entity) {
+            selections.remove(*event.entity);
         } else {
             let Ok(object_type) = query.get(*event.entity) else {
                 tracing::warn!("Can not get object type from selectable entity");
                 continue;
             };
-            app_state
-                .selections
-                .push((*event.entity, object_type.clone()));
+            selections.insert(*event.entity, object_type.clone());
         }
     }
 
     writer.write(
         ObjectSelectionChangeServerIntent {
-            selections: app_state
-                .selections
-                .iter()
-                .cloned()
-                .map(|v| v.1.0)
-                .collect(),
+            selections: (*selections).iter().cloned().map(|v| v.1.0).collect(),
         }
         .into(),
     );
@@ -111,7 +100,7 @@ mod tests {
         server::{ObjectSelectionChangeServerIntent, ServerIntent, ServerIntents},
     };
 
-    use crate::bevy_app::{component::BodyPartType, resource::EngineAppState};
+    use crate::bevy_app::{component::BodyPartType, resource::AppSelections};
 
     use super::*;
 
@@ -132,7 +121,7 @@ mod tests {
         let mut world = World::new();
         world.init_resource::<Messages<SelectObject>>();
         world.init_resource::<Messages<ServerIntents>>();
-        world.init_resource::<EngineAppState>();
+        world.init_resource::<AppSelections>();
         world.init_resource::<IntentCapture>();
         world
     }
@@ -176,8 +165,8 @@ mod tests {
         send_select_entity(&mut world, entity);
 
         // Assert
-        let app_state = world.resource::<EngineAppState>();
-        assert_eq!(app_state.selections, vec![(entity, point_type())]);
+        let selections = world.resource::<AppSelections>();
+        assert_eq!(**selections, vec![(entity, point_type())]);
     }
 
     #[test]
@@ -186,16 +175,15 @@ mod tests {
         let mut world = make_world();
         let entity = world.spawn(point_type()).id();
         world
-            .resource_mut::<EngineAppState>()
-            .selections
-            .push((entity, point_type()));
+            .resource_mut::<AppSelections>()
+            .insert(entity, point_type());
 
         // Act
         send_select_entity(&mut world, entity);
 
         // Assert
-        let app_state = world.resource::<EngineAppState>();
-        assert_eq!(app_state.selections, vec![]);
+        let selections = world.resource::<AppSelections>();
+        assert_eq!(**selections, vec![]);
     }
 
     #[test]
@@ -208,8 +196,8 @@ mod tests {
         send_select_entity(&mut world, entity);
 
         // Assert
-        let app_state = world.resource::<EngineAppState>();
-        assert_eq!(app_state.selections, vec![]);
+        let selections = world.resource::<AppSelections>();
+        assert_eq!(**selections, vec![]);
     }
 
     #[test]
@@ -233,10 +221,10 @@ mod tests {
         world.run_system_once(update_toggling_selection).unwrap();
 
         // Assert
-        let app_state = world.resource::<EngineAppState>();
-        assert_eq!(app_state.selections.len(), 2);
-        assert!(app_state.selections.contains(&(entity1, point_type())));
-        assert!(app_state.selections.contains(&(entity2, edge_type())));
+        let selections = world.resource::<AppSelections>();
+        assert_eq!((**selections).len(), 2);
+        assert!((**selections).contains(&(entity1, point_type())));
+        assert!((**selections).contains(&(entity2, edge_type())));
     }
 
     #[test]
@@ -246,17 +234,17 @@ mod tests {
         let entity1 = world.spawn(point_type()).id();
         let entity2 = world.spawn(edge_type()).id();
         {
-            let mut app_state = world.resource_mut::<EngineAppState>();
-            app_state.selections.push((entity1, point_type()));
-            app_state.selections.push((entity2, edge_type()));
+            let mut selections = world.resource_mut::<AppSelections>();
+            selections.insert(entity1, point_type());
+            selections.insert(entity2, edge_type());
         }
 
         // Act
         send_select_entity(&mut world, entity1);
 
         // Assert
-        let app_state = world.resource::<EngineAppState>();
-        assert_eq!(app_state.selections, vec![(entity2, edge_type())]);
+        let selections = world.resource::<AppSelections>();
+        assert_eq!(**selections, vec![(entity2, edge_type())]);
     }
 
     #[test]
@@ -279,9 +267,8 @@ mod tests {
         let mut world = make_world();
         let entity = world.spawn(point_type()).id();
         world
-            .resource_mut::<EngineAppState>()
-            .selections
-            .push((entity, point_type()));
+            .resource_mut::<AppSelections>()
+            .insert(entity, point_type());
 
         // Act
         send_select_entity(&mut world, entity);
@@ -298,9 +285,9 @@ mod tests {
         let entity1 = world.spawn(point_type()).id();
         let entity2 = world.spawn(edge_type()).id();
         {
-            let mut app_state = world.resource_mut::<EngineAppState>();
-            app_state.selections.push((entity1, point_type()));
-            app_state.selections.push((entity2, edge_type()));
+            let mut selections = world.resource_mut::<AppSelections>();
+            selections.insert(entity1, point_type());
+            selections.insert(entity2, edge_type());
         }
 
         // Act

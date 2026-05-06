@@ -26,7 +26,7 @@ use crate::bevy_app::{
     pan_orbit::{pan_orbit_camera, setup_pan_orbit},
     picking::{SelectObject, update_toggling_selection},
     resize::WindowResizePlugin,
-    resource::{AppActiveBody, AppSelections, EngineAppState, EngineState},
+    resource::{AppActiveBody, AppSelections, EngineState},
     setup::setup_scene,
     ui::{
         AxesGizmoGroup, SketchBaseGizmoGroup, anchor::transform_ui_anchors, draw_gizmos,
@@ -74,7 +74,6 @@ pub fn init_bevy_app(setting: BevyAppSettings) -> App {
     .init_resource::<Messages<SelectObject>>()
     .insert_resource(ClearColor(Color::srgb(0.7, 0.7, 0.7)))
     .init_resource::<EngineState>()
-    .init_resource::<EngineAppState>()
     .init_resource::<AppActiveBody>()
     .init_resource::<AppSelections>()
     .import_message_from_leptos(setting.intent)

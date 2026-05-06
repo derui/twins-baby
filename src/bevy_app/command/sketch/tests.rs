@@ -13,7 +13,7 @@ use ui_event::{
 
 use crate::bevy_app::{
     component::BodyPartType,
-    resource::{EngineAppState, EngineState},
+    resource::{AppActiveBody, AppSelections, EngineState},
 };
 
 use super::*;
@@ -23,7 +23,8 @@ fn make_world() -> World {
     world.init_resource::<Messages<Correlation<Notifications>>>();
     world.init_resource::<Messages<ServerIntents>>();
     world.init_resource::<EngineState>();
-    world.init_resource::<EngineAppState>();
+    world.init_resource::<AppActiveBody>();
+    world.init_resource::<AppSelections>();
     world.add_observer(on_create_sketch_on_plane);
     world
 }
@@ -45,9 +46,9 @@ fn writes_sketch_created_notification_when_plane_selected() -> Result<()> {
     let plane_ref = create_body_with_plane(&mut world);
     let entity = world.spawn(BodyPartType(ObjectType::Plane(plane_ref))).id();
     {
-        let mut app_state = world.resource_mut::<EngineAppState>();
-        app_state.active_body = Some(plane_ref.body_id());
-        app_state.selections = vec![(entity, BodyPartType(ObjectType::Plane(plane_ref)))];
+        world.resource_mut::<AppActiveBody>().0 = Some(plane_ref.body_id());
+        *world.resource_mut::<AppSelections>() =
+            vec![(entity, BodyPartType(ObjectType::Plane(plane_ref)))].into();
     }
 
     // Act
@@ -79,9 +80,9 @@ fn clears_selection_via_server_intent_after_sketch_creation() -> Result<()> {
     let plane_ref = create_body_with_plane(&mut world);
     let entity = world.spawn(BodyPartType(ObjectType::Plane(plane_ref))).id();
     {
-        let mut app_state = world.resource_mut::<EngineAppState>();
-        app_state.active_body = Some(plane_ref.body_id());
-        app_state.selections = vec![(entity, BodyPartType(ObjectType::Plane(plane_ref)))];
+        world.resource_mut::<AppActiveBody>().0 = Some(plane_ref.body_id());
+        *world.resource_mut::<AppSelections>() =
+            vec![(entity, BodyPartType(ObjectType::Plane(plane_ref)))].into();
     }
 
     // Act
