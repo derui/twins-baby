@@ -3,21 +3,46 @@
 
 use std::ops::Deref;
 
-use bevy::ecs::{entity::Entity, resource::Resource};
-use cad_base::{CadEngine, id::BodyId};
+use bevy::{
+    app::App,
+    ecs::{entity::Entity, resource::Resource},
+};
+use cad_base::{
+    CadEngine,
+    id::{BodyId, SketchId},
+};
 
 use crate::bevy_app::component::BodyPartType;
+
+/// Extention trait to initialize all resources for application state. This should be called when app is created.
+pub trait AppResourceExt {
+    /// Initialize all resources for application state. This should be called when app is created.
+    fn init_app_resources(&mut self) -> &mut Self;
+}
+
+impl AppResourceExt for App {
+    fn init_app_resources(&mut self) -> &mut Self {
+        self.init_resource::<EngineState>()
+            .init_resource::<AppActiveBody>()
+            .init_resource::<AppSelections>()
+            .init_resource::<AppActiveSketch>()
+    }
+}
 
 /// Global system registry.
 #[derive(Resource, Default)]
 pub struct EngineState(pub CadEngine);
 
 /// Current active body. Can not active multiple bodies at once.
-#[derive(Resource, Default)]
+#[derive(Resource, Default, Debug)]
 pub struct AppActiveBody(pub Option<BodyId>);
 
+/// Current active sketch. Can not active multiple sketches at once.
+#[derive(Resource, Default, Debug)]
+pub struct AppActiveSketch(pub Option<SketchId>);
+
 /// Selected entity/body part mapping.
-#[derive(Resource, Default)]
+#[derive(Resource, Default, Debug)]
 pub struct AppSelections(Vec<(Entity, BodyPartType)>);
 
 impl AppSelections {
