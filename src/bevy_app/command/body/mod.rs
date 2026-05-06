@@ -87,7 +87,7 @@ fn register_body_base_planes(
                 Transform::from_xyz(0., 0., 0.),
                 RenderLayers::layer(CAMERA_3D_LAYER),
                 Visibility::Hidden,
-                BodyBasePlane(*body_id, plane_ref),
+                Into::<BodyBasePlane>::into(plane_ref),
                 BodyPartType(ObjectType::Plane(plane_ref)),
                 mat,
             ));
@@ -199,7 +199,7 @@ pub(super) fn update_plane_visibilities(
 
     // Visible only planes only active
     for (plane, plane_ref) in q_planes {
-        if plane_ref.0 != body_id {
+        if plane_ref.body_id() != body_id {
             continue;
         }
         commands.entity(plane).insert(Visibility::Visible);
