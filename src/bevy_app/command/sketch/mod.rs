@@ -49,7 +49,6 @@ pub(super) fn on_create_sketch_on_plane(
     trigger: On<Correlation<CreateSketchOnSelectedCommand>>,
     mut engine: ResMut<EngineState>,
     active_body: Res<AppActiveBody>,
-    mut active_sketch: ResMut<AppActiveSketch>,
     selections: ResMut<AppSelections>,
     mut writer: MessageWriter<Correlation<Notifications>>,
     mut picking: MessageWriter<PickingMessages>,
@@ -110,8 +109,6 @@ pub(super) fn on_create_sketch_on_plane(
             .into(),
         ),
     );
-
-    active_sketch.0 = Some(created_sketch);
 
     // reset selection
     picking.write(PickingMessages::Clear);
