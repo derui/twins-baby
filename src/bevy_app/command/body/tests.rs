@@ -15,6 +15,7 @@ use ui_event::{
 
 use crate::bevy_app::resource::{EngineAppState, EngineState};
 
+use super::component::BodyBasePlane;
 use super::*;
 
 fn make_world() -> World {
@@ -29,6 +30,15 @@ fn make_world() -> World {
     world
 }
 
+fn get_plane_entities_for_body(world: &mut World, body_id: cad_base::id::BodyId) -> Vec<Entity> {
+    let mut query = world.query::<(Entity, &BodyBasePlane)>();
+    query
+        .iter(world)
+        .filter(|(_, plane)| plane.0 == body_id)
+        .map(|(e, _)| e)
+        .collect()
+}
+
 #[test]
 fn writes_notification_with_given_name_for_unique_name() {
     // Arrange
@@ -39,21 +49,20 @@ fn writes_notification_with_given_name_for_unique_name() {
     world.flush();
 
     // Assert
-    let messages = world.resource::<Messages<Correlation<Notifications>>>();
-    let mut cursor = messages.get_cursor();
-    let notifications: Vec<_> = cursor.read(messages).collect();
-    assert_eq!(notifications.len(), 1);
-    let notif = notifications[0]
-        .data
-        .select_ref::<BodyCreatedNotification>()
-        .unwrap();
-    assert!(!notif.name.is_empty());
-    let body_id = *notif.body_id;
-    let app_state = world.resource::<EngineAppState>();
-    assert_eq!(
-        app_state.body_planes_map.get(&body_id).map(|v| v.len()),
-        Some(6)
-    );
+    let body_id = {
+        let messages = world.resource::<Messages<Correlation<Notifications>>>();
+        let mut cursor = messages.get_cursor();
+        let notifications: Vec<_> = cursor.read(messages).collect();
+        assert_eq!(notifications.len(), 1);
+        let notif = notifications[0]
+            .data
+            .select_ref::<BodyCreatedNotification>()
+            .unwrap();
+        assert!(!notif.name.is_empty());
+        *notif.body_id
+    };
+    let plane_count = get_plane_entities_for_body(&mut world, body_id).len();
+    assert_eq!(plane_count, 6);
 }
 
 #[test]
@@ -66,20 +75,19 @@ fn writes_notification_with_body_created() -> Result<()> {
     world.flush();
 
     // Assert
-    let messages = world.resource::<Messages<Correlation<Notifications>>>();
-    let mut cursor = messages.get_cursor();
-    let notifications: Vec<_> = cursor.read(messages).collect();
-    let notif = notifications[0]
-        .data
-        .select_ref::<BodyCreatedNotification>()
-        .unwrap();
-    assert!(!notif.name.is_empty());
-    let body_id = *notif.body_id;
-    let app_state = world.resource::<EngineAppState>();
-    assert_eq!(
-        app_state.body_planes_map.get(&body_id).map(|v| v.len()),
-        Some(6)
-    );
+    let body_id = {
+        let messages = world.resource::<Messages<Correlation<Notifications>>>();
+        let mut cursor = messages.get_cursor();
+        let notifications: Vec<_> = cursor.read(messages).collect();
+        let notif = notifications[0]
+            .data
+            .select_ref::<BodyCreatedNotification>()
+            .unwrap();
+        assert!(!notif.name.is_empty());
+        *notif.body_id
+    };
+    let plane_count = get_plane_entities_for_body(&mut world, body_id).len();
+    assert_eq!(plane_count, 6);
     Ok(())
 }
 
@@ -103,12 +111,7 @@ fn registered_planes_have_xy_yz_zx_axes_in_order() {
             .unwrap()
             .body_id
     };
-    let entities = world
-        .resource::<EngineAppState>()
-        .body_planes_map
-        .get(&body_id)
-        .unwrap()
-        .clone();
+    let entities = get_plane_entities_for_body(&mut world, body_id);
     let (ref_x, ref_y, ref_z) = {
         let mut engine = world.resource_mut::<EngineState>();
         let tx = engine.0.begin();
@@ -126,12 +129,12 @@ fn registered_planes_have_xy_yz_zx_axes_in_order() {
     assert_eq!(
         axes,
         vec![
-            BodyBasePlane(ref_z),
-            BodyBasePlane(ref_z),
-            BodyBasePlane(ref_x),
-            BodyBasePlane(ref_x),
-            BodyBasePlane(ref_y),
-            BodyBasePlane(ref_y),
+            BodyBasePlane(body_id, ref_z),
+            BodyBasePlane(body_id, ref_z),
+            BodyBasePlane(body_id, ref_x),
+            BodyBasePlane(body_id, ref_x),
+            BodyBasePlane(body_id, ref_y),
+            BodyBasePlane(body_id, ref_y),
         ]
     );
 }
@@ -156,12 +159,7 @@ fn registered_planes_are_placed_at_origin() {
             .unwrap()
             .body_id
     };
-    let entities = world
-        .resource::<EngineAppState>()
-        .body_planes_map
-        .get(&body_id)
-        .unwrap()
-        .clone();
+    let entities = get_plane_entities_for_body(&mut world, body_id);
     for &e in &entities {
         let transform = *world.entity(e).get::<Transform>().unwrap();
         assert_eq!(transform.translation, bevy::math::Vec3::ZERO);
@@ -188,12 +186,7 @@ fn registered_planes_are_hidden_on_creation() {
             .unwrap()
             .body_id
     };
-    let entities = world
-        .resource::<EngineAppState>()
-        .body_planes_map
-        .get(&body_id)
-        .unwrap()
-        .clone();
+    let entities = get_plane_entities_for_body(&mut world, body_id);
     for &e in &entities {
         let visibility = *world.entity(e).get::<Visibility>().unwrap();
         assert_eq!(visibility, Visibility::Hidden);
@@ -214,12 +207,7 @@ fn create_body_and_get_plane_entities(world: &mut World) -> (cad_base::id::BodyI
             .unwrap()
             .body_id
     };
-    let entities = world
-        .resource::<EngineAppState>()
-        .body_planes_map
-        .get(&body_id)
-        .unwrap()
-        .clone();
+    let entities = get_plane_entities_for_body(world, body_id);
     (body_id, entities)
 }
 
