@@ -21,7 +21,7 @@ use bevy::{
 
 use crate::bevy_app::{
     camera::{CAMERA_3D_LAYER, CAMERA_UI_LAYER},
-    ui::components::{AxesGizmo, SketchBaseGizmo},
+    ui::components::{AxesGizmo, HudAnchor, HudRotation, SketchBaseGizmo},
 };
 
 // 2.5unit = 25px per line
@@ -52,6 +52,7 @@ pub fn setup_gizmos(
         Transform::from_scale(Vec3::splat(1.)),
         AxesGizmo,
         RenderLayers::from_layers(&[CAMERA_UI_LAYER]),
+        HudAnchor::Axes,
     ));
 
     {

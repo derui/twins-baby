@@ -25,17 +25,18 @@ pub fn transform_ui_anchors(
         let translation = match anchor {
             HudAnchor::NavigationCube => {
                 // Navigation Cube must be upper right.
+                // The cube's root is not origin.
                 Vec3::new(
-                    UI_SCALE_2 * (size.x - 96 / 2) as f32,
-                    UI_SCALE_2 * size.y as f32,
+                    UI_SCALE_2 * (size.x - 96) as f32,
+                    UI_SCALE_2 * (size.y - 96) as f32,
                     0.,
                 )
             }
             HudAnchor::Axes => {
                 // Axes must be lower right. `96 / 2` is need to show it
                 Vec3::new(
-                    UI_SCALE_2 * (size.x - 96 / 2) as f32,
-                    -UI_SCALE_2 * (size.y - 96 / 2) as f32,
+                    UI_SCALE_2 * (size.x - 96) as f32,
+                    -UI_SCALE_2 * (size.y - 96) as f32,
                     0.,
                 )
             }
