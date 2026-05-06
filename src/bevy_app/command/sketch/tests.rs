@@ -8,12 +8,13 @@ use ui_event::{
     notification::{
         Notification, Notifications, SketchCreatedNotification, SketchCreationFailedNotification,
     },
-    server::{ObjectSelectionChangeServerIntent, ServerIntent as _, ServerIntents},
+    server::ServerIntents,
 };
 
 use crate::bevy_app::{
     component::BodyPartType,
-    resource::{AppActiveBody, AppSelections, EngineState},
+    picking::PickingMessages,
+    resource::{AppActiveBody, AppActiveSketch, AppSelections, EngineState},
 };
 
 use super::*;
@@ -22,8 +23,10 @@ fn make_world() -> World {
     let mut world = World::new();
     world.init_resource::<Messages<Correlation<Notifications>>>();
     world.init_resource::<Messages<ServerIntents>>();
+    world.init_resource::<Messages<PickingMessages>>();
     world.init_resource::<EngineState>();
     world.init_resource::<AppActiveBody>();
+    world.init_resource::<AppActiveSketch>();
     world.init_resource::<AppSelections>();
     world.add_observer(on_create_sketch_on_plane);
     world
@@ -74,7 +77,7 @@ fn writes_sketch_created_notification_when_plane_selected() -> Result<()> {
 }
 
 #[test]
-fn clears_selection_via_server_intent_after_sketch_creation() -> Result<()> {
+fn sends_picking_clear_message_after_sketch_creation() -> Result<()> {
     // Arrange
     let mut world = make_world();
     let plane_ref = create_body_with_plane(&mut world);
@@ -93,19 +96,16 @@ fn clears_selection_via_server_intent_after_sketch_creation() -> Result<()> {
     world.flush();
 
     // Assert
-    let intents = world.resource::<Messages<ServerIntents>>();
-    let mut cursor = intents.get_cursor();
-    let received: Vec<_> = cursor.read(intents).collect();
+    let messages = world.resource::<Messages<PickingMessages>>();
+    let mut cursor = messages.get_cursor();
+    let received: Vec<_> = cursor.read(messages).collect();
     assert_eq!(received.len(), 1);
-    let intent = received[0]
-        .select_ref::<ObjectSelectionChangeServerIntent>()
-        .unwrap();
-    assert_eq!(intent.selections, Vec::new());
+    assert_eq!(*received[0], PickingMessages::Clear);
     Ok(())
 }
 
 #[test]
-fn does_not_send_server_intent_when_creation_fails() -> Result<()> {
+fn does_not_send_picking_clear_when_creation_fails() -> Result<()> {
     // Arrange
     let mut world = make_world();
 
@@ -117,9 +117,9 @@ fn does_not_send_server_intent_when_creation_fails() -> Result<()> {
     world.flush();
 
     // Assert
-    let intents = world.resource::<Messages<ServerIntents>>();
-    let mut cursor = intents.get_cursor();
-    let received: Vec<_> = cursor.read(intents).collect();
+    let messages = world.resource::<Messages<PickingMessages>>();
+    let mut cursor = messages.get_cursor();
+    let received: Vec<_> = cursor.read(messages).collect();
     assert_eq!(received.len(), 0);
     Ok(())
 }

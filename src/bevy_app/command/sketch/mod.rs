@@ -9,12 +9,12 @@ use ui_event::{
     Correlation, ObjectType, SketchCreationFailure,
     command::CreateSketchOnSelectedCommand,
     notification::{Notifications, SketchCreatedNotification, SketchCreationFailedNotification},
-    server::{ObjectSelectionChangeServerIntent, ServerIntents},
 };
 
 use crate::bevy_app::{
     component::BodyPartType,
-    resource::{AppActiveBody, AppSelections, EngineState},
+    picking::PickingMessages,
+    resource::{AppActiveBody, AppActiveSketch, AppSelections, EngineState},
 };
 
 #[cfg(test)]
@@ -49,9 +49,10 @@ pub(super) fn on_create_sketch_on_plane(
     trigger: On<Correlation<CreateSketchOnSelectedCommand>>,
     mut engine: ResMut<EngineState>,
     active_body: Res<AppActiveBody>,
-    mut selections: ResMut<AppSelections>,
+    mut active_sketch: ResMut<AppActiveSketch>,
+    selections: ResMut<AppSelections>,
     mut writer: MessageWriter<Correlation<Notifications>>,
-    mut intent: MessageWriter<ServerIntents>,
+    mut picking: MessageWriter<PickingMessages>,
     _commands: Commands,
 ) {
     let command = trigger.event();
@@ -109,13 +110,9 @@ pub(super) fn on_create_sketch_on_plane(
             .into(),
         ),
     );
-    selections.clear();
+
+    active_sketch.0 = Some(created_sketch);
 
     // reset selection
-    intent.write(
-        ObjectSelectionChangeServerIntent {
-            selections: Vec::new(),
-        }
-        .into(),
-    );
+    picking.write(PickingMessages::Clear);
 }

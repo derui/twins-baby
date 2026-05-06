@@ -1,7 +1,7 @@
 use std::ops::Deref;
 
 use bevy::prelude::*;
-use cad_base::{body::PlaneRef, id::BodyId};
+use cad_base::body::PlaneRef;
 
 /// A marker compoment
 #[derive(Debug, Component, PartialEq, Eq, Clone, Copy)]

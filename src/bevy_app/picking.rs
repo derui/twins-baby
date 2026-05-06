@@ -17,11 +17,12 @@ pub struct PickingMaterials {
     pub over: Handle<StandardMaterial>,
 }
 
-/// An event to change Active Plane
+/// Packed messages
 #[derive(Debug, Clone, PartialEq, Eq, Message)]
-pub struct SelectObject {
-    /// Entity id
-    pub entity: Im<Entity>,
+pub enum PickingMessages {
+    /// An event to change Active Plane
+    Select(Im<Entity>),
+    Clear,
 }
 
 // common observers
@@ -53,28 +54,36 @@ pub fn update_pointer_out(
 }
 
 /// A observer for [Pointer<Click>] event to send [SelectObject] message
-pub fn update_pointer_click(event: On<Pointer<Click>>, mut commands: MessageWriter<SelectObject>) {
-    commands.write(SelectObject {
-        entity: event.event_target().into(),
-    });
+pub fn update_pointer_click(
+    event: On<Pointer<Click>>,
+    mut commands: MessageWriter<PickingMessages>,
+) {
+    commands.write(PickingMessages::Select(event.entity.into()));
 }
 
 /// Update selections of something of body
 pub fn update_toggling_selection(
-    mut reader: MessageReader<SelectObject>,
+    mut reader: MessageReader<PickingMessages>,
     mut selections: ResMut<AppSelections>,
     query: Query<&BodyPartType>,
     mut writer: MessageWriter<ServerIntents>,
 ) {
     for event in reader.read() {
-        if selections.contains(*event.entity) {
-            selections.remove(*event.entity);
-        } else {
-            let Ok(object_type) = query.get(*event.entity) else {
-                tracing::warn!("Can not get object type from selectable entity");
-                continue;
-            };
-            selections.insert(*event.entity, object_type.clone());
+        match event {
+            PickingMessages::Select(im) => {
+                if selections.contains(**im) {
+                    selections.remove(**im);
+                } else {
+                    let Ok(object_type) = query.get(**im) else {
+                        tracing::warn!("Can not get object type from selectable entity");
+                        continue;
+                    };
+                    selections.insert(**im, object_type.clone());
+                }
+            }
+            PickingMessages::Clear => {
+                selections.clear();
+            }
         }
     }
 
@@ -119,7 +128,7 @@ mod tests {
 
     fn make_world() -> World {
         let mut world = World::new();
-        world.init_resource::<Messages<SelectObject>>();
+        world.init_resource::<Messages<PickingMessages>>();
         world.init_resource::<Messages<ServerIntents>>();
         world.init_resource::<AppSelections>();
         world.init_resource::<IntentCapture>();
@@ -128,10 +137,8 @@ mod tests {
 
     fn send_select_entity(world: &mut World, entity: bevy::ecs::entity::Entity) {
         world
-            .run_system_once(move |mut writer: MessageWriter<SelectObject>| {
-                writer.write(SelectObject {
-                    entity: entity.into(),
-                });
+            .run_system_once(move |mut writer: MessageWriter<PickingMessages>| {
+                writer.write(PickingMessages::Select(entity.into()));
             })
             .unwrap();
         world.run_system_once(update_toggling_selection).unwrap();
@@ -209,13 +216,9 @@ mod tests {
 
         // Act — write both messages in one batch so a single reader cursor covers them
         world
-            .run_system_once(move |mut writer: MessageWriter<SelectObject>| {
-                writer.write(SelectObject {
-                    entity: entity1.into(),
-                });
-                writer.write(SelectObject {
-                    entity: entity2.into(),
-                });
+            .run_system_once(move |mut writer: MessageWriter<PickingMessages>| {
+                writer.write(PickingMessages::Select(entity1.into()));
+                writer.write(PickingMessages::Select(entity2.into()));
             })
             .unwrap();
         world.run_system_once(update_toggling_selection).unwrap();

@@ -24,9 +24,9 @@ use crate::bevy_app::{
     },
     command::CommandAppExt,
     pan_orbit::{pan_orbit_camera, setup_pan_orbit},
-    picking::{SelectObject, update_toggling_selection},
+    picking::{PickingMessages, update_toggling_selection},
     resize::WindowResizePlugin,
-    resource::{AppActiveBody, AppActiveSketch, AppResourceExt, AppSelections, EngineState},
+    resource::AppResourceExt,
     setup::setup_scene,
     ui::{
         AxesGizmoGroup, SketchBaseGizmoGroup, anchor::transform_ui_anchors, draw_gizmos,
@@ -71,7 +71,7 @@ pub fn init_bevy_app(setting: BevyAppSettings) -> App {
         is_touch_enabled: true,
         is_mouse_enabled: true,
     })
-    .init_resource::<Messages<SelectObject>>()
+    .init_resource::<Messages<PickingMessages>>()
     .insert_resource(ClearColor(Color::srgb(0.7, 0.7, 0.7)))
     .init_app_resources()
     .import_message_from_leptos(setting.intent)

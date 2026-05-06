@@ -7,7 +7,6 @@ use bevy::color::palettes::tailwind::GREEN_500;
 use bevy::color::palettes::tailwind::RED_500;
 use bevy::color::{Alpha, Color};
 use bevy::ecs::entity::Entity;
-use bevy::ecs::query::With;
 use bevy::ecs::system::{Commands, Query, Res};
 use bevy::ecs::{message::MessageWriter, observer::On};
 use bevy::math::Dir3;
