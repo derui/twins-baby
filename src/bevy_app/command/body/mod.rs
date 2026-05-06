@@ -63,9 +63,8 @@ fn register_body_base_planes(
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
-) -> eyre::Result<Vec<Entity>> {
-    // all sizes are 1 = 1m
-    let mut entities = Vec::new();
+) {
+    // all sizes are 10 = 10m
     let ref_x = bodies.to_x_plane_ref(body_id).expect("Should get X ref");
     let ref_y = bodies.to_y_plane_ref(body_id).expect("Should get Y ref");
     let ref_z = bodies.to_z_plane_ref(body_id).expect("Should get Z ref");
@@ -88,24 +87,20 @@ fn register_body_base_planes(
                 Transform::from_xyz(0., 0., 0.),
                 RenderLayers::layer(CAMERA_3D_LAYER),
                 Visibility::Hidden,
-                BodyBasePlane(plane_ref),
+                BodyBasePlane(*body_id, plane_ref),
                 BodyPartType(ObjectType::Plane(plane_ref)),
                 mat,
             ));
             entity.observe(update_pointer_over);
             entity.observe(update_pointer_out);
             entity.observe(update_pointer_click);
-            entities.push(entity.id());
         }
     }
-
-    Ok(entities)
 }
 
 pub(super) fn on_create_body(
     trigger: On<Correlation<CreateBodyCommand>>,
     mut engine: ResMut<EngineState>,
-    mut app_state: ResMut<EngineAppState>,
     mut writer: MessageWriter<Correlation<Notifications>>,
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -129,11 +124,7 @@ pub(super) fn on_create_body(
         }
     }
 
-    if let Ok(entities) =
-        register_body_base_planes(body, &body_id, &mut commands, &mut meshes, &mut materials)
-    {
-        app_state.body_planes_map.insert(body_id, entities);
-    }
+    register_body_base_planes(body, &body_id, &mut commands, &mut meshes, &mut materials);
 
     transaction.commit();
 
@@ -184,10 +175,10 @@ pub(super) fn update_plane_visibilities(
     mut commands: Commands,
     app_state: Res<EngineAppState>,
     mut cad_state: ResMut<EngineState>,
-    q_planes: Query<Entity, With<BodyBasePlane>>,
+    q_planes: Query<(Entity, &BodyBasePlane)>,
 ) {
     // Make all entities hidden
-    for plane in q_planes {
+    for (plane, _) in q_planes {
         commands.entity(plane).insert(Visibility::Hidden);
     }
 
@@ -206,11 +197,11 @@ pub(super) fn update_plane_visibilities(
         return;
     }
 
-    for &plane in app_state
-        .body_planes_map
-        .get(&body_id)
-        .unwrap_or(&Vec::<Entity>::new())
-    {
+    // Visible only planes only active
+    for (plane, plane_ref) in q_planes {
+        if plane_ref.0 != body_id {
+            continue;
+        }
         commands.entity(plane).insert(Visibility::Visible);
     }
 }

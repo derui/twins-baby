@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use bevy::ecs::{entity::Entity, resource::Resource};
 use cad_base::{CadEngine, id::BodyId};
 
@@ -16,7 +14,4 @@ pub struct EngineAppState {
 
     /// Current selected objects
     pub selections: Vec<(Entity, BodyPartType)>,
-
-    /// A management of body-based plane map
-    pub body_planes_map: HashMap<BodyId, Vec<Entity>>,
 }
