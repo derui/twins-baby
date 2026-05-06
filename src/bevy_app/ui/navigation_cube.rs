@@ -1,6 +1,6 @@
 //! internal module for navigation cube
 
-use bevy::{camera::visibility::RenderLayers, prelude::*};
+use bevy::{camera::visibility::RenderLayers, prelude::*, scene::SceneInstance};
 
 use crate::bevy_app::{
     camera::CAMERA_UI_LAYER,
@@ -52,6 +52,35 @@ pub fn setup_navigation_cube(
         NeedsRenderLayers(RenderLayers::layer(CAMERA_UI_LAYER)),
         HudAnchor::NavigationCube,
     ));
+
+    Ok(())
+}
+
+/// Setup navigation cube as UI element.
+///
+/// glTF scene with render layer can not reflect children to the same render layer, so
+/// we should do it manually.
+pub fn insert_render_layer(
+    mut commands: Commands,
+    scenes: Query<(Entity, &SceneInstance, &NeedsRenderLayers)>,
+    scene_spawmer: Res<SceneSpawner>,
+) -> Result<(), BevyError> {
+    for (entity, instance, needs_render_layers) in &scenes {
+        if !scene_spawmer.instance_is_ready(**instance) {
+            continue;
+        }
+
+        scene_spawmer
+            .iter_instance_entities(**instance)
+            .for_each(|e| {
+                commands.entity(e).insert(needs_render_layers.0.clone());
+                commands.entity(e).insert(NavigationCube);
+                commands.entity(e).insert(NeedsTextureSetup);
+            });
+
+        commands.entity(entity).remove::<NeedsRenderLayers>();
+        commands.entity(entity).insert(Visibility::Inherited);
+    }
 
     Ok(())
 }
