@@ -21,7 +21,7 @@ use bevy::{
 
 use crate::bevy_app::{
     camera::{CAMERA_3D_LAYER, CAMERA_UI_LAYER},
-    ui::components::{AxesGizmo, HudAnchor, HudRotation, SketchBaseGizmo},
+    ui::components::{AxesGizmo, HudAnchor, SketchBaseGizmo},
 };
 
 // 2.5unit = 25px per line
