@@ -1,6 +1,6 @@
 use bevy::ecs::message::Message;
 use bevy::prelude::Event;
-use cad_base::id::BodyId;
+use cad_base::id::{BodyId, SketchId};
 use immutable::Im;
 use ui_event_macros::Command;
 
@@ -10,6 +10,7 @@ pub enum Commands {
     CreateSketchOnSelected(CreateSketchOnSelectedCommand),
     CreateBody(CreateBodyCommand),
     SwitchActiveBody(SwitchActiveBodyCommand),
+    ActivateSketch(ActivateSketchCommand),
 }
 
 /// A command to create a sketch to the selected object in CAD.
@@ -27,4 +28,12 @@ pub struct CreateBodyCommand {}
 pub struct SwitchActiveBodyCommand {
     /// Id of body to switch
     pub body_id: Im<BodyId>,
+}
+
+/// A command to activate the sketch.
+/// This command is used to move sketch perspective in CAD view
+#[derive(Event, Debug, Clone, Command)]
+pub struct ActivateSketchCommand {
+    /// Id of the sketch to activate
+    pub sketch_id: Im<SketchId>,
 }

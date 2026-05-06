@@ -35,6 +35,7 @@ fn dispatch_commands(
             Commands::CreateSketchOnSelected(c) => commands.trigger(cmd.correlate(c.clone())),
             Commands::CreateBody(c) => commands.trigger(cmd.correlate(c.clone())),
             Commands::SwitchActiveBody(c) => commands.trigger(cmd.correlate(c.clone())),
+            Commands::ActivateSketch(c) => commands.trigger(cmd.correlate(c.clone())),
         }
     }
     Ok(())
