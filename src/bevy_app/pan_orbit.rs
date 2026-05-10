@@ -63,14 +63,6 @@ pub struct PanOrbitSettings {
     pub scroll_pixel_sensitivity: f32,
 }
 
-/// Actions of controller
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum PanOrbitAction {
-    Pan,
-    Orbit,
-    Zoom,
-}
-
 /// Input method for an action
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum InputMethod {
