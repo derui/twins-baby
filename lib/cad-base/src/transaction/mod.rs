@@ -1,13 +1,12 @@
 #[cfg(test)]
 mod tests;
 
+mod core;
 pub mod registry;
 
-use crate::transaction::registry::PerspectiveRegistry;
-use std::{
-    any::{Any, TypeId},
-    mem::replace,
-};
+pub use core::*;
+
+use std::{any::Any, mem::replace};
 
 /// Marker trait for snapshot
 pub trait Snapshot: Clone + Send + Sync + 'static {}
@@ -92,6 +91,24 @@ impl<S: Snapshot> SnapshotHistory<S> {
 }
 
 /// Basic transactoin history of perspective's state
+pub trait PerspectiveBaseline: Any + Send + Sync {
+    // Get referece as Any
+    fn as_any(&self) -> &dyn Any;
+}
+
+/// Wrapping state of snapshot. This struct should contain implementation of `PerspectiveHistory`
+pub struct TypedSnapshot<S: Snapshot> {
+    state: S,
+}
+
+// A default wrapper implementation of TypedPerspective
+impl<S: Snapshot> PerspectiveBaseline for TypedSnapshot<S> {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
+/// Basic transactoin history of perspective's state
 pub trait PerspectiveHistory: Any + Send + Sync {
     /// Save a current snap shot to undo
     fn save_snapshot(&mut self);
@@ -111,6 +128,9 @@ pub trait PerspectiveHistory: Any + Send + Sync {
 
     /// Get mutable referece as Any
     fn as_any_mut(&mut self) -> &mut dyn Any;
+
+    /// Get a baseline snapshot of this perspective. This snapshot is used to create a new transaction.
+    fn snapshot_baseline(&self) -> Box<dyn PerspectiveBaseline>;
 }
 
 /// Wrapping state of snapshot. This struct should contain implementation of `PerspectiveHistory`
@@ -139,63 +159,10 @@ impl<S: Snapshot> PerspectiveHistory for TypedPerspective<S> {
     fn as_any_mut(&mut self) -> &mut dyn Any {
         self
     }
-}
 
-/// A transaction to manage some changes commit/restore.
-pub struct Transaction<'a> {
-    register: &'a mut PerspectiveRegistry,
-    affected: Vec<TypeId>,
-    committed: bool,
-}
-
-impl<'a> Transaction<'a> {
-    /// Get a mutable reference to modify the perspective. If call this method after committed, this do not anything
-    pub fn modify<S: Snapshot>(&mut self) -> Option<&mut S> {
-        // can not change after committed
-        if self.committed {
-            return None;
-        }
-
-        let type_id = TypeId::of::<S>();
-        if !self.affected.contains(&type_id) {
-            if let Some(perspective) = self.register.perspectives.get_mut(&type_id) {
-                perspective.save_snapshot();
-            }
-            self.affected.push(type_id);
-        }
-
-        self.register.get_mut::<S>()
-    }
-
-    /// Get a read reference. This method can call anytimes/anywhere in this transaction.
-    pub fn read<S: Snapshot>(&self) -> Option<&S> {
-        self.register.get::<S>()
-    }
-
-    /// Commit this transaction
-    pub fn commit(&mut self) {
-        if self.committed {
-            // can not commit twice
-            return;
-        }
-
-        self.register.transaction_log.push(self.affected.clone());
-        self.register.redo_log.clear();
-        self.committed = true;
-    }
-}
-
-impl Drop for Transaction<'_> {
-    fn drop(&mut self) {
-        if self.committed {
-            return;
-        }
-
-        // undo all affected types
-        for type_id in &self.affected {
-            if let Some(history) = self.register.perspectives.get_mut(type_id) {
-                history.undo();
-            }
-        }
+    fn snapshot_baseline(&self) -> Box<dyn PerspectiveBaseline> {
+        Box::new(TypedSnapshot {
+            state: self.history.state().clone(),
+        })
     }
 }

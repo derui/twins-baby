@@ -1,7 +1,7 @@
 use std::{any::TypeId, collections::HashMap};
 
 use crate::transaction::{
-    PerspectiveHistory, Snapshot, SnapshotHistory, Transaction, TypedPerspective,
+    Baseline, PerspectiveHistory, Snapshot, SnapshotHistory, Transaction, TypedPerspective,
 };
 
 /// Simple registry implementation for perspective
@@ -104,5 +104,10 @@ impl PerspectiveRegistry {
             affected: Vec::new(),
             committed: false,
         }
+    }
+
+    /// Create a baseline, separate reference of this.
+    pub fn baseline(&self) -> Baseline {
+        Baseline::new(&self.perspectives)
     }
 }

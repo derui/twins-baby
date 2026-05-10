@@ -13,7 +13,7 @@ use crate::{
     body::BodyPerspective,
     feature::FeaturePerspective,
     sketch::SketchPerspective,
-    transaction::{Transaction, registry::PerspectiveRegistry},
+    transaction::{Baseline, Snapshot, Transaction, registry::PerspectiveRegistry},
 };
 
 /// Whole engine state of CAD
@@ -35,6 +35,11 @@ impl CadEngine {
     /// A simple transaction undo
     pub fn undo(&mut self) -> bool {
         self.registry.undo()
+    }
+
+    /// Get snapshot of [S]
+    pub fn baseline(&self) -> Baseline {
+        self.registry.baseline()
     }
 
     /// A simple redo transaction
