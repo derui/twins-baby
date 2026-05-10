@@ -17,18 +17,16 @@ use crate::leptos_app::{
 #[component]
 fn SketchItem(sketch: SketchUI) -> impl IntoView {
     let UseActionReturn { dispatch, .. } = use_action();
-
-    let class = move || {
-        if sketch.active.get() {
-            "flex flex-row items-center gap-1 rounded-full px-2 py-0.5 min-w-0 overflow-hidden cursor-pointer border border-white/60 bg-white/90 text-gray-900 transition-colors"
-        } else {
-            "flex flex-row items-center gap-1 rounded-full px-2 py-0.5 min-w-0 overflow-hidden text-white/80 border border-transparent hover:text-white hover:bg-white/10 cursor-pointer transition-colors"
-        }
-    };
+    let active = (*sketch.active);
 
     view! {
         <div
-            class=class
+            class="flex flex-row items-center gap-1 rounded-full px-2 py-0.5 min-w-0 overflow-hidden cursor-pointer transition-colors border"
+            class=(["border-white/60", "bg-white/90", "text-gray-900"], move || active.get())
+            class=(
+                ["border-transparent", "text-white/80", "hover:text-white", "hover:bg-white/10"],
+                move || !active.get(),
+            )
             on:dblclick=move |e| {
                 e.stop_propagation();
                 e.prevent_default();
