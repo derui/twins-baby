@@ -50,7 +50,6 @@ pub fn setup_gizmos(
     commands.spawn((
         Transform::from_scale(Vec3::splat(1.)),
         AxesGizmo,
-        RenderLayers::from_layers(&[CAMERA_UI_LAYER]),
         HudAnchor::Axes,
     ));
 
@@ -63,13 +62,10 @@ pub fn setup_gizmos(
 
     {
         // It needs only transformation
-        commands.spawn((
-            SketchBaseGizmo,
-            Transform::from_scale(Vec3::splat(100.)),
-            RenderLayers::from_layers(&[CAMERA_3D_LAYER]),
-        ));
+        commands.spawn((SketchBaseGizmo, Transform::from_scale(Vec3::splat(100.))));
 
-        let (config, t) = config_store.config_mut::<SketchBaseGizmoGroup>();
+        let (config, _) = config_store.config_mut::<SketchBaseGizmoGroup>();
+        config.render_layers = RenderLayers::from_layers(&[CAMERA_3D_LAYER]);
         config.line.width = 2.0;
     }
 
