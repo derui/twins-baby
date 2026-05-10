@@ -91,15 +91,16 @@ pub fn draw_gizmos(
 pub fn draw_sketch_gizmos(
     mut gizmos_sketch: Gizmos<SketchBaseGizmoGroup>,
     active_sketch: Res<AppActiveSketch>,
-    mut engine: ResMut<EngineState>,
+    engine: Res<EngineState>,
     sketches: Query<(Entity, &Transform), With<SketchBaseGizmo>>,
 ) {
     let Some(sketch_id) = active_sketch.0 else {
         return;
     };
 
-    let transaction = engine.0.begin();
-    let Some(sketch_p) = transaction.read::<SketchPerspective>() else {
+    let baseline = engine.0.baseline();
+
+    let Some(sketch_p) = baseline.read::<SketchPerspective>() else {
         return;
     };
     let Some(sketch) = sketch_p.get(&sketch_id) else {
@@ -108,7 +109,7 @@ pub fn draw_sketch_gizmos(
 
     let normal = match &*sketch.attach_target {
         AttachableTarget::Plane(plane_ref) => {
-            let Some(body_p) = transaction.read::<BodyPerspective>() else {
+            let Some(body_p) = baseline.read::<BodyPerspective>() else {
                 return;
             };
             let Some(body) = body_p.get(&plane_ref.body_id()) else {
