@@ -81,9 +81,9 @@ impl SketchState {
 impl From<&SketchCreatedNotification> for SketchState {
     fn from(notification: &SketchCreatedNotification) -> Self {
         Self::new(
-            (*notification.sketch_id).into(),
+            (*notification.sketch_id),
             &notification.name,
-            (*notification.body_id).into(),
+            (*notification.body_id),
         )
     }
 }

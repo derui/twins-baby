@@ -148,7 +148,6 @@ pub(super) fn on_activate_sketch(
         }
         None => {
             tracing::warn!("Can not get sketch perspective");
-            return;
         }
     }
 }
