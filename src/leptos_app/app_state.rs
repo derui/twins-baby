@@ -48,6 +48,9 @@ pub struct SketchState {
     /// Id of the body that this sketch belongs to
     pub body_id: Im<BodyId>,
 
+    /// Whether this sketch is active. This is used to move sketch perspective in CAD view
+    pub active: Im<bool>,
+
     _immutable: (),
 }
 
@@ -58,33 +61,36 @@ impl SketchState {
             id: id.into(),
             name: name.to_string().into(),
             body_id: body_id.into(),
+            active: false.into(),
 
             _immutable: (),
         }
+    }
+
+    /// Marks the sketch as active.
+    pub fn activate(&mut self) {
+        self.active = true.into();
+    }
+
+    /// Marks the sketch as inactive.
+    pub fn deactivate(&mut self) {
+        self.active = false.into();
     }
 }
 
 impl From<&SketchCreatedNotification> for SketchState {
     fn from(notification: &SketchCreatedNotification) -> Self {
-        SketchState {
-            id: notification.sketch_id.clone(),
-            name: notification.name.clone(),
-            body_id: notification.body_id.clone(),
-
-            _immutable: (),
-        }
+        Self::new(
+            (*notification.sketch_id).into(),
+            &notification.name,
+            (*notification.body_id).into(),
+        )
     }
 }
 
 impl From<SketchCreatedNotification> for SketchState {
     fn from(notification: SketchCreatedNotification) -> Self {
-        SketchState {
-            id: notification.sketch_id,
-            name: notification.name,
-            body_id: notification.body_id,
-
-            _immutable: (),
-        }
+        (&notification).into()
     }
 }
 

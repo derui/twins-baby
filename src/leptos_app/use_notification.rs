@@ -64,6 +64,19 @@ pub(crate) fn use_notificarions(
             Notifications::SketchCreationFailed(n) => {
                 tracing::warn!("Got error on sketch creation: {:?}", *n.reason)
             }
+            Notifications::SketchActivated(n) => {
+                store.sketches().update(|sketches| {
+                    let Some(index) = sketches.iter().position(|v| *v.id == *n.sketch_id) else {
+                        return;
+                    };
+
+                    for sketch in sketches.iter_mut() {
+                        sketch.deactivate();
+                    }
+
+                    sketches[index].activate();
+                });
+            }
         }
     });
 

@@ -7,8 +7,11 @@ use cad_base::{
 };
 use ui_event::{
     Correlation, ObjectType, SketchCreationFailure,
-    command::CreateSketchOnSelectedCommand,
-    notification::{Notifications, SketchCreatedNotification, SketchCreationFailedNotification},
+    command::{ActivateSketchCommand, CreateSketchOnSelectedCommand},
+    notification::{
+        Notifications, SketchActivatedNotification, SketchCreatedNotification,
+        SketchCreationFailedNotification,
+    },
 };
 
 use crate::bevy_app::{
@@ -112,4 +115,40 @@ pub(super) fn on_create_sketch_on_plane(
 
     // reset selection
     picking.write(PickingMessages::Clear);
+}
+
+/// A command to create sketch on the plane.
+pub(super) fn on_activate_sketch(
+    trigger: On<Correlation<ActivateSketchCommand>>,
+    mut engine: ResMut<EngineState>,
+    mut active_sketch: ResMut<AppActiveSketch>,
+    mut writer: MessageWriter<Correlation<Notifications>>,
+) {
+    let command = trigger.event();
+
+    let transaction = engine.0.begin();
+
+    let sketch_id = *command.sketch_id;
+
+    match transaction
+        .read::<SketchPerspective>()
+        .and_then(|p| p.get(&sketch_id))
+    {
+        Some(_) => {
+            active_sketch.0 = Some(sketch_id);
+
+            writer.write(
+                trigger.event().correlate(
+                    SketchActivatedNotification {
+                        sketch_id: sketch_id.into(),
+                    }
+                    .into(),
+                ),
+            );
+        }
+        None => {
+            tracing::warn!("Can not get sketch perspective");
+            return;
+        }
+    }
 }

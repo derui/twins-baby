@@ -21,6 +21,7 @@ pub enum Notifications {
     SketchCreationFailed(SketchCreationFailedNotification),
     BodyCreated(BodyCreatedNotification),
     BodyActivated(BodyActivatedNotification),
+    SketchActivated(SketchActivatedNotification),
 }
 
 /// Response of [ConfimSketchCreationCommand]
@@ -54,4 +55,11 @@ pub struct BodyCreatedNotification {
 pub struct BodyActivatedNotification {
     /// Activated body id
     pub body_id: Im<BodyId>,
+}
+
+/// Response of [ActivateSketchCommand] .
+#[derive(Debug, Clone, Notification)]
+pub struct SketchActivatedNotification {
+    /// Activated sketch id
+    pub sketch_id: Im<SketchId>,
 }
