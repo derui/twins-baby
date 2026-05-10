@@ -8,7 +8,7 @@ use ui_component::{
 
 use crate::leptos_app::{
     app_state::{AppStore, AppStoreStoreFields as _},
-    ui_action::BodyActivatedAction,
+    ui_action::{BodyActivatedAction, SketchActivatedAction},
     ui_state::{BodiesUI, BodyUI, FeatureTreeUI, FeatureUIType, SketchUI},
     use_action::{UseActionReturn, use_action},
 };
@@ -16,12 +16,31 @@ use crate::leptos_app::{
 /// A sketch item row in the feature tree.
 #[component]
 fn SketchItem(sketch: SketchUI) -> impl IntoView {
-    let name = *sketch.name;
+    let UseActionReturn { dispatch, .. } = use_action();
+
+    let class = move || {
+        if sketch.active.get() {
+            "flex flex-row items-center gap-1 rounded-full px-2 py-0.5 min-w-0 overflow-hidden cursor-pointer border border-white/60 bg-white/90 text-gray-900 transition-colors"
+        } else {
+            "flex flex-row items-center gap-1 rounded-full px-2 py-0.5 min-w-0 overflow-hidden text-white/80 hover:text-white hover:bg-white/10 cursor-pointer transition-colors"
+        }
+    };
 
     view! {
-        <div class="flex flex-row items-center gap-1 rounded-full px-2 py-0.5 min-w-0 overflow-hidden text-white/80 hover:text-white hover:bg-white/10 transition-colors">
+        <div
+            class=class
+            on:dblclick=move |e| {
+                e.stop_propagation();
+                e.prevent_default();
+                dispatch(
+                    Box::new(SketchActivatedAction {
+                        sketch_id: sketch.id.get(),
+                    }),
+                )
+            }
+        >
             <Icon icon=IconType::Sketch(IconSize::ExtraSmall) />
-            <span class="text-xs truncate flex content-center">{name}</span>
+            <span class="text-xs truncate flex content-center">{*sketch.name}</span>
         </div>
     }
 }
