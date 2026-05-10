@@ -19,6 +19,13 @@ pub trait UiAction {
     fn apply(&self, context: &ActionContext) -> Option<Commands>;
 }
 
+// support traits
+impl<T: UiAction + 'static> From<T> for Box<dyn UiAction> {
+    fn from(value: T) -> Self {
+        Box::new(value)
+    }
+}
+
 /// An event to notice perpective change
 #[derive(Debug, Clone)]
 pub struct PerspectiveChangedAction {

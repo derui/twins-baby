@@ -30,7 +30,7 @@ pub fn use_perspective() -> UsePerspective<impl Fn(PerspectiveKind) + Clone + Se
     let UseActionReturn { dispatch, .. } = use_action();
 
     let change = move |v| {
-        dispatch(Box::new(PerspectiveChangedAction { next: v }));
+        dispatch(PerspectiveChangedAction { next: v }.into());
     };
 
     UsePerspective {

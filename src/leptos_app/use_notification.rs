@@ -5,8 +5,10 @@ use leptos_bevy_canvas::prelude::LeptosMessageReceiver;
 use reactive_stores::Store;
 use ui_event::{Correlation, notification::Notifications};
 
-use crate::leptos_app::app_state::{
-    AppStore, AppStoreStoreFields as _, BodyState, FeatureTree, SketchState,
+use crate::leptos_app::{
+    app_state::{AppStore, AppStoreStoreFields as _, BodyState, FeatureTree, SketchState},
+    ui_action::SketchActivatedAction,
+    use_action::{UseActionReturn, use_action},
 };
 
 #[derive(Debug, Clone)]
@@ -17,6 +19,7 @@ pub(crate) fn use_notificarions(
     receiver: LeptosMessageReceiver<Correlation<Notifications>>,
 ) -> UseNotificationReturn {
     let store = use_context::<Store<AppStore>>().expect("Must initialized");
+    let UseActionReturn { dispatch, .. } = use_action();
 
     Effect::new(move || {
         let Some(intent) = receiver.get() else {
@@ -47,6 +50,14 @@ pub(crate) fn use_notificarions(
                 store.sketches().update(|v| {
                     v.push(state);
                 });
+
+                // created sketch should be activated ASAP
+                dispatch(
+                    SketchActivatedAction {
+                        sketch_id: *n.sketch_id,
+                    }
+                    .into(),
+                );
             }
             Notifications::BodyActivated(n) => {
                 store.bodies().update(|bodies| {
