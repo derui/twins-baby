@@ -19,10 +19,15 @@ use bevy::{
     reflect::Reflect,
     transform::components::Transform,
 };
+use cad_base::{
+    body::BodyPerspective,
+    sketch::{AttachableTarget, SketchPerspective},
+};
 
 use crate::bevy_app::{
     camera::{CAMERA_3D_LAYER, CAMERA_UI_LAYER},
-    resource::AppActiveSketch,
+    resource::{AppActiveSketch, EngineState},
+    support::Vec3Ext,
     ui::components::{AxesGizmo, HudAnchor, SketchBaseGizmo},
 };
 
@@ -86,29 +91,54 @@ pub fn draw_gizmos(
 pub fn draw_sketch_gizmos(
     mut gizmos_sketch: Gizmos<SketchBaseGizmoGroup>,
     active_sketch: Res<AppActiveSketch>,
+    mut engine: ResMut<EngineState>,
     sketches: Query<(Entity, &Transform), With<SketchBaseGizmo>>,
 ) {
     let Some(sketch_id) = active_sketch.0 else {
         return;
     };
 
-    // TODO place it on plane/face normal based
-    let x = Vec3::X;
-    let y = Vec3::Y;
+    let transaction = engine.0.begin();
+    let Some(sketch_p) = transaction.read::<SketchPerspective>() else {
+        return;
+    };
+    let Some(sketch) = sketch_p.get(&sketch_id) else {
+        return;
+    };
+
+    let normal = match &*sketch.attach_target {
+        AttachableTarget::Plane(plane_ref) => {
+            let Some(body_p) = transaction.read::<BodyPerspective>() else {
+                return;
+            };
+            let Some(body) = body_p.get(&plane_ref.body_id()) else {
+                return;
+            };
+            let plane = plane_ref.to_plane_from(body);
+            plane.normal.to_vec3()
+        }
+        AttachableTarget::Face(_) => {
+            // TODO: derive normal from solid face
+            Vec3::Z
+        }
+    };
+
+    let (axis_u, axis_v) = normal.any_orthonormal_pair();
+
     for (_, transform) in &sketches {
         gizmos_sketch.primitive_3d(
             &Line3d {
-                direction: Dir3::from_xyz(x.x, x.y, x.z).unwrap(),
+                direction: Dir3::from_xyz(axis_u.x, axis_u.y, axis_u.z).unwrap(),
             },
-            *transform * Vec3::X,
+            transform.translation,
             Color::from(RED),
         );
 
         gizmos_sketch.primitive_3d(
             &Line3d {
-                direction: Dir3::from_xyz(y.x, y.y, y.z).unwrap(),
+                direction: Dir3::from_xyz(axis_v.x, axis_v.y, axis_v.z).unwrap(),
             },
-            *transform * Vec3::X,
+            transform.translation,
             Color::from(GREEN),
         );
     }

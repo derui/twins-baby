@@ -17,7 +17,7 @@ use crate::leptos_app::{
 #[component]
 fn SketchItem(sketch: SketchUI) -> impl IntoView {
     let UseActionReturn { dispatch, .. } = use_action();
-    let active = (*sketch.active);
+    let active = *sketch.active;
 
     view! {
         <div
