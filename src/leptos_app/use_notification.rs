@@ -7,7 +7,7 @@ use ui_event::{Correlation, PerspectiveKind, notification::Notifications};
 
 use crate::leptos_app::{
     app_state::{AppStore, AppStoreStoreFields as _, BodyState, FeatureTree, SketchState},
-    ui_action::{PerspectiveChangedAction, SketchActivatedAction},
+    ui_action::SketchActivatedAction,
     use_action::{UseActionReturn, use_action},
 };
 
