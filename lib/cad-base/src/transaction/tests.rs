@@ -483,8 +483,133 @@ mod snapshot_history {
     }
 }
 
+mod baseline {
+    use pretty_assertions::assert_eq;
+
+    use crate::transaction::registry::PerspectiveRegistry;
+
+    use super::*;
+
+    #[test]
+    fn test_read_returns_registered_value() {
+        // Arrange
+        let mut registry = PerspectiveRegistry::new();
+        registry.register(42i32);
+
+        // Act
+        let baseline = registry.baseline();
+
+        // Assert
+        assert_eq!(baseline.read::<i32>(), Some(&42));
+    }
+
+    #[test]
+    fn test_read_returns_none_for_unregistered_type() {
+        // Arrange
+        let registry = PerspectiveRegistry::new();
+        let baseline = registry.baseline();
+
+        // Act
+        let result = baseline.read::<i32>();
+
+        // Assert
+        assert_eq!(result, None);
+    }
+
+    #[test]
+    fn test_read_multiple_types() {
+        // Arrange
+        let mut registry = PerspectiveRegistry::new();
+        registry.register(42i32);
+        registry.register("hello");
+        let baseline = registry.baseline();
+
+        // Act & Assert
+        assert_eq!(baseline.read::<i32>(), Some(&42));
+        assert_eq!(baseline.read::<&str>(), Some(&"hello"));
+    }
+
+    #[test]
+    fn test_baseline_captures_state_at_creation_time() {
+        // Arrange
+        let mut registry = PerspectiveRegistry::new();
+        registry.register(1i32);
+        let baseline = registry.baseline();
+
+        // Act - modify registry after baseline was taken
+        {
+            let mut tx = registry.begin();
+            *tx.modify::<i32>().unwrap() = 2;
+            tx.commit();
+        }
+
+        // Assert
+        assert_eq!(baseline.read::<i32>(), Some(&1));
+        assert_eq!(registry.get::<i32>(), Some(&2));
+    }
+
+    #[test]
+    fn test_baseline_not_affected_by_undo() {
+        // Arrange
+        let mut registry = PerspectiveRegistry::new();
+        registry.register(1i32);
+        {
+            let mut tx = registry.begin();
+            *tx.modify::<i32>().unwrap() = 2;
+            tx.commit();
+        }
+        let baseline = registry.baseline();
+
+        // Act
+        registry.undo();
+
+        // Assert - baseline reflects state at the moment it was created, not after undo
+        assert_eq!(baseline.read::<i32>(), Some(&2));
+        assert_eq!(registry.get::<i32>(), Some(&1));
+    }
+
+    #[test]
+    fn test_baseline_with_empty_registry() {
+        // Arrange
+        let registry = PerspectiveRegistry::new();
+
+        // Act
+        let baseline = registry.baseline();
+
+        // Assert
+        assert_eq!(baseline.read::<i32>(), None);
+        assert_eq!(baseline.read::<&str>(), None);
+    }
+
+    #[test]
+    fn test_baseline_with_custom_type() {
+        // Arrange
+        #[derive(Clone, Debug, PartialEq)]
+        struct State {
+            value: i32,
+        }
+
+        let mut registry = PerspectiveRegistry::new();
+        registry.register(State { value: 10 });
+        let baseline = registry.baseline();
+
+        // Act
+        {
+            let mut tx = registry.begin();
+            tx.modify::<State>().unwrap().value = 99;
+            tx.commit();
+        }
+
+        // Assert
+        assert_eq!(baseline.read::<State>().map(|s| s.value), Some(10));
+        assert_eq!(registry.get::<State>().map(|s| s.value), Some(99));
+    }
+}
+
 mod perspective_registry {
     use pretty_assertions::assert_eq;
+
+    use crate::transaction::registry::PerspectiveRegistry;
 
     use super::*;
 
