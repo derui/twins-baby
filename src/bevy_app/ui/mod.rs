@@ -15,6 +15,7 @@ use crate::bevy_app::ui::navigation_cube::{
 pub use gizmo::AxesGizmoGroup;
 pub use gizmo::SketchBaseGizmoGroup;
 pub use gizmo::draw_gizmos;
+pub use gizmo::draw_sketch_gizmos;
 
 pub trait AppUiExt {
     /// Init UI resources

@@ -13,14 +13,16 @@ use bevy::{
     gizmos::{
         config::{GizmoConfigGroup, GizmoConfigStore},
         gizmos::Gizmos,
+        primitives::dim3::GizmoPrimitive3d,
     },
-    math::Vec3,
+    math::{Dir3, Vec3, primitives::Line3d},
     reflect::Reflect,
     transform::components::Transform,
 };
 
 use crate::bevy_app::{
     camera::{CAMERA_3D_LAYER, CAMERA_UI_LAYER},
+    resource::AppActiveSketch,
     ui::components::{AxesGizmo, HudAnchor, SketchBaseGizmo},
 };
 
@@ -82,32 +84,40 @@ pub fn setup_gizmos(
 /// draw axes gizmos
 pub fn draw_gizmos(
     mut gizmos: Gizmos<AxesGizmoGroup>,
-    mut gizmos_sketch: Gizmos<SketchBaseGizmoGroup>,
-    config_store: Res<GizmoConfigStore>,
     arrow_gizmo: Query<(Entity, &Transform), With<AxesGizmo>>,
-    sketches: Query<(Entity, &Transform), With<SketchBaseGizmo>>,
 ) {
     for (_, transform) in &arrow_gizmo {
         gizmos.axes(*transform, GIZMO_LENGTH)
     }
+}
 
-    let (_, config) = config_store.config::<SketchBaseGizmoGroup>();
-
-    if !config.show_sketch {
+/// draw sketch gizmos
+pub fn draw_sketch_gizmos(
+    mut gizmos_sketch: Gizmos<SketchBaseGizmoGroup>,
+    active_sketch: Res<AppActiveSketch>,
+    sketches: Query<(Entity, &Transform), With<SketchBaseGizmo>>,
+) {
+    let Some(sketch_id) = active_sketch.0 else {
         return;
-    }
+    };
 
     // TODO place it on plane/face normal based
+    let x = Vec3::X;
+    let y = Vec3::Y;
     for (_, transform) in &sketches {
-        gizmos_sketch.line(
+        gizmos_sketch.primitive_3d(
+            &Line3d {
+                direction: Dir3::from_xyz(x.x, x.y, x.z).unwrap(),
+            },
             *transform * Vec3::X,
-            *transform * Vec3::NEG_X,
             Color::from(RED),
         );
 
-        gizmos_sketch.line(
-            *transform * Vec3::Y,
-            *transform * Vec3::NEG_Y,
+        gizmos_sketch.primitive_3d(
+            &Line3d {
+                direction: Dir3::from_xyz(y.x, y.y, y.z).unwrap(),
+            },
+            *transform * Vec3::X,
             Color::from(GREEN),
         );
     }

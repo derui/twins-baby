@@ -30,6 +30,7 @@ use crate::bevy_app::{
     setup::setup_scene,
     ui::{
         AppUiExt, AxesGizmoGroup, SketchBaseGizmoGroup, anchor::transform_ui_anchors, draw_gizmos,
+        draw_sketch_gizmos,
     },
 };
 
@@ -89,6 +90,7 @@ pub fn init_bevy_app(setting: BevyAppSettings) -> App {
                 move_camera_with_request,
                 transform_ui_anchors,
                 draw_gizmos,
+                draw_sketch_gizmos,
             )
                 .chain(),
         ),
