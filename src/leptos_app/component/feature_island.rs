@@ -22,7 +22,7 @@ fn SketchItem(sketch: SketchUI) -> impl IntoView {
         if sketch.active.get() {
             "flex flex-row items-center gap-1 rounded-full px-2 py-0.5 min-w-0 overflow-hidden cursor-pointer border border-white/60 bg-white/90 text-gray-900 transition-colors"
         } else {
-            "flex flex-row items-center gap-1 rounded-full px-2 py-0.5 min-w-0 overflow-hidden text-white/80 hover:text-white hover:bg-white/10 cursor-pointer transition-colors"
+            "flex flex-row items-center gap-1 rounded-full px-2 py-0.5 min-w-0 overflow-hidden text-white/80 border border-transparent hover:text-white hover:bg-white/10 cursor-pointer transition-colors"
         }
     };
 
@@ -120,7 +120,7 @@ pub fn FeatureIsland() -> impl IntoView {
     let bodies = BodiesUI::from_store(store);
 
     view! {
-        <div class="flex flex-col h-full w-full rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 p-2 overflow-y-auto">
+        <div class="flex flex-col h-full w-full rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 p-2 overflow-y-auto gap-1">
             <h3 class="text-xs font-semibold text-white/70 uppercase tracking-wider mb-2 px-1">
                 "Features"
             </h3>
