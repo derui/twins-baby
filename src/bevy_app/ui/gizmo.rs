@@ -35,10 +35,7 @@ pub struct AxesGizmoGroup;
 
 /// Gizmo configuration group for Sketch perspective
 #[derive(Default, Reflect, GizmoConfigGroup)]
-pub struct SketchBaseGizmoGroup {
-    /// show gizmos
-    pub show_sketch: bool,
-}
+pub struct SketchBaseGizmoGroup;
 
 /// Setup Gizmos on the scene
 ///
@@ -74,8 +71,6 @@ pub fn setup_gizmos(
 
         let (config, t) = config_store.config_mut::<SketchBaseGizmoGroup>();
         config.line.width = 2.0;
-        // All axes are hidden in initial
-        t.show_sketch = false;
     }
 
     Ok(())
