@@ -140,11 +140,12 @@ impl SketchUI {
     pub fn from_store(store: Store<AppStore>, id: SketchId) -> Self {
         let derived_id: Signal<_> = derive_sketch_field!(store, id, id: copy SketchId);
         let name: Signal<_> = derive_sketch_field!(store, id, name: String);
+        let active: Signal<_> = derive_sketch_field!(store, id, active: bool);
 
         Self {
             id: derived_id.into(),
             name: name.into(),
-            active: Signal::derive(|| false).into(),
+            active: active.into(),
         }
     }
 }
