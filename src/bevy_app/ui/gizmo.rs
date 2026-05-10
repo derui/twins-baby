@@ -100,21 +100,22 @@ pub fn draw_sketch_gizmos(
 
     let baseline = engine.0.baseline();
 
-    let Some(sketch_p) = baseline.read::<SketchPerspective>() else {
-        return;
-    };
-    let Some(sketch) = sketch_p.get(&sketch_id) else {
+    let Some(sketch) = baseline
+        .read::<SketchPerspective>()
+        .and_then(|p| p.get(&sketch_id))
+    else {
         return;
     };
 
     let normal = match &*sketch.attach_target {
         AttachableTarget::Plane(plane_ref) => {
-            let Some(body_p) = baseline.read::<BodyPerspective>() else {
+            let Some(body) = baseline
+                .read::<BodyPerspective>()
+                .and_then(|p| p.get(&plane_ref.body_id()))
+            else {
                 return;
             };
-            let Some(body) = body_p.get(&plane_ref.body_id()) else {
-                return;
-            };
+
             let plane = plane_ref.to_plane_from(body);
             plane.normal.to_vec3()
         }
