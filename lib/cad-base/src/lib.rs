@@ -37,7 +37,7 @@ impl CadEngine {
         self.registry.undo()
     }
 
-    /// Get snapshot of [S]
+    /// Get baseline snapshot of transaction.
     pub fn baseline(&self) -> Baseline {
         self.registry.baseline()
     }
