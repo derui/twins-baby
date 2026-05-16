@@ -44,4 +44,180 @@ impl GeometryOperation {
             current_step: 0,
         })
     }
+
+    /// Forward the operation by one step with the given point.
+    ///
+    /// # Errors
+    /// Returns an error if the operation is already completed.
+    ///
+    /// # Arguments
+    /// * `point` - The point obtained from the mouse operation for the current step.
+    pub fn forward_step(&mut self, point: Vec3) -> eyre::Result<()> {
+        if self.current_step >= self.steps.len() {
+            return Err(eyre!("Can not forward anymore"));
+        }
+
+        self.step_result.push(point);
+        self.current_step += 1;
+
+        Ok(())
+    }
+
+    /// Backward the operation by one step.
+    ///
+    /// # Errors
+    /// Returns an error if the operation is already at the initial step.
+    ///
+    /// # Returns
+    /// The point that was removed from the current step result.
+    ///
+    /// # Arguments
+    /// * `point` - The point obtained from the mouse operation for the current step.
+    pub fn backward_step(&mut self) -> eyre::Result<Vec3> {
+        if self.current_step == 0 {
+            return Err(eyre!("Can not backward anymore"));
+        }
+
+        let vec = self
+            .step_result
+            .pop()
+            .expect("step_result should not be empty when current_step > 0");
+        self.current_step -= 1;
+
+        Ok(vec)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use bevy::math::Vec3;
+    use eyre::Result;
+    use pretty_assertions::assert_eq;
+
+    #[test]
+    fn new_returns_error_for_empty_steps() {
+        // Arrange
+        let steps: &[GeometryOperationStep] = &[];
+
+        // Act
+        let result = GeometryOperation::new(steps);
+
+        // Assert
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn new_succeeds_with_valid_steps() {
+        // Arrange
+        let steps = &[GeometryOperationStep::Point];
+
+        // Act
+        let result = GeometryOperation::new(steps);
+
+        // Assert
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn forward_step_advances_through_steps() -> Result<()> {
+        // Arrange
+        let steps = &[GeometryOperationStep::Point, GeometryOperationStep::Point];
+        let mut op = GeometryOperation::new(steps)?;
+        let point = Vec3::new(1.0, 2.0, 3.0);
+
+        // Act
+        let result = op.forward_step(point);
+
+        // Assert
+        assert!(result.is_ok());
+
+        Ok(())
+    }
+
+    #[test]
+    fn forward_step_returns_error_when_all_steps_completed() -> Result<()> {
+        // Arrange
+        let steps = &[GeometryOperationStep::Point];
+        let mut op = GeometryOperation::new(steps)?;
+        op.forward_step(Vec3::ZERO)?;
+
+        // Act
+        let result = op.forward_step(Vec3::ONE);
+
+        // Assert
+        assert!(result.is_err());
+
+        Ok(())
+    }
+
+    #[test]
+    fn backward_step_returns_error_at_initial_step() -> Result<()> {
+        // Arrange
+        let steps = &[GeometryOperationStep::Point];
+        let mut op = GeometryOperation::new(steps)?;
+
+        // Act
+        let result = op.backward_step();
+
+        // Assert
+        assert!(result.is_err());
+
+        Ok(())
+    }
+
+    #[test]
+    fn backward_step_returns_previously_forwarded_point() -> Result<()> {
+        // Arrange
+        let steps = &[GeometryOperationStep::Point];
+        let mut op = GeometryOperation::new(steps)?;
+        let point = Vec3::new(1.0, 2.0, 3.0);
+        op.forward_step(point)?;
+
+        // Act
+        let returned = op.backward_step()?;
+
+        // Assert
+        assert_eq!(returned, point);
+
+        Ok(())
+    }
+
+    #[test]
+    fn forward_and_backward_are_symmetric() -> Result<()> {
+        // Arrange
+        let steps = &[GeometryOperationStep::Point, GeometryOperationStep::Point];
+        let mut op = GeometryOperation::new(steps)?;
+        let p1 = Vec3::new(1.0, 0.0, 0.0);
+        let p2 = Vec3::new(0.0, 1.0, 0.0);
+        op.forward_step(p1)?;
+        op.forward_step(p2)?;
+
+        // Act
+        let r2 = op.backward_step()?;
+        let r1 = op.backward_step()?;
+
+        // Assert
+        assert_eq!(r2, p2);
+        assert_eq!(r1, p1);
+
+        Ok(())
+    }
+
+    #[test]
+    fn can_forward_again_after_backward() -> Result<()> {
+        // Arrange
+        let steps = &[GeometryOperationStep::Point];
+        let mut op = GeometryOperation::new(steps)?;
+        op.forward_step(Vec3::ZERO)?;
+        op.backward_step()?;
+
+        // Act
+        let result = op.forward_step(Vec3::ONE);
+
+        // Assert
+        assert!(result.is_ok());
+
+        Ok(())
+    }
 }
