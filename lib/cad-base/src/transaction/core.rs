@@ -1,11 +1,7 @@
-use std::{
-    any::{Any, TypeId},
-    collections::HashMap,
-};
+use std::{any::TypeId, collections::HashMap};
 
 use crate::transaction::{
-    PerspectiveBaseline, PerspectiveHistory, Snapshot, TypedPerspective, TypedSnapshot,
-    registry::PerspectiveRegistry,
+    PerspectiveBaseline, PerspectiveHistory, Snapshot, TypedSnapshot, registry::PerspectiveRegistry,
 };
 
 /// A transaction to manage some changes commit/restore.
@@ -77,7 +73,7 @@ impl Baseline {
         Self {
             baselines: registry
                 .iter()
-                .map(|(key, snapshot)| (key.clone(), snapshot.snapshot_baseline()))
+                .map(|(key, snapshot)| (*key, snapshot.snapshot_baseline()))
                 .collect(),
         }
     }

@@ -13,7 +13,7 @@ use crate::{
     body::BodyPerspective,
     feature::FeaturePerspective,
     sketch::SketchPerspective,
-    transaction::{Baseline, Snapshot, Transaction, registry::PerspectiveRegistry},
+    transaction::{Baseline, Transaction, registry::PerspectiveRegistry},
 };
 
 /// Whole engine state of CAD
