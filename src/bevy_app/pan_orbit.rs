@@ -15,7 +15,7 @@ use bevy::{
     input::{
         ButtonInput,
         keyboard::Key,
-        mouse::{MouseButton, MouseMotion, MouseWheel},
+        mouse::{MouseButton, MouseMotion, MouseScrollUnit, MouseWheel},
     },
     math::{EulerRot, Quat, Vec2, Vec3, primitives::InfinitePlane3d},
     transform::components::{GlobalTransform, Transform},
@@ -121,10 +121,26 @@ pub fn pan_orbit_camera(
     // Reverse Y. (Worldscpace coodinate system has Y up, but mouse Y goes down)
     total_motion.y = -total_motion.y;
 
-    let mut total_scroll_pixels = Vec2::ZERO;
+    let scroll_line_sensitivity = q_camere
+        .iter()
+        .next()
+        .map(|(s, _)| s.scroll_line_sensitivity)
+        .unwrap_or(16.0);
+
+    let mut total_scroll_lines = Vec2::ZERO;
     for ev in evr_wheel.read() {
-        total_scroll_pixels.x += ev.x;
-        total_scroll_pixels.y -= ev.y;
+        match ev.unit {
+            // Each notch is one discrete tick — use direction only, ignore magnitude
+            MouseScrollUnit::Line => {
+                total_scroll_lines.x += ev.x.signum();
+                total_scroll_lines.y -= ev.y.signum();
+            }
+            // Smooth scrolling (trackpad): accumulate and convert to line-equivalent units
+            MouseScrollUnit::Pixel => {
+                total_scroll_lines.x += ev.x / scroll_line_sensitivity;
+                total_scroll_lines.y -= ev.y / scroll_line_sensitivity;
+            }
+        }
     }
 
     let activated = mouse.pressed(STARTER_BUTTON);
@@ -153,8 +169,7 @@ pub fn pan_orbit_camera(
 
         let mut total_zoom = Vec2::ZERO;
         if settings.zoom_input == Some(InputMethod::Scroll) {
-            total_zoom -=
-                total_scroll_pixels * settings.scroll_line_sensitivity * settings.zoom_sensitivity;
+            total_zoom -= total_scroll_lines * settings.zoom_sensitivity;
         }
 
         // Upon starting a new orbit maneuver
