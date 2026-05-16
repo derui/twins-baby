@@ -87,7 +87,23 @@ impl CameraMoveOperation {
                     rotation,
                 })
             }
-            CameraMoveOperation::BySystem { .. } => todo!("not yet implementation"),
+            CameraMoveOperation::BySystem {
+                target,
+                position,
+                duration,
+                ..
+            } => {
+                // make rotation of camera's look angle
+                let rotation = Quat::from_rotation_arc(Vec3::Y, (*target - *position).normalize());
+
+                Some(CameraMoveExpectation {
+                    camera_transform: *camera_transform,
+                    duration: Some(*duration),
+                    // TODO: need to define radius by scene
+                    translation: *position,
+                    rotation,
+                })
+            }
             CameraMoveOperation::Noop => None,
         }
     }
