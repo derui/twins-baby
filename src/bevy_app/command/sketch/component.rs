@@ -1,6 +1,7 @@
 use bevy::math::{USizeVec3, Vec3};
 use color_eyre::eyre::eyre;
 use immutable::Im;
+use ui_event::SketchGeometryOperation;
 
 /// The step definition for mouse operation to create geometry in a sketch.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -43,6 +44,23 @@ impl GeometryOperation {
             step_result: vec![],
             current_step: 0,
         })
+    }
+
+    /// Create a new [GeometryOperation] with the event
+    pub fn from_geometry(geometry_type: SketchGeometryOperation) -> Self {
+        match geometry_type {
+            SketchGeometryOperation::LineSegment => {
+                Self::new(&[GeometryOperationStep::Point, GeometryOperationStep::Point])
+                    .expect("should be able to create operation by event")
+            }
+            SketchGeometryOperation::Rectangle => Self::new(&[
+                GeometryOperationStep::Point,
+                GeometryOperationStep::Point,
+                GeometryOperationStep::Point,
+                GeometryOperationStep::Point,
+            ])
+            .expect("should be able to create operation by event"),
+        }
     }
 
     /// Forward the operation by one step with the given point.
@@ -219,5 +237,38 @@ mod tests {
         assert!(result.is_ok());
 
         Ok(())
+    }
+
+    #[test]
+    fn from_geometry_line_segment_creates_two_point_steps() {
+        use ui_event::SketchGeometryOperation;
+
+        // Arrange / Act
+        let op = GeometryOperation::from_geometry(SketchGeometryOperation::LineSegment);
+
+        // Assert
+        assert_eq!(
+            op.steps.as_slice(),
+            &[GeometryOperationStep::Point, GeometryOperationStep::Point]
+        );
+    }
+
+    #[test]
+    fn from_geometry_rectangle_creates_four_point_steps() {
+        use ui_event::SketchGeometryOperation;
+
+        // Arrange / Act
+        let op = GeometryOperation::from_geometry(SketchGeometryOperation::Rectangle);
+
+        // Assert
+        assert_eq!(
+            op.steps.as_slice(),
+            &[
+                GeometryOperationStep::Point,
+                GeometryOperationStep::Point,
+                GeometryOperationStep::Point,
+                GeometryOperationStep::Point,
+            ]
+        );
     }
 }
