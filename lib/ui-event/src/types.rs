@@ -3,8 +3,7 @@ use std::{fmt::Display, ops::Deref};
 use bevy::ecs::{event::Event, message::Message};
 use cad_base::{
     body::PlaneRef,
-    id::{EdgeId, FaceId, GeometryId},
-    vector3::Vector3,
+    id::{EdgeId, FaceId},
 };
 use cad_base_macros::MakeId;
 use color_eyre::eyre;

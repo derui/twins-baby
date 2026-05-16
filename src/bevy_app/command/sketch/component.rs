@@ -1,4 +1,4 @@
-use bevy::math::{USizeVec3, Vec3};
+use bevy::math::Vec3;
 use color_eyre::eyre::eyre;
 use immutable::Im;
 use ui_event::SketchGeometryOperation;
