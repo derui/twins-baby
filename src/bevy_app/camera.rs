@@ -61,7 +61,7 @@ pub enum CameraMoveOperation {
         position: Vec3,
         pitch: Option<f32>,
         yaw: Option<f32>,
-        duraton: f32,
+        duration: f32,
     },
 
     /// Special pattern, no-op
