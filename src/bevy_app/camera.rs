@@ -455,6 +455,86 @@ mod tests {
     }
 
     #[test]
+    fn system_by_system_places_camera_at_position() {
+        // Arrange
+        let mut world = make_world();
+        let camera_pos = Vec3::new(0.0, 5.0, 0.0);
+        world.spawn((
+            CameraMoveHandle::default(),
+            CameraMoveOperation::BySystem {
+                target: Vec3::new(0.0, 0.0, 5.0),
+                position: camera_pos,
+                pitch: None,
+                yaw: None,
+                duration: 0.0,
+            },
+        ));
+        let cam = world.spawn((MainCamera, Transform::default())).id();
+        world.spawn(HudRotation::default());
+
+        // Act
+        world.run_system_once(move_camera_with_request).unwrap();
+
+        // Assert
+        let transform = world.get::<Transform>(cam).unwrap();
+        assert_relative_eq!(transform.translation.x, camera_pos.x, epsilon = 1e-5);
+        assert_relative_eq!(transform.translation.y, camera_pos.y, epsilon = 1e-5);
+        assert_relative_eq!(transform.translation.z, camera_pos.z, epsilon = 1e-5);
+    }
+
+    #[test]
+    fn system_by_system_resets_to_noop_after_completion() {
+        // Arrange
+        let mut world = make_world();
+        let req = world
+            .spawn((
+                CameraMoveHandle::default(),
+                CameraMoveOperation::BySystem {
+                    target: Vec3::new(0.0, 0.0, 5.0),
+                    position: Vec3::new(0.0, 5.0, 0.0),
+                    pitch: None,
+                    yaw: None,
+                    duration: 0.0,
+                },
+            ))
+            .id();
+        world.spawn((MainCamera, Transform::default()));
+
+        // Act
+        world.run_system_once(move_camera_with_request).unwrap();
+
+        // Assert
+        let op = world.get::<CameraMoveOperation>(req).unwrap();
+        assert_eq!(*op, CameraMoveOperation::Noop);
+    }
+
+    #[test]
+    fn system_by_system_does_not_reset_during_animation() {
+        // Arrange
+        let mut world = make_world();
+        let req = world
+            .spawn((
+                CameraMoveHandle::default(),
+                CameraMoveOperation::BySystem {
+                    target: Vec3::new(0.0, 0.0, 5.0),
+                    position: Vec3::new(0.0, 5.0, 0.0),
+                    pitch: None,
+                    yaw: None,
+                    duration: 1.0,
+                },
+            ))
+            .id();
+        world.spawn((MainCamera, Transform::default()));
+
+        // Act
+        world.run_system_once(move_camera_with_request).unwrap();
+
+        // Assert - operation still in progress, not yet reset to Noop
+        let op = world.get::<CameraMoveOperation>(req).unwrap();
+        assert_ne!(*op, CameraMoveOperation::Noop);
+    }
+
+    #[test]
     fn ease_in_out_cubic_at_boundaries() {
         // Arrange & Act & Assert
         assert_relative_eq!(ease_in_out_cubic(0.0), 0.0);
