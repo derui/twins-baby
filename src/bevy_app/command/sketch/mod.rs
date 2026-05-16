@@ -20,6 +20,8 @@ use crate::bevy_app::{
     resource::{AppActiveBody, AppActiveSketch, AppSelections, EngineState},
 };
 
+pub mod component;
+
 #[cfg(test)]
 mod tests;
 

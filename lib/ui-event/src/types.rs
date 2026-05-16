@@ -3,7 +3,8 @@ use std::{fmt::Display, ops::Deref};
 use bevy::ecs::{event::Event, message::Message};
 use cad_base::{
     body::PlaneRef,
-    id::{EdgeId, FaceId},
+    id::{EdgeId, FaceId, GeometryId},
+    vector3::Vector3,
 };
 use cad_base_macros::MakeId;
 use color_eyre::eyre;
@@ -128,4 +129,11 @@ impl<T: Clone> Deref for Correlation<T> {
     fn deref(&self) -> &Self::Target {
         &self.data
     }
+}
+
+/// Type of geometry creational operation
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SketchGeometryOperation {
+    LineSegment,
+    Rectangle,
 }
