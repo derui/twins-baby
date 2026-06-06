@@ -53,13 +53,10 @@ impl GeometryOperation {
                 Self::new(&[GeometryOperationStep::Point, GeometryOperationStep::Point])
                     .expect("should be able to create operation by event")
             }
-            SketchGeometryOperation::Rectangle => Self::new(&[
-                GeometryOperationStep::Point,
-                GeometryOperationStep::Point,
-                GeometryOperationStep::Point,
-                GeometryOperationStep::Point,
-            ])
-            .expect("should be able to create operation by event"),
+            SketchGeometryOperation::Rectangle => {
+                Self::new(&[GeometryOperationStep::Point, GeometryOperationStep::Point])
+                    .expect("should be able to create operation by event")
+            }
         }
     }
 
@@ -263,12 +260,7 @@ mod tests {
         // Assert
         assert_eq!(
             op.steps.as_slice(),
-            &[
-                GeometryOperationStep::Point,
-                GeometryOperationStep::Point,
-                GeometryOperationStep::Point,
-                GeometryOperationStep::Point,
-            ]
+            &[GeometryOperationStep::Point, GeometryOperationStep::Point,]
         );
     }
 }
