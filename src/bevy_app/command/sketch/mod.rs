@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{ecs::relationship::RelationshipSourceCollection, prelude::*};
 use cad_base::{
     body::{BodyPerspective, PlaneRef},
     id::SketchId,
@@ -7,7 +7,9 @@ use cad_base::{
 };
 use ui_event::{
     Correlation, ObjectType, SketchCreationFailure,
-    command::{ActivateSketchCommand, CreateSketchOnSelectedCommand},
+    command::{
+        ActivateSketchCommand, CreateSketchOnSelectedCommand, RequestGeometryCreationCommand,
+    },
     notification::{
         Notifications, SketchActivatedNotification, SketchCreatedNotification,
         SketchCreationFailedNotification,
@@ -15,6 +17,7 @@ use ui_event::{
 };
 
 use crate::bevy_app::{
+    command::sketch::component::{GeometryOperation, RequestedGeometryOperation},
     component::BodyPartType,
     picking::PickingMessages,
     resource::{AppActiveBody, AppActiveSketch, AppSelections, EngineState},
@@ -151,5 +154,29 @@ pub(super) fn on_activate_sketch(
         None => {
             tracing::warn!("Can not get sketch perspective");
         }
+    }
+}
+
+/// A command to start creation process of a geometry requested
+pub(super) fn on_request_geometry_creation_command(
+    trigger: On<Correlation<RequestGeometryCreationCommand>>,
+    mut commands: Commands,
+    mut processing: Query<(
+        Entity,
+        &mut RequestedGeometryOperation,
+        &mut GeometryOperation,
+    )>,
+) {
+    let command = trigger.event();
+
+    // update old if exists
+    if let Ok((_, mut typ, mut ope)) = processing.single_mut() {
+        typ.0 = (*command.geometry).clone();
+        *ope = GeometryOperation::from_geometry((*command.geometry).clone());
+    } else {
+        commands.spawn((
+            RequestedGeometryOperation((*command.geometry).clone()),
+            GeometryOperation::from_geometry((*command.geometry).clone()),
+        ));
     }
 }

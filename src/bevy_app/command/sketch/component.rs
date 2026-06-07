@@ -1,7 +1,11 @@
-use bevy::math::Vec3;
+use bevy::{ecs::component::Component, math::Vec3};
 use color_eyre::eyre::eyre;
 use immutable::Im;
 use ui_event::SketchGeometryOperation;
+
+/// A component
+#[derive(Debug, Clone, PartialEq, Eq, Component)]
+pub struct RequestedGeometryOperation(pub SketchGeometryOperation);
 
 /// The step definition for mouse operation to create geometry in a sketch.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -15,7 +19,7 @@ pub enum GeometryOperationStep {
 /// This structure encapsulates the necessary information to instruct a CAD kernel
 /// on how to perform a geometric construction, such as joining, subtracting,
 /// or intersecting existing sketches elements.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Component)]
 pub struct GeometryOperation {
     /// Steps of the operation
     pub steps: Im<Vec<GeometryOperationStep>>,
@@ -58,6 +62,11 @@ impl GeometryOperation {
                     .expect("should be able to create operation by event")
             }
         }
+    }
+
+    /// Get the current step result.
+    pub fn step_result(&self) -> &Vec<Vec3> {
+        &self.step_result
     }
 
     /// Forward the operation by one step with the given point.

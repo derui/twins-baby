@@ -7,8 +7,10 @@ use cad_base::{
 use eyre::Result;
 use pretty_assertions::assert_eq;
 use ui_event::{
-    CommandId, Correlation, ObjectType, SketchCreationFailure,
-    command::{ActivateSketchCommand, CreateSketchOnSelectedCommand},
+    CommandId, Correlation, ObjectType, SketchCreationFailure, SketchGeometryOperation,
+    command::{
+        ActivateSketchCommand, CreateSketchOnSelectedCommand, RequestGeometryCreationCommand,
+    },
     notification::{
         Notification, Notifications, SketchActivatedNotification, SketchCreatedNotification,
         SketchCreationFailedNotification,
@@ -17,6 +19,9 @@ use ui_event::{
 };
 
 use crate::bevy_app::{
+    command::sketch::component::{
+        GeometryOperation, GeometryOperationStep, RequestedGeometryOperation,
+    },
     component::BodyPartType,
     picking::PickingMessages,
     resource::{AppActiveBody, AppActiveSketch, AppSelections, EngineState},
@@ -35,6 +40,7 @@ fn make_world() -> World {
     world.init_resource::<AppSelections>();
     world.add_observer(on_create_sketch_on_plane);
     world.add_observer(on_activate_sketch);
+    world.add_observer(on_request_geometry_creation_command);
     world
 }
 
@@ -245,5 +251,86 @@ fn does_not_write_notification_when_sketch_not_found() -> Result<()> {
     let mut cursor = messages.get_cursor();
     let notifications: Vec<_> = cursor.read(messages).collect();
     assert_eq!(notifications.len(), 0);
+    Ok(())
+}
+
+#[test]
+fn spawns_geometry_operation_entity_when_none_exists() -> Result<()> {
+    // Arrange
+    let mut world = make_world();
+
+    // Act
+    world.trigger(Correlation::new(
+        CommandId::new(1),
+        RequestGeometryCreationCommand {
+            geometry: SketchGeometryOperation::LineSegment.into(),
+        },
+    ));
+    world.flush();
+
+    // Assert
+    let mut query = world.query::<(&RequestedGeometryOperation, &GeometryOperation)>();
+    let entities: Vec<_> = query.iter(&world).collect();
+    assert_eq!(entities.len(), 1);
+    assert_eq!(entities[0].0.0, SketchGeometryOperation::LineSegment);
+    assert_eq!(
+        entities[0].1.steps.as_slice(),
+        &[GeometryOperationStep::Point, GeometryOperationStep::Point]
+    );
+    Ok(())
+}
+
+#[test]
+fn updates_existing_entity_when_geometry_operation_already_exists() -> Result<()> {
+    // Arrange
+    let mut world = make_world();
+    world.trigger(Correlation::new(
+        CommandId::new(1),
+        RequestGeometryCreationCommand {
+            geometry: SketchGeometryOperation::LineSegment.into(),
+        },
+    ));
+    world.flush();
+
+    // Act
+    world.trigger(Correlation::new(
+        CommandId::new(2),
+        RequestGeometryCreationCommand {
+            geometry: SketchGeometryOperation::Rectangle.into(),
+        },
+    ));
+    world.flush();
+
+    // Assert
+    let mut query = world.query::<(&RequestedGeometryOperation, &GeometryOperation)>();
+    let entities: Vec<_> = query.iter(&world).collect();
+    assert_eq!(entities.len(), 1);
+    assert_eq!(entities[0].0.0, SketchGeometryOperation::Rectangle);
+    Ok(())
+}
+
+#[test]
+fn spawns_rectangle_operation_with_correct_steps() -> Result<()> {
+    // Arrange
+    let mut world = make_world();
+
+    // Act
+    world.trigger(Correlation::new(
+        CommandId::new(1),
+        RequestGeometryCreationCommand {
+            geometry: SketchGeometryOperation::Rectangle.into(),
+        },
+    ));
+    world.flush();
+
+    // Assert
+    let mut query = world.query::<(&RequestedGeometryOperation, &GeometryOperation)>();
+    let entities: Vec<_> = query.iter(&world).collect();
+    assert_eq!(entities.len(), 1);
+    assert_eq!(entities[0].0.0, SketchGeometryOperation::Rectangle);
+    assert_eq!(
+        entities[0].1.steps.as_slice(),
+        &[GeometryOperationStep::Point, GeometryOperationStep::Point]
+    );
     Ok(())
 }
