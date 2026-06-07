@@ -28,6 +28,7 @@ impl AppResourceExt for App {
             .init_resource::<AppSelections>()
             .init_resource::<AppActiveSketch>()
             .init_resource::<VisualConfiguration>()
+            .init_resource::<AppCursorIcon>()
     }
 }
 
@@ -99,6 +100,28 @@ impl Default for VisualConfiguration {
         Self {
             point_radius: 0.1,
             line_width: 0.1,
+        }
+    }
+}
+
+#[derive(Resource, Debug, Default)]
+pub struct AppCursorIcon(pub Option<IconType>);
+
+/// Icon in bevy
+#[derive(Debug, Clone, Copy)]
+pub enum IconType {
+    SketchLine,
+    SketchRect,
+    SketchCircle,
+}
+
+impl IconType {
+    /// Convert the icon type to asset URL
+    pub fn to_asset_url(&self) -> String {
+        match self {
+            IconType::SketchLine => "bevy-icons/sketch-line.png".to_string(),
+            IconType::SketchRect => "bevy-icons/sketch-rect.png".to_string(),
+            IconType::SketchCircle => "bevy-icons/sketch-circle.png".to_string(),
         }
     }
 }

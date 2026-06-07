@@ -23,6 +23,10 @@ pub struct SketchBaseGizmo;
 #[derive(Component)]
 pub struct SketchOperationTag;
 
+/// Tag component for cursor icon
+#[derive(Component)]
+pub struct CursorIconTag;
+
 /// A component of HUD Anchor point.
 #[derive(Debug, Clone, Component)]
 pub enum HudAnchor {
