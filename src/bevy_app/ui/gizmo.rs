@@ -127,6 +127,7 @@ pub fn draw_sketch_gizmos(
 
     let (axis_u, axis_v) = normal.any_orthonormal_pair();
 
+    // show lines through x/y axis on the attachable target
     for (_, transform) in &sketches {
         gizmos_sketch.primitive_3d(
             &Line3d {
