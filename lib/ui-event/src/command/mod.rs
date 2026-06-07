@@ -4,6 +4,8 @@ use cad_base::id::{BodyId, SketchId};
 use immutable::Im;
 use ui_event_macros::Command;
 
+use crate::SketchGeometryOperation;
+
 /// Commands are UI -> Bevy command request
 #[derive(Message, Debug, Clone)]
 pub enum Commands {
@@ -11,6 +13,8 @@ pub enum Commands {
     CreateBody(CreateBodyCommand),
     SwitchActiveBody(SwitchActiveBodyCommand),
     ActivateSketch(ActivateSketchCommand),
+    RequestGeometryCreation(RequestGeometryCreationCommand),
+    CancelCurrentGeometryCreation(CancelCurrentGeometryCreationCommand),
 }
 
 /// A command to create a sketch to the selected object in CAD.
@@ -37,3 +41,18 @@ pub struct ActivateSketchCommand {
     /// Id of the sketch to activate
     pub sketch_id: Im<SketchId>,
 }
+
+/// A command to request geometry to create on the activated sketch
+///
+/// This command will not send any notification for UI
+#[derive(Event, Debug, Clone, Command)]
+pub struct RequestGeometryCreationCommand {
+    /// a geometry creating on the activated sketch
+    pub geometry: Im<SketchGeometryOperation>,
+}
+
+/// A command to cancel current geometry creation process.
+///
+/// This command will not send any notification for UI
+#[derive(Event, Debug, Clone, Command)]
+pub struct CancelCurrentGeometryCreationCommand {}

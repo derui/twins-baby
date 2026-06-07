@@ -37,6 +37,10 @@ fn dispatch_commands(
             Commands::CreateBody(c) => commands.trigger(cmd.correlate(c.clone())),
             Commands::SwitchActiveBody(c) => commands.trigger(cmd.correlate(c.clone())),
             Commands::ActivateSketch(c) => commands.trigger(cmd.correlate(c.clone())),
+            Commands::RequestGeometryCreation(c) => todo!(),
+            Commands::CancelCurrentGeometryCreation(c) => {
+                todo!()
+            }
         }
     }
     Ok(())
