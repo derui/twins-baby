@@ -82,3 +82,21 @@ impl Deref for AppSelections {
         &self.0
     }
 }
+
+/// some visual configurations
+#[derive(Resource, Debug)]
+pub struct VisualConfiguration {
+    /// Sphere radius of the point.
+    pub point_radius: f32,
+    /// Line width. It uses for segment/edge of a sold
+    pub line_width: f32,
+}
+
+impl Default for VisualConfiguration {
+    fn default() -> Self {
+        Self {
+            point_radius: 0.1,
+            line_width: 0.1,
+        }
+    }
+}

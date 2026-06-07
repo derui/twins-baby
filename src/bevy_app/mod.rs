@@ -26,7 +26,7 @@ use crate::bevy_app::{
     pan_orbit::{pan_orbit_camera, setup_pan_orbit},
     picking::{PickingMessages, update_toggling_selection},
     resize::WindowResizePlugin,
-    resource::AppResourceExt,
+    resource::{AppResourceExt, VisualConfiguration},
     setup::setup_scene,
     ui::{
         AppUiExt, AxesGizmoGroup, SketchBaseGizmoGroup, anchor::transform_ui_anchors, draw_gizmos,
@@ -67,6 +67,7 @@ pub fn init_bevy_app(setting: BevyAppSettings) -> App {
     .init_gizmo_group::<AxesGizmoGroup>()
     .init_gizmo_group::<SketchBaseGizmoGroup>()
     .init_resource::<LastWindowSize>()
+    .init_resource::<VisualConfiguration>()
     .insert_resource(PointerInputSettings {
         is_touch_enabled: true,
         is_mouse_enabled: true,
