@@ -19,7 +19,9 @@ use ui_event::{
 use crate::bevy_app::{
     component::{BodyPartType, RequestedGeometryOperation, sketch::GeometryOperation},
     picking::PickingMessages,
-    resource::{AppActiveBody, AppActiveSketch, AppSelections, EngineState},
+    resource::{
+        AppActiveBody, AppActiveSketch, AppCursorIcon, AppSelections, EngineState, IconType,
+    },
 };
 
 #[cfg(test)]
@@ -163,6 +165,7 @@ pub(super) fn on_request_geometry_creation_command(
         &mut RequestedGeometryOperation,
         &mut GeometryOperation,
     )>,
+    mut cursor: ResMut<AppCursorIcon>,
 ) {
     let command = trigger.event();
 
@@ -176,4 +179,11 @@ pub(super) fn on_request_geometry_creation_command(
             GeometryOperation::from_geometry((*command.geometry).clone()),
         ));
     }
+
+    let icon = match *command.geometry {
+        ui_event::SketchGeometryOperation::LineSegment => IconType::SketchLine,
+        ui_event::SketchGeometryOperation::Rectangle => IconType::SketchRect,
+    };
+
+    cursor.0 = Some(icon);
 }
