@@ -15,7 +15,6 @@ use ui_event::{
 
 use crate::bevy_app::resource::{AppActiveBody, EngineState};
 
-use super::component::BodyBasePlane;
 use super::*;
 
 fn make_world() -> World {

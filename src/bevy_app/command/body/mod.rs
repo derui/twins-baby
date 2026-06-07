@@ -26,8 +26,8 @@ use ui_event::{
 };
 
 use crate::bevy_app::camera::CAMERA_3D_LAYER;
-use crate::bevy_app::command::body::component::BodyBasePlane;
 use crate::bevy_app::component::BodyPartType;
+use crate::bevy_app::component::body::BodyBasePlane;
 use crate::bevy_app::picking::{
     PickingMaterials, update_pointer_click, update_pointer_out, update_pointer_over,
 };
@@ -35,8 +35,6 @@ use crate::bevy_app::resource::{AppActiveBody, EngineState};
 
 #[cfg(test)]
 mod tests;
-
-mod component;
 
 /// make a [PickingMaterials] of plane with color
 fn make_picking_materials(

@@ -1,6 +1,6 @@
 use bevy::{prelude::*, window::PrimaryWindow};
 
-use crate::bevy_app::ui::components::{HudAnchor, HudRotation};
+use crate::bevy_app::component::ui::{HudAnchor, HudRotation};
 
 const UI_SCALE_2: f32 = 0.1 / 2.;
 

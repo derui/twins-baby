@@ -1,12 +1,12 @@
 pub mod anchor;
-pub mod components;
+mod cursor;
 mod gizmo;
 mod navigation_cube;
 
 use bevy::ecs::{error::BevyError, system::Commands};
 use bevy::prelude::*;
 
-use crate::bevy_app::ui::components::HudRotation;
+use crate::bevy_app::component::ui::HudRotation;
 use crate::bevy_app::ui::gizmo::setup_gizmos;
 use crate::bevy_app::ui::navigation_cube::{
     insert_render_layer, setup_navigation_cube, setup_navigation_texture,

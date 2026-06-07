@@ -2,10 +2,8 @@
 
 use bevy::{camera::visibility::RenderLayers, prelude::*, scene::SceneInstance};
 
-use crate::bevy_app::{
-    camera::CAMERA_UI_LAYER,
-    ui::components::{HudAnchor, NavigationCube, NeedsRenderLayers, NeedsTextureSetup},
-};
+use crate::bevy_app::camera::CAMERA_UI_LAYER;
+use crate::bevy_app::component::ui::*;
 
 const NAVIGATION_CUBE_SCALE: f32 = 4.8; // 4.8 to 4.8unit = 48px on UI
 

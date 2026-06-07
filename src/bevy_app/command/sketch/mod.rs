@@ -1,4 +1,4 @@
-use bevy::{ecs::relationship::RelationshipSourceCollection, prelude::*};
+use bevy::prelude::*;
 use cad_base::{
     body::{BodyPerspective, PlaneRef},
     id::SketchId,
@@ -17,13 +17,10 @@ use ui_event::{
 };
 
 use crate::bevy_app::{
-    command::sketch::component::{GeometryOperation, RequestedGeometryOperation},
-    component::BodyPartType,
+    component::{BodyPartType, RequestedGeometryOperation, sketch::GeometryOperation},
     picking::PickingMessages,
     resource::{AppActiveBody, AppActiveSketch, AppSelections, EngineState},
 };
-
-pub mod component;
 
 #[cfg(test)]
 mod tests;

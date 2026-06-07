@@ -3,10 +3,6 @@ use color_eyre::eyre::eyre;
 use immutable::Im;
 use ui_event::SketchGeometryOperation;
 
-/// A component
-#[derive(Debug, Clone, PartialEq, Eq, Component)]
-pub struct RequestedGeometryOperation(pub SketchGeometryOperation);
-
 /// The step definition for mouse operation to create geometry in a sketch.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum GeometryOperationStep {

@@ -19,10 +19,7 @@ use ui_event::{
 };
 
 use crate::bevy_app::{
-    command::sketch::component::{
-        GeometryOperation, GeometryOperationStep, RequestedGeometryOperation,
-    },
-    component::BodyPartType,
+    component::{BodyPartType, sketch::GeometryOperationStep},
     picking::PickingMessages,
     resource::{AppActiveBody, AppActiveSketch, AppSelections, EngineState},
 };

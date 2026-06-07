@@ -26,7 +26,7 @@ use crate::bevy_app::{
     pan_orbit::{pan_orbit_camera, setup_pan_orbit},
     picking::{PickingMessages, update_toggling_selection},
     resize::WindowResizePlugin,
-    resource::{AppResourceExt, VisualConfiguration},
+    resource::AppResourceExt,
     setup::setup_scene,
     ui::{
         AppUiExt, AxesGizmoGroup, SketchBaseGizmoGroup, anchor::transform_ui_anchors, draw_gizmos,

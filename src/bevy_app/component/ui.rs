@@ -19,6 +19,10 @@ pub struct AxesGizmo;
 #[derive(Component)]
 pub struct SketchBaseGizmo;
 
+/// Tag for sketch operation
+#[derive(Component)]
+pub struct SketchOperationTag;
+
 /// A component of HUD Anchor point.
 #[derive(Debug, Clone, Component)]
 pub enum HudAnchor {

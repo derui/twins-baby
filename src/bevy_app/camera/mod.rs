@@ -4,10 +4,10 @@ use bevy::{
 };
 use eyre::Result;
 
+use crate::bevy_app::component::ui::HudRotation;
+
 #[cfg(test)]
 mod tests;
-
-use crate::bevy_app::ui::components::HudRotation;
 
 pub const CAMERA_3D_LAYER: usize = 0;
 pub const CAMERA_UI_LAYER: usize = 1;

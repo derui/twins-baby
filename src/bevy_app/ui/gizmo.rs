@@ -26,9 +26,9 @@ use cad_base::{
 
 use crate::bevy_app::{
     camera::{CAMERA_3D_LAYER, CAMERA_UI_LAYER},
+    component::ui::{AxesGizmo, HudAnchor, SketchBaseGizmo},
     resource::{AppActiveSketch, EngineState},
     support::Vec3Ext,
-    ui::components::{AxesGizmo, HudAnchor, SketchBaseGizmo},
 };
 
 // 2.5unit = 25px per line
