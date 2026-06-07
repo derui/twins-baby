@@ -67,7 +67,6 @@ pub fn init_bevy_app(setting: BevyAppSettings) -> App {
     .init_gizmo_group::<AxesGizmoGroup>()
     .init_gizmo_group::<SketchBaseGizmoGroup>()
     .init_resource::<LastWindowSize>()
-    .init_resource::<VisualConfiguration>()
     .insert_resource(PointerInputSettings {
         is_touch_enabled: true,
         is_mouse_enabled: true,

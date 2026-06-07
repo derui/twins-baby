@@ -11,6 +11,7 @@ use cad_base::{
     CadEngine,
     id::{BodyId, SketchId},
 };
+use ui_event::SketchGeometryOperation;
 
 use crate::bevy_app::component::BodyPartType;
 
@@ -26,6 +27,7 @@ impl AppResourceExt for App {
             .init_resource::<AppActiveBody>()
             .init_resource::<AppSelections>()
             .init_resource::<AppActiveSketch>()
+            .init_resource::<VisualConfiguration>()
     }
 }
 
