@@ -21,7 +21,9 @@ use ui_event::{
 use crate::bevy_app::{
     component::{BodyPartType, sketch::GeometryOperationStep},
     picking::PickingMessages,
-    resource::{AppActiveBody, AppActiveSketch, AppSelections, EngineState},
+    resource::{
+        AppActiveBody, AppActiveSketch, AppCursorIcon, AppSelections, EngineState, IconType,
+    },
 };
 
 use super::*;
@@ -35,6 +37,7 @@ fn make_world() -> World {
     world.init_resource::<AppActiveBody>();
     world.init_resource::<AppActiveSketch>();
     world.init_resource::<AppSelections>();
+    world.init_resource::<AppCursorIcon>();
     world.add_observer(on_create_sketch_on_plane);
     world.add_observer(on_activate_sketch);
     world.add_observer(on_request_geometry_creation_command);
@@ -274,6 +277,10 @@ fn spawns_geometry_operation_entity_when_none_exists() -> Result<()> {
         entities[0].1.steps.as_slice(),
         &[GeometryOperationStep::Point, GeometryOperationStep::Point]
     );
+    assert_eq!(
+        world.resource::<AppCursorIcon>().0,
+        Some(IconType::SketchLine)
+    );
     Ok(())
 }
 
@@ -303,6 +310,10 @@ fn updates_existing_entity_when_geometry_operation_already_exists() -> Result<()
     let entities: Vec<_> = query.iter(&world).collect();
     assert_eq!(entities.len(), 1);
     assert_eq!(entities[0].0.0, SketchGeometryOperation::Rectangle);
+    assert_eq!(
+        world.resource::<AppCursorIcon>().0,
+        Some(IconType::SketchRect)
+    );
     Ok(())
 }
 
@@ -328,6 +339,10 @@ fn spawns_rectangle_operation_with_correct_steps() -> Result<()> {
     assert_eq!(
         entities[0].1.steps.as_slice(),
         &[GeometryOperationStep::Point, GeometryOperationStep::Point]
+    );
+    assert_eq!(
+        world.resource::<AppCursorIcon>().0,
+        Some(IconType::SketchRect)
     );
     Ok(())
 }

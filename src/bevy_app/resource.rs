@@ -108,7 +108,7 @@ impl Default for VisualConfiguration {
 pub struct AppCursorIcon(pub Option<IconType>);
 
 /// Icon in bevy
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum IconType {
     SketchLine,
     SketchRect,
