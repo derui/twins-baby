@@ -1,7 +1,7 @@
 [package]
 name = "twins-baby"
 version = "0.1.0"
-edition = "2024"
+edition.workspace = true
 
 [workspace]
 
@@ -9,6 +9,9 @@ members = [
    "lib/cad-base", "lib/cad-base-macros", "lib/cad-kernel", "lib/epsilon", "lib/immutable", "lib/leptos-test",
    "lib/solver"
 , "lib/ui-component", "lib/ui-event", "lib/ui-event-macros", "lib/ui-fixtures", "lib/ui-headless"]
+
+[workspace.package]
+edition = "2024"
 
 [workspace.dependencies]
 approx = "0.5.1"
@@ -105,4 +108,3 @@ lto = "thin"      # Link-time optimization (balance between build time and outpu
 codegen-units = 1 # Better optimization, slower build
 strip = true      # Strip debug symbols
 panic = "abort"   # Smaller binary size
-
