@@ -27,7 +27,6 @@ use crate::bevy_app::{
 
 mod geometry;
 
-mod event;
 #[cfg(test)]
 mod tests;
 
