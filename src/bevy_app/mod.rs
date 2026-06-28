@@ -9,6 +9,9 @@ mod setup;
 pub(crate) mod support;
 mod ui;
 
+#[cfg(test)]
+pub(crate) mod test_support;
+
 // This initializes a normal Bevy app
 use bevy::{asset::AssetMetaCheck, picking::input::PointerInputSettings, prelude::*};
 use leptos_bevy_canvas::prelude::{BevyMessageReceiver, BevyMessageSender, LeptosBevyApp};

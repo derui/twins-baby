@@ -70,3 +70,73 @@ pub fn handle_geometry_operation(
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use bevy::input::ButtonInput;
+    use bevy::prelude::*;
+    use cad_base::plane::Plane;
+    use eyre::Result;
+    use ui_event::SketchGeometryOperation;
+
+    use crate::bevy_app::component::{RequestedGeometryOperation, sketch::GeometryOperation};
+
+    fn default_plane() -> Plane {
+        Plane::new_xy()
+    }
+
+    fn make_world() -> World {
+        let mut world = World::new();
+        world.init_resource::<ButtonInput<MouseButton>>();
+        world
+    }
+
+    #[test]
+    fn system_does_not_despawn_entity_when_mouse_not_pressed() -> Result<()> {
+        // Arrange
+        let mut world = make_world();
+        let plane = default_plane();
+        let entity = world
+            .spawn((
+                RequestedGeometryOperation(SketchGeometryOperation::LineSegment),
+                GeometryOperation::from_geometry(SketchGeometryOperation::LineSegment, &plane),
+            ))
+            .id();
+
+        // Act
+        let mut schedule = Schedule::default();
+        schedule.add_systems(handle_geometry_operation);
+        schedule.run(&mut world);
+
+        // Assert - entity must still exist because mouse was not pressed
+        assert!(world.get_entity(entity).is_ok());
+        Ok(())
+    }
+
+    #[test]
+    fn system_does_not_despawn_entity_when_no_camera_exists() -> Result<()> {
+        // Arrange
+        let mut world = make_world();
+        let plane = default_plane();
+        let entity = world
+            .spawn((
+                RequestedGeometryOperation(SketchGeometryOperation::LineSegment),
+                GeometryOperation::from_geometry(SketchGeometryOperation::LineSegment, &plane),
+            ))
+            .id();
+        world.spawn(Window::default()).insert(PrimaryWindow);
+        world
+            .resource_mut::<ButtonInput<MouseButton>>()
+            .press(MouseButton::Left);
+
+        // Act
+        let mut schedule = Schedule::default();
+        schedule.add_systems(handle_geometry_operation);
+        schedule.run(&mut world);
+
+        // Assert - entity still exists because no camera was found
+        assert!(world.get_entity(entity).is_ok());
+        Ok(())
+    }
+}
