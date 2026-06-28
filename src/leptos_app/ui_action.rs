@@ -1,10 +1,10 @@
 use cad_base::id::{BodyId, SketchId};
 use leptos::prelude::{GetUntracked, Set};
 use ui_event::{
-    PerspectiveKind,
+    PerspectiveKind, SketchGeometryOperation,
     command::{
         ActivateSketchCommand, Commands, CreateBodyCommand, CreateSketchOnSelectedCommand,
-        SwitchActiveBodyCommand,
+        RequestGeometryCreationCommand, SwitchActiveBodyCommand,
     },
 };
 
@@ -91,5 +91,22 @@ impl UiAction for SketchActivatedAction {
         Some(Commands::ActivateSketch(ActivateSketchCommand {
             sketch_id: self.sketch_id.into(),
         }))
+    }
+}
+
+/// An event to request creation a geometry in the sketch
+#[derive(Debug, Clone)]
+pub struct SketchGeometryRequestedAction {
+    /// The geometry operation to create
+    pub operation: SketchGeometryOperation,
+}
+
+impl UiAction for SketchGeometryRequestedAction {
+    fn apply(&self, _context: &ActionContext) -> Option<Commands> {
+        Some(Commands::RequestGeometryCreation(
+            RequestGeometryCreationCommand {
+                geometry: self.operation.clone().into(),
+            },
+        ))
     }
 }
