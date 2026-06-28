@@ -258,6 +258,12 @@ fn does_not_write_notification_when_sketch_not_found() -> Result<()> {
 fn spawns_geometry_operation_entity_when_none_exists() -> Result<()> {
     // Arrange
     let mut world = make_world();
+    let plane_ref = create_body_with_plane(&mut world);
+    let sketch_id = create_sketch(&mut world, plane_ref);
+    {
+        world.resource_mut::<AppActiveBody>().0 = Some(plane_ref.body_id());
+        world.resource_mut::<AppActiveSketch>().0 = Some(sketch_id);
+    }
 
     // Act
     world.trigger(Correlation::new(
@@ -288,6 +294,12 @@ fn spawns_geometry_operation_entity_when_none_exists() -> Result<()> {
 fn updates_existing_entity_when_geometry_operation_already_exists() -> Result<()> {
     // Arrange
     let mut world = make_world();
+    let plane_ref = create_body_with_plane(&mut world);
+    let sketch_id = create_sketch(&mut world, plane_ref);
+    {
+        world.resource_mut::<AppActiveBody>().0 = Some(plane_ref.body_id());
+        world.resource_mut::<AppActiveSketch>().0 = Some(sketch_id);
+    }
     world.trigger(Correlation::new(
         CommandId::new(1),
         RequestGeometryCreationCommand {
@@ -321,6 +333,12 @@ fn updates_existing_entity_when_geometry_operation_already_exists() -> Result<()
 fn spawns_rectangle_operation_with_correct_steps() -> Result<()> {
     // Arrange
     let mut world = make_world();
+    let plane_ref = create_body_with_plane(&mut world);
+    let sketch_id = create_sketch(&mut world, plane_ref);
+    {
+        world.resource_mut::<AppActiveBody>().0 = Some(plane_ref.body_id());
+        world.resource_mut::<AppActiveSketch>().0 = Some(sketch_id);
+    }
 
     // Act
     world.trigger(Correlation::new(

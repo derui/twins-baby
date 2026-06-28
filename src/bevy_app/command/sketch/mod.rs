@@ -22,7 +22,10 @@ use crate::bevy_app::{
     resource::{
         AppActiveBody, AppActiveSketch, AppCursorIcon, AppSelections, EngineState, IconType,
     },
+    support::Vec3Ext,
 };
+
+mod mouse_handler;
 
 #[cfg(test)]
 mod tests;
@@ -165,18 +168,39 @@ pub(super) fn on_request_geometry_creation_command(
         &mut RequestedGeometryOperation,
         &mut GeometryOperation,
     )>,
+    engine: Res<EngineState>,
+    active_sketch: Res<AppActiveSketch>,
+    active_body: Res<AppActiveBody>,
     mut cursor: ResMut<AppCursorIcon>,
 ) {
     let command = trigger.event();
 
+    let baseline = engine.0.baseline();
+
+    let Some(sketch) = active_sketch.0.and_then(|id| {
+        baseline
+            .read::<SketchPerspective>()
+            .and_then(|p| p.get(&id))
+    }) else {
+        return;
+    };
+    let Some(body) = active_body
+        .0
+        .and_then(|id| baseline.read::<BodyPerspective>().and_then(|p| p.get(&id)))
+    else {
+        return;
+    };
+
     // update old if exists
+    let plane = sketch.attach_target.to_plane(body);
+
     if let Ok((_, mut typ, mut ope)) = processing.single_mut() {
         typ.0 = (*command.geometry).clone();
-        *ope = GeometryOperation::from_geometry((*command.geometry).clone());
+        *ope = GeometryOperation::from_geometry((*command.geometry).clone(), &plane);
     } else {
         commands.spawn((
             RequestedGeometryOperation((*command.geometry).clone()),
-            GeometryOperation::from_geometry((*command.geometry).clone()),
+            GeometryOperation::from_geometry((*command.geometry).clone(), &plane),
         ));
     }
 

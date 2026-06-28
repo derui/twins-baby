@@ -17,8 +17,9 @@ use tracing::instrument;
 use std::collections::HashMap;
 
 use crate::{
-    body::PlaneRef,
+    body::{Body, PlaneRef},
     id::{FaceId, GeometryId, IdStore, VariableId},
+    plane::Plane,
     sketch::{
         edge::SketchEdge,
         scope::{ConstraintScope, VariableScope},
@@ -39,7 +40,7 @@ pub enum AttachableTarget {
 
 impl AttachableTarget {
     /// Get plane ref if this target is plane.
-    pub fn to_plane(&self) -> Option<PlaneRef> {
+    pub fn to_plane_ref(&self) -> Option<PlaneRef> {
         match self {
             AttachableTarget::Plane(plane_ref) => Some(*plane_ref),
             _ => None,
@@ -51,6 +52,14 @@ impl AttachableTarget {
         match self {
             AttachableTarget::Face(id) => Some(*id),
             _ => None,
+        }
+    }
+
+    /// Make plane from target.
+    pub fn to_plane(&self, base: &Body) -> Plane {
+        match self {
+            AttachableTarget::Plane(plane_ref) => plane_ref.to_plane_from(base),
+            AttachableTarget::Face(_) => todo!(),
         }
     }
 }

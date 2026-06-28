@@ -1,4 +1,5 @@
 use bevy::{ecs::component::Component, math::Vec3};
+use cad_base::plane::Plane;
 use color_eyre::eyre::eyre;
 use immutable::Im;
 use ui_event::SketchGeometryOperation;
@@ -20,6 +21,8 @@ pub struct GeometryOperation {
     /// Steps of the operation
     pub steps: Im<Vec<GeometryOperationStep>>,
 
+    pub plane: Im<Plane>,
+
     /// Result of mouse operations each steps
     step_result: Vec<Vec3>,
 
@@ -32,7 +35,7 @@ impl GeometryOperation {
     ///
     /// # Errors
     /// Returns an error if the steps are empty.
-    pub fn new(steps: &[GeometryOperationStep]) -> eyre::Result<Self> {
+    pub fn new(steps: &[GeometryOperationStep], plane: &Plane) -> eyre::Result<Self> {
         let steps = Vec::from(steps);
 
         if steps.is_empty() {
@@ -41,22 +44,25 @@ impl GeometryOperation {
 
         Ok(GeometryOperation {
             steps: steps.into(),
+            plane: plane.clone().into(),
             step_result: vec![],
             current_step: 0,
         })
     }
 
     /// Create a new [GeometryOperation] with the event
-    pub fn from_geometry(geometry_type: SketchGeometryOperation) -> Self {
+    pub fn from_geometry(geometry_type: SketchGeometryOperation, plane: &Plane) -> Self {
         match geometry_type {
-            SketchGeometryOperation::LineSegment => {
-                Self::new(&[GeometryOperationStep::Point, GeometryOperationStep::Point])
-                    .expect("should be able to create operation by event")
-            }
-            SketchGeometryOperation::Rectangle => {
-                Self::new(&[GeometryOperationStep::Point, GeometryOperationStep::Point])
-                    .expect("should be able to create operation by event")
-            }
+            SketchGeometryOperation::LineSegment => Self::new(
+                &[GeometryOperationStep::Point, GeometryOperationStep::Point],
+                plane,
+            )
+            .expect("should be able to create operation by event"),
+            SketchGeometryOperation::Rectangle => Self::new(
+                &[GeometryOperationStep::Point, GeometryOperationStep::Point],
+                plane,
+            )
+            .expect("should be able to create operation by event"),
         }
     }
 
@@ -112,16 +118,22 @@ impl GeometryOperation {
 mod tests {
     use super::*;
     use bevy::math::Vec3;
+    use cad_base::plane::Plane;
     use eyre::Result;
     use pretty_assertions::assert_eq;
+
+    fn default_plane() -> Plane {
+        Plane::new_xy()
+    }
 
     #[test]
     fn new_returns_error_for_empty_steps() {
         // Arrange
         let steps: &[GeometryOperationStep] = &[];
+        let plane = default_plane();
 
         // Act
-        let result = GeometryOperation::new(steps);
+        let result = GeometryOperation::new(steps, &plane);
 
         // Assert
         assert!(result.is_err());
@@ -131,9 +143,10 @@ mod tests {
     fn new_succeeds_with_valid_steps() {
         // Arrange
         let steps = &[GeometryOperationStep::Point];
+        let plane = default_plane();
 
         // Act
-        let result = GeometryOperation::new(steps);
+        let result = GeometryOperation::new(steps, &plane);
 
         // Assert
         assert!(result.is_ok());
@@ -142,8 +155,9 @@ mod tests {
     #[test]
     fn forward_step_advances_through_steps() -> Result<()> {
         // Arrange
+        let plane = default_plane();
         let steps = &[GeometryOperationStep::Point, GeometryOperationStep::Point];
-        let mut op = GeometryOperation::new(steps)?;
+        let mut op = GeometryOperation::new(steps, &plane)?;
         let point = Vec3::new(1.0, 2.0, 3.0);
 
         // Act
@@ -158,8 +172,9 @@ mod tests {
     #[test]
     fn forward_step_returns_error_when_all_steps_completed() -> Result<()> {
         // Arrange
+        let plane = default_plane();
         let steps = &[GeometryOperationStep::Point];
-        let mut op = GeometryOperation::new(steps)?;
+        let mut op = GeometryOperation::new(steps, &plane)?;
         op.forward_step(Vec3::ZERO)?;
 
         // Act
@@ -174,8 +189,9 @@ mod tests {
     #[test]
     fn backward_step_returns_error_at_initial_step() -> Result<()> {
         // Arrange
+        let plane = default_plane();
         let steps = &[GeometryOperationStep::Point];
-        let mut op = GeometryOperation::new(steps)?;
+        let mut op = GeometryOperation::new(steps, &plane)?;
 
         // Act
         let result = op.backward_step();
@@ -189,8 +205,9 @@ mod tests {
     #[test]
     fn backward_step_returns_previously_forwarded_point() -> Result<()> {
         // Arrange
+        let plane = default_plane();
         let steps = &[GeometryOperationStep::Point];
-        let mut op = GeometryOperation::new(steps)?;
+        let mut op = GeometryOperation::new(steps, &plane)?;
         let point = Vec3::new(1.0, 2.0, 3.0);
         op.forward_step(point)?;
 
@@ -206,8 +223,9 @@ mod tests {
     #[test]
     fn forward_and_backward_are_symmetric() -> Result<()> {
         // Arrange
+        let plane = default_plane();
         let steps = &[GeometryOperationStep::Point, GeometryOperationStep::Point];
-        let mut op = GeometryOperation::new(steps)?;
+        let mut op = GeometryOperation::new(steps, &plane)?;
         let p1 = Vec3::new(1.0, 0.0, 0.0);
         let p2 = Vec3::new(0.0, 1.0, 0.0);
         op.forward_step(p1)?;
@@ -227,8 +245,9 @@ mod tests {
     #[test]
     fn can_forward_again_after_backward() -> Result<()> {
         // Arrange
+        let plane = default_plane();
         let steps = &[GeometryOperationStep::Point];
-        let mut op = GeometryOperation::new(steps)?;
+        let mut op = GeometryOperation::new(steps, &plane)?;
         op.forward_step(Vec3::ZERO)?;
         op.backward_step()?;
 
@@ -245,8 +264,11 @@ mod tests {
     fn from_geometry_line_segment_creates_two_point_steps() {
         use ui_event::SketchGeometryOperation;
 
-        // Arrange / Act
-        let op = GeometryOperation::from_geometry(SketchGeometryOperation::LineSegment);
+        // Arrange
+        let plane = default_plane();
+
+        // Act
+        let op = GeometryOperation::from_geometry(SketchGeometryOperation::LineSegment, &plane);
 
         // Assert
         assert_eq!(
@@ -259,8 +281,11 @@ mod tests {
     fn from_geometry_rectangle_creates_four_point_steps() {
         use ui_event::SketchGeometryOperation;
 
-        // Arrange / Act
-        let op = GeometryOperation::from_geometry(SketchGeometryOperation::Rectangle);
+        // Arrange
+        let plane = default_plane();
+
+        // Act
+        let op = GeometryOperation::from_geometry(SketchGeometryOperation::Rectangle, &plane);
 
         // Assert
         assert_eq!(
