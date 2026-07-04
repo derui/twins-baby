@@ -60,12 +60,13 @@ pub fn handle_geometry_operation(
         return;
     };
 
-    // the normal should be direction from local to global
-    let normal = global_transform.transform_point(geo.plane.normal.to_vec3());
-
-    if let Some(point) = ray.plane_intersection_point(ray.origin, InfinitePlane3d::new(normal)) {
+    if let Some(point) = ray.plane_intersection_point(
+        geo.plane.r0.to_vec3(),
+        InfinitePlane3d::new(geo.plane.normal.to_vec3()),
+    ) {
         // convert 2D.
-        let point = point - normal;
+        let point = point - geo.plane.r0.to_vec3();
+
         if let StepResult::Completed = geo.forward_step(point) {
             // after operation finished, send event.
             commands.entity(e).despawn();

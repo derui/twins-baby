@@ -24,7 +24,7 @@ use crate::bevy_app::{
     },
 };
 
-mod geometry;
+pub(super) mod geometry;
 
 #[cfg(test)]
 mod tests;

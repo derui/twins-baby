@@ -9,6 +9,9 @@ use ui_event::command::Commands;
 use body::on_create_body;
 
 use crate::bevy_app::command::body::{on_switch_active_body, update_plane_visibilities};
+use crate::bevy_app::command::sketch::geometry::{
+    handle_geometry_operation, on_geometory_operation_completed,
+};
 use crate::bevy_app::command::sketch::{
     on_activate_sketch, on_create_sketch_on_plane, on_request_geometry_creation_command,
 };
@@ -22,11 +25,13 @@ impl CommandAppExt for App {
     fn register_commands(&mut self) -> &mut Self {
         self.add_systems(Update, dispatch_commands)
             .add_systems(Update, update_plane_visibilities)
+            .add_systems(Update, handle_geometry_operation)
             .add_observer(on_create_body)
             .add_observer(on_switch_active_body)
             .add_observer(on_create_sketch_on_plane)
             .add_observer(on_activate_sketch)
             .add_observer(on_request_geometry_creation_command)
+            .add_observer(on_geometory_operation_completed)
     }
 }
 
