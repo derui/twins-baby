@@ -6,9 +6,11 @@ use bevy::{
     prelude::*,
     window::PrimaryWindow,
 };
+use ui_event::{Correlation, notification::Notifications, server::ServerIntents};
 
 use crate::bevy_app::{
     camera::{MainCamera, setup_camera},
+    picking::PickingMessages,
     resource::AppResourceExt as _,
 };
 
@@ -40,6 +42,9 @@ impl TestEnv for App {
                 ..default()
             })
             .add_plugins((TransformPlugin, CameraPlugin))
+            .init_resource::<Messages<Correlation<Notifications>>>()
+            .init_resource::<Messages<ServerIntents>>()
+            .init_resource::<Messages<PickingMessages>>()
             .init_resource::<Assets<Mesh>>()
             .init_resource::<Assets<StandardMaterial>>();
 
