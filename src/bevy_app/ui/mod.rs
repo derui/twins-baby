@@ -34,6 +34,8 @@ impl AppUiExt for App {
                 setup_cursor_icon,
             ),
         )
+        .init_gizmo_group::<AxesGizmoGroup>()
+        .init_gizmo_group::<SketchBaseGizmoGroup>()
         .add_systems(Update, (setup_navigation_texture, insert_render_layer))
         .add_systems(Update, update_cursor_icon)
     }

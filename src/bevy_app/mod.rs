@@ -65,8 +65,6 @@ pub fn init_bevy_app(setting: BevyAppSettings) -> App {
         MeshPickingPlugin,
         WindowResizePlugin,
     ))
-    .init_gizmo_group::<AxesGizmoGroup>()
-    .init_gizmo_group::<SketchBaseGizmoGroup>()
     .init_resource::<LastWindowSize>()
     .insert_resource(PointerInputSettings {
         is_touch_enabled: true,
