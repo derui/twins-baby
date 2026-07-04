@@ -6,8 +6,13 @@ use eyre::Result;
 
 use crate::bevy_app::component::ui::HudRotation;
 
+mod pan_orbit;
+
 #[cfg(test)]
 mod tests;
+
+pub use pan_orbit::pan_orbit_camera;
+pub use pan_orbit::setup_pan_orbit;
 
 pub const CAMERA_3D_LAYER: usize = 0;
 pub const CAMERA_UI_LAYER: usize = 1;

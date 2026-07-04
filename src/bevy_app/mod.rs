@@ -1,7 +1,6 @@
 mod camera;
 mod command;
 mod component;
-mod pan_orbit;
 mod picking;
 mod resize;
 mod resource;
@@ -22,11 +21,10 @@ use ui_event::{
 
 use crate::bevy_app::{
     camera::{
-        LastWindowSize, PanOrbitOperation, move_camera_with_request, reposition_ui_cameras,
-        setup_camera,
+        LastWindowSize, PanOrbitOperation, move_camera_with_request, pan_orbit_camera,
+        reposition_ui_cameras, setup_camera, setup_pan_orbit,
     },
     command::CommandAppExt,
-    pan_orbit::{pan_orbit_camera, setup_pan_orbit},
     picking::{PickingMessages, update_toggling_selection},
     resize::WindowResizePlugin,
     resource::AppResourceExt,
