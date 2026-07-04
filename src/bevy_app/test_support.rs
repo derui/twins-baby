@@ -2,7 +2,9 @@ use bevy::{
     camera::{CameraPlugin, CameraProjection as _},
     ecs::system::RunSystemOnce as _,
     input::InputPlugin,
+    math::DVec2,
     prelude::*,
+    window::PrimaryWindow,
 };
 
 use crate::bevy_app::{
@@ -69,5 +71,50 @@ impl TestEnv for App {
         }
 
         self
+    }
+}
+
+/// This trait provides common operation on test.
+pub trait WindowOp {
+    /// Move primary window cursor to the [position]
+    fn move_cursor_to(&mut self, position: DVec2);
+
+    /// Move cursor on primary window to [position] and click left mouse button, then run [system] and then release that.
+    ///
+    ///
+    fn click_at<T>(&mut self, position: DVec2, system: T)
+    where
+        T: FnMut(&mut World) -> ();
+}
+
+impl WindowOp for App {
+    fn move_cursor_to(&mut self, position: DVec2) {
+        let world = self.world_mut();
+        let window_entity = world
+            .query_filtered::<Entity, With<PrimaryWindow>>()
+            .single(world)
+            .unwrap();
+        world
+            .get_mut::<Window>(window_entity)
+            .unwrap()
+            .set_physical_cursor_position(Some(position));
+    }
+
+    fn click_at<T>(&mut self, position: DVec2, mut system: T)
+    where
+        T: FnMut(&mut World) -> (),
+    {
+        self.move_cursor_to(position);
+
+        let mut world = self.world_mut();
+        world
+            .resource_mut::<ButtonInput<MouseButton>>()
+            .press(MouseButton::Left);
+
+        system(&mut world);
+        world.flush();
+        world
+            .resource_mut::<ButtonInput<MouseButton>>()
+            .release(MouseButton::Left);
     }
 }
