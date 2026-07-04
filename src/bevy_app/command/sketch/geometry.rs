@@ -9,7 +9,7 @@ use crate::bevy_app::{
         RequestedGeometryOperation,
         sketch::{GeometryOperation, StepResult},
     },
-    resource::{AppActiveSketch, EngineState},
+    resource::{AppActiveSketch, AppCursorIcon, EngineState},
     support::Vec3Ext,
 };
 
@@ -87,6 +87,7 @@ pub fn on_geometory_operation_completed(
     trigger: On<GeometryOperationCompletedEvent>,
     mut engine: ResMut<EngineState>,
     active_sketch: Res<AppActiveSketch>,
+    mut cursor: ResMut<AppCursorIcon>,
 ) {
     let event = trigger.event();
     let mut t = engine.0.begin();
@@ -114,6 +115,8 @@ pub fn on_geometory_operation_completed(
         SketchGeometryOperation::Rectangle => todo!("rectangle completion is not implemented yet"),
     }
 
+    cursor.0 = None;
+
     t.commit();
 }
 
@@ -138,6 +141,7 @@ mod tests {
     use crate::bevy_app::test_support::WindowOp as _;
     use crate::bevy_app::{
         component::{RequestedGeometryOperation, sketch::GeometryOperation},
+        resource::IconType,
         test_support::TestEnv as _,
     };
 
@@ -157,12 +161,11 @@ mod tests {
         app
     }
 
-    fn make_geometry_completed_world() -> World {
-        let mut world = World::new();
-        world.init_resource::<EngineState>();
-        world.init_resource::<AppActiveSketch>();
-        world.add_observer(on_geometory_operation_completed);
-        world
+    fn make_geometry_completed_app() -> App {
+        let mut app = App::new();
+        app.setup_test_env()
+            .add_observer(on_geometory_operation_completed);
+        app
     }
 
     fn create_sketch(world: &mut World) -> cad_base::id::SketchId {
@@ -233,9 +236,11 @@ mod tests {
     #[test]
     fn completion_adds_line_segment_to_active_sketch() -> Result<()> {
         // Arrange
-        let mut world = make_geometry_completed_world();
-        let sketch_id = create_sketch(&mut world);
+        let mut app = make_geometry_completed_app();
+        let world = app.world_mut();
+        let sketch_id = create_sketch(world);
         world.resource_mut::<AppActiveSketch>().0 = Some(sketch_id);
+        world.resource_mut::<AppCursorIcon>().0 = Some(IconType::SketchLine);
 
         // Act
         world.trigger(GeometryOperationCompletedEvent {
@@ -245,25 +250,29 @@ mod tests {
         world.flush();
 
         // Assert
-        let mut engine = world.resource_mut::<EngineState>();
-        let tx = engine.0.begin();
-        let sketch = tx
-            .read::<SketchPerspective>()
-            .unwrap()
-            .get(&sketch_id)
-            .unwrap();
-        let edges = sketch.resolve_edges()?;
-        assert_eq!(edges.len(), 1);
-        assert_eq!((*edges[0].start).clone(), Point2::new(1.0, 2.0));
-        assert_eq!((*edges[0].end).clone(), Point2::new(4.0, 5.0));
+        {
+            let mut engine = world.resource_mut::<EngineState>();
+            let tx = engine.0.begin();
+            let sketch = tx
+                .read::<SketchPerspective>()
+                .unwrap()
+                .get(&sketch_id)
+                .unwrap();
+            let edges = sketch.resolve_edges()?;
+            assert_eq!(edges.len(), 1);
+            assert_eq!((*edges[0].start).clone(), Point2::new(1.0, 2.0));
+            assert_eq!((*edges[0].end).clone(), Point2::new(4.0, 5.0));
+        }
+        assert_eq!(world.resource::<AppCursorIcon>().0, None);
         Ok(())
     }
 
     #[test]
     fn completion_does_nothing_when_no_active_sketch_exists() -> Result<()> {
         // Arrange
-        let mut world = make_geometry_completed_world();
-        let sketch_id = create_sketch(&mut world);
+        let mut app = make_geometry_completed_app();
+        let world = app.world_mut();
+        let sketch_id = create_sketch(world);
 
         // Act
         world.trigger(GeometryOperationCompletedEvent {
