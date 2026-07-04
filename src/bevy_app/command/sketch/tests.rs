@@ -15,29 +15,22 @@ use ui_event::{
         Notification, Notifications, SketchActivatedNotification, SketchCreatedNotification,
         SketchCreationFailedNotification,
     },
-    server::ServerIntents,
 };
 
 use crate::bevy_app::{
     component::{BodyPartType, sketch::GeometryOperationStep},
     picking::PickingMessages,
-    resource::{
-        AppActiveBody, AppActiveSketch, AppCursorIcon, AppSelections, EngineState, IconType,
-    },
+    resource::{AppActiveBody, AppActiveSketch, AppSelections, EngineState, IconType},
+    test_support::TestEnv as _,
 };
 
 use super::*;
 
 fn make_world() -> World {
-    let mut world = World::new();
-    world.init_resource::<Messages<Correlation<Notifications>>>();
-    world.init_resource::<Messages<ServerIntents>>();
-    world.init_resource::<Messages<PickingMessages>>();
-    world.init_resource::<EngineState>();
-    world.init_resource::<AppActiveBody>();
-    world.init_resource::<AppActiveSketch>();
-    world.init_resource::<AppSelections>();
-    world.init_resource::<AppCursorIcon>();
+    let mut app = App::new();
+    app.setup_test_env();
+
+    let mut world = std::mem::replace(app.world_mut(), World::new());
     world.add_observer(on_create_sketch_on_plane);
     world.add_observer(on_activate_sketch);
     world.add_observer(on_request_geometry_creation_command);
