@@ -97,10 +97,13 @@ pub fn update_toggling_selection(
 
 #[cfg(test)]
 mod tests {
-    use bevy::ecs::{
-        message::{MessageReader, MessageWriter, Messages},
-        system::RunSystemOnce,
-        world::World,
+    use bevy::{
+        app::App,
+        ecs::{
+            message::{MessageReader, MessageWriter},
+            system::RunSystemOnce,
+            world::World,
+        },
     };
     use cad_base::id::EdgeId;
     use pretty_assertions::assert_eq;
@@ -109,7 +112,9 @@ mod tests {
         server::{ObjectSelectionChangeServerIntent, ServerIntent, ServerIntents},
     };
 
-    use crate::bevy_app::{component::BodyPartType, resource::AppSelections};
+    use crate::bevy_app::{
+        component::BodyPartType, resource::AppSelections, test_support::TestEnv as _,
+    };
 
     use super::*;
 
@@ -126,13 +131,11 @@ mod tests {
         }
     }
 
-    fn make_world() -> World {
-        let mut world = World::new();
-        world.init_resource::<Messages<PickingMessages>>();
-        world.init_resource::<Messages<ServerIntents>>();
-        world.init_resource::<AppSelections>();
-        world.init_resource::<IntentCapture>();
-        world
+    fn make_app() -> App {
+        let mut app = App::new();
+        app.setup_test_env();
+        app.world_mut().init_resource::<IntentCapture>();
+        app
     }
 
     fn send_select_entity(world: &mut World, entity: bevy::ecs::entity::Entity) {
@@ -165,11 +168,12 @@ mod tests {
     #[test]
     fn toggling_selection_adds_entity_with_object_type_when_not_selected() {
         // Arrange
-        let mut world = make_world();
+        let mut app = make_app();
+        let world = app.world_mut();
         let entity = world.spawn(point_type()).id();
 
         // Act
-        send_select_entity(&mut world, entity);
+        send_select_entity(world, entity);
 
         // Assert
         let selections = world.resource::<AppSelections>();
@@ -179,14 +183,15 @@ mod tests {
     #[test]
     fn toggling_selection_removes_entity_when_already_selected() {
         // Arrange
-        let mut world = make_world();
+        let mut app = make_app();
+        let world = app.world_mut();
         let entity = world.spawn(point_type()).id();
         world
             .resource_mut::<AppSelections>()
             .insert(entity, point_type());
 
         // Act
-        send_select_entity(&mut world, entity);
+        send_select_entity(world, entity);
 
         // Assert
         let selections = world.resource::<AppSelections>();
@@ -196,11 +201,12 @@ mod tests {
     #[test]
     fn toggling_selection_ignores_entity_without_object_type() {
         // Arrange
-        let mut world = make_world();
+        let mut app = make_app();
+        let world = app.world_mut();
         let entity = world.spawn_empty().id();
 
         // Act
-        send_select_entity(&mut world, entity);
+        send_select_entity(world, entity);
 
         // Assert
         let selections = world.resource::<AppSelections>();
@@ -210,7 +216,8 @@ mod tests {
     #[test]
     fn toggling_selection_accumulates_multiple_distinct_entities() {
         // Arrange
-        let mut world = make_world();
+        let mut app = make_app();
+        let world = app.world_mut();
         let entity1 = world.spawn(point_type()).id();
         let entity2 = world.spawn(edge_type()).id();
 
@@ -233,7 +240,8 @@ mod tests {
     #[test]
     fn toggling_selection_removes_only_the_deselected_entity() {
         // Arrange
-        let mut world = make_world();
+        let mut app = make_app();
+        let world = app.world_mut();
         let entity1 = world.spawn(point_type()).id();
         let entity2 = world.spawn(edge_type()).id();
         {
@@ -243,7 +251,7 @@ mod tests {
         }
 
         // Act
-        send_select_entity(&mut world, entity1);
+        send_select_entity(world, entity1);
 
         // Assert
         let selections = world.resource::<AppSelections>();
@@ -253,11 +261,12 @@ mod tests {
     #[test]
     fn sends_intent_with_selected_object_types_when_entity_selected() {
         // Arrange
-        let mut world = make_world();
+        let mut app = make_app();
+        let world = app.world_mut();
         let entity = world.spawn(point_type()).id();
 
         // Act
-        send_select_entity(&mut world, entity);
+        send_select_entity(world, entity);
 
         // Assert
         let intent = captured_selection_intent(&world).expect("intent should be sent");
@@ -267,14 +276,15 @@ mod tests {
     #[test]
     fn sends_intent_with_empty_selections_when_entity_deselected() {
         // Arrange
-        let mut world = make_world();
+        let mut app = make_app();
+        let world = app.world_mut();
         let entity = world.spawn(point_type()).id();
         world
             .resource_mut::<AppSelections>()
             .insert(entity, point_type());
 
         // Act
-        send_select_entity(&mut world, entity);
+        send_select_entity(world, entity);
 
         // Assert
         let intent = captured_selection_intent(&world).expect("intent should be sent");
@@ -284,7 +294,8 @@ mod tests {
     #[test]
     fn sends_intent_with_remaining_selections_after_partial_deselection() {
         // Arrange
-        let mut world = make_world();
+        let mut app = make_app();
+        let world = app.world_mut();
         let entity1 = world.spawn(point_type()).id();
         let entity2 = world.spawn(edge_type()).id();
         {
@@ -294,7 +305,7 @@ mod tests {
         }
 
         // Act
-        send_select_entity(&mut world, entity1);
+        send_select_entity(world, entity1);
 
         // Assert
         let intent = captured_selection_intent(&world).expect("intent should be sent");
