@@ -120,8 +120,12 @@ pub fn on_geometory_operation_completed(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use bevy::app::App;
+    use bevy::ecs::system::RunSystemOnce;
     use bevy::input::ButtonInput;
-    use bevy::prelude::*;
+    use bevy::math::DVec2;
+    use bevy::prelude::{Entity, MouseButton, Schedule, With, World};
+    use bevy::window::{PrimaryWindow, Window};
     use cad_base::{
         body::BodyPerspective,
         plane::Plane,
@@ -131,7 +135,11 @@ mod tests {
     use pretty_assertions::assert_eq;
     use ui_event::SketchGeometryOperation;
 
-    use crate::bevy_app::component::{RequestedGeometryOperation, sketch::GeometryOperation};
+    use crate::bevy_app::test_support::WindowOp as _;
+    use crate::bevy_app::{
+        component::{RequestedGeometryOperation, sketch::GeometryOperation},
+        test_support::TestEnv as _,
+    };
 
     fn default_plane() -> Plane {
         Plane::new_xy()
@@ -141,6 +149,12 @@ mod tests {
         let mut world = World::new();
         world.init_resource::<ButtonInput<MouseButton>>();
         world
+    }
+
+    fn make_app() -> App {
+        let mut app = App::new();
+        app.setup_test_env();
+        app
     }
 
     fn make_geometry_completed_world() -> World {
@@ -190,26 +204,29 @@ mod tests {
     #[test]
     fn system_does_not_despawn_entity_when_no_camera_exists() -> Result<()> {
         // Arrange
-        let mut world = make_world();
+        let mut app = make_app();
         let plane = default_plane();
-        let entity = world
+        let entity = app
+            .world_mut()
             .spawn((
                 RequestedGeometryOperation(SketchGeometryOperation::LineSegment),
                 GeometryOperation::from_geometry(SketchGeometryOperation::LineSegment, &plane),
             ))
             .id();
-        world.spawn(Window::default()).insert(PrimaryWindow);
-        world
-            .resource_mut::<ButtonInput<MouseButton>>()
-            .press(MouseButton::Left);
+        let camera_entity = app
+            .world_mut()
+            .query_filtered::<Entity, With<MainCamera>>()
+            .single(app.world())
+            .unwrap();
+        app.world_mut().entity_mut(camera_entity).despawn();
 
         // Act
-        let mut schedule = Schedule::default();
-        schedule.add_systems(handle_geometry_operation);
-        schedule.run(&mut world);
+        app.click_at(DVec2::new(400.0, 300.0), |w| {
+            w.run_system_once(handle_geometry_operation).unwrap()
+        });
 
         // Assert - entity still exists because no camera was found
-        assert!(world.get_entity(entity).is_ok());
+        assert!(app.world().get_entity(entity).is_ok());
         Ok(())
     }
 
@@ -223,7 +240,7 @@ mod tests {
         // Act
         world.trigger(GeometryOperationCompletedEvent {
             operation: SketchGeometryOperation::LineSegment,
-            points: vec![Vec3::new(1.0, 2.0, 3.0), Vec3::new(4.0, 5.0, 6.0)],
+            points: vec![Vec3::new(1.0, 2.0, 0.0), Vec3::new(4.0, 5.0, 0.0)],
         });
         world.flush();
 
@@ -251,7 +268,7 @@ mod tests {
         // Act
         world.trigger(GeometryOperationCompletedEvent {
             operation: SketchGeometryOperation::LineSegment,
-            points: vec![Vec3::new(1.0, 2.0, 3.0), Vec3::new(4.0, 5.0, 6.0)],
+            points: vec![Vec3::new(1.0, 2.0, 0.0), Vec3::new(4.0, 5.0, 0.0)],
         });
         world.flush();
 

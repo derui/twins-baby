@@ -22,7 +22,6 @@ use crate::bevy_app::{
     resource::{
         AppActiveBody, AppActiveSketch, AppCursorIcon, AppSelections, EngineState, IconType,
     },
-    support::Vec3Ext,
 };
 
 mod geometry;
