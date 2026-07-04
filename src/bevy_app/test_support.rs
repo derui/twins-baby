@@ -1,12 +1,25 @@
-use bevy::{camera::CameraPlugin, ecs::system::RunSystemOnce as _, input::InputPlugin, prelude::*};
+use bevy::{
+    camera::{CameraPlugin, CameraProjection as _},
+    ecs::system::RunSystemOnce as _,
+    input::InputPlugin,
+    prelude::*,
+};
 
-use crate::bevy_app::{camera::setup_camera, resource::AppResourceExt as _};
+use crate::bevy_app::{
+    camera::{MainCamera, setup_camera},
+    resource::AppResourceExt as _,
+};
 
 /// A trait for setting up the twins-baby app for testing purposes.
 ///
 /// This setup should be same as default configuration. Use this trait when the system is too complex, such as need
 /// GlobalTransform and camera, and other application resources needs.
 /// But keep setup simple as possible, just only need some resources, does not need use this.
+///
+/// Support this trait are:
+/// - Fixed size primary window and main camera configuration
+/// - setup application resources and some required resources
+/// - add some plugins minimal for test.
 pub trait TestEnv {
     /// Setup whole resources for twins-baby app.
     fn setup_test_env(&mut self) -> &mut Self;
@@ -32,6 +45,28 @@ impl TestEnv for App {
         world
             .run_system_once(setup_camera)
             .expect("should be success to setup camera");
+
+        {
+            let camera_entity = world
+                .query_filtered::<Entity, With<MainCamera>>()
+                .single(world)
+                .unwrap();
+
+            // initialize with physical view
+            let mut camera = world.get_mut::<Camera>(camera_entity).unwrap();
+            camera.viewport = Some(bevy::camera::Viewport {
+                physical_size: UVec2::new(800, 600),
+                ..default()
+            });
+            camera.computed.target_info = Some(bevy::camera::RenderTargetInfo {
+                physical_size: UVec2::new(800, 600),
+                scale_factor: 1.0,
+            });
+
+            let mut projection = PerspectiveProjection::default();
+            projection.update(800.0, 600.0);
+            camera.computed.clip_from_view = projection.get_clip_from_view();
+        }
 
         self
     }
