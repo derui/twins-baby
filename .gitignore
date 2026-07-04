@@ -1,6 +1,6 @@
 .env
 .direnv
-.claude/
+.claude/settings.local.json
 .agent-shell/
 test-results/
 playwright-report/
