@@ -1,10 +1,15 @@
 // Mouse handler for sketch commands.
-use bevy::{input::mouse::MouseMotion, prelude::*, window::PrimaryWindow};
+use bevy::{prelude::*, window::PrimaryWindow};
+use cad_base::sketch::{Geometry, LineSegment, Point2, SketchPerspective};
 use ui_event::SketchGeometryOperation;
 
 use crate::bevy_app::{
     camera::MainCamera,
-    component::{RequestedGeometryOperation, sketch::GeometryOperation},
+    component::{
+        RequestedGeometryOperation,
+        sketch::{GeometryOperation, StepResult},
+    },
+    resource::{AppActiveSketch, EngineState},
     support::Vec3Ext,
 };
 
@@ -59,15 +64,54 @@ pub fn handle_geometry_operation(
     let normal = global_transform.transform_point(geo.plane.normal.to_vec3());
 
     if let Some(point) = ray.plane_intersection_point(ray.origin, InfinitePlane3d::new(normal)) {
-        if let Err(_) = geo.forward_step(point) {
+        // convert 2D.
+        let point = point - normal;
+        if let StepResult::Completed = geo.forward_step(point) {
             // after operation finished, send event.
             commands.entity(e).despawn();
 
             commands.trigger(GeometryOperationCompletedEvent {
                 operation: ope.0.clone(),
                 points: geo.step_result().clone(),
-            })
+            });
         }
+    }
+}
+
+/**
+ * Handle [GeometryOperationCompletedEvent] after.
+ *
+ * This handler will create geometry to current sketch
+ */
+pub fn on_geometory_operation_completed(
+    trigger: On<GeometryOperationCompletedEvent>,
+    mut engine: ResMut<EngineState>,
+    active_sketch: Res<AppActiveSketch>,
+) {
+    let event = trigger.event();
+    let mut t = engine.0.begin();
+
+    let Some(sketch) = t.modify::<SketchPerspective>() else {
+        return;
+    };
+
+    let Some(active_sketch) = active_sketch.0.and_then(|s| sketch.get_mut(&s)) else {
+        return;
+    };
+
+    match event.operation {
+        SketchGeometryOperation::LineSegment => {
+            let [start, end] = event.points.as_slice() else {
+                panic!("line segment operation should contain exactly two points");
+            };
+
+            let start = Point2::new(start.x, start.y);
+            let end = Point2::new(end.x, end.y);
+            active_sketch.add_geometry(|scope| {
+                Geometry::LineSegment(LineSegment::from_points(&start, &end, scope))
+            });
+        }
+        SketchGeometryOperation::Rectangle => todo!("rectangle completion is not implemented yet"),
     }
 }
 

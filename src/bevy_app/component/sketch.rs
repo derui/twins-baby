@@ -11,6 +11,13 @@ pub enum GeometryOperationStep {
     Point,
 }
 
+/// Result of the step operation, indicating whether to continue or if the operation is completed.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum StepResult {
+    Continue,
+    Completed,
+}
+
 /// Defines an operation used to create geometry within a sketch.
 ///
 /// This structure encapsulates the necessary information to instruct a CAD kernel
@@ -73,20 +80,24 @@ impl GeometryOperation {
 
     /// Forward the operation by one step with the given point.
     ///
-    /// # Errors
-    /// Returns an error if the operation is already completed.
+    /// # Returns
+    /// The next state of the operation after applying the point.
     ///
     /// # Arguments
     /// * `point` - The point obtained from the mouse operation for the current step.
-    pub fn forward_step(&mut self, point: Vec3) -> eyre::Result<()> {
+    pub fn forward_step(&mut self, point: Vec3) -> StepResult {
         if self.current_step >= self.steps.len() {
-            return Err(eyre!("Can not forward anymore"));
+            return StepResult::Completed;
         }
 
         self.step_result.push(point);
         self.current_step += 1;
 
-        Ok(())
+        if self.current_step >= self.steps.len() {
+            StepResult::Completed
+        } else {
+            StepResult::Continue
+        }
     }
 
     /// Backward the operation by one step.
@@ -164,24 +175,27 @@ mod tests {
         let result = op.forward_step(point);
 
         // Assert
-        assert!(result.is_ok());
+        assert_eq!(result, StepResult::Continue);
+        assert_eq!(op.step_result(), &vec![point]);
 
         Ok(())
     }
 
     #[test]
-    fn forward_step_returns_error_when_all_steps_completed() -> Result<()> {
+    fn forward_step_returns_completed_when_all_steps_completed() -> Result<()> {
         // Arrange
         let plane = default_plane();
         let steps = &[GeometryOperationStep::Point];
         let mut op = GeometryOperation::new(steps, &plane)?;
-        op.forward_step(Vec3::ZERO)?;
+        let first_result = op.forward_step(Vec3::ZERO);
 
         // Act
         let result = op.forward_step(Vec3::ONE);
 
         // Assert
-        assert!(result.is_err());
+        assert_eq!(first_result, StepResult::Completed);
+        assert_eq!(result, StepResult::Completed);
+        assert_eq!(op.step_result(), &vec![Vec3::ZERO]);
 
         Ok(())
     }
@@ -209,12 +223,13 @@ mod tests {
         let steps = &[GeometryOperationStep::Point];
         let mut op = GeometryOperation::new(steps, &plane)?;
         let point = Vec3::new(1.0, 2.0, 3.0);
-        op.forward_step(point)?;
+        let result = op.forward_step(point);
 
         // Act
         let returned = op.backward_step()?;
 
         // Assert
+        assert_eq!(result, StepResult::Completed);
         assert_eq!(returned, point);
 
         Ok(())
@@ -228,14 +243,16 @@ mod tests {
         let mut op = GeometryOperation::new(steps, &plane)?;
         let p1 = Vec3::new(1.0, 0.0, 0.0);
         let p2 = Vec3::new(0.0, 1.0, 0.0);
-        op.forward_step(p1)?;
-        op.forward_step(p2)?;
+        let first_result = op.forward_step(p1);
+        let second_result = op.forward_step(p2);
 
         // Act
         let r2 = op.backward_step()?;
         let r1 = op.backward_step()?;
 
         // Assert
+        assert_eq!(first_result, StepResult::Continue);
+        assert_eq!(second_result, StepResult::Completed);
         assert_eq!(r2, p2);
         assert_eq!(r1, p1);
 
@@ -248,14 +265,15 @@ mod tests {
         let plane = default_plane();
         let steps = &[GeometryOperationStep::Point];
         let mut op = GeometryOperation::new(steps, &plane)?;
-        op.forward_step(Vec3::ZERO)?;
+        let first_result = op.forward_step(Vec3::ZERO);
         op.backward_step()?;
 
         // Act
         let result = op.forward_step(Vec3::ONE);
 
         // Assert
-        assert!(result.is_ok());
+        assert_eq!(first_result, StepResult::Completed);
+        assert_eq!(result, StepResult::Completed);
 
         Ok(())
     }
