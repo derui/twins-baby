@@ -1,8 +1,8 @@
+//! For cursor-related UI
+
 use bevy::{prelude::*, window::PrimaryWindow};
 
 use crate::bevy_app::{component::ui::CursorIconTag, resource::AppCursorIcon};
-
-///! For cursor-related UI
 
 pub(super) const ICON_SIZE: f32 = 24.0;
 
