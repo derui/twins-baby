@@ -29,10 +29,7 @@ use crate::bevy_app::{
     resize::WindowResizePlugin,
     resource::AppResourceExt,
     setup::setup_scene,
-    ui::{
-        AppUiExt, AxesGizmoGroup, SketchBaseGizmoGroup, anchor::transform_ui_anchors, draw_gizmos,
-        draw_sketch_gizmos,
-    },
+    ui::{AppUiExt, anchor::transform_ui_anchors, draw_gizmos, draw_sketch_gizmos},
 };
 
 /// Settings for bevy application, to pass massive message recievers

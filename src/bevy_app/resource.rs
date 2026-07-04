@@ -5,13 +5,12 @@ use std::ops::Deref;
 
 use bevy::{
     app::App,
-    ecs::{entity::Entity, resource::Resource},
+    ecs::{entity::Entity, resource::Resource, world::World},
 };
 use cad_base::{
     CadEngine,
     id::{BodyId, SketchId},
 };
-use ui_event::SketchGeometryOperation;
 
 use crate::bevy_app::component::BodyPartType;
 
@@ -29,6 +28,18 @@ impl AppResourceExt for App {
             .init_resource::<AppActiveSketch>()
             .init_resource::<VisualConfiguration>()
             .init_resource::<AppCursorIcon>()
+    }
+}
+
+impl AppResourceExt for World {
+    fn init_app_resources(&mut self) -> &mut Self {
+        self.init_resource::<EngineState>();
+        self.init_resource::<AppActiveBody>();
+        self.init_resource::<AppSelections>();
+        self.init_resource::<AppActiveSketch>();
+        self.init_resource::<VisualConfiguration>();
+        self.init_resource::<AppCursorIcon>();
+        self
     }
 }
 
