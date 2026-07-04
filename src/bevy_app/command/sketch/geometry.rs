@@ -113,6 +113,8 @@ pub fn on_geometory_operation_completed(
         }
         SketchGeometryOperation::Rectangle => todo!("rectangle completion is not implemented yet"),
     }
+
+    t.commit();
 }
 
 #[cfg(test)]
@@ -120,8 +122,13 @@ mod tests {
     use super::*;
     use bevy::input::ButtonInput;
     use bevy::prelude::*;
-    use cad_base::plane::Plane;
+    use cad_base::{
+        body::BodyPerspective,
+        plane::Plane,
+        sketch::{AttachableTarget, Point2},
+    };
     use eyre::Result;
+    use pretty_assertions::assert_eq;
     use ui_event::SketchGeometryOperation;
 
     use crate::bevy_app::component::{RequestedGeometryOperation, sketch::GeometryOperation};
@@ -134,6 +141,28 @@ mod tests {
         let mut world = World::new();
         world.init_resource::<ButtonInput<MouseButton>>();
         world
+    }
+
+    fn make_geometry_completed_world() -> World {
+        let mut world = World::new();
+        world.init_resource::<EngineState>();
+        world.init_resource::<AppActiveSketch>();
+        world.add_observer(on_geometory_operation_completed);
+        world
+    }
+
+    fn create_sketch(world: &mut World) -> cad_base::id::SketchId {
+        let mut engine = world.resource_mut::<EngineState>();
+        let mut tx = engine.0.begin();
+        let bodies = tx.modify::<BodyPerspective>().unwrap();
+        let body_id = bodies.add_body();
+        let plane_ref = bodies.to_x_plane_ref(&body_id).unwrap();
+        let sketch_id = tx
+            .modify::<SketchPerspective>()
+            .unwrap()
+            .add_sketch(&AttachableTarget::Plane(plane_ref));
+        tx.commit();
+        sketch_id
     }
 
     #[test]
@@ -181,6 +210,60 @@ mod tests {
 
         // Assert - entity still exists because no camera was found
         assert!(world.get_entity(entity).is_ok());
+        Ok(())
+    }
+
+    #[test]
+    fn completion_adds_line_segment_to_active_sketch() -> Result<()> {
+        // Arrange
+        let mut world = make_geometry_completed_world();
+        let sketch_id = create_sketch(&mut world);
+        world.resource_mut::<AppActiveSketch>().0 = Some(sketch_id);
+
+        // Act
+        world.trigger(GeometryOperationCompletedEvent {
+            operation: SketchGeometryOperation::LineSegment,
+            points: vec![Vec3::new(1.0, 2.0, 3.0), Vec3::new(4.0, 5.0, 6.0)],
+        });
+        world.flush();
+
+        // Assert
+        let mut engine = world.resource_mut::<EngineState>();
+        let tx = engine.0.begin();
+        let sketch = tx
+            .read::<SketchPerspective>()
+            .unwrap()
+            .get(&sketch_id)
+            .unwrap();
+        let edges = sketch.resolve_edges()?;
+        assert_eq!(edges.len(), 1);
+        assert_eq!((*edges[0].start).clone(), Point2::new(1.0, 2.0));
+        assert_eq!((*edges[0].end).clone(), Point2::new(4.0, 5.0));
+        Ok(())
+    }
+
+    #[test]
+    fn completion_does_nothing_when_no_active_sketch_exists() -> Result<()> {
+        // Arrange
+        let mut world = make_geometry_completed_world();
+        let sketch_id = create_sketch(&mut world);
+
+        // Act
+        world.trigger(GeometryOperationCompletedEvent {
+            operation: SketchGeometryOperation::LineSegment,
+            points: vec![Vec3::new(1.0, 2.0, 3.0), Vec3::new(4.0, 5.0, 6.0)],
+        });
+        world.flush();
+
+        // Assert
+        let mut engine = world.resource_mut::<EngineState>();
+        let tx = engine.0.begin();
+        let sketch = tx
+            .read::<SketchPerspective>()
+            .unwrap()
+            .get(&sketch_id)
+            .unwrap();
+        assert_eq!(sketch.resolve_edges()?.len(), 0);
         Ok(())
     }
 }
