@@ -11,7 +11,7 @@ use std::collections::HashMap;
 
 use crate::{
     feature::operation::Operation,
-    id::{IdStore, SketchId, SolidId},
+    id::{BodyId, IdStore, SketchId, SolidId},
     plane::Plane,
     sketch::Sketch,
     solid::{Solid, face::Face},
@@ -33,6 +33,9 @@ pub struct Feature {
     /// sketch id to apply operation.
     pub sketch: Im<SketchId>,
 
+    /// Body id where this feature is attached.
+    pub body: Im<BodyId>,
+
     /// Feature operation
     pub operation: Im<Operation>,
 
@@ -40,7 +43,7 @@ pub struct Feature {
     pub status: Im<FeatureStatus>,
 
     /// Solids what created by this feature.
-    pub solids: Im<Option<HashMap<SolidId, Solid>>>,
+    pub solids: Im<Option<Vec<Solid>>>,
 
     _immutable: (),
 }
@@ -48,13 +51,14 @@ pub struct Feature {
 impl Feature {
     /// Get new feature
     #[tracing::instrument(err)]
-    pub fn new(name: &str, sketch: SketchId, operation: &Operation) -> Result<Self> {
+    pub fn new(name: &str, body: BodyId, sketch: SketchId, operation: &Operation) -> Result<Self> {
         if name.trim().is_empty() {
             return Err(color_eyre::eyre::eyre!("Name must not be empty"));
         }
 
         Ok(Feature {
             name: name.trim().to_string().into(),
+            body: body.into(),
             sketch: sketch.into(),
             operation: operation.clone().into(),
             status: FeatureStatus::Stale.into(),
@@ -83,14 +87,9 @@ impl Feature {
     pub fn evaluate<'a, E: Evaluate>(
         &mut self,
         context: &'a FeatureContext<'a>,
-        solid_id_gen: &mut IdStore<SolidId>,
     ) -> Result<(), EvaluateError> {
         match E::evaluate(self, context) {
             Ok(solids) => {
-                let solids = solids
-                    .into_iter()
-                    .map(|s| (solid_id_gen.generate(), s))
-                    .collect::<HashMap<_, _>>();
                 self.solids = Some(solids).into();
                 self.status = FeatureStatus::Valid.into();
                 Ok(())
@@ -161,6 +160,10 @@ mod tests {
         SketchId::from(1)
     }
 
+    fn make_body_id() -> BodyId {
+        BodyId::from(2)
+    }
+
     #[rstest]
     #[case("")]
     #[case("   ")]
@@ -168,10 +171,11 @@ mod tests {
     fn test_new_returns_error_for_blank_name(#[case] name: &str) {
         // arrange
         let sketch = make_sketch_id();
+        let body = make_body_id();
         let op = make_operation();
 
         // act
-        let result = Feature::new(name, sketch, &op);
+        let result = Feature::new(name, body, sketch, &op);
 
         // assert
         assert!(result.is_err());
@@ -181,10 +185,11 @@ mod tests {
     fn test_new_creates_feature_with_stale_status() {
         // arrange
         let sketch = make_sketch_id();
+        let body = make_body_id();
         let op = make_operation();
 
         // act
-        let feature = Feature::new("Pad1", sketch, &op).unwrap();
+        let feature = Feature::new("Pad1", body, sketch, &op).unwrap();
 
         // assert
         assert_eq!(*feature.status, FeatureStatus::Stale);
@@ -194,10 +199,11 @@ mod tests {
     fn test_new_trims_name() {
         // arrange
         let sketch = make_sketch_id();
+        let body = make_body_id();
         let op = make_operation();
 
         // act
-        let feature = Feature::new("  Pad1  ", sketch, &op).unwrap();
+        let feature = Feature::new("  Pad1  ", body, sketch, &op).unwrap();
 
         // assert
         assert_eq!(*feature.name, "Pad1");
@@ -210,8 +216,9 @@ mod tests {
     fn test_set_name_returns_error_for_blank_name(#[case] name: &str) {
         // arrange
         let sketch = make_sketch_id();
+        let body = make_body_id();
         let op = make_operation();
-        let mut feature = Feature::new("Pad1", sketch, &op).unwrap();
+        let mut feature = Feature::new("Pad1", body, sketch, &op).unwrap();
 
         // act
         let result = feature.set_name(name);
@@ -224,8 +231,9 @@ mod tests {
     fn test_set_name_updates_name() {
         // arrange
         let sketch = make_sketch_id();
+        let body = make_body_id();
         let op = make_operation();
-        let mut feature = Feature::new("Pad1", sketch, &op).unwrap();
+        let mut feature = Feature::new("Pad1", body, sketch, &op).unwrap();
 
         // act
         feature.set_name("NewName").unwrap();
@@ -238,8 +246,9 @@ mod tests {
     fn test_set_name_trims_name() {
         // arrange
         let sketch = make_sketch_id();
+        let body = make_body_id();
         let op = make_operation();
-        let mut feature = Feature::new("Pad1", sketch, &op).unwrap();
+        let mut feature = Feature::new("Pad1", body, sketch, &op).unwrap();
 
         // act
         feature.set_name("  Trimmed  ").unwrap();
@@ -278,14 +287,12 @@ mod tests {
     #[test]
     fn test_evaluate_sets_status_to_valid_on_success() {
         // arrange
-        let mut feature = Feature::new("Pad1", make_sketch_id(), &make_operation()).unwrap();
+        let mut feature =
+            Feature::new("Pad1", make_body_id(), make_sketch_id(), &make_operation()).unwrap();
         let context = make_context();
-        let mut solid_id_gen = IdStore::of();
 
         // act
-        feature
-            .evaluate::<SuccessEvaluator>(&context, &mut solid_id_gen)
-            .unwrap();
+        feature.evaluate::<SuccessEvaluator>(&context).unwrap();
 
         // assert
         assert_eq!(*feature.status, FeatureStatus::Valid);
@@ -294,14 +301,12 @@ mod tests {
     #[test]
     fn test_evaluate_stores_solids_on_success() {
         // arrange
-        let mut feature = Feature::new("Pad1", make_sketch_id(), &make_operation()).unwrap();
+        let mut feature =
+            Feature::new("Pad1", make_body_id(), make_sketch_id(), &make_operation()).unwrap();
         let context = make_context();
-        let mut solid_id_gen = IdStore::of();
 
         // act
-        feature
-            .evaluate::<SuccessEvaluator>(&context, &mut solid_id_gen)
-            .unwrap();
+        feature.evaluate::<SuccessEvaluator>(&context).unwrap();
 
         // assert
         assert!(feature.solids.is_some());
@@ -310,12 +315,12 @@ mod tests {
     #[test]
     fn test_evaluate_sets_status_to_error_on_failure() {
         // arrange
-        let mut feature = Feature::new("Pad1", make_sketch_id(), &make_operation()).unwrap();
+        let mut feature =
+            Feature::new("Pad1", make_body_id(), make_sketch_id(), &make_operation()).unwrap();
         let context = make_context();
-        let mut solid_id_gen = IdStore::of();
 
         // act
-        let result = feature.evaluate::<FailEvaluator>(&context, &mut solid_id_gen);
+        let result = feature.evaluate::<FailEvaluator>(&context);
 
         // assert
         assert!(result.is_err());
@@ -328,12 +333,12 @@ mod tests {
     #[test]
     fn test_evaluate_does_not_update_solids_on_failure() {
         // arrange
-        let mut feature = Feature::new("Pad1", make_sketch_id(), &make_operation()).unwrap();
+        let mut feature =
+            Feature::new("Pad1", make_body_id(), make_sketch_id(), &make_operation()).unwrap();
         let context = make_context();
-        let mut solid_id_gen = IdStore::of();
 
         // act
-        let _ = feature.evaluate::<FailEvaluator>(&context, &mut solid_id_gen);
+        let _ = feature.evaluate::<FailEvaluator>(&context);
 
         // assert
         assert!(feature.solids.is_none());
