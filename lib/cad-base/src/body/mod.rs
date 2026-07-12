@@ -21,18 +21,23 @@ enum BodyPlane {
 }
 
 /// A id-like reference of the plane. Plane is tightly coupled on the body.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PlaneRef(BodyId, BodyPlane);
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PlaneRef {
+    pub body_id: Im<BodyId>,
+    pub plane: Im<BodyPlane>,
+}
 
 impl PlaneRef {
-    /// Get the body id of the plane reference.
-    pub fn body_id(&self) -> BodyId {
-        self.0
+    pub fn new(body_id: BodyId, plane: BodyPlane) -> Self {
+        PlaneRef {
+            body_id: body_id.into(),
+            plane: plane.into(),
+        }
     }
 
     /// Get the plane entity from the body
     pub fn to_plane_from(&self, body: &Body) -> Plane {
-        match self.1 {
+        match *self.plane {
             BodyPlane::X => (*body.x_plane).clone(),
             BodyPlane::Y => (*body.y_plane).clone(),
             BodyPlane::Z => (*body.z_plane).clone(),
