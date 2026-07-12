@@ -225,7 +225,7 @@ mod sketch {
         #[test]
         fn add_geometry_returns_geometry_id() {
             // Arrange
-            let mut sketch = Sketch::new("TestSketch",BodyId::from(1), &make_attach_target());
+            let mut sketch = Sketch::new("TestSketch", BodyId::from(1), &make_attach_target());
             let start = Point2::new(0.0, 0.0);
             let end = Point2::new(1.0, 1.0);
 

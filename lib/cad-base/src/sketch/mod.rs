@@ -17,10 +17,14 @@ use tracing::instrument;
 use std::collections::HashMap;
 
 use crate::{
-    body::BodyReader, id::{BodyId, GeometryId, IdStore, VariableId}, plane::Plane, refs::{FaceRef, PlaneRef}, sketch::{
+    body::BodyReader,
+    id::{BodyId, GeometryId, IdStore, VariableId},
+    plane::Plane,
+    refs::{FaceRef, PlaneRef},
+    sketch::{
         edge::SketchEdge,
         scope::{ConstraintScope, VariableScope},
-    }, 
+    },
 };
 
 use color_eyre::eyre::{Result, eyre};

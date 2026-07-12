@@ -1,7 +1,7 @@
 use immutable::Im;
 
 use crate::{
-    id::{FaceId, SolidId},
+    id::{BodyId, FaceId, SolidId},
     plane::Plane,
     solid::{Solid, face::Face},
 };
@@ -9,15 +9,15 @@ use crate::{
 /// A id-like reference of a face in a solid.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FaceRef {
-    pub solid_id: Im<SolidId>,
+    pub body_id: Im<BodyId>,
     pub face_id: Im<FaceId>,
 }
 
 impl FaceRef {
     /// Create a new FaceRef with the given solid ID and face ID.
-    pub fn new(solid_id: SolidId, face_id: FaceId) -> Self {
+    pub fn new(body_id: BodyId, face_id: FaceId) -> Self {
         FaceRef {
-            solid_id: solid_id.into(),
+            body_id: body_id.into(),
             face_id: face_id.into(),
         }
     }
