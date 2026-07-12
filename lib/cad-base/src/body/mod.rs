@@ -20,6 +20,12 @@ enum BodyPlane {
     Z,
 }
 
+/// A trait for reading body information by its ID. Implementors of this trait should provide a method to retrieve a `Body` instance given its `BodyId`.
+pub trait BodyReader {
+    /// Read a body by its ID.
+    fn read(&self, id: BodyId) -> Option<Body>;
+}
+
 /// A id-like reference of the plane. Plane is tightly coupled on the body.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PlaneRef {
