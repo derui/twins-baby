@@ -27,26 +27,3 @@ impl Vec3Ext for Vector3 {
         }
     }
 }
-
-pub trait PlaneExt {
-    /// Get the normal vector of the plane as Vec3
-    fn normal_vec3<T: BodyReader>(&self, reader: T) -> Vec3;
-}
-
-impl PlaneExt for AttachableTarget {
-    fn normal_vec3<T: BodyReader>(&self, reader: T) -> Vec3 {
-        match &self {
-            &AttachableTarget::Plane(plane_ref) => {
-                let body = reader
-                    .read(*plane_ref.body_id)
-                    .expect(format!("can not found body: {:?}", *plane_ref.body_id).as_str());
-                let plane = plane_ref.to_plane_from(&body);
-                plane.normal.to_vec3()
-            }
-            &AttachableTarget::Face(_) => {
-                // TODO: derive normal from solid face
-                Vec3::Z
-            }
-        }
-    }
-}
