@@ -40,6 +40,7 @@ fn make_world() -> World {
 fn create_sketch(world: &mut World, plane_ref: cad_base::body::PlaneRef) -> SketchId {
     let mut engine = world.resource_mut::<EngineState>();
     let mut tx = engine.0.begin();
+    let body_id = *plane_ref.body_id;
     let sketch_id;
     {
         let sketch_p = tx.modify::<SketchPerspective>().unwrap();
@@ -47,10 +48,7 @@ fn create_sketch(world: &mut World, plane_ref: cad_base::body::PlaneRef) -> Sket
     }
     {
         let body_p = tx.modify::<BodyPerspective>().unwrap();
-        body_p
-            .get_mut(&plane_ref.body_id())
-            .unwrap()
-            .add_sketch(&sketch_id);
+        body_p.get_mut(&body_id).unwrap().add_sketch(&sketch_id);
     }
     tx.commit();
     sketch_id
@@ -71,11 +69,13 @@ fn writes_sketch_created_notification_when_plane_selected() -> Result<()> {
     // Arrange
     let mut world = make_world();
     let plane_ref = create_body_with_plane(&mut world);
-    let entity = world.spawn(BodyPartType(ObjectType::Plane(plane_ref))).id();
+    let entity = world
+        .spawn(BodyPartType(ObjectType::Plane(plane_ref.clone())))
+        .id();
     {
-        world.resource_mut::<AppActiveBody>().0 = Some(plane_ref.body_id());
+        world.resource_mut::<AppActiveBody>().0 = Some(*plane_ref.body_id);
         *world.resource_mut::<AppSelections>() =
-            vec![(entity, BodyPartType(ObjectType::Plane(plane_ref)))].into();
+            vec![(entity, BodyPartType(ObjectType::Plane(plane_ref.clone())))].into();
     }
 
     // Act
@@ -96,7 +96,7 @@ fn writes_sketch_created_notification_when_plane_selected() -> Result<()> {
         .unwrap();
     assert_eq!(*notifications[0].id, CommandId::new(1));
     assert!(!notif.name.is_empty());
-    assert_eq!(*notif.body_id, plane_ref.body_id());
+    assert_eq!(notif.body_id, plane_ref.body_id);
     Ok(())
 }
 
@@ -105,9 +105,11 @@ fn sends_picking_clear_message_after_sketch_creation() -> Result<()> {
     // Arrange
     let mut world = make_world();
     let plane_ref = create_body_with_plane(&mut world);
-    let entity = world.spawn(BodyPartType(ObjectType::Plane(plane_ref))).id();
+    let entity = world
+        .spawn(BodyPartType(ObjectType::Plane(plane_ref.clone())))
+        .id();
     {
-        world.resource_mut::<AppActiveBody>().0 = Some(plane_ref.body_id());
+        world.resource_mut::<AppActiveBody>().0 = Some(*plane_ref.body_id);
         *world.resource_mut::<AppSelections>() =
             vec![(entity, BodyPartType(ObjectType::Plane(plane_ref)))].into();
     }
@@ -252,9 +254,9 @@ fn spawns_geometry_operation_entity_when_none_exists() -> Result<()> {
     // Arrange
     let mut world = make_world();
     let plane_ref = create_body_with_plane(&mut world);
-    let sketch_id = create_sketch(&mut world, plane_ref);
+    let sketch_id = create_sketch(&mut world, plane_ref.clone());
     {
-        world.resource_mut::<AppActiveBody>().0 = Some(plane_ref.body_id());
+        world.resource_mut::<AppActiveBody>().0 = Some(*plane_ref.body_id);
         world.resource_mut::<AppActiveSketch>().0 = Some(sketch_id);
     }
 
@@ -288,9 +290,9 @@ fn updates_existing_entity_when_geometry_operation_already_exists() -> Result<()
     // Arrange
     let mut world = make_world();
     let plane_ref = create_body_with_plane(&mut world);
-    let sketch_id = create_sketch(&mut world, plane_ref);
+    let sketch_id = create_sketch(&mut world, plane_ref.clone());
     {
-        world.resource_mut::<AppActiveBody>().0 = Some(plane_ref.body_id());
+        world.resource_mut::<AppActiveBody>().0 = Some(*plane_ref.body_id);
         world.resource_mut::<AppActiveSketch>().0 = Some(sketch_id);
     }
     world.trigger(Correlation::new(
@@ -327,9 +329,9 @@ fn spawns_rectangle_operation_with_correct_steps() -> Result<()> {
     // Arrange
     let mut world = make_world();
     let plane_ref = create_body_with_plane(&mut world);
-    let sketch_id = create_sketch(&mut world, plane_ref);
+    let sketch_id = create_sketch(&mut world, plane_ref.clone());
     {
-        world.resource_mut::<AppActiveBody>().0 = Some(plane_ref.body_id());
+        world.resource_mut::<AppActiveBody>().0 = Some(*plane_ref.body_id);
         world.resource_mut::<AppActiveSketch>().0 = Some(sketch_id);
     }
 

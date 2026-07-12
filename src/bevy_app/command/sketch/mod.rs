@@ -39,10 +39,10 @@ fn to_attachable_target(engine: &AppActiveBody, selections: &AppSelections) -> O
         return None;
     }
 
-    match selections[0] {
+    match &selections[0] {
         (_, BodyPartType(ObjectType::Plane(plane_ref))) => {
-            if plane_ref.body_id() == body_id {
-                Some(plane_ref)
+            if *plane_ref.body_id == body_id {
+                Some(plane_ref.clone())
             } else {
                 None
             }
@@ -88,7 +88,7 @@ pub(super) fn on_create_sketch_on_plane(
             return;
         };
 
-        created_sketch = sketch_p.add_sketch(&AttachableTarget::Plane(target));
+        created_sketch = sketch_p.add_sketch(&AttachableTarget::Plane(target.clone()));
         sketch_name = sketch_p
             .get(&created_sketch)
             .map(|v| (*v.name).clone())
@@ -97,7 +97,7 @@ pub(super) fn on_create_sketch_on_plane(
 
     let camera_target: Plane;
     if let Some(body_p) = transaction.modify::<BodyPerspective>()
-        && let Some(body) = body_p.get_mut(&target.body_id())
+        && let Some(body) = body_p.get_mut(&target.body_id)
     {
         body.add_sketch(&created_sketch);
         camera_target = target.to_plane_from(body);
@@ -113,7 +113,7 @@ pub(super) fn on_create_sketch_on_plane(
             SketchCreatedNotification {
                 sketch_id: created_sketch.into(),
                 name: sketch_name.into(),
-                body_id: target.body_id().into(),
+                body_id: target.body_id,
             }
             .into(),
         ),

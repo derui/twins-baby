@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use cad_base::body::PlaneRef;
 
 /// A marker compoment
-#[derive(Debug, Component, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, Component, PartialEq, Eq, Clone)]
 pub struct BodyBasePlane(PlaneRef);
 
 impl From<PlaneRef> for BodyBasePlane {

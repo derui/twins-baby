@@ -107,7 +107,7 @@ mod sketch_perspective {
             let (_bodies, plane_ref) = make_plane_ref();
 
             // Act
-            let sketch_id1 = perspective.add_sketch(&AttachableTarget::Plane(plane_ref));
+            let sketch_id1 = perspective.add_sketch(&AttachableTarget::Plane(plane_ref.clone()));
             let sketch_id2 = perspective.add_sketch(&AttachableTarget::Plane(plane_ref));
 
             // Assert
@@ -121,7 +121,7 @@ mod sketch_perspective {
             let (_bodies, plane_ref) = make_plane_ref();
 
             // Act
-            let sketch_id = perspective.add_sketch(&AttachableTarget::Plane(plane_ref));
+            let sketch_id = perspective.add_sketch(&AttachableTarget::Plane(plane_ref.clone()));
 
             // Assert
             let sketch = perspective.get(&sketch_id).unwrap();
@@ -165,8 +165,8 @@ mod sketch_perspective {
             // Arrange
             let mut perspective = SketchPerspective::new();
             let (_bodies, plane_ref) = make_plane_ref();
-            let sketch_id1 = perspective.add_sketch(&AttachableTarget::Plane(plane_ref));
-            let sketch_id2 = perspective.add_sketch(&AttachableTarget::Plane(plane_ref));
+            let sketch_id1 = perspective.add_sketch(&AttachableTarget::Plane(plane_ref.clone()));
+            let sketch_id2 = perspective.add_sketch(&AttachableTarget::Plane(plane_ref.clone()));
             let sketch_id3 = perspective.add_sketch(&AttachableTarget::Plane(plane_ref));
 
             // Act
@@ -235,7 +235,7 @@ mod sketch_perspective {
             // Arrange
             let mut perspective = SketchPerspective::new();
             let (_bodies, plane_ref) = make_plane_ref();
-            let sketch_id1 = perspective.add_sketch(&AttachableTarget::Plane(plane_ref));
+            let sketch_id1 = perspective.add_sketch(&AttachableTarget::Plane(plane_ref.clone()));
             let sketch_id2 = perspective.add_sketch(&AttachableTarget::Plane(plane_ref));
             let duplicate_name = "DuplicateName";
             perspective

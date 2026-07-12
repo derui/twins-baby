@@ -32,7 +32,7 @@ fn get_plane_entities_for_body(world: &mut World, body_id: cad_base::id::BodyId)
     let mut query = world.query::<(Entity, &BodyBasePlane)>();
     query
         .iter(world)
-        .filter(|(_, plane)| (*plane).body_id() == body_id)
+        .filter(|(_, plane)| *plane.body_id == body_id)
         .map(|(e, _)| e)
         .collect()
 }
@@ -125,16 +125,16 @@ fn registered_planes_have_xy_yz_zx_axes_in_order() {
     };
     let axes: Vec<BodyBasePlane> = entities
         .iter()
-        .map(|&e| *world.entity(e).get::<BodyBasePlane>().unwrap())
+        .map(|&e| world.entity(e).get::<BodyBasePlane>().unwrap().clone())
         .collect();
     assert_eq!(
         axes,
         vec![
+            Into::<BodyBasePlane>::into(ref_z.clone()),
             Into::<BodyBasePlane>::into(ref_z),
-            Into::<BodyBasePlane>::into(ref_z),
+            Into::<BodyBasePlane>::into(ref_x.clone()),
             Into::<BodyBasePlane>::into(ref_x),
-            Into::<BodyBasePlane>::into(ref_x),
-            Into::<BodyBasePlane>::into(ref_y),
+            Into::<BodyBasePlane>::into(ref_y.clone()),
             Into::<BodyBasePlane>::into(ref_y),
         ]
     );

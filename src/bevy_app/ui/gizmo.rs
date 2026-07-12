@@ -111,7 +111,7 @@ pub fn draw_sketch_gizmos(
         AttachableTarget::Plane(plane_ref) => {
             let Some(body) = baseline
                 .read::<BodyPerspective>()
-                .and_then(|p| p.get(&plane_ref.body_id()))
+                .and_then(|p| p.get(&plane_ref.body_id))
             else {
                 return;
             };
