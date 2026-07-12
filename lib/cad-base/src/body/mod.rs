@@ -18,13 +18,7 @@ mod tests;
 /// A trait for reading body information by its ID. Implementors of this trait should provide a method to retrieve a `Body` instance given its `BodyId`.
 pub trait BodyReader {
     /// Read a body by its ID.
-    fn read(&self, id: BodyId) -> Option<&Body>;
-}
-
-impl BodyReader for Baseline {
-    fn read(&self, id: BodyId) -> Option<&Body> {
-        self.read::<BodyPerspective>()?.get(&id)
-    }
+    fn read_body(&self, id: BodyId) -> Option<&Body>;
 }
 
 #[derive(Clone)]
@@ -33,7 +27,7 @@ pub struct BodyPerspective {
     bodies: HashMap<BodyId, Body>,
 
     /// body id generator
-    body_id_gen: IdStore<BodyId>,
+    body_id_gen: IdStore,
 }
 
 impl Default for BodyPerspective {

@@ -76,8 +76,7 @@ mod attachable_target {
             let solids = (*feature_perspective.get(&feature_id).unwrap().solids)
                 .as_ref()
                 .unwrap();
-            let (sid, solid) = solids.iter().next().unwrap();
-            solid_id = *sid;
+            let solid = solids.iter().next().unwrap();
             face_id = *solid.faces.keys().next().unwrap();
             transaction.commit();
         }
@@ -124,7 +123,7 @@ mod attachable_target {
         // Arrange
         let (engine, _, solid_id, face_id) = make_engine_with_body_and_solid();
         let baseline = engine.baseline();
-        let target = AttachableTarget::Face(FaceRef::new(solid_id, face_id));
+        let target = AttachableTarget::Face(FaceRef::new(BodyId::from(1), face_id));
 
         // Act
         let result = target.to_plane(&baseline);
@@ -138,7 +137,7 @@ mod attachable_target {
         // Arrange
         let (engine, _, _, face_id) = make_engine_with_body_and_solid();
         let baseline = engine.baseline();
-        let target = AttachableTarget::Face(FaceRef::new(SolidId::from(999), face_id));
+        let target = AttachableTarget::Face(FaceRef::new(BodyId::from(1), face_id));
 
         // Act
         let result = target.to_plane(&baseline);
@@ -152,7 +151,7 @@ mod attachable_target {
         // Arrange
         let (engine, _, solid_id, _) = make_engine_with_body_and_solid();
         let baseline = engine.baseline();
-        let target = AttachableTarget::Face(FaceRef::new(solid_id, FaceId::from(999)));
+        let target = AttachableTarget::Face(FaceRef::new(BodyId::from(1), FaceId::from(999)));
 
         // Act
         let result = target.to_plane(&baseline);
@@ -179,7 +178,7 @@ mod attachable_target {
     #[test]
     fn to_plane_ref_returns_none_for_face_variant() {
         // Arrange
-        let target = AttachableTarget::Face(FaceRef::new(SolidId::from(1), FaceId::from(1)));
+        let target = AttachableTarget::Face(FaceRef::new(BodyId::from(1), FaceId::from(1)));
 
         // Act
         let result = target.to_plane_ref();
@@ -191,7 +190,7 @@ mod attachable_target {
     #[test]
     fn to_face_ref_returns_some_for_face_variant() {
         // Arrange
-        let face_ref = FaceRef::new(SolidId::from(1), FaceId::from(1));
+        let face_ref = FaceRef::new(BodyId::from(1), FaceId::from(1));
         let target = AttachableTarget::Face(face_ref.clone());
 
         // Act
@@ -226,7 +225,7 @@ mod sketch {
         #[test]
         fn add_geometry_returns_geometry_id() {
             // Arrange
-            let mut sketch = Sketch::new("TestSketch", &make_attach_target());
+            let mut sketch = Sketch::new("TestSketch",BodyId::from(1), &make_attach_target());
             let start = Point2::new(0.0, 0.0);
             let end = Point2::new(1.0, 1.0);
 
@@ -242,7 +241,7 @@ mod sketch {
         #[test]
         fn add_geometry_generates_unique_ids() {
             // Arrange
-            let mut sketch = Sketch::new("TestSketch", &make_attach_target());
+            let mut sketch = Sketch::new("TestSketch", BodyId::from(1), &make_attach_target());
             let start = Point2::new(0.0, 0.0);
             let end = Point2::new(1.0, 1.0);
 
@@ -267,7 +266,7 @@ mod sketch {
         #[test]
         fn returns_empty_vec_when_no_geometries() {
             // Arrange
-            let sketch = Sketch::new("TestSketch", &make_attach_target());
+            let sketch = Sketch::new("TestSketch", BodyId::from(1), &make_attach_target());
 
             // Act
             let edges = sketch.resolve_edges().unwrap();
@@ -279,7 +278,7 @@ mod sketch {
         #[test]
         fn resolves_single_line_segment() {
             // Arrange
-            let mut sketch = Sketch::new("TestSketch", &make_attach_target());
+            let mut sketch = Sketch::new("TestSketch", BodyId::from(1), &make_attach_target());
             let start = Point2::new(1.0, 2.0);
             let end = Point2::new(3.0, 4.0);
             sketch.add_geometry(|scope| {
@@ -300,7 +299,7 @@ mod sketch {
         #[test]
         fn resolves_multiple_line_segments() {
             // Arrange
-            let mut sketch = Sketch::new("TestSketch", &make_attach_target());
+            let mut sketch = Sketch::new("TestSketch", BodyId::from(1), &make_attach_target());
             sketch.add_geometry(|scope| {
                 Geometry::LineSegment(LineSegment::from_points(
                     &Point2::new(0.0, 0.0),
@@ -333,7 +332,7 @@ mod sketch {
         #[test]
         fn does_not_resolve_removed_geometry() {
             // Arrange
-            let mut sketch = Sketch::new("TestSketch", &make_attach_target());
+            let mut sketch = Sketch::new("TestSketch", BodyId::from(1), &make_attach_target());
             let id = sketch.add_geometry(|scope| {
                 Geometry::LineSegment(LineSegment::from_points(
                     &Point2::new(0.0, 0.0),
@@ -353,7 +352,7 @@ mod sketch {
         #[test]
         fn resolves_edges_with_negative_coordinates() {
             // Arrange
-            let mut sketch = Sketch::new("TestSketch", &make_attach_target());
+            let mut sketch = Sketch::new("TestSketch", BodyId::from(1), &make_attach_target());
             sketch.add_geometry(|scope| {
                 Geometry::LineSegment(LineSegment::from_points(
                     &Point2::new(-5.0, -3.0),
@@ -380,7 +379,7 @@ mod sketch {
         #[test]
         fn remove_geometry_returns_removed_geometry() {
             // Arrange
-            let mut sketch = Sketch::new("TestSketch", &make_attach_target());
+            let mut sketch = Sketch::new("TestSketch", BodyId::from(1), &make_attach_target());
             let start = Point2::new(0.0, 0.0);
             let end = Point2::new(1.0, 1.0);
             let geometry_id = sketch.add_geometry(|scope| {
@@ -398,7 +397,7 @@ mod sketch {
         #[test]
         fn remove_geometry_returns_none_for_nonexistent() {
             // Arrange
-            let mut sketch = Sketch::new("TestSketch", &make_attach_target());
+            let mut sketch = Sketch::new("TestSketch", BodyId::from(1), &make_attach_target());
             let nonexistent_id = GeometryId::from(999);
 
             // Act
@@ -411,7 +410,7 @@ mod sketch {
         #[test]
         fn remove_geometry_does_not_affect_other_geometries() {
             // Arrange
-            let mut sketch = Sketch::new("TestSketch", &make_attach_target());
+            let mut sketch = Sketch::new("TestSketch", BodyId::from(1), &make_attach_target());
             let start = Point2::new(0.0, 0.0);
             let end = Point2::new(1.0, 1.0);
             let geometry_id1 = sketch.add_geometry(|scope| {

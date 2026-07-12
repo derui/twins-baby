@@ -11,12 +11,6 @@ pub mod edge;
 pub mod face;
 pub mod vertex;
 
-/// A trait for reading solid information by its ID.
-pub trait SolidReader {
-    /// Read a solid by its ID.
-    fn read_solid(&self, id: SolidId) -> Option<&Solid>;
-}
-
 /// The struct for a solid
 #[derive(Debug, Clone, PartialEq)]
 pub struct Solid {

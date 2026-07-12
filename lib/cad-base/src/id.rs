@@ -47,16 +47,17 @@ impl<T: Clone + Copy + From<u64> + Debug> Id for T {}
 
 /// An ID store for each concrete Id types.
 #[derive(Debug, Clone)]
-pub struct IdStore<T: Id> {
+pub struct IdStore {
     current: u64,
-    _marker: PhantomData<T>,
+
+    _immutable: (),
 }
 
-impl<T: Id> IdStore<T> {
-    pub fn of() -> IdStore<T> {
+impl IdStore {
+    pub fn of() -> IdStore {
         IdStore {
             current: 1,
-            _marker: PhantomData,
+            _immutable: (),
         }
     }
 
@@ -64,7 +65,7 @@ impl<T: Id> IdStore<T> {
     ///
     /// # Returns
     /// A new unique identifier of type T.
-    pub fn generate(&mut self) -> T {
+    pub fn generate<T: Id>(&mut self) -> T {
         let current = self.current;
         self.current += 1;
         T::from(current)

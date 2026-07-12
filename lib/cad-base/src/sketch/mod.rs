@@ -17,15 +17,10 @@ use tracing::instrument;
 use std::collections::HashMap;
 
 use crate::{
-    body::BodyReader,
-    id::{GeometryId, IdStore, VariableId},
-    plane::Plane,
-    refs::{FaceRef, PlaneRef},
-    sketch::{
+    body::BodyReader, id::{BodyId, GeometryId, IdStore, VariableId}, plane::Plane, refs::{FaceRef, PlaneRef}, sketch::{
         edge::SketchEdge,
         scope::{ConstraintScope, VariableScope},
-    },
-    solid::SolidReader,
+    }, 
 };
 
 use color_eyre::eyre::{Result, eyre};
@@ -58,7 +53,7 @@ impl AttachableTarget {
     }
 
     /// Make plane from target.
-    pub fn to_plane<T: BodyReader + SolidReader>(&self, reader: &T) -> Option<Plane> {
+    pub fn to_plane<T: BodyReader>(&self, reader: &T) -> Option<Plane> {
         match self {
             AttachableTarget::Plane(plane_ref) => reader
                 .read(*plane_ref.body_id)
@@ -83,7 +78,10 @@ pub struct Sketch {
     /// Name of this sketch
     pub name: Im<String>,
 
-    geometory_id_gen: IdStore<GeometryId>,
+    /// The body that this sketch belongs to
+    pub body: Im<BodyId>,
+
+    geometory_id_gen: IdStore,
 
     /// Geometries in this sketch
     geometries: HashMap<GeometryId, Geometry>,
@@ -100,8 +98,9 @@ pub struct Sketch {
 
 impl Sketch {
     /// Create a new sketch with builder
-    pub fn new(name: &str, attach_target: &AttachableTarget) -> Self {
+    pub fn new(name: &str, body: BodyId, attach_target: &AttachableTarget) -> Self {
         Sketch {
+            body: body.into(),
             name: name.to_string().into(),
             geometory_id_gen: IdStore::of(),
             geometries: HashMap::new(),
