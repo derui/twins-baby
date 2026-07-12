@@ -1,5 +1,5 @@
 use bevy::math::Vec3;
-use cad_base::{body::BodyReader, point::Point, sketch::AttachableTarget, vector3::Vector3};
+use cad_base::{point::Point, vector3::Vector3};
 
 /// convenience support for converting Point to Vec3
 pub trait Vec3Ext {

@@ -17,25 +17,27 @@ use tracing::instrument;
 use std::collections::HashMap;
 
 use crate::{
-    body::{Body, PlaneRef},
-    id::{FaceId, GeometryId, IdStore, VariableId},
+    body::BodyReader,
+    id::{GeometryId, IdStore, VariableId},
     plane::Plane,
+    refs::{FaceRef, PlaneRef},
     sketch::{
         edge::SketchEdge,
         scope::{ConstraintScope, VariableScope},
     },
+    solid::SolidReader,
 };
 
 use color_eyre::eyre::{Result, eyre};
 use immutable::Im;
 
-/// Target of sketch attachiment.
+/// Target of sketch attachment.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AttachableTarget {
     /// attaching to a plane. such as base plane of the body
     Plane(PlaneRef),
     /// atthching to a face, in some solid.
-    Face(FaceId),
+    Face(FaceRef),
 }
 
 impl AttachableTarget {
@@ -47,19 +49,23 @@ impl AttachableTarget {
         }
     }
 
-    /// Get face id if this target is face.
-    pub fn to_face(&self) -> Option<FaceId> {
+    /// Get face ref if this target is face.
+    pub fn to_face_ref(&self) -> Option<FaceRef> {
         match self {
-            AttachableTarget::Face(id) => Some(*id),
+            AttachableTarget::Face(face_ref) => Some(face_ref.clone()),
             _ => None,
         }
     }
 
     /// Make plane from target.
-    pub fn to_plane(&self, base: &Body) -> Plane {
+    pub fn to_plane<T: BodyReader + SolidReader>(&self, reader: &T) -> Option<Plane> {
         match self {
-            AttachableTarget::Plane(plane_ref) => plane_ref.to_plane_from(base),
-            AttachableTarget::Face(_) => todo!(),
+            AttachableTarget::Plane(plane_ref) => reader
+                .read(*plane_ref.body_id)
+                .map(|body| plane_ref.to_plane_from(body)),
+            AttachableTarget::Face(face_ref) => reader
+                .read_solid(*face_ref.solid_id)
+                .and_then(|solid| face_ref.to_plane_from(solid)),
         }
     }
 }

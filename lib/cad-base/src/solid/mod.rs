@@ -3,8 +3,7 @@ use std::collections::HashMap;
 use immutable::Im;
 
 use crate::{
-    body,
-    id::{BodyId, EdgeId, FaceId, IdStore, VertexId},
+    id::{EdgeId, FaceId, IdStore, SolidId, VertexId},
     solid::{edge::Edge, face::Face, vertex::Vertex},
 };
 
@@ -12,11 +11,15 @@ pub mod edge;
 pub mod face;
 pub mod vertex;
 
+/// A trait for reading solid information by its ID.
+pub trait SolidReader {
+    /// Read a solid by its ID.
+    fn read_solid(&self, id: SolidId) -> Option<&Solid>;
+}
+
 /// The struct for a solid
 #[derive(Debug, Clone, PartialEq)]
 pub struct Solid {
-    /// The id of the body that this solid belongs to. This is used to identify the solid in the body.
-    pub body_id: Im<BodyId>,
     /// Surfaces that constructs the solid. Each edges must be contained in the same solid
     pub faces: Im<HashMap<FaceId, Face>>,
     /// Edges that constructs the solid. All edges must be shared by 2 faces
@@ -99,9 +102,8 @@ impl SolidBuilder {
     }
 
     /// Build solid. Builder can not reuse.
-    pub fn build(self, body_id: BodyId) -> Solid {
+    pub fn build(self) -> Solid {
         Solid {
-            body_id: body_id.into(),
             faces: (self.faces).into(),
             edges: (self.edges).into(),
             vertices: (self.vertices).into(),
@@ -134,7 +136,7 @@ mod tests {
     use pretty_assertions::assert_eq;
 
     use crate::{
-        id::{BodyId, IdStore},
+        id::IdStore,
         plane::Plane,
         point::Point,
         solid::{
@@ -333,10 +335,9 @@ mod tests {
         builder.add_faces(&[make_face()]);
 
         // Act
-        let solid = builder.build(BodyId::new(3));
+        let solid = builder.build();
 
         // Assert
-        assert_eq!(*solid.body_id, BodyId::new(3));
         assert_eq!(solid.vertices.len(), 3);
         assert_eq!(solid.edges.len(), 1);
         assert_eq!(solid.faces.len(), 1);

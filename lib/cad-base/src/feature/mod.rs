@@ -7,9 +7,11 @@ use color_eyre::eyre::Result;
 use immutable::Im;
 use thiserror::Error;
 
+use std::collections::HashMap;
+
 use crate::{
     feature::operation::Operation,
-    id::SketchId,
+    id::{IdStore, SketchId, SolidId},
     plane::Plane,
     sketch::Sketch,
     solid::{Solid, face::Face},
@@ -37,8 +39,8 @@ pub struct Feature {
     /// status of feature
     pub status: Im<FeatureStatus>,
 
-    /// Solid Id what created by this feature.
-    pub solids: Im<Option<Vec<Solid>>>,
+    /// Solids what created by this feature.
+    pub solids: Im<Option<HashMap<SolidId, Solid>>>,
 
     _immutable: (),
 }
@@ -81,9 +83,14 @@ impl Feature {
     pub fn evaluate<'a, E: Evaluate>(
         &mut self,
         context: &'a FeatureContext<'a>,
+        solid_id_gen: &mut IdStore<SolidId>,
     ) -> Result<(), EvaluateError> {
         match E::evaluate(self, context) {
             Ok(solids) => {
+                let solids = solids
+                    .into_iter()
+                    .map(|s| (solid_id_gen.generate(), s))
+                    .collect::<HashMap<_, _>>();
                 self.solids = Some(solids).into();
                 self.status = FeatureStatus::Valid.into();
                 Ok(())
@@ -120,6 +127,9 @@ pub enum EvaluateError {
 
     #[error("Given sketch can not make closed surface | {0}")]
     HaveSomeInvalidSketches(#[from] Box<dyn Error>),
+
+    #[error("Feature not found")]
+    FeatureNotFound,
 }
 
 pub trait Evaluate {
@@ -137,7 +147,7 @@ pub trait Evaluate {
 mod tests {
     use super::*;
     use crate::feature::operation::{Operation, Pad};
-    use crate::id::SketchId;
+    use crate::id::{IdStore, SketchId};
     use pretty_assertions::assert_eq;
     use rstest::rstest;
     use solver::equation::Equation;
@@ -270,9 +280,12 @@ mod tests {
         // arrange
         let mut feature = Feature::new("Pad1", make_sketch_id(), &make_operation()).unwrap();
         let context = make_context();
+        let mut solid_id_gen = IdStore::of();
 
         // act
-        feature.evaluate::<SuccessEvaluator>(&context).unwrap();
+        feature
+            .evaluate::<SuccessEvaluator>(&context, &mut solid_id_gen)
+            .unwrap();
 
         // assert
         assert_eq!(*feature.status, FeatureStatus::Valid);
@@ -283,9 +296,12 @@ mod tests {
         // arrange
         let mut feature = Feature::new("Pad1", make_sketch_id(), &make_operation()).unwrap();
         let context = make_context();
+        let mut solid_id_gen = IdStore::of();
 
         // act
-        feature.evaluate::<SuccessEvaluator>(&context).unwrap();
+        feature
+            .evaluate::<SuccessEvaluator>(&context, &mut solid_id_gen)
+            .unwrap();
 
         // assert
         assert!(feature.solids.is_some());
@@ -296,9 +312,10 @@ mod tests {
         // arrange
         let mut feature = Feature::new("Pad1", make_sketch_id(), &make_operation()).unwrap();
         let context = make_context();
+        let mut solid_id_gen = IdStore::of();
 
         // act
-        let result = feature.evaluate::<FailEvaluator>(&context);
+        let result = feature.evaluate::<FailEvaluator>(&context, &mut solid_id_gen);
 
         // assert
         assert!(result.is_err());
@@ -313,9 +330,10 @@ mod tests {
         // arrange
         let mut feature = Feature::new("Pad1", make_sketch_id(), &make_operation()).unwrap();
         let context = make_context();
+        let mut solid_id_gen = IdStore::of();
 
         // act
-        let _ = feature.evaluate::<FailEvaluator>(&context);
+        let _ = feature.evaluate::<FailEvaluator>(&context, &mut solid_id_gen);
 
         // assert
         assert!(feature.solids.is_none());

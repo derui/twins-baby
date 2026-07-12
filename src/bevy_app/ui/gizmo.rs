@@ -19,10 +19,7 @@ use bevy::{
     reflect::Reflect,
     transform::components::Transform,
 };
-use cad_base::{
-    body::BodyPerspective,
-    sketch::{AttachableTarget, SketchPerspective},
-};
+use cad_base::sketch::SketchPerspective;
 
 use crate::bevy_app::{
     camera::{CAMERA_3D_LAYER, CAMERA_UI_LAYER},
@@ -107,22 +104,12 @@ pub fn draw_sketch_gizmos(
         return;
     };
 
-    let normal = match &*sketch.attach_target {
-        AttachableTarget::Plane(plane_ref) => {
-            let Some(body) = baseline
-                .read::<BodyPerspective>()
-                .and_then(|p| p.get(&plane_ref.body_id))
-            else {
-                return;
-            };
-
-            let plane = plane_ref.to_plane_from(body);
-            plane.normal.to_vec3()
-        }
-        AttachableTarget::Face(_) => {
-            // TODO: derive normal from solid face
-            Vec3::Z
-        }
+    let Some(normal) = sketch
+        .attach_target
+        .to_plane(&baseline)
+        .map(|plane| plane.normal.to_vec3())
+    else {
+        return;
     };
 
     let (axis_u, axis_v) = normal.any_orthonormal_pair();

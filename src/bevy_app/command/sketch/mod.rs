@@ -2,7 +2,6 @@ use bevy::prelude::*;
 use cad_base::{
     body::{BodyPerspective, PlaneRef},
     id::SketchId,
-    plane::Plane,
     sketch::{AttachableTarget, SketchPerspective},
 };
 use ui_event::{
@@ -81,6 +80,7 @@ pub(super) fn on_create_sketch_on_plane(
 
     let created_sketch: SketchId;
     let sketch_name: String;
+    let attach_target = AttachableTarget::Plane(target.clone());
 
     {
         let Some(sketch_p) = transaction.modify::<SketchPerspective>() else {
@@ -88,19 +88,17 @@ pub(super) fn on_create_sketch_on_plane(
             return;
         };
 
-        created_sketch = sketch_p.add_sketch(&AttachableTarget::Plane(target.clone()));
+        created_sketch = sketch_p.add_sketch(&attach_target);
         sketch_name = sketch_p
             .get(&created_sketch)
             .map(|v| (*v.name).clone())
             .expect("Should be found");
     }
 
-    let camera_target: Plane;
     if let Some(body_p) = transaction.modify::<BodyPerspective>()
         && let Some(body) = body_p.get_mut(&target.body_id)
     {
         body.add_sketch(&created_sketch);
-        camera_target = target.to_plane_from(body);
     } else {
         tracing::warn!("Can not get body");
         return;
@@ -183,15 +181,18 @@ pub(super) fn on_request_geometry_creation_command(
     }) else {
         return;
     };
-    let Some(body) = active_body
+    if active_body
         .0
         .and_then(|id| baseline.read::<BodyPerspective>().and_then(|p| p.get(&id)))
-    else {
+        .is_none()
+    {
         return;
-    };
+    }
 
     // update old if exists
-    let plane = sketch.attach_target.to_plane(body);
+    let Some(plane) = sketch.attach_target.to_plane(&baseline) else {
+        return;
+    };
 
     if let Ok((_, mut typ, mut ope)) = processing.single_mut() {
         typ.0 = (*command.geometry).clone();

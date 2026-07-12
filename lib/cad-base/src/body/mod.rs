@@ -6,64 +6,24 @@ use immutable::Im;
 use crate::{
     id::{BodyId, IdStore, SketchId},
     plane::Plane,
+    transaction::Baseline,
     vector3::Vector3,
 };
+
+pub use crate::refs::PlaneRef;
 
 #[cfg(test)]
 mod tests;
 
-/// A internal reference of BodyPlane.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-enum BodyPlane {
-    X,
-    Y,
-    Z,
-}
-
 /// A trait for reading body information by its ID. Implementors of this trait should provide a method to retrieve a `Body` instance given its `BodyId`.
 pub trait BodyReader {
     /// Read a body by its ID.
-    fn read(&self, id: BodyId) -> Option<Body>;
+    fn read(&self, id: BodyId) -> Option<&Body>;
 }
 
-/// A id-like reference of the plane. Plane is tightly coupled on the body.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct PlaneRef {
-    pub body_id: Im<BodyId>,
-    plane: BodyPlane,
-}
-
-impl PlaneRef {
-    /// Create a new PlaneRef with the given body ID and plane.
-    fn new(body_id: BodyId, plane: BodyPlane) -> Self {
-        PlaneRef {
-            body_id: body_id.into(),
-            plane,
-        }
-    }
-
-    /// Create a new PlaneRef for the X plane of the given body ID.
-    pub fn new_with_x(body_id: BodyId) -> Self {
-        PlaneRef::new(body_id, BodyPlane::X)
-    }
-
-    /// Create a new PlaneRef for the Y plane of the given body ID.
-    pub fn new_with_y(body_id: BodyId) -> Self {
-        PlaneRef::new(body_id, BodyPlane::Y)
-    }
-
-    /// Create a new PlaneRef for the Z plane of the given body ID.
-    pub fn new_with_z(body_id: BodyId) -> Self {
-        PlaneRef::new(body_id, BodyPlane::Z)
-    }
-
-    /// Get the plane entity from the body
-    pub fn to_plane_from(&self, body: &Body) -> Plane {
-        match self.plane {
-            BodyPlane::X => (*body.x_plane).clone(),
-            BodyPlane::Y => (*body.y_plane).clone(),
-            BodyPlane::Z => (*body.z_plane).clone(),
-        }
+impl BodyReader for Baseline {
+    fn read(&self, id: BodyId) -> Option<&Body> {
+        self.read::<BodyPerspective>()?.get(&id)
     }
 }
 
@@ -147,23 +107,17 @@ impl BodyPerspective {
 
     /// Get X-plane reference for the body
     pub fn to_x_plane_ref(&self, id: &BodyId) -> Option<PlaneRef> {
-        self.bodies
-            .get(id)
-            .map(|_| PlaneRef::new(*id, BodyPlane::X))
+        self.bodies.get(id).map(|_| PlaneRef::new_with_x(*id))
     }
 
     /// Get Y-plane reference for the body
     pub fn to_y_plane_ref(&self, id: &BodyId) -> Option<PlaneRef> {
-        self.bodies
-            .get(id)
-            .map(|_| PlaneRef::new(*id, BodyPlane::Y))
+        self.bodies.get(id).map(|_| PlaneRef::new_with_y(*id))
     }
 
     /// Get Z-plane reference for the body
     pub fn to_z_plane_ref(&self, id: &BodyId) -> Option<PlaneRef> {
-        self.bodies
-            .get(id)
-            .map(|_| PlaneRef::new(*id, BodyPlane::Z))
+        self.bodies.get(id).map(|_| PlaneRef::new_with_z(*id))
     }
 }
 

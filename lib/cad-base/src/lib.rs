@@ -4,6 +4,7 @@ pub mod feature;
 pub mod id;
 pub mod plane;
 pub mod point;
+pub mod refs;
 pub mod sketch;
 pub mod solid;
 pub mod transaction;

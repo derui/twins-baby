@@ -1,8 +1,9 @@
 use cad_base::{
     body::BodyPerspective,
     feature::AttachedTarget,
-    id::FaceId,
+    id::{FaceId, SolidId},
     plane::Plane,
+    refs::FaceRef,
     sketch::{AttachableTarget, Geometry, LineSegment, Point2, Sketch},
 };
 use epsilon::DefaultEpsilon;
@@ -18,7 +19,7 @@ fn plane_sketch() -> Sketch {
 }
 
 fn face_sketch() -> Sketch {
-    let target = AttachableTarget::Face(FaceId::from(1));
+    let target = AttachableTarget::Face(FaceRef::new(SolidId::from(1), FaceId::from(1)));
     Sketch::new("test", &target)
 }
 
