@@ -1,18 +1,27 @@
-mod face_ref;
 mod plane_ref;
+mod resolve;
 
-pub use face_ref::*;
 use immutable::Im;
 pub use plane_ref::*;
+pub use resolve::*;
 
-use crate::id::{BodyId, FeatureId};
+use crate::{id::FeatureId, tag::FaceTag};
 
-/// A id-like reference of a feature in a body.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct FeatureRef {
-    /// The ID of the body that contains the feature.
-    pub body_id: Im<BodyId>,
+pub struct FaceRef {
+    /// The ID of the body that contains the face.
+    pub feature: Im<FeatureId>,
 
-    /// The ID of the feature.
-    pub feature_id: Im<FeatureId>,
+    /// The ID of the face from the feature.
+    pub face: Im<FaceTag>,
+}
+
+impl FaceRef {
+    /// Create a new FaceRef with the given feature ID and face tag.
+    pub fn new(feature: FeatureId, face: FaceTag) -> Self {
+        FaceRef {
+            feature: feature.into(),
+            face: face.into(),
+        }
+    }
 }
