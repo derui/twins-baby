@@ -4,7 +4,7 @@ mod tests;
 use std::collections::HashMap;
 
 use crate::{
-    id::{IdStore, SketchId},
+    id::{BodyId, IdStore, SketchId},
     sketch::{AttachableTarget, Sketch},
 };
 
@@ -15,7 +15,7 @@ use tracing::instrument;
 #[derive(Debug, Clone)]
 pub struct SketchPerspective {
     sketches: HashMap<SketchId, Sketch>,
-    sketch_id_gen: IdStore<SketchId>,
+    sketch_id_gen: IdStore,
 }
 
 impl Default for SketchPerspective {
@@ -44,9 +44,9 @@ impl SketchPerspective {
     }
 
     /// Add a new sketch to the perpective
-    pub fn add_sketch(&mut self, target: &AttachableTarget) -> SketchId {
+    pub fn add_sketch(&mut self, body: BodyId, target: &AttachableTarget) -> SketchId {
         let id = self.sketch_id_gen.generate();
-        let sketch = Sketch::new(&format!("Sketch{}", id), target);
+        let sketch = Sketch::new(&format!("Sketch{}", id), body, target);
 
         self.sketches.insert(id, sketch);
         id

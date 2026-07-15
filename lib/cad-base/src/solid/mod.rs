@@ -30,9 +30,9 @@ pub struct SolidBuilder {
     edges: HashMap<EdgeId, Edge>,
     vertices: HashMap<VertexId, Vertex>,
 
-    edge_id_gen: IdStore<EdgeId>,
-    vertex_id_gen: IdStore<VertexId>,
-    face_id_gen: IdStore<FaceId>,
+    edge_id_gen: IdStore,
+    vertex_id_gen: IdStore,
+    face_id_gen: IdStore,
 }
 
 impl Default for SolidBuilder {
@@ -146,7 +146,7 @@ mod tests {
     }
 
     fn make_face() -> Face {
-        let mut store: IdStore<crate::id::EdgeId> = IdStore::of();
+        let mut store = IdStore::of();
         let edge_ids: Vec<_> = (0..4).map(|_| store.generate()).collect();
         Face::Planar(PlanarSurface::new(&edge_ids, &Plane::new_xy()).unwrap())
     }

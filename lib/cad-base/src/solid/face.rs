@@ -52,7 +52,7 @@ mod tests {
     use crate::id::IdStore;
 
     fn make_edge_ids(count: usize) -> Vec<EdgeId> {
-        let mut store: IdStore<EdgeId> = IdStore::of();
+        let mut store = IdStore::of();
         (0..count).map(|_| store.generate()).collect()
     }
 

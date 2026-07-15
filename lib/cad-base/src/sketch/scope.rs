@@ -10,7 +10,7 @@ use crate::{
 /// Scoping defined variable.
 #[derive(Debug, Clone)]
 pub struct VariableScope {
-    id_gen: IdStore<VariableId>,
+    id_gen: IdStore,
 
     variables: HashMap<VariableId, Variable>,
 }
@@ -68,7 +68,7 @@ impl VariableScope {
 #[derive(Debug, Clone)]
 pub struct ConstraintScope {
     /// Gene
-    id_gen: IdStore<ConstraintId>,
+    id_gen: IdStore,
 
     constraints: HashMap<ConstraintId, Constraint>,
 }

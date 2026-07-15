@@ -8,8 +8,8 @@ use tracing::instrument;
 
 use crate::{
     feature::{Evaluate, EvaluateError, Feature, FeatureContext, operation::Operation},
-    id::{FeatureId, IdStore, SketchId, SolidId},
-    solid::{Solid, SolidReader},
+    id::{BodyId, FeatureId, IdStore, SketchId, SolidId},
+    solid::Solid,
     transaction::Baseline,
 };
 
@@ -20,8 +20,8 @@ use crate::{
 pub struct FeaturePerspective {
     features: HashMap<FeatureId, Feature>,
 
-    feature_id_gen: IdStore<FeatureId>,
-    solid_id_gen: IdStore<SolidId>,
+    feature_id_gen: IdStore,
+    solid_id_gen: IdStore,
 }
 
 impl Default for FeaturePerspective {
@@ -31,20 +31,6 @@ impl Default for FeaturePerspective {
             feature_id_gen: IdStore::of(),
             solid_id_gen: IdStore::of(),
         }
-    }
-}
-
-impl SolidReader for FeaturePerspective {
-    fn read_solid(&self, id: SolidId) -> Option<&Solid> {
-        self.features
-            .values()
-            .find_map(|f| (*f.solids).as_ref().and_then(|m| m.get(&id)))
-    }
-}
-
-impl SolidReader for Baseline {
-    fn read_solid(&self, id: SolidId) -> Option<&Solid> {
-        self.read::<FeaturePerspective>()?.read_solid(id)
     }
 }
 
@@ -65,11 +51,16 @@ impl FeaturePerspective {
     }
 
     /// Add a feature with operation
-    pub fn add_feature(&mut self, sketch: &SketchId, operation: &Operation) -> FeatureId {
+    pub fn add_feature(
+        &mut self,
+        body: BodyId,
+        sketch: SketchId,
+        operation: &Operation,
+    ) -> FeatureId {
         let id = self.feature_id_gen.generate();
         self.features.insert(
             id,
-            Feature::new(&id.to_string(), *sketch, operation).expect("must be success"),
+            Feature::new(&id.to_string(), body, sketch, operation).expect("must be success"),
         );
         id
     }
@@ -89,7 +80,7 @@ impl FeaturePerspective {
             return Err(EvaluateError::FeatureNotFound);
         };
 
-        feature.evaluate::<E>(context, &mut self.solid_id_gen)
+        feature.evaluate::<E>(context)
     }
 
     /// Rename a feature by id

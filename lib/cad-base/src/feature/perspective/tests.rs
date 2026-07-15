@@ -4,8 +4,8 @@ use solver::equation::Equation;
 
 use crate::feature::operation::{Operation, Pad};
 use crate::feature::{Evaluate, EvaluateError, Feature, FeatureContext};
-use crate::id::{FeatureId, SketchId, SolidId};
-use crate::solid::{Solid, SolidBuilder, SolidReader};
+use crate::id::{BodyId, FeatureId, SketchId, SolidId};
+use crate::solid::{Solid, SolidBuilder};
 
 use super::FeaturePerspective;
 
@@ -16,6 +16,10 @@ fn make_operation() -> Operation {
 
 fn make_sketch_id() -> SketchId {
     SketchId::from(1)
+}
+
+fn make_body_id() -> BodyId {
+    BodyId::from(2)
 }
 
 fn make_context<'a>() -> FeatureContext<'a> {
@@ -63,9 +67,10 @@ fn test_evaluate_feature_mints_unique_solid_ids_across_features() {
     // Arrange
     let mut perspective = FeaturePerspective::new();
     let sketch = make_sketch_id();
+    let body = make_body_id();
     let op = make_operation();
-    let id1 = perspective.add_feature(&sketch, &op);
-    let id2 = perspective.add_feature(&sketch, &op);
+    let id1 = perspective.add_feature(body, sketch, &op);
+    let id2 = perspective.add_feature(body, sketch, &op);
     let context = make_context();
 
     // Act
@@ -86,9 +91,10 @@ fn test_evaluate_feature_mints_unique_solid_ids_across_features() {
 fn test_read_solid_returns_none_before_evaluation() {
     // Arrange
     let mut perspective = FeaturePerspective::new();
+    let body = make_body_id();
     let sketch = make_sketch_id();
     let op = make_operation();
-    perspective.add_feature(&sketch, &op);
+    perspective.add_feature(body, sketch, &op);
 
     // Act
     let result = perspective.read_solid(SolidId::from(1));
@@ -101,9 +107,10 @@ fn test_read_solid_returns_none_before_evaluation() {
 fn test_read_solid_returns_solid_after_evaluation() {
     // Arrange
     let mut perspective = FeaturePerspective::new();
+    let body = make_body_id();
     let sketch = make_sketch_id();
     let op = make_operation();
-    let id = perspective.add_feature(&sketch, &op);
+    let id = perspective.add_feature(body, sketch, &op);
     let context = make_context();
     perspective
         .evaluate_feature::<OneSolidEvaluator>(&id, &context)
@@ -121,9 +128,10 @@ fn test_read_solid_returns_solid_after_evaluation() {
 fn test_read_solid_returns_none_for_unknown_id() {
     // Arrange
     let mut perspective = FeaturePerspective::new();
+    let body = make_body_id();
     let sketch = make_sketch_id();
     let op = make_operation();
-    let id = perspective.add_feature(&sketch, &op);
+    let id = perspective.add_feature(body, sketch, &op);
     let context = make_context();
     perspective
         .evaluate_feature::<OneSolidEvaluator>(&id, &context)
@@ -140,11 +148,12 @@ fn test_read_solid_returns_none_for_unknown_id() {
 fn test_add_feature_returns_retrievable_feature() {
     // Arrange
     let mut perspective = FeaturePerspective::new();
+    let body = make_body_id();
     let sketch = make_sketch_id();
     let op = make_operation();
 
     // Act
-    let id = perspective.add_feature(&sketch, &op);
+    let id = perspective.add_feature(body, sketch, &op);
 
     // Assert
     assert!(perspective.get(&id).is_some());
@@ -154,12 +163,13 @@ fn test_add_feature_returns_retrievable_feature() {
 fn test_add_multiple_features_generates_unique_ids() {
     // Arrange
     let mut perspective = FeaturePerspective::new();
+    let body = make_body_id();
     let sketch = make_sketch_id();
     let op = make_operation();
 
     // Act
-    let id1 = perspective.add_feature(&sketch, &op);
-    let id2 = perspective.add_feature(&sketch, &op);
+    let id1 = perspective.add_feature(body, sketch, &op);
+    let id2 = perspective.add_feature(body, sketch, &op);
 
     // Assert
     assert_ne!(id1, id2);
@@ -197,9 +207,10 @@ fn test_get_mut_returns_none_for_missing_id() {
 fn test_remove_feature_returns_the_feature() {
     // Arrange
     let mut perspective = FeaturePerspective::new();
+    let body = make_body_id();
     let sketch = make_sketch_id();
     let op = make_operation();
-    let id = perspective.add_feature(&sketch, &op);
+    let id = perspective.add_feature(body, sketch, &op);
 
     // Act
     let removed = perspective.remove_feature(&id);
@@ -212,9 +223,10 @@ fn test_remove_feature_returns_the_feature() {
 fn test_remove_feature_makes_feature_inaccessible() {
     // Arrange
     let mut perspective = FeaturePerspective::new();
+    let body = make_body_id();
     let sketch = make_sketch_id();
     let op = make_operation();
-    let id = perspective.add_feature(&sketch, &op);
+    let id = perspective.add_feature(body, sketch, &op);
 
     // Act
     perspective.remove_feature(&id);
@@ -240,9 +252,10 @@ fn test_remove_feature_returns_none_for_missing_id() {
 fn test_rename_feature_updates_name() {
     // Arrange
     let mut perspective = FeaturePerspective::new();
+    let body = make_body_id();
     let sketch = make_sketch_id();
     let op = make_operation();
-    let id = perspective.add_feature(&sketch, &op);
+    let id = perspective.add_feature(body, sketch, &op);
 
     // Act
     let result = perspective.rename_feature(&id, "NewName");
@@ -256,10 +269,11 @@ fn test_rename_feature_updates_name() {
 fn test_rename_feature_fails_for_duplicate_name() {
     // Arrange
     let mut perspective = FeaturePerspective::new();
+    let body = make_body_id();
     let sketch = make_sketch_id();
     let op = make_operation();
-    let id1 = perspective.add_feature(&sketch, &op);
-    let id2 = perspective.add_feature(&sketch, &op);
+    let id1 = perspective.add_feature(body, sketch, &op);
+    let id2 = perspective.add_feature(body, sketch, &op);
     perspective.rename_feature(&id1, "Existing").unwrap();
 
     // Act
@@ -289,9 +303,10 @@ fn test_rename_feature_fails_for_missing_id() {
 fn test_rename_feature_fails_for_blank_name(#[case] name: &str) {
     // Arrange
     let mut perspective = FeaturePerspective::new();
+    let body = make_body_id();
     let sketch = make_sketch_id();
     let op = make_operation();
-    let id = perspective.add_feature(&sketch, &op);
+    let id = perspective.add_feature(body, sketch, &op);
 
     // Act
     let result = perspective.rename_feature(&id, name);
@@ -304,9 +319,10 @@ fn test_rename_feature_fails_for_blank_name(#[case] name: &str) {
 fn test_rename_feature_trims_whitespace() {
     // Arrange
     let mut perspective = FeaturePerspective::new();
+    let body = make_body_id();
     let sketch = make_sketch_id();
     let op = make_operation();
-    let id = perspective.add_feature(&sketch, &op);
+    let id = perspective.add_feature(body, sketch, &op);
 
     // Act
     let result = perspective.rename_feature(&id, "  Trimmed  ");
