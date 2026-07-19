@@ -101,17 +101,17 @@ impl BodyPerspective {
 
     /// Get X-plane reference for the body
     pub fn to_x_plane_ref(&self, id: &BodyId) -> Option<PlaneRef> {
-        self.bodies.get(id).map(|_| PlaneRef::new_with_x(*id))
+        self.bodies.get(id).map(|_| PlaneRef::with_x(*id))
     }
 
     /// Get Y-plane reference for the body
     pub fn to_y_plane_ref(&self, id: &BodyId) -> Option<PlaneRef> {
-        self.bodies.get(id).map(|_| PlaneRef::new_with_y(*id))
+        self.bodies.get(id).map(|_| PlaneRef::with_y(*id))
     }
 
     /// Get Z-plane reference for the body
     pub fn to_z_plane_ref(&self, id: &BodyId) -> Option<PlaneRef> {
-        self.bodies.get(id).map(|_| PlaneRef::new_with_z(*id))
+        self.bodies.get(id).map(|_| PlaneRef::with_z(*id))
     }
 }
 

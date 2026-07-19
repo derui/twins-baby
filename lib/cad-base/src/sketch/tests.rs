@@ -109,7 +109,7 @@ mod attachable_target {
         // Arrange
         let (engine, _, _, _) = make_engine_with_body_and_solid();
         let baseline = engine.baseline();
-        let target = AttachableTarget::Plane(crate::refs::PlaneRef::new_with_x(BodyId::from(999)));
+        let target = AttachableTarget::Plane(crate::refs::PlaneRef::with_x(BodyId::from(999)));
 
         // Act
         let result = target.to_plane(&baseline);

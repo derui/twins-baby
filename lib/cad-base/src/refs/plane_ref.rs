@@ -50,9 +50,9 @@ pub struct PlaneScope<'a> {
     original_ref: PlaneRef,
 }
 
-impl<'a> PlaneScope<'a> {
+impl PlaneScope<'_> {
     /// Create a new PlaneScope with the given body and plane reference.
-    pub fn new(body: &'a Body, plane_ref: PlaneRef) -> Self {
+    pub fn new<'a>(body: &'a Body, plane_ref: PlaneRef) -> PlaneScope<'a> {
         PlaneScope {
             body,
             original_ref: plane_ref,
@@ -60,13 +60,8 @@ impl<'a> PlaneScope<'a> {
     }
 
     /// Get the plane entity from the body
-    pub fn to_plane(&self) -> Plane {
-        self.original_ref.to_plane_from(self.body)
-    }
-
-    /// Get the plane entity from the body
     pub(crate) fn to_plane(&self) -> Plane {
-        match self.plane {
+        match self.original_ref.plane {
             BodyPlane::X => (*self.body.x_plane).clone(),
             BodyPlane::Y => (*self.body.y_plane).clone(),
             BodyPlane::Z => (*self.body.z_plane).clone(),

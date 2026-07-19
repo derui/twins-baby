@@ -12,9 +12,10 @@ pub mod transaction;
 pub mod vector3;
 
 use crate::{
-    body::{Body, BodyPerspective, BodyReader},
+    body::{Body, BodyPerspective, BodyReader, PlaneRef},
     feature::FeaturePerspective,
     id::BodyId,
+    refs::{PlaneScope, Resolve},
     sketch::SketchPerspective,
     transaction::{Baseline, Transaction, registry::PerspectiveRegistry},
 };
@@ -68,8 +69,11 @@ impl BodyReader for Baseline {
     }
 }
 
-impl FaceReader for Baseline {
-    fn read_solid(&self, id: SolidId) -> Option<&Solid> {
-        self.read::<FeaturePerspective>()?.read_solid(id)
+impl<'a> Resolve<'a, PlaneRef, PlaneScope<'a>> for Baseline {
+    type Output = PlaneScope<'a>;
+    fn resolve(&'a self, ref_: PlaneRef) -> Option<Self::Output> {
+        self.read::<BodyPerspective>()?
+            .get(&*ref_.body_id)
+            .map(|b| PlaneScope::new(b, ref_))
     }
 }

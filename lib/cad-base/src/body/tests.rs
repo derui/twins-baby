@@ -376,7 +376,7 @@ mod body_perspective {
         let result = perspective.to_x_plane_ref(&id);
 
         // Assert
-        assert_eq!(result, Some(PlaneRef::new_with_x(id)));
+        assert_eq!(result, Some(PlaneRef::with_x(id)));
     }
 
     #[test]
@@ -402,7 +402,7 @@ mod body_perspective {
         let result = perspective.to_y_plane_ref(&id);
 
         // Assert
-        assert_eq!(result, Some(PlaneRef::new_with_y(id)));
+        assert_eq!(result, Some(PlaneRef::with_y(id)));
     }
 
     #[test]
@@ -428,7 +428,7 @@ mod body_perspective {
         let result = perspective.to_z_plane_ref(&id);
 
         // Assert
-        assert_eq!(result, Some(PlaneRef::new_with_z(id)));
+        assert_eq!(result, Some(PlaneRef::with_z(id)));
     }
 
     #[test]

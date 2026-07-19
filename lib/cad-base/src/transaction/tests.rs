@@ -23,7 +23,7 @@ mod snapshot_history {
     }
 
     #[test]
-    fn test_new_with_min_max_history() {
+    fn test_with_min_max_history() {
         // Arrange
         let initial = "state";
         let max_history = 1;
@@ -37,7 +37,7 @@ mod snapshot_history {
 
     #[test]
     #[should_panic(expected = "History size must be greater than 0")]
-    fn test_new_with_zero_max_history_panics() {
+    fn test_with_zero_max_history_panics() {
         // Arrange
         let initial = 42;
         let max_history = 0;

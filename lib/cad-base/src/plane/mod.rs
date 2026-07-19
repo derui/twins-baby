@@ -46,7 +46,7 @@ impl<E: Epsilon> Plane<E> {
     }
 
     /// Get a new [Plane] with parametric arguments
-    pub fn new_with_parametric(normal: &Vector3, r: &Point) -> Self {
+    pub fn with_parametric(normal: &Vector3, r: &Point) -> Self {
         Plane {
             normal: normal.clone().unit().into(),
             r0: r.clone().into(),
@@ -56,23 +56,23 @@ impl<E: Epsilon> Plane<E> {
 
     /// A new XY-plane. It contains origin and Z-unit vector.
     pub fn new_xy() -> Self {
-        Self::new_with_parametric(&Vector3::new_z_unit(), &Point::zero())
+        Self::with_parametric(&Vector3::new_z_unit(), &Point::zero())
     }
 
     /// A new XZ-plane. It contains origin and Y-unit vector.
     pub fn new_xz() -> Self {
-        Self::new_with_parametric(&Vector3::new_y_unit(), &Point::zero())
+        Self::with_parametric(&Vector3::new_y_unit(), &Point::zero())
     }
 
     /// A new YZ-plane. It contains origin and X-unit vector.
     pub fn new_yz() -> Self {
-        Self::new_with_parametric(&Vector3::new_x_unit(), &Point::zero())
+        Self::with_parametric(&Vector3::new_x_unit(), &Point::zero())
     }
 
     /// Get normal-inverted plane
     pub fn normal_inverted(&self) -> Self {
         let inverted = *self.normal * -1;
-        Plane::new_with_parametric(&inverted, &self.r0)
+        Plane::with_parametric(&inverted, &self.r0)
     }
 
     /// Check the [point] on the plane or not
