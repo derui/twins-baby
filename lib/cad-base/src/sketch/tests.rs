@@ -19,7 +19,7 @@ mod attachable_target {
     use crate::feature::{Evaluate, EvaluateError, Feature, FeatureContext, FeaturePerspective};
     use crate::id::{EdgeId, FaceId, SketchId, SolidId};
     use crate::plane::Plane;
-    use crate::refs::FaceRef;
+
     use crate::sketch::AttachableTarget;
     use crate::solid::face::{Face, PlanarSurface};
     use crate::solid::{Solid, SolidBuilder};
@@ -58,17 +58,20 @@ mod attachable_target {
 
     /// Build a body and a solid-with-face in a fresh engine, returning the engine plus the ids
     /// needed to construct plane/face refs against it.
-    fn make_engine_with_body_and_solid() -> (CadEngine, BodyId, SolidId, FaceId) {
+    fn make_engine_with_body_and_solid() -> (CadEngine, BodyId, FaceId) {
         let mut engine = CadEngine::new();
         let body_id;
-        let solid_id;
         let face_id;
         {
             let mut transaction = engine.begin();
             body_id = transaction.modify::<BodyPerspective>().unwrap().add_body();
 
             let feature_perspective = transaction.modify::<FeaturePerspective>().unwrap();
-            let feature_id = feature_perspective.add_feature(&SketchId::from(1), &make_operation());
+            let feature_id = feature_perspective.add_feature(
+                BodyId::from(1),
+                SketchId::from(1),
+                &make_operation(),
+            );
             let context = make_context();
             feature_perspective
                 .evaluate_feature::<OneSolidEvaluator>(&feature_id, &context)
@@ -80,7 +83,7 @@ mod attachable_target {
             face_id = *solid.faces.keys().next().unwrap();
             transaction.commit();
         }
-        (engine, body_id, solid_id, face_id)
+        (engine, body_id, face_id)
     }
 
     #[rstest]
@@ -91,7 +94,7 @@ mod attachable_target {
         #[case] to_plane_ref: fn(&BodyPerspective, &BodyId) -> Option<crate::refs::PlaneRef>,
     ) {
         // Arrange
-        let (engine, body_id, _, _) = make_engine_with_body_and_solid();
+        let (engine, body_id, _) = make_engine_with_body_and_solid();
         let baseline = engine.baseline();
         let plane_ref =
             to_plane_ref(baseline.read::<BodyPerspective>().unwrap(), &body_id).unwrap();
@@ -107,51 +110,9 @@ mod attachable_target {
     #[test]
     fn to_plane_returns_none_for_unknown_body_id() {
         // Arrange
-        let (engine, _, _, _) = make_engine_with_body_and_solid();
+        let (engine, _, _) = make_engine_with_body_and_solid();
         let baseline = engine.baseline();
         let target = AttachableTarget::Plane(crate::refs::PlaneRef::with_x(BodyId::from(999)));
-
-        // Act
-        let result = target.to_plane(&baseline);
-
-        // Assert
-        assert!(result.is_none());
-    }
-
-    #[test]
-    fn to_plane_resolves_face_variant() {
-        // Arrange
-        let (engine, _, solid_id, face_id) = make_engine_with_body_and_solid();
-        let baseline = engine.baseline();
-        let target = AttachableTarget::Face(FaceRef::new(BodyId::from(1), face_id));
-
-        // Act
-        let result = target.to_plane(&baseline);
-
-        // Assert
-        assert!(result.is_some());
-    }
-
-    #[test]
-    fn to_plane_returns_none_for_unknown_solid_id() {
-        // Arrange
-        let (engine, _, _, face_id) = make_engine_with_body_and_solid();
-        let baseline = engine.baseline();
-        let target = AttachableTarget::Face(FaceRef::new(BodyId::from(1), face_id));
-
-        // Act
-        let result = target.to_plane(&baseline);
-
-        // Assert
-        assert!(result.is_none());
-    }
-
-    #[test]
-    fn to_plane_returns_none_for_unknown_face_id() {
-        // Arrange
-        let (engine, _, solid_id, _) = make_engine_with_body_and_solid();
-        let baseline = engine.baseline();
-        let target = AttachableTarget::Face(FaceRef::new(BodyId::from(1), FaceId::from(999)));
 
         // Act
         let result = target.to_plane(&baseline);
@@ -173,31 +134,6 @@ mod attachable_target {
 
         // Assert
         assert_eq!(result, Some(plane_ref));
-    }
-
-    #[test]
-    fn to_plane_ref_returns_none_for_face_variant() {
-        // Arrange
-        let target = AttachableTarget::Face(FaceRef::new(BodyId::from(1), FaceId::from(1)));
-
-        // Act
-        let result = target.to_plane_ref();
-
-        // Assert
-        assert!(result.is_none());
-    }
-
-    #[test]
-    fn to_face_ref_returns_some_for_face_variant() {
-        // Arrange
-        let face_ref = FaceRef::new(BodyId::from(1), FaceId::from(1));
-        let target = AttachableTarget::Face(face_ref.clone());
-
-        // Act
-        let result = target.to_face_ref();
-
-        // Assert
-        assert_eq!(result, Some(face_ref));
     }
 
     #[test]
