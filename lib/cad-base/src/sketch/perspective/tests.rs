@@ -2,11 +2,11 @@ use super::*;
 use crate::body::BodyPerspective;
 use crate::sketch::AttachableTarget;
 
-fn make_plane_ref() -> (BodyPerspective, crate::body::PlaneRef) {
+fn make_plane_ref() -> (BodyPerspective, BodyId, crate::body::PlaneRef) {
     let mut bodies = BodyPerspective::new();
     let body_id = bodies.add_body();
     let plane_ref = bodies.to_x_plane_ref(&body_id).unwrap();
-    (bodies, plane_ref)
+    (bodies, body_id, plane_ref)
 }
 
 mod sketch_perspective {
@@ -32,8 +32,8 @@ mod sketch_perspective {
         fn get_returns_some_for_existing_sketch() {
             // Arrange
             let mut perspective = SketchPerspective::new();
-            let (_bodies, plane_ref) = make_plane_ref();
-            let sketch_id = perspective.add_sketch(&AttachableTarget::Plane(plane_ref));
+            let (_bodies, body_id, plane_ref) = make_plane_ref();
+            let sketch_id = perspective.add_sketch(body_id, &AttachableTarget::Plane(plane_ref));
 
             // Act
             let result = perspective.get(&sketch_id);
@@ -59,8 +59,8 @@ mod sketch_perspective {
         fn get_mut_returns_some_for_existing_sketch() {
             // Arrange
             let mut perspective = SketchPerspective::new();
-            let (_bodies, plane_ref) = make_plane_ref();
-            let sketch_id = perspective.add_sketch(&AttachableTarget::Plane(plane_ref));
+            let (_bodies, body_id, plane_ref) = make_plane_ref();
+            let sketch_id = perspective.add_sketch(body_id, &AttachableTarget::Plane(plane_ref));
 
             // Act
             let result = perspective.get_mut(&sketch_id);
@@ -91,10 +91,10 @@ mod sketch_perspective {
         fn add_sketch_returns_valid_id() {
             // Arrange
             let mut perspective = SketchPerspective::new();
-            let (_bodies, plane_ref) = make_plane_ref();
+            let (_bodies, body_id, plane_ref) = make_plane_ref();
 
             // Act
-            let sketch_id = perspective.add_sketch(&AttachableTarget::Plane(plane_ref));
+            let sketch_id = perspective.add_sketch(body_id, &AttachableTarget::Plane(plane_ref));
 
             // Assert
             assert!(perspective.get(&sketch_id).is_some());
@@ -104,11 +104,12 @@ mod sketch_perspective {
         fn add_sketch_generates_unique_ids() {
             // Arrange
             let mut perspective = SketchPerspective::new();
-            let (_bodies, plane_ref) = make_plane_ref();
+            let (_bodies, body_id, plane_ref) = make_plane_ref();
 
             // Act
-            let sketch_id1 = perspective.add_sketch(&AttachableTarget::Plane(plane_ref.clone()));
-            let sketch_id2 = perspective.add_sketch(&AttachableTarget::Plane(plane_ref));
+            let sketch_id1 =
+                perspective.add_sketch(body_id, &AttachableTarget::Plane(plane_ref.clone()));
+            let sketch_id2 = perspective.add_sketch(body_id, &AttachableTarget::Plane(plane_ref));
 
             // Assert
             assert_ne!(sketch_id1, sketch_id2);
@@ -118,10 +119,11 @@ mod sketch_perspective {
         fn add_sketch_creates_sketch_with_correct_plane() {
             // Arrange
             let mut perspective = SketchPerspective::new();
-            let (_bodies, plane_ref) = make_plane_ref();
+            let (_bodies, body_id, plane_ref) = make_plane_ref();
 
             // Act
-            let sketch_id = perspective.add_sketch(&AttachableTarget::Plane(plane_ref.clone()));
+            let sketch_id =
+                perspective.add_sketch(body_id, &AttachableTarget::Plane(plane_ref.clone()));
 
             // Assert
             let sketch = perspective.get(&sketch_id).unwrap();
@@ -136,8 +138,8 @@ mod sketch_perspective {
         fn remove_sketch_returns_removed_sketch() {
             // Arrange
             let mut perspective = SketchPerspective::new();
-            let (_bodies, plane_ref) = make_plane_ref();
-            let sketch_id = perspective.add_sketch(&AttachableTarget::Plane(plane_ref));
+            let (_bodies, body_id, plane_ref) = make_plane_ref();
+            let sketch_id = perspective.add_sketch(body_id, &AttachableTarget::Plane(plane_ref));
 
             // Act
             let result = perspective.remove_sketch(&sketch_id);
@@ -164,10 +166,12 @@ mod sketch_perspective {
         fn remove_sketch_does_not_affect_other_sketches() {
             // Arrange
             let mut perspective = SketchPerspective::new();
-            let (_bodies, plane_ref) = make_plane_ref();
-            let sketch_id1 = perspective.add_sketch(&AttachableTarget::Plane(plane_ref.clone()));
-            let sketch_id2 = perspective.add_sketch(&AttachableTarget::Plane(plane_ref.clone()));
-            let sketch_id3 = perspective.add_sketch(&AttachableTarget::Plane(plane_ref));
+            let (_bodies, body_id, plane_ref) = make_plane_ref();
+            let sketch_id1 =
+                perspective.add_sketch(body_id, &AttachableTarget::Plane(plane_ref.clone()));
+            let sketch_id2 =
+                perspective.add_sketch(body_id, &AttachableTarget::Plane(plane_ref.clone()));
+            let sketch_id3 = perspective.add_sketch(body_id, &AttachableTarget::Plane(plane_ref));
 
             // Act
             perspective.remove_sketch(&sketch_id2);
@@ -187,8 +191,8 @@ mod sketch_perspective {
         fn rename_sketch_succeeds_with_valid_name() {
             // Arrange
             let mut perspective = SketchPerspective::new();
-            let (_bodies, plane_ref) = make_plane_ref();
-            let sketch_id = perspective.add_sketch(&AttachableTarget::Plane(plane_ref));
+            let (_bodies, body_id, plane_ref) = make_plane_ref();
+            let sketch_id = perspective.add_sketch(body_id, &AttachableTarget::Plane(plane_ref));
             let new_name = "NewSketchName";
 
             // Act
@@ -204,8 +208,8 @@ mod sketch_perspective {
         fn rename_sketch_fails_with_empty_name() {
             // Arrange
             let mut perspective = SketchPerspective::new();
-            let (_bodies, plane_ref) = make_plane_ref();
-            let sketch_id = perspective.add_sketch(&AttachableTarget::Plane(plane_ref));
+            let (_bodies, body_id, plane_ref) = make_plane_ref();
+            let sketch_id = perspective.add_sketch(body_id, &AttachableTarget::Plane(plane_ref));
 
             // Act
             let result = perspective.remane_sketch(&sketch_id, "");
@@ -219,8 +223,8 @@ mod sketch_perspective {
         fn rename_sketch_fails_with_whitespace_only_name() {
             // Arrange
             let mut perspective = SketchPerspective::new();
-            let (_bodies, plane_ref) = make_plane_ref();
-            let sketch_id = perspective.add_sketch(&AttachableTarget::Plane(plane_ref));
+            let (_bodies, body_id, plane_ref) = make_plane_ref();
+            let sketch_id = perspective.add_sketch(body_id, &AttachableTarget::Plane(plane_ref));
 
             // Act
             let result = perspective.remane_sketch(&sketch_id, "   ");
@@ -234,9 +238,10 @@ mod sketch_perspective {
         fn rename_sketch_fails_with_duplicate_name() {
             // Arrange
             let mut perspective = SketchPerspective::new();
-            let (_bodies, plane_ref) = make_plane_ref();
-            let sketch_id1 = perspective.add_sketch(&AttachableTarget::Plane(plane_ref.clone()));
-            let sketch_id2 = perspective.add_sketch(&AttachableTarget::Plane(plane_ref));
+            let (_bodies, body_id, plane_ref) = make_plane_ref();
+            let sketch_id1 =
+                perspective.add_sketch(body_id, &AttachableTarget::Plane(plane_ref.clone()));
+            let sketch_id2 = perspective.add_sketch(body_id, &AttachableTarget::Plane(plane_ref));
             let duplicate_name = "DuplicateName";
             perspective
                 .remane_sketch(&sketch_id1, duplicate_name)
