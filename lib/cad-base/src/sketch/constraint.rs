@@ -5,7 +5,7 @@ use immutable::Im;
 use solver::equation::{Equation, Evaluate};
 use tracing::instrument;
 
-use crate::{id::VariableId, sketch::scope::VariableArena};
+use crate::sketch::scope::{VariableArena, VariableIndex};
 
 /// Constraint between variables
 #[derive(Debug, Clone)]
@@ -17,7 +17,7 @@ pub struct Constraint {
     pub equation: Im<Equation>,
 
     /// A variables related of equation
-    pub related_variables: Im<Vec<VariableId>>,
+    pub related_variables: Im<Vec<VariableIndex>>,
 }
 
 impl Constraint {

@@ -17,12 +17,12 @@ use tracing::instrument;
 use std::collections::HashMap;
 
 use crate::{
-    id::{BodyId, GeometryId, IdStore, VariableId},
+    id::{BodyId, GeometryId, IdStore},
     plane::Plane,
     refs::{FaceRef, PlaneRef, PlaneScope, Resolve},
     sketch::{
         edge::SketchEdge,
-        scope::{ConstraintArena, VariableArena},
+        scope::{ConstraintArena, VariableArena, VariableIndex},
     },
 };
 
@@ -146,7 +146,7 @@ impl Sketch {
 
     /// Get a point2 from raw point.
     #[tracing::instrument(err)]
-    fn resolve_point(&self, raw_point: &Im<(VariableId, VariableId)>) -> Result<Point2> {
+    fn resolve_point(&self, raw_point: &Im<(VariableIndex, VariableIndex)>) -> Result<Point2> {
         let Some(start) = self.variables.get(&raw_point.0) else {
             return Err(eyre!("Do not found variable for {}", &raw_point.0));
         };
