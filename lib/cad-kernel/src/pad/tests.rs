@@ -4,7 +4,7 @@ use cad_base::{
         AttachedTarget, Evaluate, EvaluateError, Feature, FeatureContext,
         operation::{Operation, Pad, PadDirection},
     },
-    id::SketchId,
+    id::{BodyId, SketchId},
     plane::Plane,
     sketch::{AttachableTarget, Geometry, LineSegment, Point2, Sketch},
 };
@@ -25,7 +25,7 @@ fn make_plane_attach_target() -> AttachableTarget {
 /// Pentagon produces a JordanCurve with 5 points and 5 edges,
 fn make_pentagon_sketch() -> Sketch {
     let target = make_plane_attach_target();
-    let mut sketch = Sketch::new("pentagon", &target);
+    let mut sketch = Sketch::new("pentagon", BodyId::from(1), &target);
     for (s, e) in [
         ((0.0_f32, 0.0_f32), (2.0_f32, 0.0_f32)),
         ((2.0, 0.0), (3.0, 1.0)),
@@ -47,7 +47,7 @@ fn make_pentagon_sketch() -> Sketch {
 /// Create a sketch with an open path (not a closed Jordan curve).
 fn make_open_sketch() -> Sketch {
     let target = make_plane_attach_target();
-    let mut sketch = Sketch::new("open", &target);
+    let mut sketch = Sketch::new("open", BodyId::from(1), &target);
     sketch.add_geometry(|vars| {
         Geometry::LineSegment(LineSegment::from_points(
             &Point2::new(0.0, 0.0),
@@ -68,7 +68,7 @@ fn make_open_sketch() -> Sketch {
 fn make_feature(eq_value: f32) -> Feature {
     let eq: Equation = eq_value.into();
     let op = Operation::Pad(Pad::new(&eq));
-    Feature::new("Pad1", SketchId::from(1), &op).unwrap()
+    Feature::new("Pad1", BodyId::from(1), SketchId::from(1), &op).unwrap()
 }
 
 fn make_feature_with_direction(eq_value: f32, direction: &PadDirection) -> Feature {
@@ -76,7 +76,7 @@ fn make_feature_with_direction(eq_value: f32, direction: &PadDirection) -> Featu
     let mut pad = Pad::new(&eq);
     pad.change_direction(direction);
     let op = Operation::Pad(pad);
-    Feature::new("Pad1", SketchId::from(1), &op).unwrap()
+    Feature::new("Pad1", BodyId::from(1), SketchId::from(1), &op).unwrap()
 }
 
 fn make_context<'a>(sketch: &'a Sketch, plane: &'a Plane) -> FeatureContext<'a> {
