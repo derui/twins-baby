@@ -44,7 +44,7 @@ fn create_sketch(world: &mut World, plane_ref: cad_base::body::PlaneRef) -> Sket
     let sketch_id;
     {
         let sketch_p = tx.modify::<SketchPerspective>().unwrap();
-        sketch_id = sketch_p.add_sketch(&AttachableTarget::Plane(plane_ref));
+        sketch_id = sketch_p.add_sketch(body_id, &AttachableTarget::Plane(plane_ref));
     }
     {
         let body_p = tx.modify::<BodyPerspective>().unwrap();
@@ -96,7 +96,7 @@ fn writes_sketch_created_notification_when_plane_selected() -> Result<()> {
         .unwrap();
     assert_eq!(*notifications[0].id, CommandId::new(1));
     assert!(!notif.name.is_empty());
-    assert_eq!(notif.body_id, plane_ref.body_id);
+    assert_eq!(*notif.body_id, *plane_ref.body_id);
     Ok(())
 }
 

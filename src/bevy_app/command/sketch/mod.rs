@@ -88,7 +88,7 @@ pub(super) fn on_create_sketch_on_plane(
             return;
         };
 
-        created_sketch = sketch_p.add_sketch(&attach_target);
+        created_sketch = sketch_p.add_sketch(*target.body_id, &attach_target);
         sketch_name = sketch_p
             .get(&created_sketch)
             .map(|v| (*v.name).clone())
@@ -111,7 +111,7 @@ pub(super) fn on_create_sketch_on_plane(
             SketchCreatedNotification {
                 sketch_id: created_sketch.into(),
                 name: sketch_name.into(),
-                body_id: target.body_id,
+                body_id: (*target.body_id).into(),
             }
             .into(),
         ),

@@ -2,12 +2,7 @@ use std::collections::HashMap;
 
 use solver::{environment::Environment, variable::Variable};
 
-use crate::{
-    arena::Gen,
-    id::{ConstraintId, IdStore},
-    index_impl,
-    sketch::constraint::Constraint,
-};
+use crate::{arena::Gen, index_impl, sketch::constraint::Constraint};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct VariableIndex(u64);
@@ -71,42 +66,46 @@ impl VariableArena {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ConstraintIndex(u64);
+index_impl!(ConstraintIndex);
+
 #[derive(Debug, Clone)]
 pub struct ConstraintArena {
     /// Gene
-    id_gen: IdStore,
+    id_gen: Gen,
 
-    constraints: HashMap<ConstraintId, Constraint>,
+    constraints: HashMap<ConstraintIndex, Constraint>,
 }
 
 impl ConstraintArena {
     /// Create a new constraint scope
     pub fn new() -> Self {
         Self {
-            id_gen: IdStore::of(),
+            id_gen: Gen::new(),
             constraints: HashMap::new(),
         }
     }
 
     /// Register a constraint
-    pub fn register(&mut self, constraint: Constraint) -> ConstraintId {
-        let id = self.id_gen.generate();
+    pub fn register(&mut self, constraint: Constraint) -> ConstraintIndex {
+        let id = self.id_gen.next();
         self.constraints.insert(id, constraint);
         id
     }
 
     /// Deregister a constraint
-    pub fn deregister(&mut self, id: &ConstraintId) -> Option<Constraint> {
+    pub fn deregister(&mut self, id: &ConstraintIndex) -> Option<Constraint> {
         self.constraints.remove(id)
     }
 
     /// Get a constraint by id
-    pub fn get(&self, id: &ConstraintId) -> Option<&Constraint> {
+    pub fn get(&self, id: &ConstraintIndex) -> Option<&Constraint> {
         self.constraints.get(id)
     }
 
     /// Get a mutable constraint by id
-    pub fn get_mut(&mut self, id: &ConstraintId) -> Option<&mut Constraint> {
+    pub fn get_mut(&mut self, id: &ConstraintIndex) -> Option<&mut Constraint> {
         self.constraints.get_mut(id)
     }
 }

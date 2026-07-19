@@ -178,7 +178,7 @@ mod tests {
         let sketch_id = tx
             .modify::<SketchPerspective>()
             .unwrap()
-            .add_sketch(&AttachableTarget::Plane(plane_ref));
+            .add_sketch(body_id, &AttachableTarget::Plane(plane_ref));
         tx.commit();
         sketch_id
     }

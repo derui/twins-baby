@@ -1,10 +1,11 @@
 use cad_base::{
     body::BodyPerspective,
     feature::AttachedTarget,
-    id::{FaceId, SolidId},
+    id::{BodyId, FeatureId},
     plane::Plane,
     refs::FaceRef,
     sketch::{AttachableTarget, Geometry, LineSegment, Point2, Sketch},
+    tag::FaceTag,
 };
 use epsilon::DefaultEpsilon;
 
@@ -15,12 +16,12 @@ fn plane_sketch() -> Sketch {
     let body_id = bodies.add_body();
     let plane_ref = bodies.to_x_plane_ref(&body_id).unwrap();
     let target = AttachableTarget::Plane(plane_ref);
-    Sketch::new("test", &target)
+    Sketch::new("test", body_id, &target)
 }
 
 fn face_sketch() -> Sketch {
-    let target = AttachableTarget::Face(FaceRef::new(SolidId::from(1), FaceId::from(1)));
-    Sketch::new("test", &target)
+    let target = AttachableTarget::Face(FaceRef::new(FeatureId::from(1), FaceTag::from(1)));
+    Sketch::new("test", BodyId::new(1), &target)
 }
 
 fn add_segment(sketch: &mut Sketch, start: (f32, f32), end: (f32, f32)) {
