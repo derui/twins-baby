@@ -41,7 +41,7 @@ fn to_attachable_target(engine: &AppActiveBody, selections: &AppSelections) -> O
     match &selections[0] {
         (_, BodyPartType(ObjectType::Plane(plane_ref))) => {
             if *plane_ref.body_id == body_id {
-                Some(plane_ref.clone())
+                Some(*plane_ref)
             } else {
                 None
             }
@@ -80,7 +80,7 @@ pub(super) fn on_create_sketch_on_plane(
 
     let created_sketch: SketchId;
     let sketch_name: String;
-    let attach_target = AttachableTarget::Plane(target.clone());
+    let attach_target = AttachableTarget::Plane(target);
 
     {
         let Some(sketch_p) = transaction.modify::<SketchPerspective>() else {

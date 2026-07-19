@@ -84,8 +84,8 @@ fn register_body_base_planes(
                 Transform::from_xyz(0., 0., 0.),
                 RenderLayers::layer(CAMERA_3D_LAYER),
                 Visibility::Hidden,
-                Into::<BodyBasePlane>::into(plane_ref.clone()),
-                BodyPartType(ObjectType::Plane(plane_ref.clone())),
+                Into::<BodyBasePlane>::into(plane_ref),
+                BodyPartType(ObjectType::Plane(plane_ref)),
                 mat,
             ));
             entity.observe(update_pointer_over);
