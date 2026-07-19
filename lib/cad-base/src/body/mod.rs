@@ -6,7 +6,6 @@ use immutable::Im;
 use crate::{
     id::{BodyId, IdStore, SketchId},
     plane::Plane,
-    transaction::Baseline,
     vector3::Vector3,
 };
 
