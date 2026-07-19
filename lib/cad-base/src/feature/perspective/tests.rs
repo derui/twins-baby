@@ -4,7 +4,7 @@ use solver::equation::Equation;
 
 use crate::feature::operation::{Operation, Pad};
 use crate::feature::{Evaluate, EvaluateError, Feature, FeatureContext};
-use crate::id::{BodyId, FeatureId, SketchId, SolidId};
+use crate::id::{BodyId, FeatureId, SketchId};
 use crate::solid::{Solid, SolidBuilder};
 
 use super::FeaturePerspective;
@@ -39,15 +39,6 @@ impl Evaluate for OneSolidEvaluator {
     }
 }
 
-fn solid_id_of(perspective: &FeaturePerspective, feature_id: &FeatureId) -> SolidId {
-    *(*perspective.get(feature_id).unwrap().solids)
-        .as_ref()
-        .unwrap()
-        .keys()
-        .next()
-        .unwrap()
-}
-
 #[test]
 fn test_evaluate_feature_returns_feature_not_found_for_missing_id() {
     // Arrange
@@ -60,88 +51,6 @@ fn test_evaluate_feature_returns_feature_not_found_for_missing_id() {
 
     // Assert
     assert!(matches!(result, Err(EvaluateError::FeatureNotFound)));
-}
-
-#[test]
-fn test_evaluate_feature_mints_unique_solid_ids_across_features() {
-    // Arrange
-    let mut perspective = FeaturePerspective::new();
-    let sketch = make_sketch_id();
-    let body = make_body_id();
-    let op = make_operation();
-    let id1 = perspective.add_feature(body, sketch, &op);
-    let id2 = perspective.add_feature(body, sketch, &op);
-    let context = make_context();
-
-    // Act
-    perspective
-        .evaluate_feature::<OneSolidEvaluator>(&id1, &context)
-        .unwrap();
-    perspective
-        .evaluate_feature::<OneSolidEvaluator>(&id2, &context)
-        .unwrap();
-
-    // Assert
-    let solid_id1 = solid_id_of(&perspective, &id1);
-    let solid_id2 = solid_id_of(&perspective, &id2);
-    assert_ne!(solid_id1, solid_id2);
-}
-
-#[test]
-fn test_read_solid_returns_none_before_evaluation() {
-    // Arrange
-    let mut perspective = FeaturePerspective::new();
-    let body = make_body_id();
-    let sketch = make_sketch_id();
-    let op = make_operation();
-    perspective.add_feature(body, sketch, &op);
-
-    // Act
-    let result = perspective.read_solid(SolidId::from(1));
-
-    // Assert
-    assert!(result.is_none());
-}
-
-#[test]
-fn test_read_solid_returns_solid_after_evaluation() {
-    // Arrange
-    let mut perspective = FeaturePerspective::new();
-    let body = make_body_id();
-    let sketch = make_sketch_id();
-    let op = make_operation();
-    let id = perspective.add_feature(body, sketch, &op);
-    let context = make_context();
-    perspective
-        .evaluate_feature::<OneSolidEvaluator>(&id, &context)
-        .unwrap();
-    let solid_id = solid_id_of(&perspective, &id);
-
-    // Act
-    let result = perspective.read_solid(solid_id);
-
-    // Assert
-    assert!(result.is_some());
-}
-
-#[test]
-fn test_read_solid_returns_none_for_unknown_id() {
-    // Arrange
-    let mut perspective = FeaturePerspective::new();
-    let body = make_body_id();
-    let sketch = make_sketch_id();
-    let op = make_operation();
-    let id = perspective.add_feature(body, sketch, &op);
-    let context = make_context();
-    perspective
-        .evaluate_feature::<OneSolidEvaluator>(&id, &context)
-        .unwrap();
-
-    // Act
-    let result = perspective.read_solid(SolidId::from(999));
-
-    // Assert
-    assert!(result.is_none());
 }
 
 #[test]

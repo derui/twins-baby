@@ -8,9 +8,7 @@ use tracing::instrument;
 
 use crate::{
     feature::{Evaluate, EvaluateError, Feature, FeatureContext, operation::Operation},
-    id::{BodyId, FeatureId, IdStore, SketchId, SolidId},
-    solid::Solid,
-    transaction::Baseline,
+    id::{BodyId, FeatureId, IdStore, SketchId},
 };
 
 /// A struct of feature perspective.
@@ -21,7 +19,6 @@ pub struct FeaturePerspective {
     features: HashMap<FeatureId, Feature>,
 
     feature_id_gen: IdStore,
-    solid_id_gen: IdStore,
 }
 
 impl Default for FeaturePerspective {
@@ -29,7 +26,6 @@ impl Default for FeaturePerspective {
         Self {
             features: Default::default(),
             feature_id_gen: IdStore::of(),
-            solid_id_gen: IdStore::of(),
         }
     }
 }

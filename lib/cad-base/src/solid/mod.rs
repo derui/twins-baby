@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use immutable::Im;
 
 use crate::{
-    id::{EdgeId, FaceId, IdStore, SolidId, VertexId},
+    id::{EdgeId, FaceId, IdStore, VertexId},
     solid::{edge::Edge, face::Face, vertex::Vertex},
 };
 

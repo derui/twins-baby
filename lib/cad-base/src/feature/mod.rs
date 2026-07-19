@@ -7,11 +7,9 @@ use color_eyre::eyre::Result;
 use immutable::Im;
 use thiserror::Error;
 
-use std::collections::HashMap;
-
 use crate::{
     feature::operation::Operation,
-    id::{BodyId, IdStore, SketchId, SolidId},
+    id::{BodyId, SketchId},
     plane::Plane,
     sketch::Sketch,
     solid::{Solid, face::Face},
