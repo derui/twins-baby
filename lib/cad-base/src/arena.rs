@@ -12,6 +12,7 @@ impl<T: Clone + Copy + From<u64> + Debug> Index for T {}
 ///
 /// use like:
 /// ```index_impl(SampleIndex)```
+#[macro_export]
 macro_rules! index_impl {
     ($ty:ident) => {
         impl $ty {
@@ -41,6 +42,7 @@ macro_rules! index_impl {
 }
 
 /// A generation counter for tags. This is used to track the current generation of tags in the system.
+#[derive(Debug, Clone)]
 pub struct Gen {
     /// mapped internal id of current tags.
     current_generation: HashMap<Tag, u64>,
@@ -60,6 +62,13 @@ impl Gen {
             current: 0,
             generation: 1,
         }
+    }
+
+    /// no-tag generation.
+    pub fn next<I: Index>(&mut self) -> I {
+        let next = self.current + 1;
+        self.current = next;
+        I::from(next)
     }
 
     /// Re-generate an index for the given tag. This will increment the current index and return a new index.
