@@ -3,23 +3,29 @@ use std::collections::HashMap;
 use solver::{environment::Environment, variable::Variable};
 
 use crate::{
-    id::{ConstraintId, IdStore, VariableId},
+    arena::Gen,
+    id::{ConstraintId, IdStore},
+    index_impl,
     sketch::constraint::Constraint,
 };
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct VariableIndex(u64);
+index_impl!(VariableIndex);
+
 /// Scoping defined variable.
 #[derive(Debug, Clone)]
-pub struct VariableScope {
-    id_gen: IdStore,
+pub struct VariableArena {
+    id_gen: Gen,
 
-    variables: HashMap<VariableId, Variable>,
+    variables: HashMap<VariableIndex, Variable>,
 }
 
 /// Single responsibility module to register a variable
-impl VariableScope {
+impl VariableArena {
     pub fn new() -> Self {
         Self {
-            id_gen: IdStore::of(),
+            id_gen: Gen::new(),
             variables: HashMap::new(),
         }
     }
@@ -30,8 +36,8 @@ impl VariableScope {
     }
 
     /// Get mapping name and variable id. This is useful of between environment.
-    pub(crate) fn to_id_name_map(&self) -> HashMap<String, VariableId> {
-        let mut map: HashMap<String, VariableId> = HashMap::new();
+    pub(crate) fn to_id_name_map(&self) -> HashMap<String, VariableIndex> {
+        let mut map: HashMap<String, VariableIndex> = HashMap::new();
 
         for (k, v) in &self.variables {
             map.insert((*v.name).clone(), *k);
@@ -41,8 +47,8 @@ impl VariableScope {
     }
 
     /// Register a variable.
-    pub fn register(&mut self, value: f32) -> VariableId {
-        let id = self.id_gen.generate();
+    pub fn register(&mut self, value: f32) -> VariableIndex {
+        let id: VariableIndex = self.id_gen.next();
         let v = Variable::new(&id.to_string(), value);
 
         self.variables.insert(id, v);
@@ -50,30 +56,30 @@ impl VariableScope {
     }
 
     /// De-register a variable if it registered
-    pub fn deregister(&mut self, id: &VariableId) -> Option<Variable> {
-        self.variables.remove(id)
+    pub fn deregister(&mut self, index: &VariableIndex) -> Option<Variable> {
+        self.variables.remove(index)
     }
 
     /// Get a variable by id
-    pub fn get(&self, id: &VariableId) -> Option<&Variable> {
-        self.variables.get(id)
+    pub fn get(&self, index: &VariableIndex) -> Option<&Variable> {
+        self.variables.get(index)
     }
 
     /// Get a mutable variable by id
-    pub fn get_mut(&mut self, id: &VariableId) -> Option<&mut Variable> {
-        self.variables.get_mut(id)
+    pub fn get_mut(&mut self, index: &VariableIndex) -> Option<&mut Variable> {
+        self.variables.get_mut(index)
     }
 }
 
 #[derive(Debug, Clone)]
-pub struct ConstraintScope {
+pub struct ConstraintArena {
     /// Gene
     id_gen: IdStore,
 
     constraints: HashMap<ConstraintId, Constraint>,
 }
 
-impl ConstraintScope {
+impl ConstraintArena {
     /// Create a new constraint scope
     pub fn new() -> Self {
         Self {
@@ -114,7 +120,7 @@ mod tests {
     #[test]
     fn register_creates_variable_with_given_value() {
         // Arrange
-        let mut scope = VariableScope::new();
+        let mut scope = VariableArena::new();
         let value = 42.0;
 
         // Act
@@ -129,7 +135,7 @@ mod tests {
     #[test]
     fn register_generates_unique_ids_for_multiple_variables() {
         // Arrange
-        let mut scope = VariableScope::new();
+        let mut scope = VariableArena::new();
 
         // Act
         let id1 = scope.register(10.0);
@@ -145,7 +151,7 @@ mod tests {
     #[test]
     fn register_stores_different_values_independently() {
         // Arrange
-        let mut scope = VariableScope::new();
+        let mut scope = VariableArena::new();
 
         // Act
         let id1 = scope.register(1.5);
@@ -161,8 +167,8 @@ mod tests {
     #[test]
     fn get_returns_none_for_non_existent_id() {
         // Arrange
-        let scope = VariableScope::new();
-        let non_existent_id = VariableId::from(999);
+        let scope = VariableArena::new();
+        let non_existent_id = VariableIndex::from(999);
 
         // Act
         let result = scope.get(&non_existent_id);
@@ -174,7 +180,7 @@ mod tests {
     #[test]
     fn deregister_removes_variable_and_returns_it() {
         // Arrange
-        let mut scope = VariableScope::new();
+        let mut scope = VariableArena::new();
         let id = scope.register(100.0);
 
         // Act
@@ -189,8 +195,8 @@ mod tests {
     #[test]
     fn deregister_returns_none_for_non_existent_id() {
         // Arrange
-        let mut scope = VariableScope::new();
-        let non_existent_id = VariableId::from(999);
+        let mut scope = VariableArena::new();
+        let non_existent_id = VariableIndex::from(999);
 
         // Act
         let result = scope.deregister(&non_existent_id);
@@ -202,7 +208,7 @@ mod tests {
     #[test]
     fn deregister_does_not_affect_other_variables() {
         // Arrange
-        let mut scope = VariableScope::new();
+        let mut scope = VariableArena::new();
         let id1 = scope.register(1.0);
         let id2 = scope.register(2.0);
         let id3 = scope.register(3.0);
@@ -219,7 +225,7 @@ mod tests {
     #[test]
     fn get_mut_allows_modifying_variable_value() {
         // Arrange
-        let mut scope = VariableScope::new();
+        let mut scope = VariableArena::new();
         let id = scope.register(5.0);
 
         // Act
@@ -233,8 +239,8 @@ mod tests {
     #[test]
     fn get_mut_returns_none_for_non_existent_id() {
         // Arrange
-        let mut scope = VariableScope::new();
-        let non_existent_id = VariableId::from(999);
+        let mut scope = VariableArena::new();
+        let non_existent_id = VariableIndex::from(999);
 
         // Act
         let result = scope.get_mut(&non_existent_id);
@@ -246,7 +252,7 @@ mod tests {
     #[test]
     fn to_environment_creates_environment_with_all_variables() {
         // Arrange
-        let mut scope = VariableScope::new();
+        let mut scope = VariableArena::new();
         scope.register(1.0);
         scope.register(2.0);
         scope.register(3.0);
@@ -261,7 +267,7 @@ mod tests {
     #[test]
     fn to_environment_reflects_current_state_after_deregistration() {
         // Arrange
-        let mut scope = VariableScope::new();
+        let mut scope = VariableArena::new();
         let id1 = scope.register(1.0);
         let id2 = scope.register(2.0);
         scope.deregister(&id1);
@@ -280,7 +286,7 @@ mod tests {
     #[test]
     fn to_environment_with_empty_scope_creates_empty_environment() {
         // Arrange
-        let scope = VariableScope::new();
+        let scope = VariableArena::new();
 
         // Act
         let env = scope.to_environment();
@@ -292,7 +298,7 @@ mod tests {
     #[test]
     fn register_handles_special_float_values() {
         // Arrange
-        let mut scope = VariableScope::new();
+        let mut scope = VariableArena::new();
 
         // Act
         let id_zero = scope.register(0.0);
@@ -310,7 +316,7 @@ mod tests {
     #[test]
     fn to_id_name_map_returns_empty_for_empty_scope() {
         // Arrange
-        let scope = VariableScope::new();
+        let scope = VariableArena::new();
 
         // Act
         let map = scope.to_id_name_map();
@@ -322,7 +328,7 @@ mod tests {
     #[test]
     fn to_id_name_map_maps_variable_names_to_ids() {
         // Arrange
-        let mut scope = VariableScope::new();
+        let mut scope = VariableArena::new();
         let id1 = scope.register(1.0);
         let id2 = scope.register(2.0);
 
@@ -338,7 +344,7 @@ mod tests {
     #[test]
     fn to_id_name_map_reflects_current_state_after_deregistration() {
         // Arrange
-        let mut scope = VariableScope::new();
+        let mut scope = VariableArena::new();
         let id1 = scope.register(1.0);
         let id2 = scope.register(2.0);
         scope.deregister(&id1);
