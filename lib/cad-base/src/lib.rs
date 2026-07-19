@@ -1,4 +1,5 @@
 #![allow(clippy::manual_non_exhaustive)]
+pub(crate) mod arena;
 pub mod body;
 pub mod feature;
 pub mod id;
@@ -72,7 +73,7 @@ impl BodyReader for Baseline {
 impl<'a> Resolve<'a, PlaneRef, PlaneScope<'a>> for Baseline {
     fn resolve(&'a self, ref_: PlaneRef) -> Option<PlaneScope<'a>> {
         self.read::<BodyPerspective>()?
-            .get(&*ref_.body_id)
+            .get(&ref_.body_id)
             .map(|b| PlaneScope::new(b, ref_))
     }
 }
