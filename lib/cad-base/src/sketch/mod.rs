@@ -22,7 +22,7 @@ use crate::{
     refs::{FaceRef, PlaneRef, PlaneScope, Resolve},
     sketch::{
         edge::SketchEdge,
-        scope::{ConstraintScope, VariableScope},
+        scope::{ConstraintArena, VariableArena},
     },
 };
 
@@ -89,10 +89,10 @@ pub struct Sketch {
     geometries: HashMap<GeometryId, Geometry>,
 
     /// variable scope.
-    variables: VariableScope,
+    variables: VariableArena,
 
     /// Constraint scope
-    constraints: ConstraintScope,
+    constraints: ConstraintArena,
 
     /// A plane atteched to sketch
     pub attach_target: Im<AttachableTarget>,
@@ -106,8 +106,8 @@ impl Sketch {
             name: name.to_string().into(),
             geometory_id_gen: IdStore::of(),
             geometries: HashMap::new(),
-            variables: VariableScope::new(),
-            constraints: ConstraintScope::new(),
+            variables: VariableArena::new(),
+            constraints: ConstraintArena::new(),
             attach_target: attach_target.clone().into(),
         }
     }
@@ -130,7 +130,7 @@ impl Sketch {
     /// Add a geometry to this sketch with a geometry maker function
     pub fn add_geometry<F>(&mut self, maker: F) -> GeometryId
     where
-        F: FnOnce(&mut VariableScope) -> Geometry,
+        F: FnOnce(&mut VariableArena) -> Geometry,
     {
         let geometry = maker(&mut self.variables);
 

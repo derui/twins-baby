@@ -17,7 +17,7 @@ mod attachable_target {
     use crate::CadEngine;
     use crate::feature::operation::{Operation, Pad};
     use crate::feature::{Evaluate, EvaluateError, Feature, FeatureContext, FeaturePerspective};
-    use crate::id::{EdgeId, FaceId, SketchId, SolidId};
+    use crate::id::{EdgeId, FaceId, SketchId};
     use crate::plane::Plane;
 
     use crate::sketch::AttachableTarget;
