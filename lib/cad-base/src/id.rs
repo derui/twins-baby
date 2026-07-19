@@ -14,10 +14,6 @@ pub struct VertexId(u64);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, MakeId)]
 pub struct SketchId(u64);
 
-/// Internal id for manage variable in sketch
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, MakeId)]
-pub struct VariableId(u64);
-
 /// Internal id for manage shape in sketch
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, MakeId)]
 pub struct GeometryId(u64);
