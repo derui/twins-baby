@@ -1,4 +1,4 @@
-use immutable::Im;
+use immutable::Imc;
 
 use crate::{body::Body, id::BodyId, plane::Plane};
 
@@ -11,9 +11,9 @@ enum BodyPlane {
 }
 
 /// A id-like reference of the plane. Plane is tightly coupled on the body.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Copy)]
 pub struct PlaneRef {
-    pub body_id: Im<BodyId>,
+    pub body_id: Imc<BodyId>,
     plane: BodyPlane,
 }
 
@@ -60,7 +60,7 @@ impl PlaneScope<'_> {
     }
 
     /// Get the plane entity from the body
-    pub(crate) fn to_plane(&self) -> Plane {
+    pub fn to_plane(&self) -> Plane {
         match self.original_ref.plane {
             BodyPlane::X => (*self.body.x_plane).clone(),
             BodyPlane::Y => (*self.body.y_plane).clone(),

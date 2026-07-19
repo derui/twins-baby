@@ -17,10 +17,9 @@ use tracing::instrument;
 use std::collections::HashMap;
 
 use crate::{
-    body::BodyReader,
     id::{BodyId, GeometryId, IdStore, VariableId},
     plane::Plane,
-    refs::{FaceRef, PlaneRef},
+    refs::{FaceRef, PlaneRef, PlaneScope, Resolve},
     sketch::{
         edge::SketchEdge,
         scope::{ConstraintScope, VariableScope},
@@ -57,14 +56,13 @@ impl AttachableTarget {
     }
 
     /// Make plane from target.
-    pub fn to_plane<T: BodyReader>(&self, reader: &T) -> Option<Plane> {
+    pub fn to_plane<'a, T: Resolve<'a, PlaneRef, PlaneScope<'a>>>(
+        &self,
+        reader: &'a T,
+    ) -> Option<Plane> {
         match self {
-            AttachableTarget::Plane(plane_ref) => reader
-                .read(*plane_ref.body_id)
-                .map(|body| plane_ref.to_plane_from(body)),
-            AttachableTarget::Face(face_ref) => reader
-                .read_solid(*face_ref.solid_id)
-                .and_then(|solid| face_ref.to_plane_from(solid)),
+            AttachableTarget::Plane(plane_ref) => reader.resolve(*plane_ref).map(|s| s.to_plane()),
+            AttachableTarget::Face(_face_ref) => todo!(),
         }
     }
 }

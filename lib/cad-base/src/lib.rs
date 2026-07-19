@@ -70,8 +70,7 @@ impl BodyReader for Baseline {
 }
 
 impl<'a> Resolve<'a, PlaneRef, PlaneScope<'a>> for Baseline {
-    type Output = PlaneScope<'a>;
-    fn resolve(&'a self, ref_: PlaneRef) -> Option<Self::Output> {
+    fn resolve(&'a self, ref_: PlaneRef) -> Option<PlaneScope<'a>> {
         self.read::<BodyPerspective>()?
             .get(&*ref_.body_id)
             .map(|b| PlaneScope::new(b, ref_))
