@@ -5,7 +5,7 @@ use immutable::Im;
 use solver::equation::{Equation, Evaluate};
 use tracing::instrument;
 
-use crate::{id::VariableId, sketch::scope::VariableScope};
+use crate::{id::VariableId, sketch::scope::VariableArena};
 
 /// Constraint between variables
 #[derive(Debug, Clone)]
@@ -34,7 +34,7 @@ impl Constraint {
     /// # Returns
     /// * `Result<Constraint>` - Returns a Result containing the newly created Constraint or an error if any variable in the equation is not found in the scope.
     #[instrument(err)]
-    pub fn new(name: &str, equation: Equation, scope: &VariableScope) -> Result<Self> {
+    pub fn new(name: &str, equation: Equation, scope: &VariableArena) -> Result<Self> {
         let mut vars: HashSet<String> = HashSet::from_iter(equation.related_variables());
 
         let env = scope.to_id_name_map();
@@ -73,7 +73,7 @@ mod tests {
     fn creates_constraint_with_no_variables() {
         // Arrange
         let equation = parse("5.0").unwrap();
-        let scope = VariableScope::new();
+        let scope = VariableArena::new();
 
         // Act
         let result = Constraint::new("constant_constraint", equation.clone(), &scope);
@@ -88,7 +88,7 @@ mod tests {
     #[test]
     fn creates_constraint_with_single_variable() {
         // Arrange
-        let mut scope = VariableScope::new();
+        let mut scope = VariableArena::new();
         let var_id = scope.register(5.0);
         let equation = parse(&var_id.to_string()).unwrap();
 
@@ -104,7 +104,7 @@ mod tests {
     #[test]
     fn creates_constraint_with_multiple_variables() {
         // Arrange
-        let mut scope = VariableScope::new();
+        let mut scope = VariableArena::new();
         let var1 = scope.register(1.0);
         let var2 = scope.register(2.0);
         let var3 = scope.register(3.0);
@@ -124,7 +124,7 @@ mod tests {
     #[test]
     fn deduplicates_repeated_variables() {
         // Arrange
-        let mut scope = VariableScope::new();
+        let mut scope = VariableArena::new();
         let var_id = scope.register(5.0);
         let equation = parse(&format!("{} + {} * 2.0", var_id, var_id)).unwrap();
 
@@ -141,7 +141,7 @@ mod tests {
     fn returns_error_when_all_variables_missing_from_scope() {
         // Arrange
         let equation = parse("x").unwrap();
-        let scope = VariableScope::new();
+        let scope = VariableArena::new();
 
         // Act
         let result = Constraint::new("missing_var_constraint", equation, &scope);
@@ -159,7 +159,7 @@ mod tests {
     #[test]
     fn returns_error_when_some_variables_missing_from_scope() {
         // Arrange
-        let mut scope = VariableScope::new();
+        let mut scope = VariableArena::new();
         let var1 = scope.register(1.0);
         let equation = parse(&format!("{} + unknown", var1)).unwrap();
 
@@ -173,7 +173,7 @@ mod tests {
     #[test]
     fn uses_only_relevant_variables_from_scope() {
         // Arrange
-        let mut scope = VariableScope::new();
+        let mut scope = VariableArena::new();
         let var1 = scope.register(1.0);
         scope.register(2.0); // var2 - not used
         scope.register(3.0); // var3 - not used
